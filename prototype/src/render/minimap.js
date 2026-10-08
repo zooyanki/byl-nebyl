@@ -4,7 +4,7 @@ import { PAL } from '../palette.js';
 import { pline, rect, disc } from './shapes.js';
 import { SUB } from '../world/collision.js';
 
-const TYPE = { free: 0, water: 1, tree: 2, rock: 3, wall: 4, palisade: 5, izba: 6, idol: 7, fire: 8 };
+const TYPE = { free: 0, water: 1, tree: 2, rock: 3, wall: 4, palisade: 5, izba: 6, idol: 7, fire: 8, bush: 2, gate: 5 };
 const EDGE = { 1: PAL.sea, 2: PAL.moss, 3: PAL.slate_lt, 4: PAL.mist, 5: PAL.bronze_lt, 6: PAL.birch, 7: PAL.bronze, 8: PAL.ember };
 export const MINI = { x: 506, y: 26, w: 128, h: 84 };
 const REVEAL = 11;
@@ -20,6 +20,8 @@ export class Minimap {
         for (let sx = Math.round(x * SUB); sx < Math.round((x + w) * SUB); sx++)
           if (sx >= 0 && sy >= 0 && sx < map.sw && sy < map.sh) t[sy * map.sw + sx] = v;
     }
+    // чаща тропы: непроходимый тайл без пропса — тоже лес
+    if (map.forest) for (let i = 0; i < t.length; i++) if (t[i] === TYPE.free && map.sub[i]) t[i] = TYPE.tree;
     this.types = t;
     this.seen = new Uint8Array(map.w * map.h);
     this.layers = {};
@@ -117,8 +119,22 @@ export class Minimap {
       const p = P(e.x, e.y); if (inClip(p)) rect(ctx, p[0], p[1], L.k > 3 ? 2 : 1, 1, PAL.red_lt);
     }
     const kr = game.map.krada;
-    const q = P(kr.x, kr.y);
-    if (inClip(q)) { disc(ctx, q[0], q[1], 3.5, PAL.ink); disc(ctx, q[0], q[1], 2.6, PAL.bronze_lt); rect(ctx, q[0], q[1], 1, 1, PAL.ink); }
+    if (kr) {
+      const q = P(kr.x, kr.y);
+      if (inClip(q)) { disc(ctx, q[0], q[1], 3.5, PAL.ink); disc(ctx, q[0], q[1], 2.6, PAL.bronze_lt); rect(ctx, q[0], q[1], 1, 1, PAL.ink); }
+    }
+    const cs = game.map.churStone;
+    if (cs && this.isSeen(cs.x, cs.y)) { const q = P(cs.x, cs.y); if (inClip(q)) { disc(ctx, q[0], q[1], 2.5, PAL.ink); disc(ctx, q[0], q[1], 1.6, PAL.blue_lt); } }
+    // объекты задания: двери изб, сундук, тело — ромбик; выходы и ворота — всегда видны
+    for (const o of game.map.objects || []) {
+      if (o.done) continue;
+      const way = o.type === 'exit' || o.type === 'gate';
+      if (!way && !this.isSeen(o.x, o.y)) continue;
+      const q = P(o.x, o.y); if (!inClip(q)) continue;
+      const c = way ? (o.requires && !game.quest.flag(o.requires) ? PAL.slate_lt : PAL.bronze_hi) : PAL.flame;
+      for (let r = 0; r <= 2; r++) { rect(ctx, q[0] - 2 + r, q[1] - r, 5 - r * 2, 1, r === 0 ? PAL.ink : c); rect(ctx, q[0] - 2 + r, q[1] + r, 5 - r * 2, 1, r === 0 ? PAL.ink : c); }
+      rect(ctx, q[0] - 3, q[1], 1, 1, PAL.ink); rect(ctx, q[0] + 3, q[1], 1, 1, PAL.ink); rect(ctx, q[0] - 2, q[1], 5, 1, c);
+    }
     const h = game.hero, hp = P(h.x, h.y);
     rect(ctx, hp[0] - 2, hp[1], 5, 1, PAL.linen); rect(ctx, hp[0], hp[1] - 2, 1, 5, PAL.linen); rect(ctx, hp[0], hp[1], 1, 1, PAL.red_lt);
   }

@@ -6,6 +6,7 @@
   assets/win_character.png                 — статичный фон окна «Витязь» (character_v2.py)
   assets/hud_buttons.png                   — кнопки C/I/T/M/J/ESC (gameplay_hud_v2.draw_buttons)
   assets/win_skills.png                    — фон окна «Навыки» (рамка ui_rus.window, слоты theme_rus.wood_slot)
+  assets/hud_quest.png                     — рамка трекера задания с буквицей (gameplay_hud_v2.draw_quest без текста)
   иконки навыков theme_rus.ICONS (16/20/26 px) — в общий атлас items.png под ключами sk_<иконка>_<размер>
 Прозрачность определяется рендером на двух разных фонах."""
 import json, os, sys
@@ -196,6 +197,25 @@ def skills_bg(cv):
 
 rgba = render(skills_bg)
 meta["win_skills"] = crop_save(rgba, "win_skills.png")
+
+
+# ---------------- трекер задания (макет HUD v2: gameplay_hud_v2.draw_quest) -------------
+# Рамка ui_rus.carved_frame и буквица ui_rus.bukvitsa рисуются как у художника; текст (заголовок уставом, цели)
+# игра пишет сама из data/ru.json. Ширина считается по формуле draw_quest для самой длинной цели М1 (act1.md v1.1).
+QUEST_TITLE = "ОГОНЬ НА КАПИЩЕ"
+QUEST_GOALS = ("— Доберись до капища", "— Спаси выживших", "— Отбей огнища у упырей", "— Одолей Крившу", "— Найди поджигателя")
+def quest_frame(cv):
+    first, rest = QUEST_TITLE[0], QUEST_TITLE[1:]
+    tw = pk.text_width(rest, FONT_USTAV)
+    gw = max(pk.text_width(g, FONT_RU) + pk.text_width("0/3", FONT_RU) + 8 + 10 for g in QUEST_GOALS)
+    w, h = max(186, 26 + 4 + tw + 6 + 14 + 4, gw + 16), 80
+    ix, iy, iw, ih = U.carved_frame(cv, 3, 3, w, h, fill="dim")
+    bw, bh = U.bukvitsa(cv, ix + 1, iy + 1, first)
+    meta["quest_layout"] = {"frame": [3, 3, w, h], "inner": [ix, iy, iw, ih], "buk": [bw, bh], "title": QUEST_TITLE}
+
+
+rgba = render(quest_frame)
+meta["hud_quest"] = crop_save(rgba, "hud_quest.png")
 
 
 # ---------------- атлас иконок -----------------------------------------------------

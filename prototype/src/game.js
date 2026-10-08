@@ -22,14 +22,25 @@ import { InventoryUI, compareLines } from './ui/windows.js';
 import { xpPenalty, xpToNext, hitChance, S as STATS } from './data/progression.js';
 import { enemyStats } from './data/enemies.js';
 import { CFG } from './data/config.js';
+import { skillShort, rankBlock } from './data/skills.js';
 import { UI_ATLAS } from './ui/assets.js';
 import { makeItem, makePotion, rollItem, pickBase } from './data/items.js';
 import { dirOf } from './entities/actor.js';
 import { rnd } from './core/math.js';
 import { t, plural, silverText } from './core/i18n.js';
 import { SKILLS, DASH, rankOf } from './data/skills.js';
+import { Quest } from './systems/quest.js';
+import { ZoneMixin } from './systems/zones.js';
 
 const LS_LABELS = 'byl_nebyl_labels';
+
+/** Герой занят действием, которое не даёт начать навык ('skill') или рывок ('dash') — те же условия, что в hero.useSkill/dash. */
+function heroBusy(h, what) {
+  if (h.dashing || h.stun > 0) return true;
+  if (!h.action) return false;
+  if (what === 'dash') return !h.action.fired;
+  return !(h.action.fired && h.action.t > h.action.dur * 0.85);   // конец замаха/каста: можно ставить следующий
+}
 
 export class Game {
   constructor(canvas) {
@@ -39,9 +50,6 @@ export class Game {
     this.audio = new Audio();
     this.input.onGesture = () => this.audio.unlock();
     this.debug = DEBUG;
-    this.zone = CFG.zones.zalesye;
-    this.map = generateMap(MAP_SEED, this.zone);
-    this.renderer = new WorldRenderer(this.map);
     this.fps = 60;
     this.labelsAlways = false;
     try { this.labelsAlways = localStorage.getItem(LS_LABELS) === '1'; } catch (e) { /* нет localStorage */ }
@@ -50,7 +58,7 @@ export class Game {
     this.t = t;
     this._barks = {};
     // для автотестов и отладки из консоли
-    this.dbg = { circleFree, sightClear, lineWalkable, enemyStats, xpToNext, CFG, UI_ATLAS, SKILLS, t, plural, silverText, pickBase, dirOf, rankOf, cmp: (it) => compareLines(it, this.hero), hitChance };
+    this.dbg = { circleFree, sightClear, lineWalkable, enemyStats, xpToNext, CFG, UI_ATLAS, SKILLS, t, plural, silverText, pickBase, dirOf, rankOf, cmp: (it) => compareLines(it, this.hero), hitChance, short: skillShort, rankBlock };
     // GDD §4.1, QA B-01: потеря фокуса или скрытая вкладка — пауза
     window.addEventListener('blur', () => { if (this.state === 'play') this.paused = true; });
     document.addEventListener('visibilitychange', () => { if (document.hidden && this.state === 'play') this.paused = true; });
@@ -66,17 +74,16 @@ export class Game {
     if (window.__seed != null) Math.random = makeRng(window.__seed);   // ?seed=N: новая игра повторяет случайность (QA B-14)
     this.deaths = 0;
     this.deathInfo = null;
-    this.hero = new Hero(this.map.start.x, this.map.start.y);
+    this.hero = new Hero(0, 0);
     this.fx = new FX();
     this.log = new Log();
     this.combat = new Combat(this);
     this.loot = new Loot(this);
-    this.minimap = new Minimap(this.map);
     this.ui = new InventoryUI(this);
-    this.enemies = [];
+    this.quest = new Quest(this, 'm1');
+    this.enemies = []; this.buried = []; this.npcs = [];
+    this.dialogQ = []; this.dialogNext = 0; this.letter = null;
     this.killsTotal = 0;
-    this.map.packs.forEach((_, i) => this.spawnPack(i));
-    this.enemyTotal = this.enemies.length;
     this.cam = { x: 0, y: 0 };
     this.camCX = VIEW_W / 2; this.camCY = PLAYFIELD_CY;
     this.shakeX = 0; this.shakeY = 0; this.shakeT = 0; this.shakeDur = 0; this.shakeAmp = 0;
@@ -87,18 +94,29 @@ export class Game {
     this.lastTarget = null;
     this.leftMode = null; this.holdT = 0;
     this.notice = null; this._noticeKeys = {};
-    this.log.add('Ратибор пришёл в Залесье. Очисти округу от нечисти!', PAL.bronze_hi);
+    // зоны М1: у каждой своё состояние (systems/zones.js); начинаем в Залесье
+    this.zoneStates = {}; this.zs = null; this.hoverObj = null;
+    this.enterZone('zalesye', 'start');
+    this.log.add('Ратибор пришёл в Залесье. ' + t('quest.act') + ': «' + this.quest.title + '».', PAL.bronze_hi);
+    // вводная миссии (act1): переносим по ширине журнала
+    let line = '';
+    for (const w of t('quest.m1.brief').split(' ')) {
+      if (line && textWidth(line + ' ' + w) > 430) { this.log.add(line, PAL.birch); line = w; } else line = line ? line + ' ' + w : w;
+    }
+    if (line) this.log.add(line, PAL.birch);
   }
 
   spawnPack(i, kinds = null) {
     const p = this.map.packs[i];
+    // волна (ambush): лежат под землёй, пока герой не подойдёт (systems/zones.js → updateZone)
+    const into = p.ambush && !p.risen ? this.buried : this.enemies;
     let n = 0;
     for (const kind of kinds || p.kinds) {
       for (let tries = 0; tries < 40; tries++) {
         const x = p.x + rnd(-1.6, 1.6), y = p.y + rnd(-1.6, 1.6);
         if (!this.map.isReachableAt(x, y) || !circleFree(this.map, x, y, 0.36)) continue;
-        if (this.enemies.some((e) => !e.dead && Math.hypot(e.x - x, e.y - y) < e.r + 0.4)) continue;
-        this.enemies.push(new Enemy(kind, x, y, i, p.mlvl || 1)); n++;
+        if (into.some((e) => !e.dead && Math.hypot(e.x - x, e.y - y) < e.r + 0.4)) continue;
+        into.push(new Enemy(kind, x, y, i, p.mlvl || 1)); n++;
         break;
       }
     }
@@ -134,11 +152,11 @@ export class Game {
   hitStop(t) { this.counters.hitStop++; this.hitStopT = Math.max(this.hitStopT, t); }
   shake(px, t) { this.counters.shake++; this.shakeAmp = Math.max(this.shakeAmp, px); this.shakeT = Math.max(this.shakeT, t); this.shakeDur = Math.max(this.shakeDur, t); }
 
-  notify(text, color, key) {
+  notify(text, color, key, dur = null) {
     // повтор глушим, только если на экране уже это же сообщение (QA B-19)
     if (key && this._noticeKeys[key] && this.time - this._noticeKeys[key] < 1.2 && this.notice && this.notice.text === text) return;
     if (key) this._noticeKeys[key] = this.time;
-    this.notice = { text, color, t: this.time };
+    this.notice = { text, color, t: this.time, dur: dur || (key === 'tut' || key === 'tip' || key === 'locked' || key === 'relic' ? 3.5 : 1.6) };
   }
 
   // --- события
@@ -188,6 +206,10 @@ export class Game {
   /** Возвращение у крады (замена Ладоги в однозонном прототипе): полные жизнь и Ярь, 2 с неуязвимости.
    *  Нечисть теряет след; перебитые стаи собираются заново (замена правила GDD «при повторном входе в зону»). */
   respawnHero() {
+    // гибель в другой зоне — возвращение к краде Залесья. GDD v1.7 §4.5: убитые не возвращаются (repopulate
+    // «onNewSession»); старое правило прототипа «onHeroRespawn» оставлено для зон, где оно указано в данных
+    for (const st of Object.values(this.zoneStates)) if (st.id !== 'zalesye' && CFG.zones[st.id] && CFG.zones[st.id].repopulate === 'onHeroRespawn') st.needRepop = true;
+    if (this.zone.id !== 'zalesye') this.enterZone('zalesye', 'krada', { respawn: true });
     const h = this.hero, k = this.map.krada;
     let spot = null;
     for (let ring = 1.6; ring < 5 && !spot; ring += 0.5) {
@@ -203,9 +225,16 @@ export class Game {
     h.hp = h.maxHp; h.yar = h.maxYar;
     h.cmd = null; h.action = null; h.path = null; h.moving = false; h.kb = null; h.stun = 0; h.effects = [];
     h.invuln = STATS.death.respawnInvuln;
+    h.graceT = STATS.death.respawnInvuln;       // нечисть теряет след только на время «милости» возрождения (QA B-20)
+    // QA B-24: гибель снимает баффы («Чур-оберег») и обнуляет перезарядки навыков, рывка и зелий
+    h.buffs = {}; h.cds = {}; h.potionCds.hp = 0; h.potionCds.yar = 0; h.recalc();
     h.face(1, 1);
-    for (const e of this.enemies) if (!e.dead && e.state !== 'idle') { e.state = 'return'; e.path = null; }
-    const back = this.repopulate();
+    // недобитые уходят к логову и восстанавливают HP, как по поводку (GDD v1.7 §4.5) — во всех зонах сессии
+    for (const st of Object.values(this.zoneStates)) {
+      const list = st === this.zs ? this.enemies : st.enemies || [];
+      for (const e of list) if (!e.dead && e.state !== 'rise' && (e.state !== 'idle' || e.hp < e.maxHp)) { e.state = 'return'; e.path = null; }
+    }
+    const back = this.zone.repopulate === 'onHeroRespawn' ? this.repopulate() : 0;
     this.state = 'play';
     this.deathT = 0;
     this.lastTarget = null;
@@ -221,7 +250,7 @@ export class Game {
     this.enemies = this.enemies.filter((e) => !e.dead);
     let n = 0;
     this.map.packs.forEach((p, i) => {
-      const alive = this.enemies.filter((e) => e.pack === i).map((e) => e.kind);
+      const alive = [...this.enemies, ...this.buried].filter((e) => e.pack === i).map((e) => e.kind);
       const need = [...p.kinds];
       for (const k of alive) { const j = need.indexOf(k); if (j >= 0) need.splice(j, 1); }
       if (need.length) n += this.spawnPack(i, need);
@@ -236,7 +265,7 @@ export class Game {
     this.overHud = isOverHud(m.mx, m.my, this);
     this.overUi = this.overHud || ui.over(m.mx, m.my);
     this.hoverBelt = this.state === 'play' && !ui.over(m.mx, m.my) ? beltSlotAt(m.mx, m.my) : -1;
-    this.hoverEnemy = null; this.hoverGround = null;
+    this.hoverEnemy = null; this.hoverGround = null; this.hoverObj = null;
     if (this.overUi || this.state !== 'play' || this.paused || ui.hand) { this.hoverLabel = null; return; }
     this.hoverLabel = null;
     for (const r of this.labelRects) if (!r.item.taken && m.mx >= r.x && m.mx < r.x + r.w && m.my >= r.y && m.my < r.y + r.h) this.hoverLabel = r.item;
@@ -258,7 +287,7 @@ export class Game {
     for (const e of this.enemies) {
       if (e.dead) continue;
       const [sx, sy] = this.toS(e.x, e.y);
-      const hw = e.kind === 'upyr' ? 11 : 8;
+      const hw = e.kind === 'upyr' ? 11 : e.def.torch ? 10 : 8;
       if (Math.abs(m.mx - sx) <= hw && m.my >= sy - e.def.height - 3 && m.my <= sy + 3) {
         if (e.x + e.y > bd) { bd = e.x + e.y; best = e; }
       }
@@ -269,6 +298,7 @@ export class Game {
       for (const e of this.enemies) if (!e.dead) { const d = Math.hypot(e.x - wx, e.y - wy); if (d < bdist) { bdist = d; best = e; } }
     }
     this.hoverEnemy = best;
+    if (!best) this.hoverObj = this.objectAt(m.mx, m.my);
   }
 
   menuButton(i) {
@@ -287,7 +317,9 @@ export class Game {
     if (inp.pressed('KeyN')) { const m = this.audio.toggle(); this.notify(m ? 'Звук выключен' : 'Звук включён', PAL.mist, 'snd'); }
     if (inp.pressed('KeyZ')) this.toggleLabels();
     if (this.state === 'dead') {
-      if (this.deathT > 1.5 && ((inp.leftPressed && overDeathButton(inp)) || inp.pressed('Enter') || inp.pressed('Space'))) this.respawnHero();
+      const D = STATS.death;
+      if ((this.deathT > (D.buttonDelay ?? 1.5) && inp.leftPressed && overDeathButton(inp)) ||
+          (this.deathT > (D.keyDelay ?? 2.5) && (inp.pressed('Enter') || inp.pressed('Space')))) this.respawnHero();
       return;
     }
     if (inp.pressed('Escape')) {
@@ -312,10 +344,28 @@ export class Game {
     // F1–F6 (как в D2): над навыком в окне «Навыки» — положить его в ячейку; иначе — назначить навык ячейки на ПКМ
     for (let k = 0; k < 6; k++) if (inp.pressed('F' + (k + 1))) this.pressF(k);
     if (inp.wheel) this.cycleRmb(inp.wheel);
+    // Пробел — «Рывок». Во время замаха/каста (до удара) нажатие запоминается и срабатывает, как только
+    // действие отпустит героя (+0,3 с запаса), — QA B-23. Направление — по курсору в момент рывка.
     if (inp.pressed('Space')) {
       const [wx, wy] = this.toWorld(inp.mx, inp.my);
       const r = h.dash(this, wx, wy);
       if (r === 'cd') { this.counters.cdBlocked++; this.audio.play('error'); }
+      else if (r === 'busy' && !h.dead) { this.dashBuf = { t: 0.3 }; this.rmbBuf = null; this.dropQueuedLmb(); this.counters.dashBuffered = (this.counters.dashBuffered || 0) + 1; }
+      else this.dashBuf = null;
+    } else if (this.dashBuf) {
+      const b = this.dashBuf;
+      if (h.dead) this.dashBuf = null;
+      else if (!heroBusy(h, 'dash')) b.t -= dt;      // ждём, пока идёт замах; запас 0,3 с — после
+      if (this.dashBuf && b.t <= 0) this.dashBuf = null;
+      else if (this.dashBuf && !heroBusy(h, 'dash')) {
+        const [wx, wy] = this.toWorld(inp.mx, inp.my);
+        const r = h.dash(this, wx, wy);
+        if (r !== 'busy') {
+          this.dashBuf = null;
+          if (r === 'ok') this.counters.dashBufferedFired = (this.counters.dashBufferedFired || 0) + 1;
+          else if (r === 'cd') { this.counters.cdBlocked++; this.audio.play('error'); }
+        }
+      }
     }
     if (inp.pressed('KeyJ')) this.notify('Летопись — в следующей итерации', PAL.mist, 'soon');
     ['Digit1', 'Digit2', 'Digit3', 'Digit4'].forEach((k, i) => { if (inp.pressed(k)) h.drink(i, this); });
@@ -326,6 +376,9 @@ export class Game {
     }
     if (inp.leftPressed) {
       this.leftMode = null;
+      // GDD v1.7: ввод во время замаха/каста копится до конца действия, срабатывает последний — ЛКМ отменяет
+      // запомненные ПКМ и Пробел (сама команда ЛКМ и так ждёт конца действия)
+      if (h.action && heroBusy(h, 'skill') && !this.overUi) { this.rmbBuf = null; this.dashBuf = null; this.lmbQueuedOn = h.action; }
       const hb = this.topRightVisible ? buttonAt(inp.mx, inp.my) : -1;
       if (hb >= 0) this.menuButton(hb);
       else if (this.hoverBelt >= 0) h.drink(this.hoverBelt, this);
@@ -336,6 +389,8 @@ export class Game {
       }
       else if (this.hoverLabel || this.hoverGround) { h.pickup(this.hoverLabel || this.hoverGround); this.leftMode = 'pickup'; }
       else if (this.hoverEnemy) { h.attack(this.hoverEnemy, inp.shift, h.lmbSkill(), true); this.lastTarget = this.hoverEnemy; this.leftMode = 'attack'; }
+      else if (this.hoverObj && (this.hoverObj.type === 'exit' || this.hoverObj.type === 'gate')) { h.moveTo(this.map, this.hoverObj.x, this.hoverObj.y); this.leftMode = null; }
+      else if (this.hoverObj) { h.interact(this.hoverObj); this.leftMode = 'interact'; }
       else if (inp.shift) { h.stop(); const [wx, wy] = this.toWorld(inp.mx, inp.my); h.face(wx - h.x, wy - h.y); }
       else {
         const [wx, wy] = this.toWorld(inp.mx, inp.my);
@@ -356,21 +411,22 @@ export class Game {
     } else this.leftMode = null;
     if (h.cmd && h.cmd.type === 'attack') h.cmd.repeat = inp.left && this.leftMode === 'attack';
 
-    // ПКМ — навык панели; нажатие во время замаха запоминается на 0,3 с (QA B-02)
+    // ПКМ — навык панели; нажатие во время замаха запоминается до конца замаха + 0,3 с (QA B-02)
     if ((inp.rightPressed || inp.right) && !this.overUi && !ui.hand) {
       const tg = this.hoverEnemy, id = h.rmb;
       const [wx, wy] = tg ? [tg.x, tg.y] : this.toWorld(inp.mx, inp.my);
       if (inp.rightPressed || h.cdLeft(id) <= 0) {
         const r = h.useSkill(this, id, wx, wy, tg);
         if (r === 'ok') { this.rmbBuf = null; if (tg) this.lastTarget = tg; }
-        else if (r === 'busy' && inp.rightPressed) { this.rmbBuf = { t: 0.3, id, wx, wy, tg }; this.counters.buffered = (this.counters.buffered || 0) + 1; }
+        else if (r === 'busy' && inp.rightPressed) { this.rmbBuf = { t: 0.3, id, wx, wy, tg }; this.dashBuf = null; this.dropQueuedLmb(); this.counters.buffered = (this.counters.buffered || 0) + 1; }
         else if (r === 'cd' && inp.rightPressed) { this.counters.cdBlocked++; this.audio.play('error'); }
       }
     } else if (this.rmbBuf) {
+      // QA B-02: буфер живёт весь замах/каст (таймер стоит, пока герой занят) и ещё 0,3 с после
       const b = this.rmbBuf;
-      b.t -= dt;
+      if (!heroBusy(h, 'skill')) b.t -= dt;
       if (b.t <= 0 || h.dead) this.rmbBuf = null;
-      else if (!h.action || (h.action.fired && h.action.t > h.action.dur * 0.85)) {
+      else if (!heroBusy(h, 'skill')) {
         const r = h.useSkill(this, b.id, b.tg && !b.tg.dead ? b.tg.x : b.wx, b.tg && !b.tg.dead ? b.tg.y : b.wy, b.tg && !b.tg.dead ? b.tg : null);
         if (r !== 'busy') {
           this.rmbBuf = null;
@@ -381,16 +437,23 @@ export class Game {
     }
   }
 
+  /** ПКМ/Пробел нажаты после ЛКМ в том же замахе — побеждает последнее: команда ЛКМ снимается. */
+  dropQueuedLmb() {
+    const h = this.hero;
+    if (this.lmbQueuedOn && this.lmbQueuedOn === h.action) { h.cmd = null; h.path = null; h.moving = false; }
+    this.lmbQueuedOn = null;
+  }
   pressF(k) {
     const h = this.hero, ui = this.ui;
     const hov = ui.skillsOpen ? ui.skills.hover.skill : null;
     if (hov) {
       if (!rankOf(h, hov) || SKILLS[hov].type === 'passive') { this.audio.play('error'); return; }
-      const old = h.bar.indexOf(hov);
-      if (old >= 0) h.bar[old] = null;
+      // GDD v1.7: в занятую ячейку — обмен (прежний навык встаёт на место назначаемого, если тот был на панели)
+      const old = h.bar.indexOf(hov), prev = h.bar[k];
+      if (old >= 0) h.bar[old] = prev && prev !== hov ? prev : null;
       h.bar[k] = hov;
       this.audio.play('ui');
-      this.notify(SKILLS[hov].name + ' → F' + (k + 1), PAL.bronze_lt, 'bind');
+      this.notify(skillShort(hov) + ' → F' + (k + 1) + (old >= 0 && prev && prev !== hov ? ', ' + skillShort(prev) + ' → F' + (old + 1) : ''), PAL.bronze_lt, 'bind');
       return;
     }
     const id = h.bar[k];
@@ -446,6 +509,7 @@ export class Game {
     this.fx.update(dt);
     this.log.update(dt);
     this.enemies = this.enemies.filter((e) => !e.dead || e.corpseT < 10);
+    this.updateZone(dt);
     this.updateCamera();
     this.minimap.reveal(this.hero.x, this.hero.y);
   }
@@ -488,6 +552,7 @@ export class Game {
 
   frame(dt) {
     this.fps = this.fps * 0.95 + (1 / Math.max(dt, 1e-3)) * 0.05;
+    this.frames = (this.frames || 0) + 1; this.clock = (this.clock || 0) + dt;   // для автотестов: кадры и «прожитое» время
     this.update(dt);
     this.render();
     this.input.endFrame();
@@ -521,5 +586,8 @@ export class Game {
   }
   dropRandom(ilvl = 3) { const it = rollItem(ilvl); this.loot.spawnItem(this.hero.x + 1, this.hero.y, it); return it; }
   itemColorOf(it) { return itemColor(it); }
+  /** Объект зоны по id (двери, сундук, тело, выходы). */
+  objectById(id) { return this.map.objects.find((o) => o.id === id) || null; }
 }
+Object.assign(Game.prototype, ZoneMixin);
 

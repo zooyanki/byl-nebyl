@@ -1,0 +1,45 @@
+{
+ "effect": "Крада (обрядовый костёр), безопасная зона r = 10 тайлов: покой и отдых героя",
+ "object": "full object sprite (stone ring + log crib + flame); replaces the static крада in the tileset",
+ "footprint": "2x2 tiles (64x32 diamond), centre = pivot; stone ring r 20x10 px (scale.md §3.3, §5 п.7)",
+ "sizes_px": {
+  "log_crib": 24,
+  "flame_idle_from_ground": 72,
+  "flame_rest_from_ground": 86,
+  "sparks_rest_top_from_ground": 105
+ },
+ "layer": "sorted by pivot y like other objects (scale.md §4.1)",
+ "light_hint": "engine light at the flame root, warm (flame/ember); radius idle ≈ 3 tiles, rest ≈ 4 tiles, +25% intensity",
+ "notes": "idle: steady flame to 72 px; rest: higher (to 86), hotter core, ember sparks, fire-lit stone tops. The 96-px pillar of the ritual (scale.md) is not used for rest.",
+ "state": "rest",
+ "pivot": [
+  32,
+  108
+ ],
+ "fps": 10,
+ "loop": true,
+ "states": {
+  "idle": "fx_rest_krada_idle.png",
+  "rest": "fx_rest_krada_rest.png"
+ },
+ "state_switch": "rest while the hero stands in the zone and Жизнь/Ярь regenerate (2 s without damage, GDD §4.5); both loops are phase-aligned, so switch at the same frame index without a pop; back to idle when regen stops",
+ "anchors": {
+  "flame_root": [
+   32,
+   84
+  ],
+  "sparks_origin": [
+   32,
+   58
+  ]
+ },
+ "image": "fx_rest_krada_rest.png",
+ "frame_size": [
+  64,
+  120
+ ],
+ "frame_count": 6,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

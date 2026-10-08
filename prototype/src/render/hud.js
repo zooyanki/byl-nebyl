@@ -248,13 +248,7 @@ function plate(ctx, x, y, w, h, alpha = 0.72) {
 function drawTopUi(ctx, game) {
   const h = game.hero, ui = game.ui;
   // задание (под окном «Витязь» не рисуем)
-  if (!ui.charOpen) {
-    plate(ctx, 4, 4, 150, 30);
-    const tr = game.zone.tracker;
-    drawText(ctx, 9, 7, tr.title, PAL.bronze_hi);
-    const left = game.enemies.filter((e) => !e.dead).length, cleared = Math.max(0, game.enemyTotal - left);
-    drawText(ctx, 9, 19, tr.goal + ': ' + cleared + '/' + game.enemyTotal, left === 0 ? PAL.nebyl : PAL.linen);
-  }
+  if (!ui.charOpen && game.quest) drawQuestTracker(ctx, game);
   // зона, мини-карта и кнопки меню (как на макете HUD v2); под окном «Котомка» прячутся
   if (game.topRightVisible) {
     const [z1, z2] = game.zone.band;
@@ -295,7 +289,7 @@ function drawTopUi(ctx, game) {
     rect(ctx, x, y, Math.round(w * e.hp / e.maxHp), 11, PAL.red);
     rect(ctx, x, y, Math.round(w * e.hp / e.maxHp), 1, PAL.red_lt);
     drawText(ctx, VIEW_W / 2, y + 1, e.name + ' · ур. ' + e.mlvl, PAL.linen, { align: 'c', outline: true });
-    drawText(ctx, VIEW_W / 2, y + 15, e.def.family + ' · ' + e.def.realm, PAL.nebyl, { align: 'c', outline: true });
+    drawText(ctx, VIEW_W / 2, y + 15, e.def.family + ' · ' + e.def.realm, e.def.realm === 'Быль' ? PAL.red_lt : PAL.nebyl, { align: 'c', outline: true });
   }
   // подсказка в начале
   if (game.time < 14 && !game.hero.dead && !ui.anyOpen) {
@@ -308,9 +302,64 @@ function drawTopUi(ctx, game) {
     ctx.restore();
   }
   // уведомление
-  if (game.notice && game.time - game.notice.t < 1.6) {
-    drawText(ctx, game.camCX, 64, game.notice.text, game.notice.color, { align: 'c', outline: true });
+  drawLetter(ctx, game);
+  if (game.notice && game.time - game.notice.t < (game.notice.dur || 1.6)) {
+    // длинное уведомление (советы tip.*) переносится по словам в ширину 300 px и опускается под трекер
+    const N = game.notice, lines = [];
+    if (textWidth(N.text) <= 300) lines.push(N.text);
+    else { let cur = ''; for (const w of N.text.split(' ')) { const nx = cur ? cur + ' ' + w : w; if (textWidth(nx) > 300 && cur) { lines.push(cur); cur = w; } else cur = nx; } if (cur) lines.push(cur); }
+    const y0 = lines.length > 1 ? 90 : 64;              // несколько строк — ниже трекера (он до y 84)
+    lines.forEach((l, i) => drawText(ctx, game.camCX, y0 + i * 11, l, N.color, { align: 'c', outline: true }));
   }
+}
+
+// Трекер задания (макет gameplay_hud_v2 → draw_quest, GDD §8.2): резная рамка с буквицей (assets/hud_quest.png),
+// «Задание · Акт I», название уставом, до 3 целей «— цель  n/N»: выполненная — серым с галочкой и гаснет,
+// активная — льняным, следующая — серым.
+function drawQuestTracker(ctx, game) {
+  const q = game.quest, A = UI_ATLAS.hud_quest, L = UI_ATLAS.quest_layout;
+  if (!A || !L) return;
+  const [ix, iy, iw, ih] = L.inner, [bw, bh] = L.buk;
+  ctx.save(); ctx.globalAlpha = 0.6; rect(ctx, ix - 2, iy - 2, iw + 4, ih + 4, PAL.ink); ctx.restore();
+  if (IMG.quest && IMG.quest.complete) ctx.drawImage(IMG.quest, A.x, A.y);
+  const title = q.title.toUpperCase(), tx = ix + bw + 4;
+  drawText(ctx, tx, iy + 2, tr(q.def.actKey), PAL.mist);
+  // буквица «О» запечена в рамку; если название начинается с другой буквы — пишем его целиком
+  const baked = (L.title || '')[0];
+  drawText(ctx, tx, iy + 14, title[0] === baked ? title.slice(1) : title, PAL.bronze_hi, { font: 'ustav' });
+  const oy = iy + bh + 3, rx0 = ix + iw - 3;
+  q.lines().forEach((l, i) => {
+    const y = oy + 10 * i, col = l.state === 'active' ? PAL.linen : PAL.slate_lt;
+    const a = l.alpha;
+    let txt = '— ' + l.text, rx = rx0;
+    if (l.state === 'done') { tick(ctx, rx - 7, y + 1, PAL.bronze_lt, a); rx -= 10; }
+    let cw = 0;
+    if (l.count) cw = drawText(ctx, rx, y, l.count, col, { align: 'r', alpha: a }) + 6;
+    while (textWidth(txt) > rx - cw - (ix + 3) && txt.length > 4) txt = txt.slice(0, -2) + '…';
+    drawText(ctx, ix + 3, y, txt, col, { alpha: a });
+  });
+}
+function tick(ctx, x, y, c, a = 1) {
+  const pts = [[6, 0], [5, 1], [4, 2], [0, 2], [3, 3], [1, 3], [2, 4]];
+  ctx.save(); ctx.globalAlpha *= a;
+  for (const [dx, dy] of pts) for (const [ox, oy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) rect(ctx, x + dx + ox, y + dy + oy, 1, 1, PAL.ink);
+  for (const [dx, dy] of pts) rect(ctx, x + dx, y + dy, 1, 1, c);
+  ctx.restore();
+}
+// Грамота (тело жреца): берестяной лист посреди экрана, сам гаснет через 10 с.
+function drawLetter(ctx, game) {
+  const L = game.letter;
+  if (!L) return;
+  const age = game.time - L.t, a = age < 0.3 ? age / 0.3 : age > 9 ? Math.max(0, 10 - age) : 1;
+  const w = Math.max(textWidth(L.text), textWidth(L.name)) + 24, h = 40, x = Math.round(VIEW_W / 2 - w / 2), y = 92;
+  ctx.save(); ctx.globalAlpha = a;
+  rect(ctx, x - 1, y - 1, w + 2, h + 2, PAL.ink);
+  rect(ctx, x, y, w, h, PAL.birch);
+  rect(ctx, x + 2, y + 2, w - 4, 1, PAL.linen);
+  for (let k = 8; k < w - 8; k += 11) rect(ctx, x + k, y + h - 4, 5, 1, PAL.wood_lt);
+  ctx.restore();
+  drawText(ctx, VIEW_W / 2, y + 6, L.name, PAL.red_dk, { align: 'c', shadow: false, alpha: a });
+  drawText(ctx, VIEW_W / 2, y + 21, L.text, PAL.ink, { align: 'c', shadow: false, alpha: a });
 }
 
 function drawLog(ctx, game) {

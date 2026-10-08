@@ -2,7 +2,7 @@
 // серебро подбирается само в радиусе 1 тайла.
 import { rnd } from '../core/math.js';
 import { circleFree } from '../world/collision.js';
-import { POTIONS, DROP_NORMAL, POTION_WEIGHTS, RARITY, pickWeighted, rollItem, silverAmount, potionFor } from '../data/items.js';
+import { POTIONS, DROP_NORMAL, POTION_WEIGHTS, RARITY, pickWeighted, rollItem, silverAmount, potionFor, dropTable } from '../data/items.js';
 import { silverText } from '../core/i18n.js';
 import { PAL } from '../palette.js';
 
@@ -40,6 +40,29 @@ export class Loot {
       const pk = potionFor(type, enemy.mlvl);
       this.spawn(enemy.x, enemy.y, { kind: 'potion', potion: pk, label: POTIONS[pk].name, color: PAL.birch });
     } else if (what === 'item') this.spawnItem(enemy.x, enemy.y, rollItem(enemy.mlvl, Math.random, this.game.hero.mf));
+  }
+
+  /** Сундук (GDD §6.7): сначала гарантированные предметы (сюжетный сундук тропы — заговорённое оружие ilvl 3),
+   *  остальные броски — по таблице сундука (исходы и редкость из data/droptables.json). */
+  dropChest(tableId, x, y, ilvl) {
+    const T = dropTable(tableId), out = [];
+    if (!T) return out;
+    let rolls = T.rolls || 1;
+    for (const gi of T.guaranteed || []) {
+      out.push(this.spawnItem(x, y, rollItem(gi.ilvl || ilvl, Math.random, 0, { type: gi.type, forceRarity: gi.rarity })));
+      rolls--;
+    }
+    for (let i = 0; i < rolls; i++) {
+      const what = pickWeighted(T.outcome);
+      if (what === 'silver') out.push(this.spawnSilver(x, y, silverAmount(ilvl)));
+      else if (what === 'potion') {
+        let type = pickWeighted(POTION_WEIGHTS);
+        if (type === 'beresta') type = 'life';
+        const pk = potionFor(type, ilvl);
+        out.push(this.spawn(x, y, { kind: 'potion', potion: pk, label: POTIONS[pk].name, color: PAL.birch }));
+      } else if (what === 'item') out.push(this.spawnItem(x, y, rollItem(ilvl, Math.random, this.game.hero.mf, { rarity: T.rarity })));
+    }
+    return out;
   }
 
   pickup(it) {

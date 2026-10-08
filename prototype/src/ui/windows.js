@@ -365,7 +365,8 @@ export function drawItemTooltip(ctx, it, hero, ax, ay, compare = true, anchor = 
 function heroSnap(h) {
   const dps = ((h.dmgMin + h.dmgMax) / 2) * h.attacksPerSec * (1 + h.crit * (h.critMult - 1));
   return { dps, dpsN: dps * (1 + (h.vsNechist || 0)), def: h.def, hp: h.maxHp, yar: h.maxYar, ar: h.ar, block: h.block * 100, rf: h.res.fire, rc: h.res.cold, rp: h.res.poison,
-    speed: h.speed, ls: h.lifesteal * 100, mf: h.mf, thorns: h.thorns, fire: h.fireDmg, cold: h.coldDmg, spell: h.spellMul * 100 };
+    speed: h.speed, ls: h.lifesteal * 100, mf: h.mf, thorns: h.thorns, fire: h.fireDmg, cold: h.coldDmg, spell: h.spellMul * 100,
+    str: h.str, dex: h.dex, vit: h.vit, ene: h.ene };
 }
 /** Как изменятся характеристики, если надеть предмет в слот (примерка с откатом). */
 export function tryOn(h, it, slot) {
@@ -377,7 +378,9 @@ export function tryOn(h, it, slot) {
   return [before, after];
 }
 const CMP_KEYS = [
-  ['dps', 'Урон в секунду', 1], ['dpsN', 'по нечисти', 1], ['def', 'Защита', 0], ['hp', 'Жизнь', 0], ['yar', 'Ярь', 0], ['ar', 'Меткость', 0], ['block', 'Блок, %', 0],
+  ['dps', 'Урон в секунду', 1], ['dpsN', 'по нечисти', 1], ['def', 'Защита', 0], ['hp', 'Жизнь', 0], ['yar', 'Ярь', 0],
+  ['str', 'Сила', 0], ['dex', 'Ловкость', 0], ['vit', 'Живучесть', 0], ['ene', 'Дух', 0],   // QA B-18: свойства тоже
+  ['ar', 'Меткость', 0], ['block', 'Блок, %', 0],
   ['rf', 'Сопр. огню, %', 0], ['rc', 'Сопр. холоду, %', 0], ['rp', 'Сопр. яду, %', 0], ['spell', 'Сила чар, %', 0], ['fire', 'Урон огнём', 0], ['cold', 'Урон холодом', 0],
   ['ls', 'Кража жизни, %', 0], ['thorns', 'Шипы', 0], ['mf', 'Удача в добыче, %', 0], ['speed', 'Скорость бега', 2],
 ];
@@ -403,7 +406,7 @@ export function compareLines(it, hero) {
     if (!cur && !diffs.length) { out.push([head, PAL.nebyl]); continue; }
     out.push([head, !cur ? PAL.nebyl : PAL.mist]);
     if (!diffs.length) out.push(['без изменений', PAL.mist]);
-    else out.push(...diffs.slice(0, 5));
+    else out.push(...diffs.slice(0, 6));
   }
   return out;
 }

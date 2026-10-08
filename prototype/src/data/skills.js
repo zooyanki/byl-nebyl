@@ -1,5 +1,6 @@
 // Навыки (data/skills.json, GDD v1.4 §3.6). ЛКМ — базовый удар оружием (Ярь не тратит, доступен всегда).
 // Число [a, b] — значение a на ранге 1 и +b за каждый следующий ранг.
+import { RU } from '../core/i18n.js';
 export const SKILLS = {};
 export let RULES = null, BRANCHES = [], DASH = null;
 const ALL = [];
@@ -16,6 +17,13 @@ export function applySkills(json) {
 }
 
 export const skillList = () => ALL;
+/** Короткое имя для ячеек (GDD v1.7 §3.6, act1_texts §18: поле short ≤ 8 символов), иначе полное. */
+export function skillShort(id) {
+  const sk = SKILLS[id] || (id === 'dash' ? DASH : null);
+  if (!sk) return '';
+  const tx = sk.textKey && RU[sk.textKey];
+  return (tx && tx.short) || sk.short || sk.name;
+}
 export const branchOf = (id) => BRANCHES.find((b) => b.id === id);
 
 // --- ранги и очки

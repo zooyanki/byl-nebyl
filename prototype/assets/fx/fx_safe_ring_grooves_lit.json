@@ -1,0 +1,21 @@
+{
+ "effect": "Граница безопасной зоны: бороздка с двумя насечками",
+ "state": "lit",
+ "pivot": [
+  8,
+  6
+ ],
+ "frames_are": "tangent directions: frame b = screen angle b*22.5 deg (counter-clockwise from +x, y down); 0 = horizontal",
+ "fps": 0,
+ "loop": false,
+ "layer": "ground decal under characters",
+ "image": "fx_safe_ring_grooves_lit.png",
+ "frame_size": [
+  16,
+  12
+ ],
+ "frame_count": 8,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

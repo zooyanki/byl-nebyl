@@ -5,7 +5,7 @@ import { PAL } from '../palette.js';
 import { rect } from '../render/shapes.js';
 import { drawText, textWidth } from '../core/font.js';
 import { IMG, drawIcon, UI_ATLAS } from './assets.js';
-import { SKILLS, RULES, DASH, rankOf, boughtRank, rankBlock, pointsFree, descVars, branchOf } from '../data/skills.js';
+import { SKILLS, RULES, DASH, rankOf, boughtRank, rankBlock, pointsFree, descVars, branchOf, skillShort } from '../data/skills.js';
 import { t, tObj } from '../core/i18n.js';
 
 const L = UI_ATLAS.skills_layout;
@@ -37,7 +37,15 @@ export class SkillsWindow {
     if (H.plus) {
       const why = SKILLS[H.plus].implemented === false ? 'soon' : h.learn(H.plus, g);
       if (!why) { g.audio.play('learn'); g.log.add(SKILLS[H.plus].name + ': ' + t('ui.skills.rank', { n: boughtRank(h, H.plus) }), PAL.bronze_hi); }
-      else { g.audio.play('error'); if (why === 'points') g.notify('Нет свободных очков навыков', PAL.mist, 'sp'); }
+      else {
+        // GDD v1.7: отказ — короткий тост (тексты ui.skills.* у сценариста)
+        g.audio.play('error');
+        const sk = SKILLS[H.plus], msg = why === 'points' ? t('ui.skills.no_points')
+          : why === 'level' ? t('ui.skills.req_level', { n: sk.req + boughtRank(h, H.plus) })
+          : why === 'prev' ? t('ui.skills.req_skill', { skill: SKILLS[sk.needs].name }) : null;
+        if (msg) g.notify(msg, PAL.red_lt, 'sp', 1.6);
+        g.counters.skillRefusals = (g.counters.skillRefusals || 0) + 1;
+      }
       return true;
     }
     if (H.skill) {
@@ -77,7 +85,7 @@ export class SkillsWindow {
       // имя и ранг
       const tx = r[0] + 35, avail = L.plus[id][0] - tx - 3;
       const fit = (str) => { if (textWidth(str) <= avail) return str; while (str.length > 1 && textWidth(str + '…') > avail) str = str.slice(0, -1); return str.trimEnd() + '…'; };
-      drawText(ctx, tx, r[1] + 4, fit(sk.name), have ? PAL.linen : soon ? PAL.slate_lt : PAL.birch, { shadow: false });
+      drawText(ctx, tx, r[1] + 4, fit(skillShort(id)), have ? PAL.linen : soon ? PAL.slate_lt : PAL.birch, { shadow: false });
       let rk = t('ui.skills.rank', { n: have });
       if (eff > have && have) rk += ' (+' + (eff - have) + ')';
       const sub = fit(soon ? 'появится позже' : sk.type === 'passive' ? rk + ' · пасс.' : rk);
@@ -126,7 +134,7 @@ export function skillTipLines(h, id) {
     L.push([fill(eff + 1 > 10 ? 10 : (eff || 0) + 1), PAL.mist]);
     const why = rankBlock(h, id);
     if (why === 'level') L.push([t('ui.skills.req_level', { n: sk.req + have }), PAL.red_lt]);
-    else if (why === 'prev') L.push([t('ui.skills.req_prev', { skill: SKILLS[sk.needs].name }), PAL.red_lt]);
+    else if (why === 'prev') L.push([t('ui.skills.req_skill', { skill: SKILLS[sk.needs].name }), PAL.red_lt]);
   }
   return L;
 }

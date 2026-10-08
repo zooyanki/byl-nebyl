@@ -140,9 +140,66 @@ export function drawAnchutka(ctx, x, y, e, dir, time, outline = PAL.ink) {
   if (e.state === 'attack') { disc(ctx, x + f * 9, by - 14, 3, PAL.ember); disc(ctx, x + f * 9, by - 14, 1.5, PAL.flame); }
 }
 
+// Черноярец-поджигатель (E11): человек 44 px в тёмной свите и наголовнике, топор в одной руке, факел в другой.
+export function drawArsonist(ctx, x, y, e, dir, time, outline = PAL.ink) {
+  const f = dirSide(dir, e.facing), back = BACK.has(dir);
+  const step = e.moving ? Math.sin(e.walkPhase * 1.8) : 0;
+  const l = Math.round(step * 2), bob = e.moving ? Math.round(Math.abs(step)) : 0;
+  shadow(ctx, x, y, 9, 3.5); dirMarker(ctx, x, y, dir, 9, 3.5, PAL.red_dk);
+  const T = y - 43 - bob;
+  // замах факелом: рука поднимается к броску
+  const wind = e.state === 'torch' && e.def.torch ? Math.min(1, e.t / e.def.torch.windup) : 0;
+  const swing = e.state === 'attack' ? Math.sin(Math.min(1, e.t / e.def.attackTime) * Math.PI) : 0;
+  const parts = [
+    { x: x - 5 + l, y: y - 11, w: 4, h: 12, c: PAL.ink },                // ноги в обмотках
+    { x: x + 1 - l, y: y - 11, w: 4, h: 12, c: PAL.ink },
+    { x: x - 7, y: T + 12, w: 14, h: 18, c: PAL.wood_dk },               // свита
+    { x: x - 7, y: T + 26, w: 14, h: 7, c: PAL.slate_dk },               // подол
+    { x: x - 4, y: T + 6, w: 8, h: 7, c: back ? PAL.slate_dk : PAL.wood_md },   // лицо
+    { x: x - 5, y: T + 1, w: 10, h: 6, c: PAL.slate_dk },                // наголовник
+    { x: x + f * 7 - (f < 0 ? 3 : 0), y: T + 13 - Math.round(wind * 8), w: 3, h: 11, c: PAL.wood_dk },   // рука с факелом
+    { x: x - f * 9 - (f > 0 ? 0 : 3), y: T + 13, w: 3, h: 11, c: PAL.wood_dk },                         // рука с топором
+  ];
+  figure(ctx, parts, e.flash > 0, outline);
+  rect(ctx, x - 7, T + 24, 14, 2, PAL.red_dk);                          // кушак
+  rect(ctx, x - 1, T + 13, 2, 9, PAL.ink);                              // волчья тамга на груди
+  if (!back) { rect(ctx, x + f * 2 - 1, T + 8, 2, 1, PAL.flame); rect(ctx, x - 4, T + 11, 8, 2, PAL.slate_dk); }
+  // топор
+  const ax = x - f * 8, ay = T + 24 - Math.round(swing * 14);
+  pline(ctx, ax, ay, ax - f * 2, ay - 14, PAL.wood_lt);
+  figure(ctx, [{ x: ax - f * 2 - (f > 0 ? 6 : 0), y: ay - 17, w: 6, h: 6, c: PAL.mist }]);
+  // факел (пламя над рукой)
+  const tx = x + f * 9, ty = T + 12 - Math.round(wind * 12);
+  pline(ctx, tx, ty + 10, tx + f, ty - 2, PAL.wood_lt);
+  const fl = Math.sin(time * 17 + e.id) * 1.2;
+  disc(ctx, tx + f, ty - 5, 4 + fl, PAL.red_lt);
+  disc(ctx, tx + f, ty - 5, 3 + fl * 0.5, PAL.ember);
+  disc(ctx, tx + f, ty - 6, 1.6, PAL.flame);
+}
+
+// Селяне и Мал (act1, М1): без оружия, бегут к пристани / показывают тропу.
+export function drawNpc(ctx, x, y, n, time) {
+  const f = dirSide(n.dir, n.facing), small = n.kind === 'mal';
+  const step = n.moving ? Math.sin(n.walkPhase * 2) : 0, l = Math.round(step * 2);
+  const H = small ? 30 : 38, T = y - H + 1;
+  shadow(ctx, x, y, small ? 6 : 8, 3);
+  const shirt = small ? PAL.red : n.female ? PAL.birch : PAL.linen, hair = n.old ? PAL.mist : small ? PAL.wood_lt : PAL.wood_md;
+  figure(ctx, [
+    { x: x - 4 + l, y: y - (small ? 8 : 10), w: 3, h: small ? 9 : 11, c: PAL.wood_dk },
+    { x: x + 1 - l, y: y - (small ? 8 : 10), w: 3, h: small ? 9 : 11, c: PAL.wood_dk },
+    { x: x - 5, y: T + 9, w: 10, h: small ? 13 : 18, c: shirt },
+    ...(n.female ? [{ x: x - 6, y: T + 18, w: 12, h: 12, c: PAL.red_dk }] : []),
+    { x: x - 3, y: T + 2, w: 7, h: 7, c: PAL.wood_lt },
+    { x: x - 4, y: T, w: 8, h: 3, c: n.female ? PAL.red : hair },
+  ]);
+  rect(ctx, x - 5, T + 17, 10, 1, PAL.red);
+  if (n.dir !== 4) rect(ctx, x + f * 2 - 1, T + 4, 2, 1, PAL.ink);
+}
+
 export function drawEnemy(ctx, x, y, e, dir, time, hovered) {
   const ol = hovered ? PAL.red_lt : e.slowT > 0 ? PAL.blue_lt : PAL.ink;   // под курсором — красная обводка, замедлен холодом — голубая
   if (e.kind === 'upyr') drawUpyr(ctx, x, y, e, dir, time, ol);
+  else if (e.def.torch) drawArsonist(ctx, x, y, e, dir, time, ol);
   else drawAnchutka(ctx, x, y, e, dir, time, ol);
   if (e.slowT > 0) { ctx.save(); ctx.globalAlpha = 0.25; ctx.fillStyle = PAL.blue_lt; ctx.fillRect(x - 10, y - e.def.height, 20, e.def.height); ctx.restore(); }
   // маленькая полоска жизни над недавно раненым
@@ -162,6 +219,10 @@ export function drawCorpse(ctx, x, y, e) {
   if (e.kind === 'upyr') {
     figure(ctx, [{ x: x - 13, y: y - 6, w: 20, h: 6, c: PAL.slate_dk }, { x: x + 7, y: y - 8, w: 8, h: 7, c: PAL.birch }]);
     rect(ctx, x - 10, y - 4, 10, 2, PAL.nebyl_dk);
+  } else if (e.def.torch) {
+    figure(ctx, [{ x: x - 14, y: y - 6, w: 20, h: 6, c: PAL.wood_dk }, { x: x + 6, y: y - 7, w: 7, h: 6, c: PAL.slate_dk }]);
+    rect(ctx, x - 10, y - 4, 10, 2, PAL.red_dk);
+    rect(ctx, x - 18, y - 2, 6, 1, PAL.wood_lt); rect(ctx, x - 19, y - 3, 2, 2, PAL.slate);   // погасший факел
   } else {
     figure(ctx, [{ x: x - 7, y: y - 4, w: 12, h: 4, c: PAL.red_dk }, { x: x + 5, y: y - 6, w: 6, h: 5, c: PAL.red }]);
   }

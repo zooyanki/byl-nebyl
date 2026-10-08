@@ -1,0 +1,42 @@
+{
+ "effect": "Чуров камень, безопасная зона r = 6 тайлов: резы тлеют (покой) и светятся (отдых)",
+ "object": "full object sprite (stone + резы); the same stone is the waystone (GDD §8.1)",
+ "footprint": "1x1 tile (32x16 diamond), centre = pivot; stone 24x40 (scale.md §3.4)",
+ "sizes_px": {
+  "stone_height": 40,
+  "stone_width": 24
+ },
+ "runes": "3 резы on the face: «стрела», «ромб с крестом», «древо»; idle bronze_dk/bronze/bronze_lt wave, rest bronze_hi + linen flicker + bronze halo on the stone + rising bronze motes",
+ "light_hint": "optional engine light: bronze_lt, radius 1.5 tiles, only in rest",
+ "state": "rest",
+ "pivot": [
+  16,
+  48
+ ],
+ "fps": 8,
+ "loop": true,
+ "states": {
+  "idle": "fx_rest_churov_idle.png",
+  "rest": "fx_rest_churov_rest.png"
+ },
+ "state_switch": "rest while the hero stands in the zone and Жизнь/Ярь regenerate (2 s without damage, GDD §4.5); both loops are phase-aligned, so switch at the same frame index without a pop; back to idle when regen stops",
+ "anchors": {
+  "runes_centre": [
+   16,
+   26
+  ],
+  "motes_origin": [
+   16,
+   14
+  ]
+ },
+ "image": "fx_rest_churov_rest.png",
+ "frame_size": [
+  32,
+  56
+ ],
+ "frame_count": 6,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

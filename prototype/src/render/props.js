@@ -5,11 +5,15 @@ import { PAL } from '../palette.js';
 import { HALF_W, HALF_H, TILE_W, TILE_H } from '../config.js';
 import { w2s } from '../core/iso.js';
 import { rect, poly, strokePoly, isoBox, disc, ellipse, figure } from './shapes.js';
+import { drawRestSource } from './rest_fx.js';
 
 // toS(x,y) -> [sx,sy] экранные координаты мировой точки
 export function drawProp(ctx, p, toS, time) {
+  // крада и Чуров камень — анимированные спрайты художника (покой / отдых, общая фаза); без спрайта — заглушка грей-бокса
+  if (p.type === 'fire' && p.krada) { const [x, y] = toS(p.x + p.size / 2, p.y + p.size / 2); if (drawRestSource(ctx, 'krada', p.restOn ? 'rest' : 'idle', x, y, time)) return; }
+  if (p.type === 'churstone') { const [x, y] = toS(p.x + 0.5, p.y + 0.5); if (drawRestSource(ctx, 'churov', p.restOn ? 'rest' : 'idle', x, y, time)) return; }
   if (p.type === 'fire') return fire(ctx, p, toS, time);   // анимирован — рисуем каждый кадр
-  if (!p._spr) p._spr = bake(p);                            // остальное статично — запекаем в спрайт
+  if (!p._spr) p._spr = p.shared ? sharedSprite(p) : bake(p);   // остальное статично — запекаем в спрайт
   const [sx, sy] = toS(p.x, p.y);
   ctx.drawImage(p._spr.c, sx - p._spr.ox, sy - p._spr.oy);
 }
@@ -39,7 +43,8 @@ export function propCovers(p, toS, r) {
 export function propHeight(p) {
   if (p.type === 'tree') return p.birch ? 132 : 166;
   if (p.type === 'palisade') return p.gatepost ? 100 : 86;
-  return { rock: 36, wall: 36, izba: 132, fire: 80, idol: 66, well: 64, churstone: 40 }[p.type] || 40;
+  if (p.type === 'fire' && p.krada) return 112;       // спрайт fx_rest_krada: 120 px, опора на 108
+  return { rock: 36, wall: 36, izba: 132, fire: 80, idol: 66, well: 64, churstone: 50, gate: 80, chest: 22, body: 12, bush: 24 }[p.type] || 40;
 }
 
 function drawRaw(ctx, p, toS) {
@@ -52,12 +57,27 @@ function drawRaw(ctx, p, toS) {
     case 'idol': return idol(ctx, p, toS);
     case 'well': return well(ctx, p, toS);
     case 'churstone': return churstone(ctx, p, toS);
+    case 'gate': return gate(ctx, p, toS);
+    case 'bush': return bush(ctx, p, toS);
+    case 'chest': return chest(ctx, p, toS);
+    case 'body': return body(ctx, p, toS);
   }
+}
+
+// Деревья чащи (сотни на тропе) делят запечённые спрайты: ключ — порода и семя с шагом 1/12.
+const SHARED = new Map();
+function sharedSprite(p) {
+  const q = Math.round(p.seed * 12);
+  const key = p.type + (p.birch ? 'b' : 'p') + q;
+  let s = SHARED.get(key);
+  if (!s) { s = bake({ ...p, seed: q / 12 }); SHARED.set(key, s); }
+  return s;
 }
 
 function bake(p) {
   const ph = propHeight(p) + 14;
   const extra = p.type === 'tree' ? 40 : p.gatepost === 'right' ? 110 : 0;
+  // (чтобы гнутая перекладина ворот по оси y тоже влезла, extra симметричен)
   const W = p.size * TILE_W + 48 + extra * 2, H = p.size * TILE_H + ph + 8;
   const c = document.createElement('canvas');
   c.width = W; c.height = H;
@@ -163,10 +183,10 @@ function palisade(ctx, p, toS) {
     disc(ctx, x, y - 55, 3.5, PAL.ember);
     disc(ctx, x, y - 55, 2, PAL.flame);
     if (p.gatepost === 'right') {                                         // перекладина ворот на 84–90
-      const a = toS(p.x - 2.5, p.y + 0.5), b = toS(p.x + 0.5, p.y + 0.5);
+      const a = ys ? toS(p.x + 0.5, p.y - 2.5) : toS(p.x - 2.5, p.y + 0.5), b = toS(p.x + 0.5, p.y + 0.5);
       poly(ctx, [[a[0], a[1] - 91], [b[0], b[1] - 91], [b[0], b[1] - 83], [a[0], a[1] - 83]], PAL.ink);
       poly(ctx, [[a[0], a[1] - 90], [b[0], b[1] - 90], [b[0], b[1] - 84], [a[0], a[1] - 84]], PAL.wood_md);
-      const m = toS(p.x - 1, p.y + 0.5);
+      const m = ys ? toS(p.x + 0.5, p.y - 1) : toS(p.x - 1, p.y + 0.5);
       disc(ctx, m[0], m[1] - 87, 5, PAL.ink); disc(ctx, m[0], m[1] - 87, 4, PAL.bronze); disc(ctx, m[0], m[1] - 87, 1.5, PAL.bronze_hi);
     }
   }
@@ -267,4 +287,64 @@ function churstone(ctx, p, toS) {
   const [x, y] = toS(p.x + 0.5, p.y + 0.68);
   rect(ctx, x - 4, y - 28, 1, 14, PAL.flame); rect(ctx, x - 4, y - 28, 5, 1, PAL.flame); rect(ctx, x - 4, y - 21, 4, 1, PAL.flame);
   rect(ctx, x + 2, y - 26, 1, 10, PAL.bronze_hi);
+}
+
+// Закрытые ворота капища: две створки из тёса во весь проём (ось y), высота 72.
+function gate(ctx, p, toS) {
+  const [fx, fy, fw, fh] = p.fp;
+  const [ox, oy] = toS(fx + 0.35, fy);
+  const b = isoBox(ctx, ox, oy, 0.3, fh, 72, PAL.wood_md, PAL.wood, PAL.wood_dk);
+  for (let k = 1; k < 8; k++) {                                       // доски
+    const a = toS(fx + 0.65, fy + (fh * k) / 8);
+    rect(ctx, a[0], a[1] - 72, 1, 72, PAL.wood_dk);
+  }
+  const m = toS(fx + 0.65, fy + fh / 2);
+  rect(ctx, m[0] - 1, m[1] - 72, 2, 72, PAL.ink);                     // щель между створками
+  for (const z of [16, 52]) { const a = toS(fx + 0.65, fy), c = toS(fx + 0.65, fy + fh); strokePoly(ctx, [[a[0], a[1] - z], [c[0], c[1] - z]], PAL.bronze_dk, false); }
+  disc(ctx, m[0] - 4, m[1] - 34, 2.5, PAL.bronze); disc(ctx, m[0] + 4, m[1] - 34, 2.5, PAL.bronze);
+  return b;
+}
+
+// Кованый сундук (сюжетный, лесная тропа М1): 0,9 × 0,5 тайла, высота 18, оковка бронзой; открытый — крышка откинута.
+function chest(ctx, p, toS) {
+  const [fx, fy, fw, fh] = p.fp;
+  const [ox, oy] = toS(fx + 0.05, fy + 0.05);
+  const b = isoBox(ctx, ox, oy, fw - 0.1, fh - 0.1, 12, p.open ? PAL.ink : PAL.wood_md, PAL.wood, PAL.wood_dk);
+  for (const t of [0.2, 0.8]) { const a = toS(fx + 0.05 + (fw - 0.1) * t, fy + fh - 0.05); rect(ctx, a[0] - 1, a[1] - 12, 2, 12, PAL.bronze); }
+  const lock = toS(fx + fw / 2, fy + fh - 0.05);
+  rect(ctx, lock[0] - 2, lock[1] - 9, 4, 4, PAL.bronze_lt); rect(ctx, lock[0] - 1, lock[1] - 7, 1, 1, PAL.ink);
+  if (p.open) {                                                      // откинутая крышка за сундуком
+    const a = toS(fx + 0.05, fy + 0.05), c = toS(fx + fw - 0.05, fy + 0.05);
+    poly(ctx, [[a[0], a[1] - 12], [c[0], c[1] - 12], [c[0], c[1] - 22], [a[0], a[1] - 22]], PAL.wood_md);
+    strokePoly(ctx, [[a[0], a[1] - 12], [c[0], c[1] - 12], [c[0], c[1] - 22], [a[0], a[1] - 22]], PAL.ink);
+  } else {
+    const t0 = b.T, r0 = b.R;
+    strokePoly(ctx, [[b.L[0], b.L[1] - 12], [b.B[0], b.B[1] - 12], [r0[0], r0[1] - 12]], PAL.bronze_lt, false);
+    rect(ctx, t0[0] - 1, t0[1] - 13, 2, 1, PAL.bronze_hi);
+  }
+}
+
+// Тело жреца у тропы: лежит плоско, белая свита в крови, рядом посох.
+function body(ctx, p, toS) {
+  const [x, y] = toS(p.x + 0.5, p.y + 0.5);
+  ellipse(ctx, x, y, 16, 5, PAL.ink, 0.45);
+  figure(ctx, [{ x: x - 14, y: y - 6, w: 22, h: 6, c: PAL.birch }, { x: x + 8, y: y - 8, w: 7, h: 7, c: PAL.wood_lt }]);
+  rect(ctx, x + 8, y - 9, 7, 2, PAL.mist);                            // седые волосы
+  rect(ctx, x - 6, y - 5, 6, 3, PAL.red_dk); rect(ctx, x - 4, y - 4, 3, 1, PAL.red);
+  rect(ctx, x - 13, y - 3, 20, 1, PAL.bronze);                        // пояс
+  for (let i = 0; i < 14; i++) rect(ctx, x - 22 + i * 2, y + 3 - i, 2, 1, PAL.wood_lt);   // посох
+  if (!p.taken) { rect(ctx, x - 2, y + 1, 7, 1, PAL.ink); rect(ctx, x + 4, y, 2, 2, PAL.wood_dk); }   // чёрный нож
+}
+
+// Подлесок (кромка чащи перед тропой): низкий куст 1 тайл, высота до 22 — не закрывает тропу.
+function bush(ctx, p, toS) {
+  const [x, y] = toS(p.x + 0.5, p.y + 0.5);
+  ellipse(ctx, x, y, 15, 6, PAL.ink, 0.4);
+  const k = p.seed;
+  const blobs = [[-9, -6, 7], [8, -5, 7], [0, -11, 8], [-4, -15, 6], [5, -14, 5], [0, -4, 8]];
+  const c1 = k > 0.7 ? PAL.moss : PAL.pine, c2 = k > 0.7 ? PAL.moss_lt : PAL.moss;
+  for (const [dx, dy, r] of blobs) disc(ctx, x + dx, y + dy, r + 1, PAL.ink);
+  for (const [dx, dy, r] of blobs) disc(ctx, x + dx, y + dy, r, c1);
+  for (const [dx, dy, r] of blobs) disc(ctx, x + dx - 1, y + dy - 2, r * 0.45, c2);
+  if (k < 0.3) { rect(ctx, x - 5, y - 12, 2, 2, PAL.red_lt); rect(ctx, x + 3, y - 8, 2, 2, PAL.red_lt); }   // ягоды
 }

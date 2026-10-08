@@ -9,6 +9,7 @@ import arsonist as AR
 import axeman as AX
 import zguba as ZG
 import effects as FX
+import make_rest  # GDD v1.7 §12.1.5 rest fx (fx_rest_*, fx_safe_ring)
 
 ROOT = X.ROOT
 VIEWS = ("se", "ne")
@@ -164,6 +165,7 @@ if __name__ == "__main__":
     flame_loop()
     base_refs()
     effects()
+    make_rest.run(MEAS)
     X.REPORT["measures"] = MEAS
     with open(os.path.join(ROOT, "sprites_report.json"), "w") as f:
         json.dump(X.REPORT, f, ensure_ascii=False, indent=1)

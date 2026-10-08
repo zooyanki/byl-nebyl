@@ -3,10 +3,11 @@
 import { MAP_W, MAP_H } from '../config.js';
 import { makeRng, hash2 } from '../core/rng.js';
 import { SUB, circleFree } from './collision.js';
+import { generateTrail } from './trail.js';
 
-export const T_GRASS = 0, T_DIRT = 1, T_WATER = 2;
+export const T_GRASS = 0, T_DIRT = 1, T_WATER = 2, T_FOREST = 3;   // T_FOREST — пол чащи (непроходим)
 // Что закрывает обзор и останавливает снаряды (вода и крада — нет).
-const OPAQUE = new Set(['tree', 'rock', 'wall', 'palisade', 'izba', 'idol']);
+const OPAQUE = new Set(['tree', 'rock', 'wall', 'palisade', 'izba', 'idol', 'gate']);
 
 export class GameMap {
   constructor(w, h) {
@@ -20,6 +21,8 @@ export class GameMap {
     this.packs = [];
     this.lights = [];
     this.start = { x: 0.5, y: 0.5 };
+    this.objects = [];     // интерактивные объекты зоны: двери изб, сундук, тело, выходы (data/zones/*.json → objects)
+    this.entries = {};     // точки входа в зону
     this.passCache = new Map();
     this.reach = null;
   }
@@ -104,6 +107,7 @@ export class GameMap {
 }
 
 export function generateMap(seed, zone = null) {
+  if (zone && zone.path) return generateTrail(seed, zone);
   const m = new GameMap(MAP_W, MAP_H);
   const rng = makeRng(seed);
   const W = m.w, H = m.h;
@@ -148,11 +152,13 @@ export function generateMap(seed, zone = null) {
 
   // --- спланированные объекты
   const fire = m.addProp('fire', S.x - 4, S.y - 4, 2);      // крада 2×2 (scale.md §3.3)
+  fire.krada = true;                                         // спрайт художника fx_rest_krada (покой / отдых)
   m.krada = { x: fire.x + 1, y: fire.y + 1 };
-  m.lights.push({ x: S.x - 3, y: S.y - 3, r: 110, kind: 'fire' });
+  m.lights.push({ x: S.x - 3, y: S.y - 3, r: 110, kind: 'fire', krada: true });
   m.addProp('idol', S.x + 3, S.y - 4, 1);                   // чур
   m.addProp('izba', 11, 12, 4);                             // малая изба 4×4
   m.addProp('izba', 31, 1, 4);
+  if (LM.hut3) m.addProp('izba', LM.hut3.x, LM.hut3.y, LM.hut3.size || 4);   // изба 3 у колодца (в ней Мал, act1)
   for (let x = 28; x <= 45; x++) {                           // частокол с воротами (проём 2 тайла), толщина 1 тайл
     if (x === 38 || x === 39) continue;
     m.addProp('palisade', x, 7, 1, { gatepost: x === 37 ? 'left' : x === 40 ? 'right' : false });
@@ -176,7 +182,10 @@ export function generateMap(seed, zone = null) {
   }
 
   // стаи нечисти: из data/zones/<зона>.json (центры, состав, mlvl)
-  m.packs = (zone && zone.packs ? zone.packs : []).map((p) => ({ x: p.x, y: p.y, kinds: [...p.kinds], mlvl: p.mlvl }));
+  m.packs = (zone && zone.packs ? zone.packs : []).map((p) => ({ x: p.x, y: p.y, kinds: [...p.kinds], mlvl: p.mlvl, role: p.role, ambush: !!p.ambush }));
+  resolveObjects(m, zone, (o) => [o.x, o.y]);
+  // перед дверьми изб — свободно (подход к двери)
+  for (const o of m.objects) if (o.type === 'hut') for (let y = Math.floor(o.y); y <= Math.floor(o.y) + 1; y++) for (let x = Math.floor(o.x) - 1; x <= Math.floor(o.x) + 1; x++) m.keepClear = (m.keepClear || []).concat([[x, y]]);
   const nearPack = (x, y, r) => m.packs.some((p) => d(x + 0.5, y + 0.5, p.x, p.y) < r);
 
   // --- лесная кромка по периметру: сплошная чаща (весь тайл непроходим)
@@ -195,6 +204,7 @@ export function generateMap(seed, zone = null) {
     while (placed < count && tries++ < count * 60) {
       const x = rng.int(8, W * SUB - 10) / SUB, y = rng.int(8, H * SUB - 10) / SUB;
       if (d(x, y, S.x, S.y) < 5.5 || nearPack(x, y, 3) || !m.rectFree(x - 1, y - 1, size + 2, size + 2)) continue;
+      if (m.objects.some((o) => d(x, y, o.sx, o.sy) < 2.2)) continue;
       if (m.groundAt(Math.floor(x), Math.floor(y)) === T_DIRT && rng() < 0.7) continue;
       add(x, y); placed++;
     }
@@ -206,4 +216,30 @@ export function generateMap(seed, zone = null) {
 
   m.computeReach();
   return m;
+}
+
+/** Объекты зоны из JSON (двери изб, сундук, тело жреца, выходы, ворота) в мировые координаты.
+ *  pos(o) → [x, y] — для тропы координаты считаются от осевой линии (x, dy).
+ *  (x, y) — точка объекта, (sx, sy) — где встаёт герой. */
+export function resolveObjects(m, zone, pos) {
+  m.objects = [];
+  for (const def of (zone && zone.objects) || []) {
+    const o = { ...def, done: false };
+    if (def.type === 'hut') {
+      const [ix, iy] = def.izba, s = def.size || 4;
+      o.x = ix + 2.15; o.y = iy + s;            // дверной проём на фасаде +Y (props.js: x+1,4…2,9)
+      o.sx = o.x; o.sy = o.y + 0.75;
+      o.reach = 1.0;
+    } else {
+      [o.x, o.y] = pos(def);
+      o.sx = o.x; o.sy = o.y + (def.type === 'chest' || def.type === 'body' ? 0.9 : 0);
+      o.reach = def.type === 'chest' || def.type === 'body' ? 1.2 : 0;
+    }
+    m.objects.push(o);
+  }
+  m.entries = {};
+  for (const [id, e] of Object.entries((zone && zone.entries) || {})) {
+    if (e.at) m.entries[id] = { at: e.at };
+    else { const [x, y] = pos(e); m.entries[id] = { x, y }; }
+  }
 }

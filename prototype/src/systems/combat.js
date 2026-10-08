@@ -4,11 +4,14 @@
 import { rndInt } from '../core/math.js';
 import { sightClear } from '../world/collision.js';
 import { hitChance, MELEE_RANGE, HIT_STOP } from '../data/progression.js';
-import { SKILLS, skillNumbers, spellDamage } from '../data/skills.js';
+import { SKILLS, skillNumbers, spellDamage, rankOf } from '../data/skills.js';
 import { PAL } from '../palette.js';
+import { baseDamageAvg } from '../data/enemies.js';
+
+let FIRE_ID = 1;
 
 export class Combat {
-  constructor(game) { this.game = game; this.projectiles = []; this.lastBlast = null; }
+  constructor(game) { this.game = game; this.projectiles = []; this.fires = []; this.lastBlast = null; }
 
   heroMelee(hero, target, skill = null) {
     const g = this.game;
@@ -45,9 +48,15 @@ export class Combat {
     if (sk) dmg *= sk.dmgPct / 100;
     dmg = Math.floor(dmg);
     const dir = [target.x - hero.x, target.y - hero.y];
-    // «Сшибка» отбрасывает на шаг (масса врага не смягчает: knock делится на mass, поэтому домножаем)
-    const kb = sk ? SKILLS[skill].knockback * target.def.mass : crit ? 0.5 : 0.28;
-    const done = target.takeDamage(dmg, g, 'melee', hero, { crit, kbDir: dir, kb });
+    // «Сшибка» (GDD v1.6 §3.6): на 1 тайл отбрасывает только добивающий удар, с ранга 3 — ещё и удачный (крит);
+    // обычные попадания не отбрасывают. Масса врага не смягчает: knock делится на mass, поэтому домножаем
+    let kb, killKb;
+    if (sk) {
+      const S = SKILLS[skill], rule = S.knockbackRule || {};
+      kb = crit && rankOf(hero, skill) >= (rule.onCritFromRank ?? 3) ? S.knockback * target.def.mass : 0;
+      killKb = rule.onKill != null ? S.knockback : undefined;
+    } else kb = crit ? 0.5 : 0.28;
+    const done = target.takeDamage(dmg, g, 'melee', hero, { crit, kbDir: dir, kb, killKb });
     if (hero.fireDmg && !target.dead) target.takeDamage(hero.fireDmg, g, 'fire', hero);
     if (hero.coldDmg && !target.dead) target.takeDamage(hero.coldDmg, g, 'cold', hero);
     if (hero.lifesteal) hero.hp = Math.min(hero.maxHp, hero.hp + done * hero.lifesteal);
@@ -94,6 +103,11 @@ export class Combat {
   perunSkok(hero, id, tx, ty) {
     const g = this.game, sk = SKILLS[id];
     const from = [hero.x, hero.y];
+    // QA B-22: враг мог шагнуть в точку за время каста — приземляемся у края тела, а не внутри
+    if (g.enemies.some((e) => !e.dead && Math.hypot(e.x - tx, e.y - ty) < hero.r + e.r - 0.01)) {
+      const fix = hero.teleportPoint(g.map, tx, ty, Infinity, g.enemies);
+      if (fix) { tx = fix[0]; ty = fix[1]; }
+    }
     hero.x = tx; hero.y = ty; hero.path = null; hero.cmd = null;
     g.fx.bolt(from[0], from[1], tx, ty);
     g.fx.light(tx, ty, 110, 0.4);
@@ -122,8 +136,55 @@ export class Combat {
     this.game.audio.play('throw');
   }
 
+  /** «Поджог» (GDD v1.5 §5.2 E11): факел летит в точку, телеграф 0,8 с (красный круг), затем зона Ø 2 тайла
+   *  горит 4 с: огонь floor(0,8 × средний урон mlvl) в секунду (тики по 0,5 с с переносом дробной части). */
+  throwTorch(enemy, tx, ty) {
+    const tc = enemy.def.torch, d = Math.hypot(tx - enemy.x, ty - enemy.y);
+    const f = {
+      id: FIRE_ID++, src: enemy, x: tx, y: ty, fx: enemy.x, fy: enemy.y, t: 0, lit: false, litT: 0,
+      flight: Math.min(tc.telegraph * 0.9, d / tc.flight), tele: tc.telegraph, burn: tc.burn, r: tc.radius,
+      dps: Math.floor(tc.dpsMul * baseDamageAvg(enemy.mlvl)), tick: tc.tick, tickT: 0, acc: 0, ticks: 0, dealt: 0,
+    };
+    this.fires.push(f);
+    const g = this.game;
+    g.counters.torches = (g.counters.torches || 0) + 1;
+    g.audio.play('throw');
+    if (!g._tutTelegraph) { g._tutTelegraph = true; g.notify(g.t('ui.tut.telegraph'), PAL.red_lt, 'tut'); }
+    return f;
+  }
+  /** Сколько зон огня держит поджигатель (не больше torch.maxZones). */
+  zonesOf(enemy) { let n = 0; for (const f of this.fires) if (f.src === enemy) n++; return n; }
+  /** Точка в огне (или под телеграфом) — поджигатель сам туда не заходит. */
+  fireAt(x, y, pad = 0) { return this.fires.some((f) => Math.hypot(x - f.x, y - f.y) < f.r + pad); }
+
+  updateFires(dt) {
+    const g = this.game, h = g.hero;
+    for (const f of this.fires) {
+      f.t += dt;
+      if (!f.lit && f.t >= f.tele) {
+        f.lit = true; f.litT = 0;
+        g.fx.burst(f.x, f.y, PAL.ember, 12, 6, 40);
+        g.fx.light(f.x, f.y, 80, 0.3);
+        g.audio.play('explode');
+      }
+      if (!f.lit) continue;
+      f.litT += dt; f.tickT += dt;
+      while (f.tickT >= f.tick - 1e-9 && f.litT <= f.burn + 1e-9) {
+        f.tickT -= f.tick;
+        if (h.dead || Math.hypot(h.x - f.x, h.y - f.y) > f.r + h.r * 0.5 || g.safeAt(h.x, h.y)) continue;   // в тихом круге огонь не жжёт
+        f.acc += f.dps * f.tick;
+        const n = Math.floor(f.acc + 1e-9);
+        if (n >= 1) { f.acc -= n; f.ticks++; f.dealt += h.takeDamage(n, g, 'fire', null); g.counters.fireTicks = (g.counters.fireTicks || 0) + 1; }
+      }
+      if (Math.random() < 0.5) g.fx.parts.push({ x: f.x + (Math.random() - 0.5) * f.r * 1.4, y: f.y + (Math.random() - 0.5) * f.r * 1.4, ox: 0, oy: -6, vx: 0, vy: -18, g: 0, t: 0, dur: 0.5, color: Math.random() < 0.5 ? PAL.ember : PAL.flame, size: 1 });
+      if (f.litT >= f.burn) f.dead = true;
+    }
+    if (this.fires.some((f) => f.dead)) this.fires = this.fires.filter((f) => !f.dead);
+  }
+
   update(dt) {
     const g = this.game;
+    this.updateFires(dt);
     for (const p of this.projectiles) {
       if (p.dead) continue;
       p.t += dt;
@@ -135,7 +196,10 @@ export class Combat {
         if (p.hostile) {
           const h = g.hero;
           if (g.map.opaqueAt(p.x, p.y) || p.travelled >= p.range) { this.fizzle(p); break; }
+          if (g.safeAt(p.x, p.y)) { this.fizzle(p); g.counters.safeFizzle = (g.counters.safeFizzle || 0) + 1; break; }   // GDD v1.6 §4.5: гаснет на границе тихого круга
           if (!h.dead && Math.hypot(h.x - p.x, h.y - p.y) < h.r + p.r) {
+            // QA B-21: герой уже в тихом круге (снаряд у самой границы) — уголь гаснет, урона нет
+            if (g.safeAt(h.x, h.y)) { this.fizzle(p); g.counters.safeFizzle = (g.counters.safeFizzle || 0) + 1; break; }
             p.dead = true;
             g.fx.burst(p.x, p.y, PAL.ember, 8, 20, 50);
             h.takeDamage(rndInt(p.dmg[0], p.dmg[1]), g, p.element, null);
@@ -169,7 +233,9 @@ export class Combat {
       const e = direct;
       if (e && !e.dead) {
         const crit = Math.random() < g.hero.crit;
-        e.takeDamage(Math.floor(rndInt(p.dmg[0], p.dmg[1]) * (crit ? g.hero.critMult : 1)), g, 'cold', g.hero, { crit, kbDir: [p.vx, p.vy], kb: sk.knockback, slow: p.slow });
+        const strong = e.def.boss || e.elite || e.leader;     // боссы и вожаки: замедление вдвое слабее (GDD v1.6 §3.6)
+        const slow = p.slow && strong ? { ...p.slow, pct: p.slow.pct * (SKILLS[p.skill].slowBossMul ?? 1) } : p.slow;
+        e.takeDamage(Math.floor(rndInt(p.dmg[0], p.dmg[1]) * (crit ? g.hero.critMult : 1)), g, 'cold', g.hero, { crit, kbDir: [p.vx, p.vy], kb: sk.knockback, slow });
       }
       this.lastBlast = { x: p.x, y: p.y, hit: e ? [e.id] : [], blocked: [], t: g.time, skill: p.skill };
       return;

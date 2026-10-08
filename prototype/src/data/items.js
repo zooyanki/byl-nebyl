@@ -55,6 +55,9 @@ export function silverAmount(mlvl, rng = Math.random) {
   return Math.max(1, Math.round((s.randMin + rng() * (s.randMax - s.randMin)) * (s.base + s.perMlvl * mlvl)));
 }
 
+/** Таблица выпадения по id из data/droptables.json (normal, trailChest, …). */
+export function dropTable(id) { return DT ? DT[id] : null; }
+
 export function pickWeighted(table, rng = Math.random) {
   let sum = 0;
   for (const k in table) sum += table[k];
@@ -153,11 +156,12 @@ export function pickBase(type, ilvl, rng = Math.random) {
   for (let i = 0; i < cands.length; i++) { r -= W[i]; if (r < 0) return cands[i]; }
   return cands[cands.length - 1];
 }
-export function rollItem(ilvl, rng = Math.random, mf = 0) {
-  const w = { ...RARITY_WEIGHTS }, k = DT.mfToWeights;
+/** opts: rarity — таблица весов редкости (сундуки, §6.7), forceRarity / type — гарантированный предмет. */
+export function rollItem(ilvl, rng = Math.random, mf = 0, opts = {}) {
+  const w = { ...(opts.rarity || RARITY_WEIGHTS) }, k = DT.mfToWeights;
   if (mf) { w.magic += mf * k; w.rare += mf * k; w.unique += mf * k; }
-  const rarity = pickWeighted(w, rng);
-  let type = pickWeighted(TYPE_WEIGHTS, rng);
+  const rarity = opts.forceRarity || pickWeighted(w, rng);
+  let type = opts.type || pickWeighted(TYPE_WEIGHTS, rng);
   if (type === 'weapon') type = rng() < DT.weaponSplit.sword ? 'sword' : 'axe';
   const base = pickBase(type, ilvl, rng);
   return makeItem(base.id, rarity, ilvl, rng);
