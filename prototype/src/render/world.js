@@ -3,11 +3,13 @@ import { VIEW_W, VIEW_H, HALF_W, HALF_H, PANEL_Y } from '../config.js';
 import { PAL } from '../palette.js';
 import { w2s } from '../core/iso.js';
 import { hash2 } from '../core/rng.js';
-import { T_GRASS, T_DIRT, T_WATER } from '../world/map.js';
-import { diamond, rect, ellipse, ellipseStroke } from './shapes.js';
+import { T_GRASS, T_DIRT, T_WATER, T_FOREST } from '../world/map.js';
+import { diamond, rect, ellipse, ellipseStroke, disc } from './shapes.js';
 import { drawProp, propHeight, propCovers } from './props.js';
-import { drawHero, drawEnemy, drawCorpse, drawGroundItem, drawProjectile } from './sprites.js';
+import { drawHero, drawEnemy, drawCorpse, drawGroundItem, drawProjectile, drawNpc } from './sprites.js';
 import { drawText, textWidth } from '../core/font.js';
+import { drawSafeRing, drawRestSparks } from './rest_fx.js';
+import { CFG } from '../data/config.js';
 
 export class WorldRenderer {
   constructor(map) {
@@ -27,6 +29,10 @@ export class WorldRenderer {
     ctx.fillRect(0, 0, VIEW_W, VIEW_H);
     ctx.drawImage(this.floor, Math.round(-map.h * HALF_W - cam.x + game.camCX + game.shakeX), Math.round(-cam.y + game.camCY + game.shakeY));
 
+    // кольца рез безопасных зон — наземный слой под всем (fx_safe_ring, раскладка R10 / R6 из JSON художника)
+    const RF = game.restFx;
+    if (RF) for (const R of Object.values(RF.rings)) if (R.a > 0.01) { const [cx, cy] = toS(R.x, R.y); drawSafeRing(ctx, R.R, cx, cy, R.a, R.lit); }
+
     // трупы и добыча — плоско на земле, всегда под персонажами (scale.md §4.1)
     for (const e of game.enemies) if (e.dead) { const [sx, sy] = toS(e.x, e.y); drawCorpse(ctx, sx, sy, e); }
     for (const it of game.loot.items) {
@@ -34,6 +40,8 @@ export class WorldRenderer {
       const [sx, sy] = toS(it.fromX + (it.x - it.fromX) * k, it.fromY + (it.y - it.fromY) * k);
       drawGroundItem(ctx, sx, sy - Math.round(Math.sin(k * Math.PI) * 16), it);
     }
+
+    this.renderFires(ctx, game, toS, time);
 
     // список для сортировки по глубине
     const list = [];
@@ -46,6 +54,7 @@ export class WorldRenderer {
     for (const e of game.enemies) if (!e.dead) list.push({ d: e.x + e.y, k: 2, e });
     if (!hero.dead) list.push({ d: hero.x + hero.y, k: 3 });
     for (const p of game.combat.projectiles) list.push({ d: p.x + p.y, k: 4, p });
+    for (const n of game.npcs || []) if (!n.gone) list.push({ d: n.x + n.y, k: 5, n });
     list.sort((a, b) => a.d - b.d);
 
     // «рентген» (scale.md §4.4): то, что стоит перед героем или врагом под курсором и закрывает их, полупрозрачно
@@ -59,12 +68,23 @@ export class WorldRenderer {
         else drawProp(ctx, o.p, toS, time);
       } else if (o.k === 2) {
         const [sx, sy] = toS(o.e.x, o.e.y);
-        if (vis(sx, sy)) drawEnemy(ctx, sx, sy, o.e, o.e.dir, time, game.hoverEnemy === o.e);
+        if (!vis(sx, sy)) continue;
+        if (o.e.state === 'rise') {          // волна: упырь встаёт из земли (видна только часть над землёй)
+          const k = Math.min(1, o.e.t / (o.e.riseTime || 0.8)), hgt = o.e.def.height + 8;
+          ctx.save(); ctx.beginPath(); ctx.rect(sx - 30, sy - hgt - 10, 60, hgt + 12); ctx.clip();
+          drawEnemy(ctx, sx, sy + Math.round((1 - k) * hgt), o.e, o.e.dir, time, game.hoverEnemy === o.e);
+          ctx.restore();
+          ellipse(ctx, sx, sy, 12, 4, PAL.wood_dk, 0.8 * (1 - k * 0.5));
+        } else drawEnemy(ctx, sx, sy, o.e, o.e.dir, time, game.hoverEnemy === o.e);
+      } else if (o.k === 5) {
+        const [sx, sy] = toS(o.n.x, o.n.y);
+        ctx.save(); ctx.globalAlpha = o.n.alpha ?? 1; drawNpc(ctx, sx, sy, o.n, time); ctx.restore();
       } else if (o.k === 3) {
         const [sx, sy] = toS(hero.x, hero.y);
         if (hero.buffs.chur) drawChurRunes(ctx, sx, sy, hero.buffs.chur, time, false);
         drawHero(ctx, sx, sy, hero, hero.dir, time);
         if (hero.buffs.chur) drawChurRunes(ctx, sx, sy, hero.buffs.chur, time, true);
+        if (RF && RF.sparksFrame >= 0) drawRestSparks(ctx, sx, sy, RF.sparksFrame);     // искры отдыха поверх героя
       } else {
         const [sx, sy] = toS(o.p.x, o.p.y);
         drawProjectile(ctx, sx, sy, o.p, time);
@@ -84,7 +104,68 @@ export class WorldRenderer {
     this.renderFx(ctx, game, toS);
     this.renderLight(ctx, game, toS);
     this.renderFxText(ctx, game, toS);
+    this.renderObjects(ctx, game, toS);
     this.renderLabels(ctx, game, toS);
+  }
+
+  /** Факелы поджигателей: полёт, телеграф (красный круг, GDD §5.2 E11), горящая зона. */
+  renderFires(ctx, game, toS, time) {
+    const k2 = (r) => [r * HALF_W * Math.SQRT2, r * HALF_H * Math.SQRT2];
+    for (const f of game.combat.fires || []) {
+      const [sx, sy] = toS(f.x, f.y), [rx, ry] = k2(f.r);
+      if (!f.lit) {
+        const k = Math.min(1, f.t / f.tele);
+        ellipse(ctx, sx, sy, rx, ry, PAL.red, 0.12 + 0.22 * k);
+        ellipseStroke(ctx, sx, sy, rx, ry, PAL.red_lt, 0.9, 1);
+        ellipseStroke(ctx, sx, sy, rx * k, ry * k, PAL.red_lt, 0.7, 1);
+        if (f.t < f.flight) {                                        // факел в полёте (дуга)
+          const q = f.t / f.flight, wx = f.fx + (f.x - f.fx) * q, wy = f.fy + (f.y - f.fy) * q;
+          const [tx, ty] = toS(wx, wy), z = 18 + Math.sin(q * Math.PI) * 26;
+          rect(ctx, tx - 1, ty - z, 2, 7, PAL.wood_lt);
+          disc(ctx, tx, ty - z - 2, 3, PAL.ember); disc(ctx, tx, ty - z - 2, 1.6, PAL.flame);
+        } else {                                                     // факел лежит в центре круга
+          rect(ctx, sx - 4, sy - 1, 8, 2, PAL.wood_lt);
+          disc(ctx, sx + 4, sy - 3, 2.5 + Math.sin(time * 20) * 0.6, PAL.ember);
+        }
+      } else {
+        const fade = Math.min(1, (f.burn - f.litT) / 0.6);
+        ellipse(ctx, sx, sy, rx, ry, PAL.red_dk, 0.55 * fade);
+        ellipse(ctx, sx, sy, rx * 0.8, ry * 0.8, PAL.ember, 0.35 * fade);
+        ctx.save(); ctx.globalAlpha = fade;
+        for (let i = 0; i < 11; i++) {                               // языки пламени
+          const a = hash2(i, f.id, 3) * Math.PI * 2, rr = Math.sqrt(hash2(i, f.id, 5)) * 0.85;
+          const fx = Math.round(sx + Math.cos(a) * rx * rr), fy = Math.round(sy + Math.sin(a) * ry * rr);
+          const h = 5 + Math.round((Math.sin(time * 11 + i * 1.7) + 1) * 3 + hash2(i, f.id, 7) * 4);
+          rect(ctx, fx - 1, fy - h, 3, h, PAL.red_lt);
+          rect(ctx, fx, fy - h + 2, 1, h - 2, PAL.flame);
+        }
+        ctx.restore();
+      }
+    }
+  }
+
+  /** Подсветка интерактивных объектов под курсором, подпись действия и полоса удержания (выбить дверь). */
+  renderObjects(ctx, game, toS) {
+    const o = game.hoverObj;
+    if (o) {
+      const [sx, sy] = toS(o.x, o.y);
+      const label = game.objectLabel(o), w = textWidth(label) + 8;
+      const lift = o.type === 'hut' ? 66 : o.type === 'exit' || o.type === 'gate' ? 40 : 26;
+      const x0 = Math.round(sx - w / 2), y0 = sy - lift - 13;
+      ctx.save(); ctx.globalAlpha = 0.85; rect(ctx, x0, y0, w, 13, PAL.ink); ctx.restore();
+      ctx.strokeStyle = PAL.bronze_lt; ctx.lineWidth = 1; ctx.strokeRect(x0 + 0.5, y0 + 0.5, w - 1, 12);
+      drawText(ctx, x0 + 4, y0 + 2, label, PAL.bronze_hi);
+      if (o.type === 'hut') { ellipseStroke(ctx, sx, sy + 4, 14, 5, PAL.bronze_hi, 0.8, 1); }
+      else ellipseStroke(ctx, sx, sy, 14, 6, PAL.bronze_hi, 0.8, 1);
+    }
+    const c = game.hero.cmd;
+    if (c && c.type === 'interact' && c.started && c.obj.hold) {
+      const [sx, sy] = toS(game.hero.x, game.hero.y);
+      const w = 30, k = Math.min(1, c.holdT / c.obj.hold), y = sy - 60;
+      rect(ctx, sx - w / 2 - 1, y - 1, w + 2, 5, PAL.ink);
+      rect(ctx, sx - w / 2, y, w, 3, PAL.wood_dk);
+      rect(ctx, sx - w / 2, y, Math.round(w * k), 3, PAL.bronze_hi);
+    }
   }
 
   renderFx(ctx, game, toS) {
@@ -151,10 +232,15 @@ export class WorldRenderer {
     const warm = [];
     for (const l of game.map.lights) {
       const [sx, sy] = toS(l.x, l.y);
-      const r = l.r + (l.kind === 'fire' ? Math.sin(game.time * 7) * 4 : 0);
-      hole(sx, sy - 8, r, 1); warm.push([sx, sy - 8, r, 0.22]);
+      // отдых у крады: свет шире и ярче (подсказка художника: радиус 3 → 4 тайла, +25%); у Чурова камня — +25%
+      const src = game.restFx && game.restFx.src, F = CFG.stats.restFx || {};
+      const restL = (l.krada && src === 'krada') || (l.kind === 'chur' && src === 'churov');
+      const r = (l.r + (l.kind === 'fire' ? Math.sin(game.time * 7) * 4 : 0)) * (restL && l.krada ? (F.kradaLightRestMul ?? 1.333) : 1);
+      hole(sx, sy - 8, r, 1); warm.push([sx, sy - 8, r, 0.22 * (restL ? (F.kradaLightRestIntensity ?? 1.25) : 1)]);
     }
     for (const p of game.combat.projectiles) { const [sx, sy] = toS(p.x, p.y); hole(sx, sy - 12, 60, 0.9); warm.push([sx, sy - 12, 50, 0.25]); }
+    for (const f of game.combat.fires || []) { const [sx, sy] = toS(f.x, f.y); const r = f.lit ? 70 + Math.sin(game.time * 9 + f.id) * 4 : 34; hole(sx, sy - 6, r, f.lit ? 1 : 0.6); warm.push([sx, sy - 6, r, f.lit ? 0.3 : 0.12]); }
+    for (const e of game.enemies) if (!e.dead && e.def.torch) { const [sx, sy] = toS(e.x, e.y); if (sx > -60 && sx < VIEW_W + 60 && sy > -60 && sy < VIEW_H + 60) { hole(sx + 9 * e.facing, sy - 40, 46, 0.85); warm.push([sx + 9 * e.facing, sy - 40, 40, 0.22]); } }
     for (const f of game.fx.flashes) { const [sx, sy] = toS(f.x, f.y); const k = 1 - f.t / f.dur; hole(sx, sy, f.r, k); warm.push([sx, sy, f.r, 0.35 * k]); }
     ctx.drawImage(this.dark, 0, 0);
     // тёплый подсвет от огня
@@ -265,6 +351,8 @@ function buildFloor(map) {
         base = shore ? PAL.sea : PAL.sea_dk; spk = PAL.sea; spk2 = shore ? PAL.birch : PAL.slate_lt;
       } else if (g === T_DIRT) {
         base = h < 0.5 ? PAL.wood_md : PAL.wood; spk = PAL.wood_dk; spk2 = PAL.wood_lt;
+      } else if (g === T_FOREST) {                     // пол чащи: тёмная хвоя
+        base = h < 0.5 ? PAL.pine_dk : PAL.pine; spk = PAL.pine_dk; spk2 = PAL.moss;
       } else {
         base = n < -1.1 ? PAL.pine : (n > 1.6 && h < 0.5 ? PAL.moss_lt : PAL.moss); spk = PAL.pine; spk2 = PAL.moss_lt;
       }

@@ -21,6 +21,9 @@ export class Input {
     this.wheel = 0;
     canvas.addEventListener('wheel', (e) => { this.wheel += Math.sign(e.deltaY); e.preventDefault(); }, { passive: false });
     canvas.addEventListener('mousemove', (e) => this._pos(e));
+    // Щелчок обрабатывается в ближайшем кадре по точке нажатия: если до кадра мышь успела уйти (редкие кадры,
+    // быстрый щелчок с движением), новое положение применяется только после этого кадра (endFrame).
+    this.pendingPos = null;
     canvas.addEventListener('mousedown', (e) => {
       this._pos(e); this._mods(e); this._gesture();
       if (e.button === 0) { this.left = true; this.leftPressed = true; }
@@ -51,8 +54,9 @@ export class Input {
   _pos(e) {
     const r = this.canvas.getBoundingClientRect();
     if (!r.width) return;
-    this.mx = (e.clientX - r.left) * VIEW_W / r.width;
-    this.my = (e.clientY - r.top) * VIEW_H / r.height;
+    const x = (e.clientX - r.left) * VIEW_W / r.width, y = (e.clientY - r.top) * VIEW_H / r.height;
+    if ((this.leftPressed || this.rightPressed) && e.type === 'mousemove') { this.pendingPos = [x, y]; return; }
+    this.mx = x; this.my = y; this.pendingPos = null;
   }
 
   pressed(code) { return this.keysPressed.has(code); }
@@ -60,6 +64,7 @@ export class Input {
   get altHeld() { return this.keysDown.has('AltLeft') || this.keysDown.has('AltRight'); }
 
   endFrame() {
+    if (this.pendingPos) { [this.mx, this.my] = this.pendingPos; this.pendingPos = null; }
     this.leftPressed = false; this.rightPressed = false; this.wheel = 0;
     this.leftReleased = false; this.rightReleased = false;
     this.keysPressed.clear();

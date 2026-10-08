@@ -22,13 +22,16 @@ export class Hero extends Actor {
     this.base = { ...HERO_START };     // вложенные очки входят сюда
     this.points = 0;
     this.silver = 0;
+    this.relics = [];     // заветное (сюжетные предметы, GDD §6.11)
+    this.letters = [];    // прочитанные грамоты
     this.kills = 0;
     this.cmd = null;      // {type:'move'|'attack'|'pickup', ...}
     this.action = null;   // {type:'attack'|'cast', t, dur, hitAt, fired}
     this.effects = [];    // действие выпитых зелий
-    this.potionCd = 0;
+    this.potionCds = { hp: 0, yar: 0 };   // GDD v1.6 §4.4: перезарядка своя у каждого вида
     this.stun = 0;        // оглушение от сильного удара
     this.invuln = 0;
+    this.graceT = 0;          // «милость» после возрождения: нечисть не замечает героя (в отличие от неуязвимости рывка)
     this.levelFx = 0;
     // навыки (GDD §3.6): купленные ранги, панель F1–F6, навык на ПКМ, перезарядки, баффы
     this.skills = { ...RULES.starter };
@@ -46,6 +49,10 @@ export class Hero extends Actor {
     this.recalc();
     this.hp = this.maxHp; this.yar = this.maxYar;
   }
+
+  /** Совместимость: «КД зелий» — наибольший из двух; запись ставит оба. */
+  get potionCd() { return Math.max(this.potionCds.hp, this.potionCds.yar); }
+  set potionCd(v) { this.potionCds.hp = v; this.potionCds.yar = v; }
 
   get xpStart() { return xpAtLevel(this.level); }
   get xpNext() { return this.level >= MAX_LEVEL ? Infinity : xpAtLevel(this.level + 1); }
@@ -159,6 +166,11 @@ export class Hero extends Actor {
     this.cmd = { type: 'attack', target, repath: 0, swung: false, repeat: false, stand, skill, lmb };
   }
   pickup(item) { this.cmd = { type: 'pickup', item, repath: 0 }; }
+  /** Подойти к объекту зоны (дверь избы, сундук, тело) и взаимодействовать; hold — держать ЛКМ (GDD §8.2). */
+  interact(obj) {
+    if (this.cmd && this.cmd.type === 'interact' && this.cmd.obj === obj && !this.cmd.started) return;
+    this.cmd = { type: 'interact', obj, repath: 0, fails: 0, holdT: 0, started: false };
+  }
   stop() { this.cmd = null; this.path = null; this.moving = false; }
 
   // --- навыки
@@ -201,7 +213,12 @@ export class Hero extends Actor {
       return 'ok';
     }
     if (sk.type === 'teleport') {
-      const dest = this.teleportPoint(game.map, tx, ty, skillNumbers(this, id).range);
+      // GDD v1.7 §3.6 (B-22): по врагу — приземление перед целью на расстоянии r героя + r врага
+      if (target && !target.dead) {
+        const dx = this.x - target.x, dy = this.y - target.y, d = Math.hypot(dx, dy) || 1, k = (this.r + target.r + 0.001) / d;
+        if (d > this.r + target.r + 0.3) { tx = target.x + dx * k; ty = target.y + dy * k; }
+      }
+      const dest = this.teleportPoint(game.map, tx, ty, skillNumbers(this, id).range, game.enemies);
       if (!dest) return 'none';
       tx = dest[0]; ty = dest[1];
     }
@@ -220,13 +237,16 @@ export class Hero extends Actor {
   tryCast(game, tx, ty, target = null) { return this.useSkill(game, this.rmb, tx, ty, target) === 'ok'; }
 
   /** «Перунов скок»: видимая проходимая точка не дальше range; если курсор дальше или в стене — ближайшая годная по линии. */
-  teleportPoint(map, tx, ty, range) {
+  teleportPoint(map, tx, ty, range, bodies = []) {
     let dx = tx - this.x, dy = ty - this.y, d = Math.hypot(dx, dy);
     if (d < 0.3) return null;
     if (d > range) { dx *= range / d; dy *= range / d; d = range; }
-    for (let k = 1; k >= 0.1; k -= 0.05) {
-      const x = this.x + dx * k, y = this.y + dy * k;
-      if (circleFree(map, x, y, this.r) && sightClear(map, this.x, this.y, x, y) && map.isReachableAt(x, y)) return [x, y];
+    // QA B-22: и не внутрь тел — по врагу приземляемся у края его тела (шаг по линии 0,05 тайла)
+    const clearOfBodies = (x, y) => bodies.every((e) => e.dead || Math.hypot(e.x - x, e.y - y) >= this.r + e.r);
+    const steps = Math.ceil(d / 0.05);
+    for (let i = steps; i >= Math.max(1, Math.floor(steps * 0.1)); i--) {
+      const k = i / steps, x = this.x + dx * k, y = this.y + dy * k;
+      if (circleFree(map, x, y, this.r) && clearOfBodies(x, y) && sightClear(map, this.x, this.y, x, y) && map.isReachableAt(x, y)) return [x, y];
     }
     return null;
   }
@@ -278,11 +298,12 @@ export class Hero extends Actor {
       this.refillBelt(slot, s.kind);
     }
   }
-  /** Можно ли выпить зелье сейчас: общий КД зелий (с пояса и из котомки — QA B-15) и полная шкала (QA B-04). */
+  /** Можно ли выпить зелье сейчас: КД своего вида (с пояса и из котомки — QA B-15, GDD v1.6 §4.4) и полная шкала (QA B-04). */
   canDrink(kind, game) {
     if (this.dead) return false;
-    if (this.potionCd > 0) { game.counters.potionCdBlocked = (game.counters.potionCdBlocked || 0) + 1; return false; }
     const p = POTIONS[kind];
+    // живая вода — мгновенно и вне перезарядки; зелья жизни и Яри — каждое со своей перезарядкой 1 с
+    if (p.res !== 'both' && this.potionCds[p.res] > 0) { game.counters.potionCdBlocked = (game.counters.potionCdBlocked || 0) + 1; return false; }
     const hpFull = this.hp >= this.maxHp, yarFull = this.yar >= this.maxYar;
     if ((p.res === 'hp' && hpFull) || (p.res === 'yar' && yarFull) || (p.res === 'both' && hpFull && yarFull)) {
       game.notify(p.res === 'yar' ? 'Ярь и так полна' : 'Жизнь и так полна', PAL.mist, 'full_' + p.res);
@@ -296,7 +317,7 @@ export class Hero extends Actor {
   }
   applyPotion(kind, game) {
     const p = POTIONS[kind];
-    this.potionCd = POTION_COOLDOWN;
+    if (p.res !== 'both') this.potionCds[p.res] = POTION_COOLDOWN;
     if (p.res === 'both') {
       this.hp = Math.min(this.maxHp, this.hp + this.maxHp * p.pct);
       this.yar = Math.min(this.maxYar, this.yar + this.maxYar * p.pct);
@@ -343,8 +364,15 @@ export class Hero extends Actor {
     if (type !== 'melee') dmg = dmg * (1 - (this.res[type] || 0) / 100);
     dmg = Math.max(1, Math.floor(dmg));
     this.hp -= dmg;
+    if (dmg > 0) this.sinceHurt = 0;          // отдых в тихом круге — только после 2 с без урона (GDD v1.7 §4.5)
     this.flash = 0.12;
     game.fx.text(this.x, this.y, '-' + dmg, PAL.red_lt, 50);
+    // урон прерывает удержание (выбить дверь, GDD §8.2)
+    if (this.cmd && this.cmd.type === 'interact' && this.cmd.started && this.cmd.obj.hold) {
+      this.cmd = null;
+      game.notify(game.t('ui.obj.interrupted'), PAL.red_lt, 'interrupt');
+      game.counters.holdInterrupted = (game.counters.holdInterrupted || 0) + 1;
+    }
     game.audio.play('hurt');
     if (attacker && this.thorns && type === 'melee') attacker.takeDamage(this.thorns, game, 'thorns', this);
     // удар > 12% макс. жизни прерывает героя на 0,2 с
@@ -356,6 +384,8 @@ export class Hero extends Actor {
       this.hp = 0;
       this.dead = true;
       this.action = null; this.cmd = null; this.path = null; this.moving = false; this.effects = [];
+      if (this.buffs.chur) { this.buffs = {}; this.recalc(); }   // QA B-24: бафф снимается в момент гибели (как в D2)
+      this.cds = {};
       game.onHeroDeath();
     }
     return dmg;
@@ -378,10 +408,12 @@ export class Hero extends Actor {
     if (this.dead) return;
     this.flash = Math.max(0, this.flash - dt);
     this.levelFx = Math.max(0, this.levelFx - dt);
-    this.potionCd = Math.max(0, this.potionCd - dt);
+    this.potionCds.hp = Math.max(0, this.potionCds.hp - dt); this.potionCds.yar = Math.max(0, this.potionCds.yar - dt);
     this.beltT = (this.beltT || 0) - dt;
     if (this.beltT <= 0) { this.beltT = 0.25; if (this.belt.includes(null)) this.fillBelt(); }
     this.invuln = Math.max(0, this.invuln - dt);
+    if (this.graceT > 0) this.graceT = Math.max(0, this.graceT - dt);
+    this.sinceHurt = (this.sinceHurt ?? 99) + dt;
     for (const k in this.cds) this.cds[k] = Math.max(0, this.cds[k] - dt);
     if (this.buffs.chur) { this.buffs.chur.t -= dt; if (this.buffs.chur.t <= 0) { delete this.buffs.chur; this.recalc(); } }
     this.yar = Math.min(this.maxYar, this.yar + this.yarRegen * dt);   // жизнь сама не восстанавливается (GDD §3.3)
@@ -440,6 +472,29 @@ export class Hero extends Actor {
       c.repath -= dt;
       if (c.repath <= 0 || !this.path) { this.setPath(map, e.x, e.y, true, e); c.repath = 0.25; }
       this.followPath(map, dt, this.speed);
+    } else if (c.type === 'interact') {
+      const o = c.obj;
+      if (o.done) { this.cmd = null; this.moving = false; return; }
+      if (Math.hypot(o.x - this.x, o.y - this.y) <= o.reach) {
+        this.path = null; this.moving = false;
+        this.face(o.x - this.x, o.y - this.y);
+        if (!c.started) {
+          const err = game.canInteract(o);
+          if (err) { this.cmd = null; game.notify(game.t(err), PAL.mist, 'interact'); game.audio.play('error'); return; }
+          c.started = true;
+          if (!o.hold) { this.cmd = null; game.interact(o); return; }
+        }
+        if (!game.holdingInteract()) { this.cmd = null; return; }     // отпустили ЛКМ — удержание сброшено
+        c.holdT += dt;
+        if (c.holdT >= o.hold) { this.cmd = null; game.interact(o); }
+        return;
+      }
+      c.repath -= dt;
+      if (c.repath <= 0 || !this.path) { this.setPath(map, o.sx, o.sy, true); c.repath = 0.5; }
+      if (this.followPath(map, dt, this.speed) && Math.hypot(o.x - this.x, o.y - this.y) > o.reach) {
+        c.fails++;
+        if (c.fails > 6) { this.cmd = null; game.notify('Не дотянуться', PAL.mist, 'reach'); }
+      }
     } else if (c.type === 'pickup') {
       const it = c.item;
       if (it.taken) { this.cmd = null; this.moving = false; return; }

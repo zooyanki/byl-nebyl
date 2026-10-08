@@ -36,6 +36,7 @@ export class Enemy extends Actor {
     this.stagger = 0;
     this.lastStagger = -99;
     this.age = 0;
+    this.torchCd = 0;          // «Поджог» поджигателя (def.torch)
   }
 
   aggro(game, spread = true) {
@@ -63,7 +64,7 @@ export class Enemy extends Actor {
       this.moving = false;
       this.path = null;
       this.kb = null;
-      if (opts.kbDir) this.knock(opts.kbDir[0], opts.kbDir[1], 0.5, 0.18);   // тело отлетает
+      if (opts.kbDir) this.knock(opts.kbDir[0], opts.kbDir[1], opts.killKb ?? 0.5, 0.18);   // тело отлетает («Сшибка» — на 1 тайл)
       game.onEnemyKilled(this);
       return dmg;
     }
@@ -75,6 +76,11 @@ export class Enemy extends Actor {
     if (dmg > this.maxHp * st.hpFrac && this.age - this.lastStagger >= st.cooldown) {
       this.stagger = st.time; this.lastStagger = this.age;
       if (this.state === 'attack' && !this.attackFired) { this.state = 'chase'; this.t = 0; }
+    }
+    // GDD v1.6 §4.5: бьют из тихого круга — враг уходит к логову и восстанавливает HP (как по поводку)
+    if (game.safeAt(game.hero.x, game.hero.y) && src === game.hero) {
+      if (this.state !== 'return') { this.state = 'return'; this.path = null; game.counters.safeReturn = (game.counters.safeReturn || 0) + 1; }
+      return dmg;
     }
     this.aggro(game);
     return dmg;
@@ -96,13 +102,18 @@ export class Enemy extends Actor {
     if (this.updateKnock(map, dt)) return;
     if (this.stagger > 0) { this.stagger -= dt; this.moving = false; return; }
     const dHero = this.distTo(hero);
+    const px = this.x, py = this.y;
+    if (this.torchCd > 0) this.torchCd -= dt;
     this.t += dt;
     this.thinkT -= dt;
     if (this.thinkT <= 0) {
       this.thinkT = 0.2 + Math.random() * 0.1;
       this.los = lineWalkable(map, this.x, this.y, hero.x, hero.y, this.r * 0.8);
     }
-    const heroTargetable = !hero.dead && hero.invuln <= 0;
+    const heroTargetable = !hero.dead && hero.invuln <= 0;          // по неуязвимому не бьём и не бросаем
+    // QA B-20: неуязвимость «Рывка» — защита от урона, а не невидимость: погоню обрывают только смерть и
+    // «милость» после возрождения (graceT), но не 0,15 с рывка
+    const heroPresent = !hero.dead && !(hero.graceT > 0);
     // тихие круги (крада 10, Чуров камень 6 — QA B-16, решение дизайнера): там нечисть героя не замечает
     const heroSafe = game.safeAt(hero.x, hero.y);
 
@@ -116,12 +127,19 @@ export class Enemy extends Actor {
           const tx = this.homeX + rnd(-1.6, 1.6), ty = this.homeY + rnd(-1.6, 1.6);
           if (!map.blockedAt(tx, ty) && !game.safeAt(tx, ty, 0.5)) this.setPath(map, tx, ty);
         }
-        if (heroTargetable && !heroSafe && dHero < def.aggro && (this.los || dHero < 2.5)) this.aggro(game);
+        if (heroPresent && !heroSafe && dHero < def.aggro && (this.los || dHero < 2.5)) this.aggro(game);
         break;
       }
       case 'chase': {
-        if (!heroTargetable || heroSafe) { this.state = 'return'; this.path = null; if (heroSafe) game.counters.safeBreaks = (game.counters.safeBreaks || 0) + 1; break; }
+        if (!heroPresent || heroSafe) { this.state = 'return'; this.path = null; if (heroSafe) game.counters.safeBreaks = (game.counters.safeBreaks || 0) + 1; break; }
         if (Math.hypot(this.x - this.homeX, this.y - this.homeY) > def.leash && dHero > 3) { this.state = 'return'; this.path = null; break; }
+        const tc = def.torch;
+        // «Поджог» (GDD §5.2 E11): герой в 2–6 тайлах, КД готов, своей зоны огня нет
+        if (tc && this.torchCd <= 0 && dHero >= tc.rangeMin && dHero <= tc.rangeMax && game.combat.zonesOf(this) < tc.maxZones && sightClear(map, this.x, this.y, hero.x, hero.y)) {
+          this.state = 'torch'; this.t = 0; this.attackFired = false; this.moving = false; this.path = null;
+          this.face(hero.x - this.x, hero.y - this.y);
+          break;
+        }
         const rg = def.ranged;
         if (rg && dHero <= rg.range && dHero > 0.3 && sightClear(map, this.x, this.y, hero.x, hero.y)) {
           this.state = 'attack'; this.t = 0; this.attackFired = false; this.moving = false; this.path = null;
@@ -174,6 +192,29 @@ export class Enemy extends Actor {
         }
         break;
       }
+      case 'torch': {
+        const tc = def.torch;
+        this.face(hero.x - this.x, hero.y - this.y);
+        this.moving = false;
+        if (!this.attackFired && this.t >= tc.windup) {
+          this.attackFired = true;
+          this.torchCd = tc.cooldown;
+          if (heroTargetable && !heroSafe) {
+            // факел — на землю перед героем, на 1,5 тайла ближе к поджигателю
+            const d = this.distTo(hero) || 1, k = Math.min(tc.towardSelf, Math.max(0, d - 0.6)) / d;
+            const tx = hero.x + (this.x - hero.x) * k, ty = hero.y + (this.y - hero.y) * k;
+            if (!game.safeAt(tx, ty, tc.radius)) game.combat.throwTorch(this, tx, ty);
+          }
+        }
+        if (this.t >= tc.windup + 0.3) { this.state = 'chase'; this.t = 0; this.attackFired = false; }
+        break;
+      }
+      case 'rise': {
+        // волна: встаёт из земли, потом сразу в погоню
+        this.moving = false;
+        if (this.t >= (this.riseTime || 0.8)) { this.state = 'idle'; this.t = 0; this.aggro(game, false); }
+        break;
+      }
       case 'flee': {
         this.stepToward(map, this.x + this.fleeDir[0], this.y + this.fleeDir[1], this.speed, dt);
         if (this.t >= (this.fleeTime || 1)) { this.state = 'chase'; this.t = 0; this.retreating = false; }
@@ -186,9 +227,14 @@ export class Enemy extends Actor {
           if (Math.hypot(this.x - this.homeX, this.y - this.homeY) < 2) { this.state = 'idle'; this.hp = this.maxHp; this.wanderT = rnd(1, 3); }
           this.path = null;
         }
-        if (heroTargetable && !heroSafe && dHero < def.aggro * 0.6 && this.los) this.aggro(game);
+        if (heroPresent && !heroSafe && dHero < def.aggro * 0.6 && this.los) this.aggro(game);
         break;
       }
+    }
+    // поджигатель сам в огонь (и под телеграф) не заходит
+    if (def.torch && (this.x !== px || this.y !== py) && game.combat.fireAt(this.x, this.y, this.r) && !game.combat.fireAt(px, py, this.r)) {
+      this.x = px; this.y = py; this.path = null; this.moving = false;
+      game.counters.fireAvoid = (game.counters.fireAvoid || 0) + 1;
     }
   }
 }

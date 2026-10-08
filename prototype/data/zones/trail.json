@@ -1,5 +1,5 @@
 {
- "_about": "Лесная тропа (GDD v1.3 §8.1, решение дизайнера 08.10: mlvl 2→3 по ходу тропы). Зона ещё не сделана — конфиг-заготовка; стаи появятся с картой зоны. mlvlGradient: mlvl растёт от входа к выходу.",
+ "_about": "Лесная тропа (GDD v1.5 §8.1–8.2; act1.md, М1 п.3–4). Веха M1a: зона играбельна. Карта 128×48 генерируется по осевой линии тропы (path): y(x) = y0 + a1·sin(x/p1) + a2·sin(x/p2 + 1), коридор halfWidth тайлов, по сторонам — чаща. Стаи и объекты задаются по x вдоль тропы и смещению dy от осевой. mlvl 2 → 3 по ходу тропы (x < 50 — mlvl 2, дальше mlvl 3); 25 врагов mlvl 2 (упыри 16 / анчутки 9 ≈ 65/35) + 45 mlvl 3 (упыри 20 / анчутки 14 / поджигатели 11 ≈ 45/30/25). Поджигатели — только во второй половине (act1: «ближе к капищу»). Волны (ambush) — упыри встают из земли, когда герой подходит.",
  "id": "trail",
  "name": "Лесная тропа",
  "realm": "byl_to_nebyl",
@@ -13,8 +13,8 @@
   "anchutka": 30,
   "chernoyarets_arsonist": 25
  },
- "repopulate": "onZoneEnter",
- "implemented": false,
+ "repopulate": "onNewSession",
+ "implemented": true,
  "size": [
   128,
   48
@@ -23,23 +23,326 @@
   "from": 2,
   "to": 3
  },
- "packs": [],
+ "packs": [
+  {
+   "x": 13,
+   "dy": 0,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr",
+    "upyr"
+   ],
+   "mlvl": 2,
+   "role": "trail"
+  },
+  {
+   "x": 21,
+   "dy": -1.5,
+   "kinds": [
+    "anchutka",
+    "anchutka",
+    "anchutka",
+    "anchutka",
+    "anchutka"
+   ],
+   "mlvl": 2,
+   "role": "trail"
+  },
+  {
+   "x": 28,
+   "dy": 1,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr",
+    "upyr"
+   ],
+   "mlvl": 2,
+   "role": "wave",
+   "ambush": true,
+   "_note": "волна: упыри встают из земли (GDD §5.2 — «в М1 поднимаются из земли»)"
+  },
+  {
+   "x": 35,
+   "dy": 0,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr",
+    "upyr"
+   ],
+   "mlvl": 2,
+   "role": "trail"
+  },
+  {
+   "x": 41,
+   "dy": -1,
+   "kinds": [
+    "anchutka",
+    "anchutka",
+    "anchutka",
+    "anchutka"
+   ],
+   "mlvl": 2,
+   "role": "trail"
+  },
+  {
+   "x": 47,
+   "dy": 1.5,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr",
+    "upyr"
+   ],
+   "mlvl": 2,
+   "role": "wave",
+   "ambush": true,
+   "_note": "волна у кованого сундука"
+  },
+  {
+   "x": 54,
+   "dy": 0,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr",
+    "chernoyarets_arsonist",
+    "chernoyarets_arsonist"
+   ],
+   "mlvl": 3,
+   "role": "trail",
+   "_note": "первая встреча с поджигателями (act1: ближе к капищу)"
+  },
+  {
+   "x": 60,
+   "dy": -1,
+   "kinds": [
+    "anchutka",
+    "anchutka",
+    "anchutka",
+    "anchutka",
+    "anchutka"
+   ],
+   "mlvl": 3,
+   "role": "trail"
+  },
+  {
+   "x": 66,
+   "dy": 1,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr",
+    "upyr"
+   ],
+   "mlvl": 3,
+   "role": "wave",
+   "ambush": true
+  },
+  {
+   "x": 72,
+   "dy": 0,
+   "kinds": [
+    "chernoyarets_arsonist",
+    "chernoyarets_arsonist",
+    "chernoyarets_arsonist"
+   ],
+   "mlvl": 3,
+   "role": "trail"
+  },
+  {
+   "x": 78,
+   "dy": -1,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr",
+    "chernoyarets_arsonist",
+    "chernoyarets_arsonist"
+   ],
+   "mlvl": 3,
+   "role": "trail"
+  },
+  {
+   "x": 84,
+   "dy": 1,
+   "kinds": [
+    "anchutka",
+    "anchutka",
+    "anchutka",
+    "anchutka",
+    "anchutka"
+   ],
+   "mlvl": 3,
+   "role": "trail"
+  },
+  {
+   "x": 90,
+   "dy": 0,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr",
+    "upyr"
+   ],
+   "mlvl": 3,
+   "role": "wave",
+   "ambush": true
+  },
+  {
+   "x": 96,
+   "dy": -1,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr",
+    "chernoyarets_arsonist",
+    "chernoyarets_arsonist"
+   ],
+   "mlvl": 3,
+   "role": "trail"
+  },
+  {
+   "x": 101,
+   "dy": 1,
+   "kinds": [
+    "anchutka",
+    "anchutka",
+    "anchutka",
+    "anchutka"
+   ],
+   "mlvl": 3,
+   "role": "trail"
+  },
+  {
+   "x": 107,
+   "dy": 0,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr",
+    "chernoyarets_arsonist",
+    "chernoyarets_arsonist"
+   ],
+   "mlvl": 3,
+   "role": "trail"
+  }
+ ],
  "enemyCount": {
   "mlvl2": 25,
   "mlvl3": 45,
   "elites": 0,
-  "_note": "GDD v1.5 — на будущее (зона не реализована)"
+  "_note": "GDD v1.5 §8.1: 25 mlvl 2 + 45 mlvl 3, без элиты (вожаки М1 — следующие вехи)"
  },
  "safeZones": [
   {
    "at": "churStone",
    "radius": 6,
-   "packMinDist": 8
+   "packMinDist": 8,
+   "rest": {
+    "pctPerSec": 20,
+    "noDamageSec": 2,
+    "_gdd": "GDD v1.7 §4.5: отдых — Жизнь и Ярь +20% от максимума в секунду, если 2 с без урона; только внутри круга"
+   }
   }
  ],
  "checkpoint": {
   "exitLevel": 4,
   "tolerance": 1,
   "_note": "GDD v1.5 §9.3"
- }
+ },
+ "band": [
+  "Лесная тропа",
+  "Акт I · Миссия 1 из 3"
+ ],
+ "_repopulateNote": "GDD v1.7 §4.5: убитые враги не возвращаются ни при гибели, ни при возрождении героя — только в новой сессии (загрузка слота, перезапуск). Недобитые при гибели героя уходят к логову и восстанавливают HP, как по поводку. Трекер назад не идёт.",
+ "respawnPoint": "zalesye.krada",
+ "_respawnNote": "ЗАГЛУШКА: гибель на тропе — воскрешение у крады Залесья (другой точки в GDD нет; Чуров камень у капища — тихий круг, не точка возрождения)",
+ "path": {
+  "y0": 24,
+  "a1": 8,
+  "p1": 16,
+  "a2": 2.5,
+  "p2": 6,
+  "halfWidth": 4,
+  "clearing": 3.6,
+  "_ph": [
+   "y0",
+   "a1",
+   "p1",
+   "a2",
+   "p2",
+   "halfWidth",
+   "clearing"
+  ],
+  "_phNote": "ЗАГЛУШКА формы тропы: в GDD только размер 128×48"
+ },
+ "ambush": {
+  "trigger": 5,
+  "rise": 0.8,
+  "_ph": [
+   "trigger",
+   "rise"
+  ],
+  "_phNote": "ЗАГЛУШКА: радиус, на котором встаёт волна, и длительность подъёма из земли — в GDD чисел нет"
+ },
+ "landmarks": {
+  "churStone": {
+   "x": 117,
+   "dy": 3
+  }
+ },
+ "entries": {
+  "from_zalesye": {
+   "x": 4.5,
+   "dy": 0
+  },
+  "gate": {
+   "x": 121,
+   "dy": 0
+  }
+ },
+ "objects": [
+  {
+   "id": "to_zalesye",
+   "type": "exit",
+   "x": 0.9,
+   "dy": 0,
+   "r": 1.3,
+   "to": "zalesye",
+   "entry": "from_trail"
+  },
+  {
+   "id": "kapishche_gate",
+   "type": "gate",
+   "x": 124,
+   "dy": 0,
+   "r": 2.2,
+   "to": "kapishche",
+   "event": {
+    "event": "reach",
+    "target": "kapishche_gate"
+   },
+   "lockedKey": "proto.kapishche_soon",
+   "_note": "веха M1a: капище не строим — ворота закрыты, у ворот засчитывается цель «Доберись до капища»"
+  },
+  {
+   "id": "trail_chest",
+   "type": "chest",
+   "x": 47,
+   "dy": -4.5,
+   "loot": "trailChest",
+   "ilvl": 3
+  },
+  {
+   "id": "priest",
+   "type": "body",
+   "x": 112,
+   "dy": -2.5,
+   "relic": "knife",
+   "letter": "priest"
+  }
+ ]
 }

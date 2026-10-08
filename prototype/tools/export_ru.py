@@ -24,6 +24,38 @@ SKILL_IDS = {"skill.ratnoe.sshibka": "sshibka", "skill.ratnoe.chur": "chur", "sk
              "skill.ved.zmey": "zmey", "skill.ved.morozko": "morozko", "skill.ved.veshchee": "veshchee", "skill.ved.skok": "skok",
              "skill.dash": "dash", "skill.yar1": "yar1"}
 
+# act1.md v1.1 (дословно; читаются из файла и сверяются ниже): название и цели М1 для трекера, брифинг, диалог Мала,
+# «Грамота жреца». Шапка трекера «Задание · Акт I» — с макета HUD v2 (gameplay_hud_v2.QUEST).
+ACT1 = os.path.join(HERE, "..", "..", "story", "act1.md")
+M1_GOALS = {"reach": "Доберись до капища", "huts": "Спаси выживших", "hearths": "Отбей огнища у упырей",
+            "krivsha": "Одолей Крившу", "arsonist": "Найди поджигателя"}
+# Строки прототипа, которых нет у сценариста (заглушки вехи M1a — вопрос сценаристу/геймдизайнеру, см. README).
+PROTO = {
+    "proto.trail_locked": "Тропу покажет Мал. Он в избе у колодца.",
+    "proto.kapishche_soon": "Капище Перуна откроется в следующей вехе.",
+    "proto.exit.to": "Путь: {zone}",
+    "proto.villager": "Селяне",
+    "proto.priest_body": "Тело жреца",
+    "proto.quest.arsonist_hint": "Черноярцы с факелами — люди Чернояра.",
+}
+
+def act1_strings():
+    a = open(ACT1, encoding="utf-8").read()
+    m1 = a.split("## Миссия 1. Огонь на капище", 1)[1].split("\n## ", 1)[0]
+    out = {"quest.m1.title": "Огонь на капище", "quest.act": "Задание · Акт I"}
+    for k, g in M1_GOALS.items():
+        assert g in m1, g                       # цель должна быть в act1.md дословно
+        out["quest.m1.obj." + k] = g
+    out["quest.m1.brief"] = re.search(r"\*\*Брифинг для карты:\*\*\s*\n> (.+)", m1).group(1).strip()
+    mal = a.split("### Мал, отрок из Залесья", 1)[1].split("###", 1)[0]
+    out["dialog.m1.mal"] = [[clean(w), clean(t)] for w, t in re.findall(r"> \*\*(.+?):\*\* (.+)", mal)][:3]
+    pr = re.search(r"\*\*Грамота жреца\*\*.*?\n\s*> «(.+?)»", a, re.S).group(1)
+    out["letter.priest"] = {"name": "Грамота жреца", "text": pr}
+    out["npc.mal"] = "Мал"
+    out["npc.ratibor"] = "Ратибор"
+    return out
+
+
 def clean(c):
     c = c.strip()
     c = re.sub(r"\*\*(.+?)\*\*", r"\1", c)
@@ -52,16 +84,21 @@ for i, ln in enumerate(lines):
     if key.startswith("plural."):
         out[key] = vals[:3]
     elif key.startswith("skill.") and len(vals) >= 4:
-        out[key] = {"id": SKILL_IDS.get(key, key), "name": vals[0], "branch": vals[1], "chant": vals[2], "desc": vals[3]}
+        out[key] = {**out.get(key, {}), "id": SKILL_IDS.get(key, key), "name": vals[0], "branch": vals[1], "chant": vals[2], "desc": vals[3]}
+    elif key.startswith("skill.") and header and header[-1] == "short":     # §18: короткие имена для ячеек (GDD v1.7 §3.6)
+        out.setdefault(key, {})["short"] = vals[-1]
     elif len(vals) == 1:
         out[key] = vals[0]
     else:
         hd = header[1:] if header and len(header) == len(cs) else [str(k) for k in range(len(vals))]
         out[key] = {h: v for h, v in zip(hd, vals)}
 out.update(OVERRIDE)
+out.update(act1_strings())
+out.update(PROTO)
 for k in SKIP:
     out.pop(k, None)
 doc = {"_about": "Тексты интерфейса и игры (источник — story/act1_texts.md v1.0, сборка tools/export_ru.py; правки GDD v1.4 §12.2.1). "
+                 "Ключи quest.*, dialog.*, letter.*, npc.* — из act1.md v1.1 дословно; proto.* — заглушки прототипа (нет у сценариста). "
                  "Серебро по числам не склоняется («Серебро: N», «Потеряно серебра: N», «N сер.»), счётные слова — plural(n, one, few, many) (§10.1).",
        **dict(sorted(out.items()))}
 json.dump(doc, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)

@@ -1,0 +1,950 @@
+{
+ "effect": "Кольцо рез на границе безопасной зоны (GDD §4.5, §12.1.5)",
+ "pieces": {
+  "groove": {
+   "dim": "fx_safe_ring_grooves_dim.png",
+   "lit": "fx_safe_ring_grooves_lit.png",
+   "frame_size": [
+    16,
+    12
+   ],
+   "pivot": [
+    8,
+    6
+   ],
+   "count": 8
+  },
+  "rune": {
+   "dim": "fx_safe_ring_runes_dim.png",
+   "lit": "fx_safe_ring_runes_lit.png",
+   "frame_size": [
+    12,
+    8
+   ],
+   "pivot": [
+    6,
+    4
+   ],
+   "count": 4
+  }
+ },
+ "states": {
+  "dim": "always on: barely visible dark grooves",
+  "lit": "optional: bronze while the hero rests inside"
+ },
+ "placement": {
+  "centre": "zone centre = pivot of the крада / Чуров камень / костёр (ground point, screen px)",
+  "ellipse": "ground circle of radius R tiles -> screen ellipse rx = R*16*sqrt(2) = R*22.627, ry = R*8*sqrt(2) = R*11.314 (scale.md §1: 22.6 / 11.3 px per tile)",
+  "algorithm": [
+   "sample the ellipse x = rx*cos(t), y = ry*sin(t); accumulate arc length; perimeter P",
+   "n = round(P / 12) pieces; piece k sits at arc length k*P/n",
+   "k % 4 == 2 -> rune, index (k // 4) % 4; otherwise groove",
+   "groove index b = round(((atan2(-dy/dt, dx/dt) in degrees) mod 180) / 22.5) mod 8, where (dx/dt, dy/dt) = (-rx*sin t, ry*cos t)",
+   "draw each piece with its pivot at (centre.x + round(x), centre.y + round(y))"
+  ],
+  "reference_impl": "sprites/src/effects_rest.py: ring_layout(radius_tiles), assemble_ring()",
+  "spacing_px": 12.0,
+  "rune_every": 4
+ },
+ "render_hint": {
+  "opacity_dim": 0.5,
+  "reveal": "fade in to 1.0 when the hero is within 2 tiles of the border, so the ring is noticed where it matters (GDD §12.1.5: «видно у границы»)",
+  "sort": "ground decal layer, under characters and objects"
+ },
+ "layouts": {
+  "R10": {
+   "radius_tiles": 10,
+   "used_by": "крада / точка возрождения",
+   "perimeter_px": 1096.1,
+   "count": 91,
+   "pieces": [
+    {
+     "dx": 226,
+     "dy": 0,
+     "piece": "groove",
+     "index": 4
+    },
+    {
+     "dx": 225,
+     "dy": 12,
+     "piece": "groove",
+     "index": 3
+    },
+    {
+     "dx": 221,
+     "dy": 23,
+     "piece": "rune",
+     "index": 0
+    },
+    {
+     "dx": 216,
+     "dy": 34,
+     "piece": "groove",
+     "index": 3
+    },
+    {
+     "dx": 209,
+     "dy": 44,
+     "piece": "groove",
+     "index": 2
+    },
+    {
+     "dx": 200,
+     "dy": 53,
+     "piece": "groove",
+     "index": 2
+    },
+    {
+     "dx": 191,
+     "dy": 60,
+     "piece": "rune",
+     "index": 1
+    },
+    {
+     "dx": 182,
+     "dy": 68,
+     "piece": "groove",
+     "index": 2
+    },
+    {
+     "dx": 171,
+     "dy": 74,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": 161,
+     "dy": 80,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": 150,
+     "dy": 85,
+     "piece": "rune",
+     "index": 2
+    },
+    {
+     "dx": 139,
+     "dy": 89,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": 127,
+     "dy": 93,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": 116,
+     "dy": 97,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": 104,
+     "dy": 100,
+     "piece": "rune",
+     "index": 3
+    },
+    {
+     "dx": 93,
+     "dy": 103,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": 81,
+     "dy": 106,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 69,
+     "dy": 108,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 57,
+     "dy": 109,
+     "piece": "rune",
+     "index": 0
+    },
+    {
+     "dx": 45,
+     "dy": 111,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 33,
+     "dy": 112,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 21,
+     "dy": 113,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 9,
+     "dy": 113,
+     "piece": "rune",
+     "index": 1
+    },
+    {
+     "dx": -3,
+     "dy": 113,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": -15,
+     "dy": 113,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": -27,
+     "dy": 112,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": -39,
+     "dy": 111,
+     "piece": "rune",
+     "index": 2
+    },
+    {
+     "dx": -51,
+     "dy": 110,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": -63,
+     "dy": 109,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": -75,
+     "dy": 107,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": -87,
+     "dy": 104,
+     "piece": "rune",
+     "index": 3
+    },
+    {
+     "dx": -99,
+     "dy": 102,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": -110,
+     "dy": 99,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": -122,
+     "dy": 95,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": -133,
+     "dy": 91,
+     "piece": "rune",
+     "index": 0
+    },
+    {
+     "dx": -144,
+     "dy": 87,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": -155,
+     "dy": 82,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": -166,
+     "dy": 77,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": -177,
+     "dy": 71,
+     "piece": "rune",
+     "index": 1
+    },
+    {
+     "dx": -187,
+     "dy": 64,
+     "piece": "groove",
+     "index": 6
+    },
+    {
+     "dx": -196,
+     "dy": 57,
+     "piece": "groove",
+     "index": 6
+    },
+    {
+     "dx": -205,
+     "dy": 48,
+     "piece": "groove",
+     "index": 6
+    },
+    {
+     "dx": -212,
+     "dy": 39,
+     "piece": "rune",
+     "index": 2
+    },
+    {
+     "dx": -219,
+     "dy": 29,
+     "piece": "groove",
+     "index": 5
+    },
+    {
+     "dx": -223,
+     "dy": 18,
+     "piece": "groove",
+     "index": 5
+    },
+    {
+     "dx": -226,
+     "dy": 6,
+     "piece": "groove",
+     "index": 4
+    },
+    {
+     "dx": -226,
+     "dy": -6,
+     "piece": "rune",
+     "index": 3
+    },
+    {
+     "dx": -223,
+     "dy": -18,
+     "piece": "groove",
+     "index": 3
+    },
+    {
+     "dx": -219,
+     "dy": -29,
+     "piece": "groove",
+     "index": 3
+    },
+    {
+     "dx": -212,
+     "dy": -39,
+     "piece": "groove",
+     "index": 2
+    },
+    {
+     "dx": -205,
+     "dy": -48,
+     "piece": "rune",
+     "index": 0
+    },
+    {
+     "dx": -196,
+     "dy": -57,
+     "piece": "groove",
+     "index": 2
+    },
+    {
+     "dx": -187,
+     "dy": -64,
+     "piece": "groove",
+     "index": 2
+    },
+    {
+     "dx": -177,
+     "dy": -71,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": -166,
+     "dy": -77,
+     "piece": "rune",
+     "index": 1
+    },
+    {
+     "dx": -155,
+     "dy": -82,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": -144,
+     "dy": -87,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": -133,
+     "dy": -91,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": -122,
+     "dy": -95,
+     "piece": "rune",
+     "index": 2
+    },
+    {
+     "dx": -110,
+     "dy": -99,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": -99,
+     "dy": -102,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": -87,
+     "dy": -104,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": -75,
+     "dy": -107,
+     "piece": "rune",
+     "index": 3
+    },
+    {
+     "dx": -63,
+     "dy": -109,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": -51,
+     "dy": -110,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": -39,
+     "dy": -111,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": -27,
+     "dy": -112,
+     "piece": "rune",
+     "index": 0
+    },
+    {
+     "dx": -15,
+     "dy": -113,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": -3,
+     "dy": -113,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 9,
+     "dy": -113,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 21,
+     "dy": -113,
+     "piece": "rune",
+     "index": 1
+    },
+    {
+     "dx": 33,
+     "dy": -112,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 45,
+     "dy": -111,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 57,
+     "dy": -109,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 69,
+     "dy": -108,
+     "piece": "rune",
+     "index": 2
+    },
+    {
+     "dx": 81,
+     "dy": -106,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 93,
+     "dy": -103,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": 104,
+     "dy": -100,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": 116,
+     "dy": -97,
+     "piece": "rune",
+     "index": 3
+    },
+    {
+     "dx": 127,
+     "dy": -93,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": 139,
+     "dy": -89,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": 150,
+     "dy": -85,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": 161,
+     "dy": -80,
+     "piece": "rune",
+     "index": 0
+    },
+    {
+     "dx": 171,
+     "dy": -74,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": 182,
+     "dy": -68,
+     "piece": "groove",
+     "index": 6
+    },
+    {
+     "dx": 191,
+     "dy": -60,
+     "piece": "groove",
+     "index": 6
+    },
+    {
+     "dx": 200,
+     "dy": -53,
+     "piece": "rune",
+     "index": 1
+    },
+    {
+     "dx": 209,
+     "dy": -44,
+     "piece": "groove",
+     "index": 6
+    },
+    {
+     "dx": 216,
+     "dy": -34,
+     "piece": "groove",
+     "index": 5
+    },
+    {
+     "dx": 221,
+     "dy": -23,
+     "piece": "groove",
+     "index": 5
+    },
+    {
+     "dx": 225,
+     "dy": -12,
+     "piece": "rune",
+     "index": 2
+    }
+   ]
+  },
+  "R6": {
+   "radius_tiles": 6,
+   "used_by": "Чуров камень, костёр М3",
+   "perimeter_px": 657.7,
+   "count": 55,
+   "pieces": [
+    {
+     "dx": 136,
+     "dy": 0,
+     "piece": "groove",
+     "index": 4
+    },
+    {
+     "dx": 134,
+     "dy": 12,
+     "piece": "groove",
+     "index": 3
+    },
+    {
+     "dx": 128,
+     "dy": 22,
+     "piece": "rune",
+     "index": 0
+    },
+    {
+     "dx": 120,
+     "dy": 31,
+     "piece": "groove",
+     "index": 2
+    },
+    {
+     "dx": 111,
+     "dy": 39,
+     "piece": "groove",
+     "index": 2
+    },
+    {
+     "dx": 101,
+     "dy": 45,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": 90,
+     "dy": 51,
+     "piece": "rune",
+     "index": 1
+    },
+    {
+     "dx": 79,
+     "dy": 55,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": 68,
+     "dy": 59,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": 56,
+     "dy": 62,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": 45,
+     "dy": 64,
+     "piece": "rune",
+     "index": 2
+    },
+    {
+     "dx": 33,
+     "dy": 66,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 21,
+     "dy": 67,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 9,
+     "dy": 68,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": -3,
+     "dy": 68,
+     "piece": "rune",
+     "index": 3
+    },
+    {
+     "dx": -15,
+     "dy": 67,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": -27,
+     "dy": 67,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": -39,
+     "dy": 65,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": -51,
+     "dy": 63,
+     "piece": "rune",
+     "index": 0
+    },
+    {
+     "dx": -62,
+     "dy": 60,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": -74,
+     "dy": 57,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": -85,
+     "dy": 53,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": -96,
+     "dy": 48,
+     "piece": "rune",
+     "index": 1
+    },
+    {
+     "dx": -106,
+     "dy": 42,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": -116,
+     "dy": 35,
+     "piece": "groove",
+     "index": 6
+    },
+    {
+     "dx": -125,
+     "dy": 27,
+     "piece": "groove",
+     "index": 6
+    },
+    {
+     "dx": -131,
+     "dy": 17,
+     "piece": "rune",
+     "index": 2
+    },
+    {
+     "dx": -135,
+     "dy": 6,
+     "piece": "groove",
+     "index": 4
+    },
+    {
+     "dx": -135,
+     "dy": -6,
+     "piece": "groove",
+     "index": 4
+    },
+    {
+     "dx": -131,
+     "dy": -17,
+     "piece": "groove",
+     "index": 3
+    },
+    {
+     "dx": -125,
+     "dy": -27,
+     "piece": "rune",
+     "index": 3
+    },
+    {
+     "dx": -116,
+     "dy": -35,
+     "piece": "groove",
+     "index": 2
+    },
+    {
+     "dx": -106,
+     "dy": -42,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": -96,
+     "dy": -48,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": -85,
+     "dy": -53,
+     "piece": "rune",
+     "index": 0
+    },
+    {
+     "dx": -74,
+     "dy": -57,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": -62,
+     "dy": -60,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": -51,
+     "dy": -63,
+     "piece": "groove",
+     "index": 1
+    },
+    {
+     "dx": -39,
+     "dy": -65,
+     "piece": "rune",
+     "index": 1
+    },
+    {
+     "dx": -27,
+     "dy": -67,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": -15,
+     "dy": -67,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": -3,
+     "dy": -68,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 9,
+     "dy": -68,
+     "piece": "rune",
+     "index": 2
+    },
+    {
+     "dx": 21,
+     "dy": -67,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 33,
+     "dy": -66,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 45,
+     "dy": -64,
+     "piece": "groove",
+     "index": 0
+    },
+    {
+     "dx": 56,
+     "dy": -62,
+     "piece": "rune",
+     "index": 3
+    },
+    {
+     "dx": 68,
+     "dy": -59,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": 79,
+     "dy": -55,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": 90,
+     "dy": -51,
+     "piece": "groove",
+     "index": 7
+    },
+    {
+     "dx": 101,
+     "dy": -45,
+     "piece": "rune",
+     "index": 0
+    },
+    {
+     "dx": 111,
+     "dy": -39,
+     "piece": "groove",
+     "index": 6
+    },
+    {
+     "dx": 120,
+     "dy": -31,
+     "piece": "groove",
+     "index": 6
+    },
+    {
+     "dx": 128,
+     "dy": -22,
+     "piece": "groove",
+     "index": 6
+    },
+    {
+     "dx": 134,
+     "dy": -12,
+     "piece": "rune",
+     "index": 1
+    }
+   ]
+  }
+ },
+ "palette": "palette_v2",
+ "alpha": "0/255 only"
+}

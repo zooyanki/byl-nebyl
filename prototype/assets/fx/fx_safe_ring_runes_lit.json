@@ -1,0 +1,21 @@
+{
+ "effect": "Граница безопасной зоны: реза на земле (2:1)",
+ "state": "lit",
+ "pivot": [
+  6,
+  4
+ ],
+ "frames_are": "4 rune variants, not rotated",
+ "fps": 0,
+ "loop": false,
+ "layer": "ground decal under characters",
+ "image": "fx_safe_ring_runes_lit.png",
+ "frame_size": [
+  12,
+  8
+ ],
+ "frame_count": 4,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

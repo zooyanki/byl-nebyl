@@ -13,7 +13,7 @@
   "anchutka": 30,
   "chernoyarets_arsonist": 25
  },
- "repopulate": "onZoneEnter",
+ "repopulate": "onNewSession",
  "implemented": false,
  "size": [
   64,
@@ -37,7 +37,12 @@
   {
    "at": "churStone",
    "radius": 6,
-   "packMinDist": 8
+   "packMinDist": 8,
+   "rest": {
+    "pctPerSec": 20,
+    "noDamageSec": 2,
+    "_gdd": "GDD v1.7 §4.5: отдых — Жизнь и Ярь +20% от максимума в секунду, если 2 с без урона; только внутри круга"
+   }
   }
  ],
  "checkpoint": {
@@ -45,5 +50,6 @@
   "tolerance": 1,
   "_note": "GDD v1.5 §9.3"
  },
- "hudName": "Капище Перуна"
+ "hudName": "Капище Перуна",
+ "_repopulateNote": "GDD v1.7 §4.5: убитые враги не возвращаются ни при гибели, ни при возрождении героя — только в новой сессии (загрузка слота, перезапуск). Недобитые при гибели героя уходят к логову и восстанавливают HP, как по поводку. Трекер назад не идёт."
 }

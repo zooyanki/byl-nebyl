@@ -1,0 +1,27 @@
+{
+ "effect": "Тёплые искры над героем, пока растёт Жизнь (отдых в безопасной зоне)",
+ "pivot": [
+  32,
+  56
+ ],
+ "fps": 8,
+ "loop": true,
+ "anchors": {
+  "attach": "hero pivot (the frame is the hero's own 64x64 cell, pivot (32,56))"
+ },
+ "colours": "bronze, bronze_lt, bronze_hi, flame, linen only; no red/red_lt/red_dk/ember (red is the hero's accent, scale.md §4.4)",
+ "layer": "drawn over the hero sprite; play only while Жизнь or Ярь is rising, stop (let the loop finish) when full",
+ "sparks_band_px": [
+  14,
+  56
+ ],
+ "image": "fx_rest_sparks.png",
+ "frame_size": [
+  64,
+  64
+ ],
+ "frame_count": 4,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

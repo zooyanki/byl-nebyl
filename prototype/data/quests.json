@@ -1,0 +1,68 @@
+{
+ "_about": "Миссии и цели трекера (GDD v1.5 §8.2, act1.md v1.1). Машина состояний в данных: у цели state0 (hidden — не показана, locked — показана серым как следующая, active), условия activateOn / progressOn / doneOn — событие {event, ...поля}, все поля должны совпасть. count — счётчик «n/count». Действия onActivate / onDone / triggers[].do: bark (реплика героя или говорящего), dialog (цепочка реплик из ru.json), flag (флаг миссии), notify, log. Тексты — ключи data/ru.json. Трекер показывает не больше maxLines строк: только что выполненные (гаснут за doneFade с), активные, затем следующие серым (GDD §8.2: «не больше 3 строк, выполненные гаснут»). implemented:false — цель есть в данных, но её события появятся в следующих вехах (капище, Кривша).",
+ "events": {
+  "_about": "Какие события шлёт игра: zoneEnter {zone}; reach {target} — герой дошёл до точки зоны; hutFreed {hut}; arsonistSeen — первая встреча с черноярцем-поджигателем (тот заметил героя или герой видит его ближе sightRange); relicTaken {relic}; letterRead {letter}; chestOpened {chest}; bossKilled {boss}.",
+  "arsonistSightRange": 9,
+  "_arsonistSightRangeNote": "ЗАГЛУШКА (нет в GDD): с какого расстояния герой «видит» поджигателя для реплики и цели"
+ },
+ "m1": {
+  "titleKey": "quest.m1.title",
+  "actKey": "quest.act",
+  "maxLines": 3,
+  "doneFade": 4,
+  "_doneFadeNote": "ЗАГЛУШКА: сколько секунд выполненная цель висит в трекере с галочкой, прежде чем погаснуть (GDD: «выполненные гаснут», без числа)",
+  "objectives": [
+   {
+    "id": "reach",
+    "textKey": "quest.m1.obj.reach",
+    "state0": "active",
+    "doneOn": { "event": "reach", "target": "kapishche_gate" },
+    "required": true,
+    "_note": "Капище — следующая веха: в прототипе цель закрывается у ворот капища в конце Лесной тропы (вход в капище — Чуров камень, GDD §8.1)"
+   },
+   {
+    "id": "huts",
+    "textKey": "quest.m1.obj.huts",
+    "state0": "active",
+    "count": 3,
+    "progressOn": { "event": "hutFreed" },
+    "onDone": [ { "bark": "bark.m1.huts_done" } ],
+    "required": true
+   },
+   {
+    "id": "hearths",
+    "textKey": "quest.m1.obj.hearths",
+    "state0": "locked",
+    "count": 3,
+    "activateOn": { "event": "zoneEnter", "zone": "kapishche" },
+    "progressOn": { "event": "hearthFreed" },
+    "required": false,
+    "implemented": false
+   },
+   {
+    "id": "krivsha",
+    "textKey": "quest.m1.obj.krivsha",
+    "state0": "locked",
+    "activateOn": { "event": "zoneEnter", "zone": "kapishche" },
+    "doneOn": { "event": "bossKilled", "boss": "krivsha" },
+    "required": true,
+    "implemented": false
+   },
+   {
+    "id": "arsonist",
+    "textKey": "quest.m1.obj.arsonist",
+    "state0": "hidden",
+    "activateOn": { "event": "arsonistSeen" },
+    "onActivate": [ { "bark": "bark.m1.arsonist" } ],
+    "doneOn": { "event": "letterRead", "letter": "order" },
+    "required": true,
+    "_note": "Цель открывается при первой встрече с поджигателем (act1: «игрок видит это раньше, чем находит нож»), закрывается «Приказом Чернояра» на Кривше (GDD §8.2 п.5) — следующая веха"
+   }
+  ],
+  "triggers": [
+   { "on": { "event": "hutFreed", "hut": "hut3" }, "do": [ { "dialog": "dialog.m1.mal" }, { "flag": "trailOpen" } ], "_note": "Мал в избе у колодца открывает тропу (GDD §8.2 п.2)" },
+   { "on": { "event": "relicTaken", "relic": "knife" }, "do": [ { "bark": "bark.m1.knife" } ] },
+   { "on": { "event": "chestOpened", "chest": "trail_chest" }, "do": [ { "notify": "ui.tut.bag" } ], "_note": "Сундук с заговорённым оружием — обучение котомке (GDD §8.2 п.3)" }
+  ]
+ }
+}

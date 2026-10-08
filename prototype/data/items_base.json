@@ -637,5 +637,6 @@
  },
  "beltSize": 4,
  "beltStack": 5,
- "potionCooldown": 1.0
+ "potionCooldown": 1.0,
+ "potionCooldownRule": "GDD v1.6 §4.4: перезарядка 1 с своя у каждого вида (жизнь / Ярь); живая вода (и будущая «Чистая вода») — мгновенно, вне перезарядки"
 }

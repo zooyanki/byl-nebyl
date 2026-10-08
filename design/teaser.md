@@ -2,7 +2,7 @@
 
 | Поле | Значение |
 |---|---|
-| Версия | 1.2, 08.10.2026: подписи серебра по GDD v1.4 §10.1 («Серебро: 284», «312 сер.»). 1.1: синхронизация с act1 v1.1 и GDD v1.3 — «Лютоволк» вместо «Лютоволк», цели трекеров дословно по act1 v1.1, Ярь в М3 с учётом «Ярь I», финал с закрытием Разлома (копия 1.0: `/workspace/gamedesign/archive/teaser_before_act1_v1.1.md`) |
+| Версия | **1.3, 08.10.2026: §6.4 — исправлена команда ffmpeg (палитра 32 цвета, HUD пиксель в пиксель), эталон — `/workspace/kling_pack/postprocess/make_teaser.ps1`** (копия 1.2: `/workspace/gamedesign/archive/teaser_v1.2_before_ffmpeg.md`). 1.2, 08.10.2026: подписи серебра по GDD v1.4 §10.1 («Серебро: 284», «312 сер.»). 1.1: синхронизация с act1 v1.1 и GDD v1.3 — «Лютоволк» вместо «Волкодлака», цели трекеров дословно по act1 v1.1, Ярь в М3 с учётом «Ярь I», финал с закрытием Разлома (копия 1.0: `/workspace/gamedesign/archive/teaser_before_act1_v1.1.md`) |
 | Автор | Геймдизайнер проекта |
 | Для кого | Руководитель (Вася), художник, монтаж |
 | Цель | Ролик 30–34 с: показать команде и критикам **настроение и ощущение** игры (тёплая Быль против холодной зелёной Небыли, тяжёлый удар, ведовство, лут). Точные механики не показываем |
@@ -373,10 +373,39 @@ werewolf transforming into another creature, werewolf getting up, werewolf walki
 
 ### 6.4. Пост-обработка клипа (возврат к пиксель-арту)
 
-Kling выдаёт видео с мягкими пикселями и цветами вне палитры. Это возвращает картинку к нативной сетке 640×360 и палитре v2, а заодно даёт «спрайтовую» частоту 12 кадров/с, которая скрывает микродрожание:
+Kling выдаёт видео с мягкими пикселями и цветами вне палитры. Обработка возвращает картинку к нативной сетке 640×360 и палитре v2 (32 цвета) и даёт «спрайтовую» частоту 12 кадров/с, которая скрывает микродрожание.
+
+**Эталон — `/workspace/kling_pack/postprocess/make_teaser.ps1`** (PowerShell; `make_teaser.bat` — та же цепочка с теми же строками фильтров). Скрипт собирает все 4 сцены и плашку, меняет слои HUD по таймингу §7.1 и склеивает итоговый MP4. При расхождении этого раздела со скриптом прав скрипт. Запуск: `powershell -ExecutionPolicy Bypass -File .\make_teaser.ps1`, ffmpeg в PATH (`winget install Gyan.FFmpeg`). Клипы класть в `postprocess/clips/` как `scene1.mp4` … `scene4.mp4` (или `sceneNa.mp4` + `sceneNb.mp4` — склеит сам), слои HUD берутся из `kling_pack/02_hud_overlay/`, палитра — `postprocess/palette_v2_256.png`.
+
+**Что было не так в версии 1.2 (сообщил Вася):** после `paletteuse` кадр оставался в формате палитры (`pal8`), и перед ×3-апскейлом и наложением HUD ffmpeg сам переводил его в YUV. Отсюда ≈ 3 400 цветов вместо 32 и HUD не пиксель в пиксель (сдвиг цвета и смаз на субдискретизации). Исправление:
+- `format=rgb24` **сразу после `paletteuse`, перед** `scale=1920:1080:flags=neighbor`;
+- `overlay=0:0:format=rgb` — наложение HUD в RGB;
+- `setsar=1,format=rgb24` в конце, мастер в `libx264rgb -crf 0`; в YUV (`yuv420p`, bt709) переводится только итоговый MP4 при склейке.
+
+Проверка 08.10.2026 на размытом кадре сцены 1: старая цепочка — 3 272 цвета (все вне палитры), HUD расходится со слоем во всех непрозрачных пикселях; новая — 31 цвет, все из палитры v2, HUD совпадает со слоем пиксель в пиксель.
 
 ```bash
-# один раз: палитра v2 в формате 16×16 для ffmpeg paletteuse
+# одна сцена вручную (строки фильтров дословно из make_teaser.ps1: $PIX + $F1)
+ffmpeg -hide_banner -y -i clips/scene1.mp4 -i palette_v2_256.png -i ../02_hud_overlay/scene1_hud.png \
+ -filter_complex "[0:v]setpts=PTS-STARTPTS,fps=12,scale=640:360:flags=area[s];[s][1:v]paletteuse=dither=none[p];[p]format=rgb24,scale=1920:1080:flags=neighbor[b];[b][2:v]overlay=0:0:format=rgb,fps=24,fade=t=in:st=0:d=0.25,setsar=1,format=rgb24[v]" \
+ -map "[v]" -t 10 -an -c:v libx264rgb -crf 0 -preset veryfast work/scene1.mkv
+```
+
+| Сцена | Слои HUD (`02_hud_overlay/`) | Переключение | Длина |
+|---|---|---|---|
+| 1 | `scene1_hud.png` | — (вход из чёрного 0,25 с) | 10 с |
+| 2 | `scene2_hud.png` | — (2 кадра чёрного в начале) | 5 с |
+| 3 | `scene3_hud_a_before_cast.png` → `scene3_hud_b_after_cast.png` | на 1,2 с клипа (взрыв) | 5 с |
+| 4 | `scene4_hud_a_boss_alive.png` → `scene4_hud_b_boss_dead.png`, + `scene4_hud_c_loot_labels.png` | 3 с (распад) / 7 с (подписи лута) | 10 с |
+| Плашка | `title_text_layer.png` поверх `clips/title_bg.mp4`, иначе статичная `title_card.png` | — | 4 с |
+
+Склейка: 5 мастеров → `concat`, `scale=out_color_matrix=bt709:out_range=tv,format=yuv420p`, `libx264 -crf 15 -preset slow`, метки bt709, `+faststart` → `teaser_final.mp4`. Мастер-файлы сцен остаются в `work/` без потерь.
+
+Имена слоёв в `kling_pack` отличаются от рабочих имён этого файла (`hud_scene1.png` = `scene1_hud.png`, `hud_scene23_a/b` = `scene2_hud` / `scene3_hud_a/b`, `hud_scene4` / `_end` / `_loot` = `scene4_hud_a/b/c`); в монтаже ориентироваться на имена `kling_pack`.
+
+Палитра `palette_v2_256.png` (16×16, 32 цвета v2 по кругу) уже лежит в `postprocess/`; пересобрать при смене `palette_v2.json`:
+
+```bash
 python3 - <<'PY'
 import json
 from PIL import Image
@@ -385,16 +414,11 @@ im = Image.new("RGB", (16, 16))
 for i in range(256):
     h = pal[i % 32]
     im.putpixel((i % 16, i // 16), tuple(int(h[k:k + 2], 16) for k in (1, 3, 5)))
-im.save("/workspace/game/art/teaser/palette_v2_256.png")
+im.save("/workspace/kling_pack/postprocess/palette_v2_256.png")
 PY
-
-# клип Kling -> 12 fps, натив 640x360, палитра v2 без дизера, x3 nearest, наложение HUD
-ffmpeg -i scene1_kling.mp4 -i palette_v2_256.png -i hud_scene1.png -filter_complex \
- "[0:v]fps=12,scale=640:360:flags=area[s];[s][1:v]paletteuse=dither=none[p];[p]scale=1920:1080:flags=neighbor[b];[b][2:v]overlay=0:0" \
- -c:v libx264rgb -crf 0 scene1_final.mkv
 ```
 
-Цепочку проверил на тестовом размытом кадре из макета: результат снова в палитре v2, HUD чёткий. Мастер-файлы держать в RGB без потерь (`libx264rgb`, `-crf 0`); итоговый MP4 для показа — yuv420p, `-crf 14–16`. Если 12 кадров/с выглядят слишком рвано на огне, оставить 24 и сделать только палитру и пиксельную сетку.
+Если 12 кадров/с выглядят слишком рвано на огне, оставить 24 (убрать `fps=12` в `$PIX`) — палитра и пиксельная сетка сохраняются.
 
 ### 6.5. Прочие советы
 

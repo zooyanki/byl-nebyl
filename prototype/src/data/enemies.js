@@ -24,3 +24,9 @@ export function enemyStats(kind, mlvl) {
     xp: monsterXp(m, d.xpMul),
   };
 }
+
+/** Средний базовый урон монстра уровня mlvl (до множителя типа) — для «Поджога» (GDD §5.2 E11: 0,8 × средний урон mlvl). */
+export function baseDamageAvg(mlvl) {
+  const s = SCALE, f = ([a, b]) => a + b * mlvl;
+  return (f(s.dmgMin) + f(s.dmgMax)) / 2;
+}
