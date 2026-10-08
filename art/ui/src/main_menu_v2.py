@@ -203,8 +203,8 @@ def logo(cv, cy):
     return x0, y0, total, hgt
 
 
-def main():
-    cv = Canvas(W, H)
+def background(cv):
+    """Night over Ladoga without any text (shared with the teaser title card)."""
     sky(cv)
     treeline(cv, HZ - 2, C["pine_dk"], 4, 4, 12, 4)                 # far forest shore
     fortress(cv, 150, HZ - 4)
@@ -223,25 +223,62 @@ def main():
             if ph > 0.85 and w > 6:          # moonlit branch tips
                 cv.px(x + w // 2 - 1, base - h + k, C["night"])
     cv.rect(0, 336, W, 24, C["ink"])
-    # logo + subtitle
-    lx, ly, lw, lh = logo(cv, 54)
-    T.text_ru(cv, W // 2 + 1, 14, "ГАРДАРИКИ", C["bronze_lt"], font=FONT_USTAV, align="c")
-    tw = pk.text_width("ГАРДАРИКИ", FONT_USTAV)
-    for sx in (W // 2 - tw // 2 - 50, W // 2 + tw // 2 + 8):
-        T.interlace(cv, sx, 16, 42, 7, period=10, bg=C["ink"])
+
+
+# GDD §10 (main menu row) + act1_texts §21.2 ui.menu.*: no «ГАРДАРИКИ» (GDD §0.1), no «Выход» (browser game)
+MENU = dict(slots=(("1", "Ратибор · ур. 4 · Залесье", True), ("2", "Пустой слот", False), ("3", "Пустой слот", False)))
+
+
+def main():
+    cv = Canvas(W, H)
+    background(cv)
+    # logo + subtitle (the «ГАРДАРИКИ» header is removed: GDD §0.1)
+    lx, ly, lw, lh = logo(cv, 50)
     sw_ = pk.text_width("рабочее название · макет", FONT_RU) + 10
     cv.remap(W // 2 - sw_ // 2, ly + lh, sw_, 12, pk.DARKEN3)
     T.text_ru(cv, W // 2 + 1, ly + lh + 2, "рабочее название · макет", C["mist"], align="c")
-    # menu panel + buttons
-    bw, bh, gap = 160, 21, 6
-    labels = ["НОВАЯ ИГРА", "ПРОДОЛЖИТЬ", "НАСТРОЙКИ", "СОЗДАТЕЛИ", "ВЫХОД"]
-    ph = len(labels) * (bh + gap) - gap + 30
-    px, py = W // 2 - (bw + 30) // 2, 128
-    U.carved_frame(cv, px, py, bw + 30, ph, fill="dim")
-    for i, lab in enumerate(labels):
-        st = "hover" if i == 1 else "normal"
-        U.button(cv, W // 2 - bw // 2, py + 15 + i * (bh + gap), bw, bh, lab, state=st, font=FONT_USTAV, seed=11 + i)
-    U.cursor(cv, W // 2 + 52, py + 15 + (bh + gap) + 12)
+    # menu panel: Новая игра · Продолжить · 3 слота · Выгрузить / загрузить сохранение · Настройки · Создатели
+    bw = 200
+    pw = bw + 30
+    px, py = W // 2 - pw // 2, 112
+    x0 = W // 2 - bw // 2
+    y = py + 15
+    rows = []
+    rows.append(("btn", "НОВАЯ ИГРА", 19, "normal", FONT_USTAV)); rows.append(("gap", 5))
+    rows.append(("btn", "ПРОДОЛЖИТЬ", 19, "hover", FONT_USTAV)); rows.append(("gap", 5))
+    rows.append(("slots", 50)); rows.append(("gap", 5))
+    rows.append(("btn", "Выгрузить сохранение", 15, "normal", FONT_RU)); rows.append(("gap", 4))
+    rows.append(("btn", "Загрузить сохранение", 15, "normal", FONT_RU)); rows.append(("gap", 4))
+    rows.append(("pair", ("Настройки", "Создатели"), 15))
+    ph = sum(r[2] if r[0] in ("btn", "pair") else r[1] for r in rows) + 30
+    assert py + ph <= 334, py + ph
+    U.carved_frame(cv, px, py, pw, ph, fill="dim")
+    hover_y = None
+    for i, r in enumerate(rows):
+        if r[0] == "gap":
+            y += r[1]
+        elif r[0] == "btn":
+            U.button(cv, x0, y, bw, r[2], r[1], state=r[3], font=r[4], seed=11 + i)
+            if r[3] == "hover":
+                hover_y = y
+            y += r[2]
+        elif r[0] == "pair":
+            hw = (bw - 4) // 2
+            U.button(cv, x0, y, hw, r[2], r[1][0], font=FONT_RU, seed=31)
+            U.button(cv, x0 + hw + 4, y, hw, r[2], r[1][1], font=FONT_RU, seed=32)
+            y += r[2]
+        elif r[0] == "slots":
+            U.inset(cv, x0, y, bw, r[1]) if hasattr(U, "inset") else pk.inset(cv, x0, y, bw, r[1])
+            T.text_ru(cv, x0 + 5, y + 3, "Слоты сохранений", C["mist"], outline=False)
+            for k, (num, text, sel) in enumerate(MENU["slots"]):
+                ry = y + 15 + k * 11
+                if sel:
+                    cv.rect(x0 + 3, ry - 1, bw - 6, 11, C["wood_dk"])
+                    cv.frame(x0 + 3, ry - 1, bw - 6, 11, C["bronze"])
+                T.text_ru(cv, x0 + 8, ry, num, C["bronze_lt"] if sel else C["slate_lt"], outline=False)
+                T.text_ru(cv, x0 + 18, ry, text, C["linen"] if sel else C["slate_lt"], outline=False)
+            y += r[1]
+    U.cursor(cv, W // 2 + 60, hover_y + 11)
     # corner texts
     T.text_ru(cv, W - 5, H - 13, "Сборка 0.1.7 · пре-альфа", C["slate_lt"], align="r", outline=False)
     T.text_ru(cv, 5, H - 13, "Макет интерфейса · 2026", C["slate"], outline=False)

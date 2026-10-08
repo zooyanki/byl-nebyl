@@ -1,5 +1,5 @@
 // Звуки-заглушки: всё синтезируется WebAudio на лету, без файлов.
-// play(name): hit, crit, miss, hurt, block, skill, explode, kill, pickup, silver, potion, equip, levelup, death, respawn, ui, error.
+// play(name): hit, crit, throw, miss, hurt, block, skill, explode, kill, pickup, silver, potion, equip, levelup, death, respawn, ui, error.
 const STORE_KEY = 'byl_nebyl_mute';
 
 export class Audio {
@@ -81,6 +81,7 @@ export class Audio {
       case 'levelup': [523, 659, 784, 1047].forEach((f, i) => this.tone('triangle', f, f, 0.22, 0.2, i * 0.09)); break;
       case 'death': this.tone('sawtooth', 300, 50, 1.3, 0.16); this.tone('sine', 150, 40, 1.2, 0.2, 0.1); break;
       case 'respawn': [392, 523, 659].forEach((f, i) => this.tone('sine', f, f, 0.4, 0.15, i * 0.12)); break;
+      case 'throw': this.noise(0.12, 0.1, 'bandpass', 1800, 1, 0, 700); break;
       case 'ui': this.tone('square', 700, 700, 0.03, 0.06); break;
       case 'error': this.tone('square', 160, 140, 0.12, 0.1); break;
     }

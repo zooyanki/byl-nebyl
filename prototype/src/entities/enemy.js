@@ -1,10 +1,11 @@
 // Нечисть: бродит у логова, замечает героя в радиусе агрессии, преследует, бьёт (с телеграфом замаха).
-// Сильный удар оглушает на 0,25 с (не чаще раза в 1,5 с), удары отбрасывают. Анчутка может с визгом
-// убежать, если рядом погиб сородич (GDD §5.2). Далеко от логова — возвращается и лечится.
+// Сильный удар оглушает на 0,25 с (не чаще раза в 1,5 с), удары отбрасывают. Анчутка (GDD v1.2 §5.2)
+// держится на расстоянии и кидает угли (дальность 4, снаряд 8 тайлов/с), после броска с шансом 30%
+// отбегает на 2–3 тайла; если рядом погиб сородич — с шансом 30% удирает на 3 с. Далеко от логова — возвращается и лечится.
 import { Actor } from './actor.js';
 import { ENEMIES, enemyStats } from '../data/enemies.js';
-import { hitChance } from '../data/progression.js';
-import { lineWalkable } from '../world/collision.js';
+import { hitChance, S as STATS } from '../data/progression.js';
+import { lineWalkable, sightClear } from '../world/collision.js';
 import { rnd } from '../core/math.js';
 import { PAL } from '../palette.js';
 
@@ -18,7 +19,7 @@ export class Enemy extends Actor {
     this.def = def;
     this.kind = kind;
     this.name = def.name;
-    Object.assign(this, enemyStats(kind, mlvl));    // mlvl, hp, dmgMin, dmgMax, ar, def, xp
+    Object.assign(this, enemyStats(kind, mlvl));    // mlvl, hp, dmgMin, dmgMax, ar, dfn, xp
     this.maxHp = this.hp;
     this.speed = def.speed * rnd(0.92, 1.08);
     this.homeX = x; this.homeY = y;
@@ -68,8 +69,9 @@ export class Enemy extends Actor {
     }
     // отбрасывание (лёгких — сильнее) и оглушение: удар > 10% макс. HP прерывает на 0,25 с, не чаще раза в 1,5 с
     if (opts.kbDir && opts.kb) this.knock(opts.kbDir[0], opts.kbDir[1], opts.kb / this.def.mass);
-    if (dmg > this.maxHp * 0.1 && this.age - this.lastStagger >= 1.5) {
-      this.stagger = 0.25; this.lastStagger = this.age;
+    const st = STATS.monsterStagger;
+    if (dmg > this.maxHp * st.hpFrac && this.age - this.lastStagger >= st.cooldown) {
+      this.stagger = st.time; this.lastStagger = this.age;
       if (this.state === 'attack' && !this.attackFired) { this.state = 'chase'; this.t = 0; }
     }
     this.aggro(game);
@@ -115,7 +117,13 @@ export class Enemy extends Actor {
       case 'chase': {
         if (!heroTargetable) { this.state = 'return'; this.path = null; break; }
         if (Math.hypot(this.x - this.homeX, this.y - this.homeY) > def.leash && dHero > 3) { this.state = 'return'; this.path = null; break; }
-        if (dHero <= def.reach + hero.r * 0.5) {
+        const rg = def.ranged;
+        if (rg && dHero <= rg.range && dHero > 0.3 && sightClear(map, this.x, this.y, hero.x, hero.y)) {
+          this.state = 'attack'; this.t = 0; this.attackFired = false; this.moving = false; this.path = null;
+          this.face(hero.x - this.x, hero.y - this.y);
+          break;
+        }
+        if (!rg && dHero <= def.reach + hero.r * 0.5) {
           this.state = 'attack'; this.t = 0; this.attackFired = false; this.moving = false; this.path = null;
           this.face(hero.x - this.x, hero.y - this.y);
           break;
@@ -133,6 +141,10 @@ export class Enemy extends Actor {
       }
       case 'attack': {
         this.face(hero.x - this.x, hero.y - this.y);
+        if (!this.attackFired && this.t >= def.hitAt && def.ranged) {
+          this.attackFired = true;
+          if (heroTargetable) game.combat.throwCoal(this, hero.x, hero.y);
+        }
         if (!this.attackFired && this.t >= def.hitAt) {
           this.attackFired = true;
           if (heroTargetable && this.distTo(hero) <= def.reach + hero.r + 0.35) {
@@ -141,12 +153,21 @@ export class Enemy extends Actor {
             } else game.fx.text(hero.x, hero.y, 'Мимо', PAL.mist, 50, { dur: 0.6 });
           }
         }
-        if (this.t >= def.attackTime) { this.state = 'chase'; this.t = 0; }
+        if (this.t >= def.attackTime) {
+          this.state = 'chase'; this.t = 0;
+          const rg = def.ranged;
+          // анчутка: после броска с шансом 30% отбегает на 2–3 тайла; слишком близко к герою — отходит всегда
+          if (rg && (Math.random() < rg.retreatChance || this.distTo(hero) < rg.keepMin)) {
+            const dist = rg.retreatDist[0] + Math.random() * (rg.retreatDist[1] - rg.retreatDist[0]);
+            this.scare(this.x - hero.x, this.y - hero.y, dist / this.speed);
+            this.retreating = true;
+          }
+        }
         break;
       }
       case 'flee': {
         this.stepToward(map, this.x + this.fleeDir[0], this.y + this.fleeDir[1], this.speed, dt);
-        if (this.t >= (this.fleeTime || 1)) { this.state = 'chase'; this.t = 0; }
+        if (this.t >= (this.fleeTime || 1)) { this.state = 'chase'; this.t = 0; this.retreating = false; }
         break;
       }
       case 'return': {

@@ -1,5 +1,6 @@
 // Боевая логика: удар героя (меткость, крит, хит-стоп, отбрасывание), «Огненный змей»
-// (снаряд + взрыв; взрыв не бьёт сквозь стены — проверка прямой видимости от центра взрыва).
+// (снаряд + взрыв; взрыв не бьёт сквозь стены — проверка прямой видимости от центра взрыва),
+// угли анчуток (вражеский снаряд: попадает при касании, гаснет о стену, от него можно уйти).
 import { rndInt } from '../core/math.js';
 import { sightClear } from '../world/collision.js';
 import { hitChance, MELEE_RANGE, HIT_STOP } from '../data/progression.js';
@@ -13,7 +14,7 @@ export class Combat {
     const g = this.game;
     if (!target || target.dead) return;
     if (hero.distTo(target) > MELEE_RANGE + target.r + 0.4) return;           // увернулся / убежал
-    if (Math.random() >= hitChance(hero.ar, target.def, hero.level, target.mlvl)) {
+    if (Math.random() >= hitChance(hero.ar, target.dfn, hero.level, target.mlvl)) {
       g.fx.text(target.x, target.y, 'Мимо', PAL.mist, target.def.height + 6, { dur: 0.7 });
       g.audio.play('miss');
       return;
@@ -21,7 +22,7 @@ export class Combat {
     const crit = Math.random() < hero.crit;
     let dmg = rndInt(hero.dmgMin, hero.dmgMax);
     if (target.def.family === 'Нечисть') dmg *= 1 + hero.vsNechist;
-    if (crit) dmg *= 1.5;
+    if (crit) dmg *= hero.critMult;
     dmg = Math.floor(dmg);
     const dir = [target.x - hero.x, target.y - hero.y];
     const done = target.takeDamage(dmg, g, 'melee', hero, { crit, kbDir: dir, kb: crit ? 0.5 : 0.28 });
@@ -44,6 +45,18 @@ export class Combat {
     });
   }
 
+  throwCoal(enemy, tx, ty) {
+    const rg = enemy.def.ranged;
+    let dx = tx - enemy.x, dy = ty - enemy.y;
+    const d = Math.hypot(dx, dy) || 1;
+    dx /= d; dy /= d;
+    this.projectiles.push({
+      hostile: true, coal: true, src: enemy, x: enemy.x + dx * 0.3, y: enemy.y + dy * 0.3, vx: dx * rg.projSpeed, vy: dy * rg.projSpeed,
+      travelled: 0, range: rg.range + 0.8, r: 0.12, dmg: [enemy.dmgMin, enemy.dmgMax], element: rg.element, t: 0, trail: [],
+    });
+    this.game.audio.play('throw');
+  }
+
   update(dt) {
     const g = this.game;
     for (const p of this.projectiles) {
@@ -54,6 +67,16 @@ export class Combat {
         const ox = p.x, oy = p.y;
         p.x += (p.vx * dt) / steps; p.y += (p.vy * dt) / steps;
         p.travelled += (Math.hypot(p.vx, p.vy) * dt) / steps;
+        if (p.hostile) {
+          const h = g.hero;
+          if (g.map.opaqueAt(p.x, p.y) || p.travelled >= p.range) { this.fizzle(p); break; }
+          if (!h.dead && Math.hypot(h.x - p.x, h.y - p.y) < h.r + p.r) {
+            p.dead = true;
+            g.fx.burst(p.x, p.y, PAL.ember, 8, 20, 50);
+            h.takeDamage(rndInt(p.dmg[0], p.dmg[1]), g, p.element, null);
+          }
+          continue;
+        }
         if (g.map.opaqueAt(p.x, p.y)) { p.x = ox; p.y = oy; this.explode(p); break; }     // упёрся в стену — взрыв перед ней
         if (p.travelled >= p.range) { this.explode(p); break; }
         for (const e of g.enemies) {
@@ -61,9 +84,14 @@ export class Combat {
         }
       }
       p.trail.push([p.x, p.y]); if (p.trail.length > 6) p.trail.shift();
-      if (!p.dead && Math.random() < 0.6) g.fx.parts.push({ x: p.x, y: p.y, ox: 0, oy: -22, vx: 0, vy: -10, g: 0, t: 0, dur: 0.3, color: Math.random() < 0.5 ? PAL.ember : PAL.flame, size: 1 });
+      if (!p.dead && Math.random() < (p.coal ? 0.3 : 0.6)) g.fx.parts.push({ x: p.x, y: p.y, ox: 0, oy: -22, vx: 0, vy: -10, g: 0, t: 0, dur: 0.3, color: Math.random() < 0.5 ? PAL.ember : PAL.flame, size: 1 });
     }
     this.projectiles = this.projectiles.filter((p) => !p.dead);
+  }
+
+  fizzle(p) {
+    p.dead = true;
+    this.game.fx.burst(p.x, p.y, PAL.ember, 5, 16, 30);
   }
 
   explode(p) {
@@ -82,7 +110,9 @@ export class Combat {
       // стена между центром взрыва и целью гасит огонь
       if (!sightClear(g.map, p.x, p.y, e.x, e.y)) { blocked.push(e.id); continue; }
       hit.push(e.id);
-      e.takeDamage(rndInt(p.dmg[0], p.dmg[1]), g, 'fire', g.hero, { kbDir: [e.x - p.x, e.y - p.y], kb: sk.knockback });
+      const crit = Math.random() < g.hero.crit;      // урон ведовства тоже бывает удачным (GDD §3.3)
+      const dmg = Math.floor(rndInt(p.dmg[0], p.dmg[1]) * (crit ? g.hero.critMult : 1));
+      e.takeDamage(dmg, g, 'fire', g.hero, { crit, kbDir: [e.x - p.x, e.y - p.y], kb: sk.knockback });
     }
     this.lastBlast = { x: p.x, y: p.y, hit, blocked, t: g.time };
   }

@@ -281,12 +281,14 @@ S2 = dict(rift=(452, 172), volk=(446, 176), idol=(530, 128), fallen=(180, 238), 
 def ground_forest(lit, rng, seed=0):
     b = BAY
     n = noise(24, 31 + seed) * 0.6 + noise(7, 32 + seed) * 0.4
-    lit.put(np.ones((H, W), bool), "grass", np.clip(np.floor(1.3 + n * 2.0 + (b - 0.5) * 0.9).astype(int), 1, 3))
-    dark = noise(18, 33 + seed) > 0.56
-    lit.put(dark, "pine", np.clip(np.floor(1.2 + n * 1.8 + (b - 0.5) * 0.9).astype(int), 1, 2))
-    frost = (noise(6, 34 + seed) * 0.6 + noise(17, 35 + seed) * 0.4 > 0.66)
-    lit.put(frost & (b < 0.5), "stone", 4)
-    lit.put(frost & (b < 0.15), "stone", 5)
+    lit.put(np.ones((H, W), bool), "grass", np.clip(np.floor(2.2 + n * 1.4 + (b - 0.5) * 0.8).astype(int), 2, 3))
+    dark = noise(30, 33 + seed) > 0.6
+    lit.put(dark & (b < 0.5 + (noise(30, 33 + seed) - 0.6) * 3), "pine", 2)
+    fn = noise(16, 34 + seed) * 0.65 + noise(5, 35 + seed) * 0.35
+    lit.put((fn > 0.62) & (b < (fn - 0.62) * 7), "stone", 3)            # frost: dithered edge
+    lit.put(fn > 0.68, "stone", 3)
+    lit.put((fn > 0.68) & (b < 0.35), "stone", 4)
+    lit.put((fn > 0.73) & (b < 0.1), "stone", 5)
     for _ in range(420):                     # needles and twigs
         x, y = int(rng.integers(0, W - 3)), int(rng.integers(0, H))
         lit.put(_r(x, y, int(rng.integers(1, 4)), 1), "wood", 1)
@@ -317,7 +319,8 @@ def forest_frame(lit, rng, variant=2):
         MEAS.setdefault("spruces", []).append(h)
     if variant != 4:
         pine(lit, 548, 352, 184, seed=260, trunk=8, dark=1)
-        MEAS["pines"].append(184)
+        pine(lit, 112, 344, 176, seed=261, trunk=8, dark=1)
+        MEAS["pines"] += [184, 176]
 
 
 def chur_black(lit, feet):
@@ -367,9 +370,12 @@ def forest_world():
 
 def forest_lights(extra=()):
     rx, ry = S2["rift"]
-    src = [(rx, ry - 44, 190, 0.8), (HERO[0], HERO[1] - 22, 120, 0.3), (200, 40, 260, 0.3),
-           (S2["idol"][0], S2["idol"][1] - 30, 60, 0.3), (330, 220, 220, 0.2)] + list(extra)
-    return pk.light_field(W, H, src, ambient=0.4, depth=3.6, ysquash=1.4, gamma=0.9)
+    src = [(rx, ry - 44, 170, 0.55), (HERO[0], HERO[1] - 22, 100, 0.25), (370, 170, 300, 0.5),
+           (S2["idol"][0], S2["idol"][1] - 30, 60, 0.25), (180, 240, 120, 0.2), (214, 40, 70, 0.3)] + list(extra)
+    return pk.light_field(W, H, src, ambient=0.42, depth=3.3, ysquash=1.5, gamma=1.0)
+
+
+EERIE_F = dict(G.EERIE, mist="nebyl_dk", birch="nebyl_dk", slate_lt="pine_dk")
 
 
 def nebyl_eyes(spr):
@@ -389,7 +395,7 @@ def volk_out_of_rift(lit, tear):
     """Волколак half out of the tear: everything right of the tear's left
     lip is swallowed by the dark (dissolves into motes at the cut)."""
     snap = snapshot(lit)
-    spr = TS.rim_light(SR.volkolak(), side=1)          # Небыль rim on the contour (GDD §5)
+    spr = TS.rim_light(TS.rim_light(SR.volkolak(), side=1), side=-1)   # Небыль rim on the contour (GDD §5)
     vx, vy = S2["volk"]
     spr = nebyl_eyes(spr)
     place_m(lit, "volkolak_s2", spr, (vx, vy))
@@ -423,8 +429,8 @@ def scene2():
     L = forest_lights()
     a = lit.flatten(L)
     rx, ry = S2["rift"]
-    tint_p(a, rx, ry - 40, 80, 0.75, G.EERIE, prot, 0.25)
-    tint_p(a, rx, ry - 30, 150, 0.35, G.EERIE, prot, 0.25)
+    tint_p(a, rx, ry - 40, 80, 0.75, EERIE_F, prot, 0.25)
+    tint_p(a, rx, ry - 30, 150, 0.35, EERIE_F, prot, 0.25)
     return a, lit, L
 
 
@@ -455,7 +461,7 @@ def scene3():
     snow_up(lit, rng, 42, (0, 0, W, 300))                    # same rng sequence -> same snow as scene 2
     lx, ly = S2["leap"]
     shadow(lit, lx, ly + 10, 16, 3.5, -2)
-    spr = TS.rim_light(TS.volkolak_leap(1.07), side=1)
+    spr = TS.rim_light(TS.rim_light(TS.volkolak_leap(1.07), side=1), side=-1)
     place_m(lit, "volkolak_s3", nebyl_eyes(spr), (lx, ly))
     shadow(lit, *HERO, 9, 3.5)
     hero = TS.hero_pose("cast")
@@ -466,7 +472,164 @@ def scene3():
     L = forest_lights(extra=[(tx, ty, 48, 0.6)])
     a = lit.flatten(L)
     rx, ry = S2["rift"]
-    tint_p(a, rx, ry - 40, 80, 0.75, G.EERIE, prot, 0.25)
-    tint_p(a, rx, ry - 30, 150, 0.35, G.EERIE, prot, 0.25)
+    tint_p(a, rx, ry - 40, 80, 0.75, EERIE_F, prot, 0.25)
+    tint_p(a, rx, ry - 30, 150, 0.35, EERIE_F, prot, 0.25)
     tint(a, tx, ty, 30, 0.6, G.WARM)
+    return a, lit, L
+
+
+# ==========================================================================
+# SCENE 4 — «Край Разлома: Лютоволк» (teaser §5.2): start + end from one base
+# ==========================================================================
+S4 = dict(rift=(470, 150), boss=(408, 178), sword=(430, 190), pelt=(408, 182), staff=(396, 192), silver=(414, 198),
+          idols=((150, 120), (200, 262), (560, 250)))
+
+
+def cracked_ground(lit, rng):
+    b = BAY
+    n = noise(22, 61) * 0.6 + noise(6, 62) * 0.4
+    lit.put(np.ones((H, W), bool), "stone", np.clip(np.floor(2.4 + n * 1.3 + (b - 0.5) * 0.8).astype(int), 2, 3))
+    moss = noise(26, 63) > 0.62
+    lit.put(moss & (b < 0.5), "grass", 2)
+    fn = noise(14, 64) * 0.6 + noise(4, 65) * 0.4
+    lit.put((fn > 0.72) & (b < 0.45), "stone", 4)
+    lit.put((fn > 0.77) & (b < 0.12), "stone", 5)
+    for _ in range(60):
+        x, y = int(rng.integers(4, W - 6)), int(rng.integers(30, H - 4))
+        w = int(rng.integers(3, 7))
+        lit.put(_r(x, y, w, 2), "stone", 3); lit.put(_r(x, y - 1, w - 1, 1), "stone", 4); lit.put(_r(x, y + 2, w, 1), "ink", 0)
+    # crack network radiating from the rift: ink seams, faint Небыль glow inside
+    rx, ry = S4["rift"]
+    c = Canvas(W, H)
+    for k in range(12):
+        a = k / 12 * math.tau + rng.uniform(-0.15, 0.15)
+        x, y = rx + math.cos(a) * 14, ry + 4 + math.sin(a) * 6
+        ln = rng.uniform(60, 190)
+        steps = int(ln / 6)
+        for j in range(steps):
+            a += rng.uniform(-0.45, 0.45)
+            nx, ny = x + math.cos(a) * 6, y + math.sin(a) * 3.2
+            c.line(int(x), int(y), int(nx), int(ny), 1 if j < steps * 0.55 else 2)
+            if rng.random() < 0.18:                     # side branch
+                ba = a + rng.choice([-1, 1]) * rng.uniform(0.6, 1.2)
+                c.line(int(nx), int(ny), int(nx + math.cos(ba) * 9), int(ny + math.sin(ba) * 4.5), 2)
+            x, y = nx, ny
+    glow = c.a == 1
+    lit.put((c.a > 0), "ink", 0)
+    lit.put(glow, "nebyl", 2, em=True)
+    near = np.hypot(XX - rx, (YY - ry) * 2) < 70
+    lit.put(glow & near & (BAY < 0.25), "nebyl", 3, em=True)
+    lit.put(glow & np.roll(glow, 1, 0), "nebyl", 2, em=True)
+    lit.put(np.roll(glow, -1, 0) & ~glow & (lit.ramp != rid("nebyl")), "ink", 0)
+    # main fissure through the rift (5 tiles)
+    ground_crack(lit, [(rx - 80, ry + 34), (rx - 56, ry + 22), (rx - 34, ry + 16), (rx - 14, ry + 6), (rx, ry),
+                       (rx + 22, ry - 8), (rx + 44, ry - 14), (rx + 66, ry - 26), (rx + 84, ry - 32)],
+                 branches=((rx - 34, ry + 16, rx - 40, ry + 28), (rx + 22, ry - 8, rx + 30, ry + 4)))
+
+
+def forest_edges_4(lit, rng):
+    forest_frame(lit, rng, variant=4)
+    inverted_pine(lit, 96, 132, 86, seed=21)
+    inverted_pine(lit, 548, 118, 80, seed=22)
+    MEAS["inverted_pines_s4"] = [86, 80]
+
+
+def rift_double(lit):
+    rx, ry = S4["rift"]
+    t2 = rift_tear(lit, rx + 13, ry - 4, th=76, hw=12, seed=8, stars=3)
+    t1 = rift_tear(lit, rx - 8, ry, th=89, hw=15, seed=3, stars=4)
+    m1 = t1["inside"] & (t1["dx"] <= t1["half"] + 0.5)
+    m2 = t2["inside"] & (t2["dx"] <= t2["half"] + 0.5)
+    rows = np.where(m1.any(1))[0]
+    cols = np.where((m1 | m2).any(0))[0]
+    MEAS["rift_s4"] = dict(top=int(rows.min()), bottom=int(rows.max()), h=int(rows.max() - rows.min() + 1),
+                           w_total=int(cols.max() - cols.min() + 1), x0=int(cols.min()), x1=int(cols.max()))
+    halo = np.zeros((H, W), bool)
+    for t in (t1, t2):
+        halo |= t["inside"] & (t["dx"] <= t["half"] + 6)
+    return halo
+
+
+def scene4_base():
+    rng = np.random.default_rng(404)
+    lit = pk.Lit(W, H)
+    cracked_ground(lit, rng)
+    forest_edges_4(lit, rng)
+    for i, (x, y) in enumerate(S4["idols"]):
+        if i == 0:
+            stump(lit, x - 30, y + 2, seed=11)
+        MEAS["fallen_idol_s4_%d" % i] = fallen_idol(lit, x, y, k=1 if i != 1 else 3, seed=12 + i)
+    rift_halo = rift_double(lit)
+    snow_into(lit, rng, 70, (S4["rift"][0], S4["rift"][1] - 44), (0, 0, W, 300), rmax=260)
+    return lit, rift_halo
+
+
+def scene4_lights():
+    rx, ry = S4["rift"]
+    src = [(rx, ry - 40, 260, 0.7), (HERO[0], HERO[1] - 22, 110, 0.28), (370, 180, 300, 0.4), (150, 160, 200, 0.2)]
+    return pk.light_field(W, H, src, ambient=0.44, depth=3.3, ysquash=1.4, gamma=1.0)
+
+
+def sword_glint(lit, hero):
+    """Warm glint on the raised blade: emissive pixels only (no light change)."""
+    x0, y0 = HERO[0] - hero["pivot"][0], HERO[1] - hero["pivot"][1]
+    blade = hero["mask"] & (hero["ramp"] == rid("iron")) & (hero["lvl"] >= 5)
+    ys, xs = np.where(blade)
+    if len(ys):
+        order = np.argsort(ys)[:3]
+        for i in order:
+            put_px(lit, x0 + xs[i], y0 + ys[i], "fire", 4, em=True)
+        y, x = ys[order[0]], xs[order[0]]
+        for (dx, dy) in ((-1, 0), (1, 0), (0, -1)):
+            put_px(lit, x0 + x + dx, y0 + y + dy, "fire", 3, em=True)
+        put_px(lit, x0 + x, y0 + y - 2, "fire", 2, em=True)
+
+
+def scene4(end=False):
+    lit, halo = scene4_base()
+    hero = TS.hero_pose("idle" if end else "over")
+    bx, by = S4["boss"]
+    prot = np.zeros((H, W), bool)
+    if not end:
+        boss = TS.rim_light(TS.wolfdlak_kneel(), side=1, lvl=3)
+        shadow(lit, bx + 4, by, 30, 5, -2)
+        place_m(lit, "boss_kneel", boss, (bx, by))
+        prot |= sprite_mask_at(boss, (bx, by))
+        sw = TS.prince_sword()
+        place_m(lit, "prince_sword", sw, S4["sword"])
+        prot |= sprite_mask_at(sw, S4["sword"])
+    else:
+        pelt = TS.pelt()
+        place_m(lit, "pelt", pelt, S4["pelt"])
+        st = recolor(TS.staff(), outline=("bronze", 4), em_outline=True)
+        place_m(lit, "staff", st, S4["staff"])
+        sw = recolor(TS.prince_sword(), outline=("fire", 2), em_outline=True)
+        place_m(lit, "prince_sword_end", sw, S4["sword"])
+        place_m(lit, "silver", SR.silver(), S4["silver"])
+        prot |= sprite_mask_at(pelt, S4["pelt"]) | sprite_mask_at(st, S4["staff"]) | sprite_mask_at(sw, S4["sword"])
+        # thin wisp of green ash drawn from the pelt into the rift
+        rng = np.random.default_rng(9)
+        (x0, y0), (x1, y1) = (S4["pelt"][0], S4["pelt"][1] - 6), (S4["rift"][0] - 10, S4["rift"][1] - 40)
+        for k in range(110):
+            t = k / 109
+            x = x0 + (x1 - x0) * t + math.sin(t * 7) * 5 * (1 - t)
+            y = y0 + (y1 - y0) * t - math.sin(t * math.pi) * 16
+            spread = 2.4 * (1 - t) + 0.8
+            px_, py_ = x + rng.normal(0, spread), y + rng.normal(0, spread)
+            put_px(lit, px_, py_, "nebyl", 4 if rng.random() < 0.15 else 3, em=True)
+            if t < 0.5 and rng.random() < 0.5:
+                put_px(lit, px_ + 1, py_, "nebyl", 2, em=True)
+    shadow(lit, *HERO, 9, 3.5)
+    place_m(lit, "hero_s4_end" if end else "hero_s4", hero, HERO)
+    prot |= sprite_mask_at(hero, HERO)
+    if not end:
+        sword_glint(lit, hero)
+    L = scene4_lights()
+    a = lit.flatten(L)
+    rx, ry = S4["rift"]
+    tint_p(a, rx, ry - 40, 95, 0.7, EERIE_F, prot, 0.3)
+    tint_p(a, 560, 170, 300, 0.45, EERIE_F, prot, 0.3)          # green cast over the whole right half
+    if end:                                                      # rift a step dimmer: half the rim nebyl -> nebyl_dk
+        dim = halo & (a == C["nebyl"]) & (BAY < 0.5)
+        a[dim] = C["nebyl_dk"]
     return a, lit, L

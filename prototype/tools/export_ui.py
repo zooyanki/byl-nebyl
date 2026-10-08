@@ -1,7 +1,7 @@
 """Экспорт UI-ассетов из исходников художника (только чтение art/ui/src) в prototype/assets.
 Запуск из папки prototype:  python3 tools/export_ui.py
 Создаёт:
-  assets/items.png + src/data/ui_atlas.js  — иконки предметов (items_rus.build), отвары, кукла героя
+  assets/items.png + src/data/ui_atlas.js  — иконки предметов (items_rus.build), зелья, кукла героя
   assets/win_inventory.png                 — статичный фон окна «Котомка» (inventory_v2.py)
   assets/win_character.png                 — статичный фон окна «Витязь» (character_v2.py)
   assets/hud_buttons.png                   — кнопки C/I/T/M/J/ESC (gameplay_hud_v2.draw_buttons)

@@ -257,20 +257,29 @@ def inverted_pine(lit, x, base, h, seed=0, trunk=6):
     top = base - h
     tx = int(x - trunk // 2)
     lit.put(_r(tx, top + 10, trunk, h - 10), "fur", 2)
-    lit.put(_r(tx, top + 10, 2, h - 10), "fur", 3)
+    lit.put(_r(tx, top + 10, 2, h - 10), "fur", 4)
+    lit.put(_r(tx + 2, top + 10, 1, h - 10), "fur", 3)
+    for yy in range(top + 14, base - 4, 7):                          # bark plates
+        lit.put(_r(tx + 1 + (yy // 7) % 3, yy, 2, 2), "fur", 1)
     lit.put(_r(tx - 1, top + 10, 1, h - 10), "ink", 0); lit.put(_r(tx + trunk, top + 10, 1, h - 10), "ink", 0)
-    # roots fanning out at the top
-    for k in range(9):
-        a = -math.pi / 2 + (k - 4) * 0.33 + rng.uniform(-0.1, 0.1)
-        ln = rng.uniform(14, 26)
-        x0, y0 = x + rng.uniform(-2, 2), top + 12
-        mx, my = x0 + math.cos(a) * ln * 0.5, y0 + math.sin(a) * ln * 0.5 + 2
-        x1, y1 = x0 + math.cos(a) * ln, y0 + math.sin(a) * ln * 0.75
-        w = 2 if abs(k - 4) < 3 else 1
-        lit.put(line_mask(x0, y0, mx, my, w), "fur", 2); lit.put(line_mask(mx, my, x1, y1, 1), "fur", 2)
-        lit.put(line_mask(mx, my - 1, x1, y1 - 1, 1), "ink", 0)
-        if rng.random() < 0.6:
-            lit.put(line_mask(x1, y1, x1 + rng.uniform(-5, 5), y1 + rng.uniform(-6, -2), 1), "fur", 1)
+    # roots fanning out at the top: thick, gnarled, pale grey against the dark
+    for k in range(11):
+        a = -math.pi / 2 + (k - 5) * 0.27 + rng.uniform(-0.08, 0.08)
+        ln = rng.uniform(18, 30) * (1.0 if abs(k - 5) > 1 else 0.8)
+        x0, y0 = x + (k - 5) * 0.6, top + 12
+        pts = [(x0, y0)]
+        for j in range(1, 5):
+            t = j / 4
+            bend = math.sin(t * 2.6 + k) * 3
+            pts.append((x0 + math.cos(a) * ln * t * 1.15 + bend, y0 + math.sin(a) * ln * t * 0.8 + t * t * 6))
+        for j, ((xa, ya), (xb, yb)) in enumerate(zip(pts, pts[1:])):
+            w = 3 if j == 0 else (2 if j < 2 else 1)
+            lit.put(line_mask(xa, ya - 1, xb, yb - 1, 1), "ink", 0)
+            lit.put(line_mask(xa, ya, xb, yb, w), "fur", 3)
+            lit.put(line_mask(xa, ya, xb, yb, 1), "fur", 4)
+        xe, ye = pts[-1]
+        if rng.random() < 0.7:                                  # root hairs
+            lit.put(line_mask(xe, ye, xe + rng.uniform(-6, 6), ye + rng.uniform(2, 6), 1), "fur", 3)
     lit.put(_r(x - 6, top + 9, 13, 4), "earth", 1)                 # clod of soil still in the roots
     lit.put(_r(x - 4, top + 8, 9, 1), "earth", 2)
     # buried crown: flattened needle mass splayed on the ground
@@ -279,8 +288,9 @@ def inverted_pine(lit, x, base, h, seed=0, trunk=6):
         cx, cy = x + rng.uniform(-18, 18), base - rng.uniform(0, 7)
         d = ((XX - cx) / rng.uniform(5, 9)) ** 2 + ((YY - cy) / rng.uniform(2.5, 4)) ** 2
         m |= (d <= 1) & ((d < 0.5) | (BAY < 0.6))
-    lit.put(m, "pine", 1)
-    lit.put(m & (YY < base - 4) & (BAY < 0.3), "pine", 2)
+    lit.put(m, "pine", 2)
+    lit.put(m & (BAY < 0.35), "pine", 3)
+    lit.put(m & (YY > base - 2), "pine", 1)
     edge = m & ~(np.roll(m, 1, 1) & np.roll(m, -1, 1) & np.roll(m, 1, 0))
     lit.put(edge, "ink", 0)
 

@@ -150,7 +150,7 @@ export function drawGroundItem(ctx, x, y, it) {
       rect(ctx, x + dx, y + dy, 4, 2, PAL.mist); rect(ctx, x + dx, y + dy, 2, 1, PAL.linen);
     }
   } else if (it.kind === 'potion') {
-    const [c, cl] = it.potion === 'life' ? [PAL.red, PAL.red_lt] : it.potion === 'yar' ? [PAL.blue, PAL.blue_lt] : [PAL.bronze, PAL.bronze_hi];
+    const [c, cl] = it.potion.startsWith('life') ? [PAL.red, PAL.red_lt] : it.potion.startsWith('yar') ? [PAL.blue, PAL.blue_lt] : [PAL.bronze, PAL.bronze_hi];
     figure(ctx, [{ cx: x, cy: y - 5, r: 4, c }, { x: x - 1, y: y - 12, w: 3, h: 4, c: PAL.birch }]);
     rect(ctx, x - 2, y - 7, 2, 2, cl);
   } else {
@@ -182,6 +182,14 @@ export function drawGroundItem(ctx, x, y, it) {
 }
 
 export function drawProjectile(ctx, x, y, p, time) {
+  if (p.coal) {
+    ellipse(ctx, x, y, 2, 1, PAL.ink, 0.35);
+    const z = 14 + Math.sin(Math.min(1, p.travelled / p.range) * Math.PI) * 8;
+    disc(ctx, x, y - z, 2.2, PAL.red);
+    disc(ctx, x, y - z, 1.4, PAL.ember);
+    rect(ctx, x, y - z - 1, 1, 1, PAL.flame);
+    return;
+  }
   ellipse(ctx, x, y, 4, 2, PAL.ink, 0.35);
   const z = 22;
   const fl = Math.sin(time * 50) * 0.6;
