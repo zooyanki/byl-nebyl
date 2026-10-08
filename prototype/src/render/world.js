@@ -3,13 +3,15 @@ import { VIEW_W, VIEW_H, HALF_W, HALF_H, PANEL_Y } from '../config.js';
 import { PAL } from '../palette.js';
 import { w2s } from '../core/iso.js';
 import { hash2 } from '../core/rng.js';
-import { T_GRASS, T_DIRT, T_WATER, T_FOREST } from '../world/map.js';
+import { T_GRASS, T_DIRT, T_WATER, T_FOREST, T_ASH } from '../world/map.js';
 import { diamond, rect, ellipse, ellipseStroke, disc } from './shapes.js';
 import { drawProp, propHeight, propCovers } from './props.js';
 import { drawHero, drawEnemy, drawCorpse, drawGroundItem, drawProjectile, drawNpc } from './sprites.js';
 import { drawText, textWidth } from '../core/font.js';
 import { drawSafeRing, drawRestSparks, drawFxFrame } from './rest_fx.js';
 import { CFG } from '../data/config.js';
+import { drawPortal } from './portal.js';
+import { ART } from './boss_art.js';
 
 export class WorldRenderer {
   constructor(map) {
@@ -55,6 +57,7 @@ export class WorldRenderer {
     if (!hero.dead) list.push({ d: hero.x + hero.y, k: 3 });
     for (const p of game.combat.projectiles) list.push({ d: p.x + p.y, k: 4, p });
     for (const n of game.npcs || []) if (!n.gone) list.push({ d: n.x + n.y, k: 5, n });
+    for (const o of map.objects) if (o.type === 'portal') list.push({ d: o.x + o.y, k: 6, o });   // Чуров проход (M1c)
     list.sort((a, b) => a.d - b.d);
 
     // «рентген» (scale.md §4.4): то, что стоит перед героем или врагом под курсором и закрывает их, полупрозрачно
@@ -69,13 +72,19 @@ export class WorldRenderer {
       } else if (o.k === 2) {
         const [sx, sy] = toS(o.e.x, o.e.y);
         if (!vis(sx, sy)) continue;
-        if (o.e.state === 'rise') {          // волна: упырь встаёт из земли (видна только часть над землёй)
+        if (o.e.state === 'rise' && !o.e.boss) {          // волна: упырь встаёт из земли (видна только часть над землёй)
           const k = Math.min(1, o.e.t / (o.e.riseTime || 0.8)), hgt = o.e.def.height + 8;
+          if (o.e.summoned && drawFxFrame(ctx, 'k_summon', Math.floor(o.e.t * 10), sx, sy)) {   // призыв Кривши: 8 кадров @10 = riseTime 0,8 с; упырь виден с кадра 3
+            if (o.e.t < 0.3) continue;
+          }
           ctx.save(); ctx.beginPath(); ctx.rect(sx - 30, sy - hgt - 10, 60, hgt + 12); ctx.clip();
           drawEnemy(ctx, sx, sy + Math.round((1 - k) * hgt), o.e, o.e.dir, time, game.hoverEnemy === o.e);
           ctx.restore();
           ellipse(ctx, sx, sy, 12, 4, PAL.wood_dk, 0.8 * (1 - k * 0.5));
         } else drawEnemy(ctx, sx, sy, o.e, o.e.dir, time, game.hoverEnemy === o.e);
+      } else if (o.k === 6) {
+        const [sx, sy] = toS(o.o.x, o.o.y), P = game.portal;
+        drawPortal(ctx, sx, sy, time, P ? Math.max(0, 1 - P.t / P.ttl) : 1);
       } else if (o.k === 5) {
         const [sx, sy] = toS(o.n.x, o.n.y);
         ctx.save(); ctx.globalAlpha = o.n.alpha ?? 1; drawNpc(ctx, sx, sy, o.n, time); ctx.restore();
@@ -132,6 +141,10 @@ export class WorldRenderer {
         }
       } else {
         const fade = Math.min(1, (f.burn - f.litT) / 0.6, f.kind === 'trail' ? f.litT / 0.25 : 1);
+        if (f.kind === 'trail' && f.src && (f.src.kind === 'krivsha' || f.src.kind === 'mara')) {   // следы боссов — спрайты M1b (r 0,6 в родном размере)
+          const kr = f.src.kind === 'krivsha', fr = Math.floor((f.litT + (f.id % 4) * 0.12) * (kr ? 8 : 6));
+          if (drawFxFrame(ctx, kr ? 'k_trail' : 'm_ash', fr, sx, sy, { alpha: fade, scale: f.r / 0.6 })) continue;
+        }
         if (drawFxFrame(ctx, 'burning', Math.floor((f.litT + (f.id % 6) * 0.1) * 10), sx, sy, { alpha: fade, scale: f.r })) continue;   // спрайт художника — Ø 2 тайла (r 1) в родном размере
         ellipse(ctx, sx, sy, rx, ry, PAL.red_dk, 0.55 * fade);
         ellipse(ctx, sx, sy, rx * 0.8, ry * 0.8, PAL.ember, 0.35 * fade);
@@ -182,7 +195,17 @@ export class WorldRenderer {
       if (o.type === 'hut') { ellipseStroke(ctx, sx, sy + 4, 14, 5, PAL.bronze_hi, 0.8, 1); }
       else ellipseStroke(ctx, sx, sy, 14, 6, PAL.bronze_hi, 0.8, 1);
     }
+    const ra = game.hero.action;
+    if (ra && ra.type === 'read' && !game.hero.dead) {          // чтение бересты: полоса каста 1 с
+      const [sx, sy] = toS(game.hero.x, game.hero.y);
+      const w = 30, k = Math.min(1, ra.t / ra.dur), y = sy - 60;
+      rect(ctx, sx - w / 2 - 1, y - 1, w + 2, 5, PAL.ink);
+      rect(ctx, sx - w / 2, y, w, 3, PAL.wood_dk);
+      rect(ctx, sx - w / 2, y, Math.round(w * k), 3, PAL.bronze_lt);
+      ellipseStroke(ctx, sx, sy, 10 + 4 * k, 4 + 2 * k, PAL.bronze_hi, 0.4 + 0.5 * k, 1);
+    }
     const c = game.hero.cmd;
+    ART.hold = c && c.type === 'interact' && c.started && c.obj.hold && c.obj.prop ? { prop: c.obj.prop, t: c.holdT, dur: c.obj.hold } : null;   // оверлей прогресса освящения огнища
     if (c && c.type === 'interact' && c.started && c.obj.hold) {
       const [sx, sy] = toS(game.hero.x, game.hero.y);
       const w = 30, k = Math.min(1, c.holdT / c.obj.hold), y = sy - 60;
@@ -194,6 +217,7 @@ export class WorldRenderer {
 
   renderFx(ctx, game, toS) {
     const fx = game.fx;
+    for (const f of game.combat.sprFx || []) { const [sx, sy] = toS(f.x, f.y); drawFxFrame(ctx, f.key, Math.min(4, Math.floor(f.t * f.fps)), sx, sy); }
     for (const r of fx.rings) {
       const [sx, sy] = toS(r.x, r.y);
       const k = r.t / r.dur;
@@ -262,6 +286,8 @@ export class WorldRenderer {
       const r = (l.r + (l.kind === 'fire' ? Math.sin(game.time * 7) * 4 : 0)) * (restL && l.krada ? (F.kradaLightRestMul ?? 1.333) : 1);
       hole(sx, sy - 8, r, 1); warm.push([sx, sy - 8, r, 0.22 * (restL ? (F.kradaLightRestIntensity ?? 1.25) : 1)]);
     }
+    const pr = game.map.perun;                                       // горящий Идол Перуна: тёплый свет ~5 тайлов от корня пламени (y − 70), подсказка художника
+    if (pr && pr.burning) { const [sx, sy] = toS(pr.x + 1, pr.y + 1), r = 5 * HALF_W * Math.SQRT2 + Math.sin(game.time * 7) * 4; hole(sx, sy - 70, r, 1); warm.push([sx, sy - 70, r, 0.15]); }
     for (const p of game.combat.projectiles) { const [sx, sy] = toS(p.x, p.y); hole(sx, sy - 12, 60, 0.9); warm.push([sx, sy - 12, 50, 0.25]); }
     for (const f of game.combat.fires || []) { const [sx, sy] = toS(f.x, f.y); const r = f.lit ? 70 + Math.sin(game.time * 9 + f.id) * 4 : 34; hole(sx, sy - 6, r, f.lit ? 1 : 0.6); warm.push([sx, sy - 6, r, f.lit ? 0.3 : 0.12]); }
     for (const e of game.enemies) if (!e.dead && e.def.torch) { const [sx, sy] = toS(e.x, e.y); if (sx > -60 && sx < VIEW_W + 60 && sy > -60 && sy < VIEW_H + 60) { hole(sx + 9 * e.facing, sy - 40, 46, 0.85); warm.push([sx + 9 * e.facing, sy - 40, 40, 0.22]); } }
@@ -377,6 +403,8 @@ function buildFloor(map) {
         base = h < 0.5 ? PAL.wood_md : PAL.wood; spk = PAL.wood_dk; spk2 = PAL.wood_lt;
       } else if (g === T_FOREST) {                     // пол чащи: тёмная хвоя
         base = h < 0.5 ? PAL.pine_dk : PAL.pine; spk = PAL.pine_dk; spk2 = PAL.moss;
+      } else if (g === T_ASH) {                        // пепелище тупика Мары (GDD v1.8.1 B-31)
+        base = h < 0.5 ? PAL.slate_dk : PAL.slate; spk = PAL.ink; spk2 = PAL.slate_lt;
       } else {
         base = n < -1.1 ? PAL.pine : (n > 1.6 && h < 0.5 ? PAL.moss_lt : PAL.moss); spk = PAL.pine; spk2 = PAL.moss_lt;
       }

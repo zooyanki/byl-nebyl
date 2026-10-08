@@ -19,10 +19,14 @@ export const DROP_NORMAL = {};
 export const RARITY_WEIGHTS = {};
 export const TYPE_WEIGHTS = {};
 export const POTION_WEIGHTS = {};
+export const SCROLLS = {};          // береста возврата (GDD §4.4, веха M1c)
+export let STARTER_BAG = [];
+export const UNIQUES = [];          // былинные вещи (GDD §6.5, data/uniques.json)
+let UNIQUE_TEXT = {}, UNIQUE_PICK = null;
 let DT = null, TIERS = { t1Max: 6, t2Max: 12 }, MAGIC = null, RARE_ADJ = [], RARE_NOUN = [];
 const ARMOR = ['body', 'head', 'shield', 'gloves', 'feet', 'belt'];
 
-export function applyItems(ib, af, dt) {
+export function applyItems(ib, af, dt, un = null) {
   SLOTS.length = 0; SLOTS.push(...ib.slots);
   Object.assign(SLOT_NAMES, ib.slotNames); Object.assign(TYPE_SLOTS, ib.typeSlots); Object.assign(RARITY, ib.rarity);
   BASES.length = 0;
@@ -33,6 +37,11 @@ export function applyItems(ib, af, dt) {
   }
   for (const [k, p] of Object.entries(ib.potions)) POTIONS[k] = { id: k, ...p };
   STARTER_KIT = ib.starterKit; STARTER_BELT = ib.starterBelt;
+  for (const [k, sc] of Object.entries(ib.scrolls || {})) SCROLLS[k] = { id: k, ...sc };
+  STARTER_BAG = ib.starterBag || [];
+  UNIQUES.length = 0;
+  if (un) { for (const u of un.uniques) UNIQUES.push(u); UNIQUE_TEXT = un.modText || {}; }
+  UNIQUE_PICK = dt.uniquePick || null;
   BELT_SIZE = ib.beltSize; BELT_STACK = ib.beltStack; POTION_COOLDOWN = ib.potionCooldown;
   AFFIXES.length = 0;
   for (const a of af.affixes) AFFIXES.push({ ...a, forms: a.names, fmt: (v) => a.text.replace('{v}', v) });
@@ -137,6 +146,50 @@ function addAffix(it, a, v) {
   it.mods[a.stat] = (it.mods[a.stat] || 0) + v;
 }
 
+/** Береста возврата (стопка в котомке, GDD §6.9: до 20). */
+export function makeScroll(kind, count = 1) {
+  const sc = SCROLLS[kind];
+  return { uid: UID++, kind: 'scroll', scroll: kind, count, w: 1, h: 1, name: sc.name, icon: sc.icon, rarity: 'scroll' };
+}
+
+/** Имя / присказка былинной вещи из ru.json (item.uN.name / item.uN.lore), иначе — из uniques.json. */
+let RU_REF = null;
+export function setItemTexts(ru) { RU_REF = ru; }
+const uText = (u, k) => (RU_REF && RU_REF['item.' + u.id.toLowerCase() + '.' + k]) || (k === 'name' ? u.name : '');
+
+/** Былинная вещь по id (U1…U9): база, фиксированные свойства (диапазоны бросаются), имя и присказка (GDD §6.5, act1_texts §14). */
+export function makeUnique(uid, rng = Math.random, ilvl = null) {
+  const u = UNIQUES.find((x) => x.id === uid);
+  const base = BASE[u.base];
+  const it = {
+    uid: UID++, kind: 'gear', base: base.id, type: base.type, w: base.w, h: base.h, rarity: 'unique', unique: u.id, ilvl: ilvl ?? u.reqLevel, req: u.reqLevel,
+    baseName: base.name, icon: u.icon || (base.icons ? base.icons[0] : base.icon), mods: {}, affixes: [], fixed: [],
+    name: uText(u, 'name'), lore: uText(u, 'lore'),
+  };
+  if (base.dmg) { it.dmg = [...base.dmg]; it.speed = base.speed; }
+  if (base.armor) it.armorBase = roll(base.armor, rng);
+  if (base.block) it.block = base.block;
+  if (base.crit) it.mods.crit = base.crit;
+  if (base.vsNechist) it.mods.vsNechist = base.vsNechist;
+  for (const [stat, v0] of Object.entries(u.mods)) {
+    const v = Array.isArray(v0) ? roll(v0, rng) : v0;
+    it.fixed.push({ stat, value: v });
+    it.mods[stat] = (it.mods[stat] || 0) + v;
+  }
+  if (it.armorBase != null) it.armor = Math.floor((it.armorBase + (it.mods.flatArmor || 0)) * (1 + (it.mods.pctArmor || 0) / 100));
+  return it;
+}
+/** Какая былинная вещь выпадет на ilvl (droptables.uniquePick — заглушка: равновероятно из случайного пула с треб. ≤ ilvl). */
+export function pickUnique(ilvl, rng = Math.random) {
+  const pool = UNIQUES.filter((u) => u.pool === 'random' && BASE[u.base] && (!UNIQUE_PICK || UNIQUE_PICK.rule !== 'reqLevel<=ilvl' || u.reqLevel <= ilvl));
+  return pool.length ? pool[Math.floor(rng() * pool.length)].id : null;
+}
+export function uniqueModText(stat, v) {
+  if (UNIQUE_TEXT[stat]) return UNIQUE_TEXT[stat].replace('{v}', v);
+  const a = AFFIXES.find((x) => x.stat === stat);
+  return a ? a.fmt(v) : stat + ' ' + v;
+}
+
 export function makePotion(kind) {
   const p = POTIONS[kind];
   return { uid: UID++, kind: 'potion', potion: kind, w: 1, h: 1, name: p.name, icon: p.icon, rarity: 'potion' };
@@ -160,7 +213,12 @@ export function pickBase(type, ilvl, rng = Math.random) {
 export function rollItem(ilvl, rng = Math.random, mf = 0, opts = {}) {
   const w = { ...(opts.rarity || RARITY_WEIGHTS) }, k = DT.mfToWeights;
   if (mf) { w.magic += mf * k; w.rare += mf * k; w.unique += mf * k; }
-  const rarity = opts.forceRarity || pickWeighted(w, rng);
+  let rarity = opts.forceRarity || pickWeighted(w, rng);
+  if (rarity === 'unique') {      // веха M1c: былинная вещь из пула; нет подходящей — дивная (droptables.uniquePick.fallback)
+    const u = pickUnique(ilvl, rng);
+    if (u) return makeUnique(u, rng, ilvl);
+    rarity = (UNIQUE_PICK && UNIQUE_PICK.fallback) || 'rare';
+  }
   let type = opts.type || pickWeighted(TYPE_WEIGHTS, rng);
   if (type === 'weapon') type = rng() < DT.weaponSplit.sword ? 'sword' : 'axe';
   const base = pickBase(type, ilvl, rng);
@@ -179,6 +237,29 @@ export function itemLines(it) {
     else L.push([`+${p.amount} ${p.res === 'hp' ? 'к жизни' : 'к Яри'} за ${p.dur} с`, 'linen']);
     L.push(['ПКМ — выпить', 'mist']);
     return { lines: L, seps: [0] };
+  }
+  if (it.kind === 'scroll') {     // «Береста возврата ×3» (GDD §10.1), описание — act1_texts ui.tut.beresta
+    const T = (k, d) => (RU_REF && typeof RU_REF[k] === 'string' ? RU_REF[k] : d);
+    L.push([it.name + (it.count > 1 ? ' ' + T('ui.tip.stack', '×{n}').replace('{n}', it.count) : ''), 'birch']);
+    L.push([T('ui.tut.beresta', ''), 'linen']);
+    L.push([T('proto.beresta.use', 'ПКМ — прочитать'), 'mist']);
+    return { lines: L, seps: [0] };
+  }
+  if (it.rarity === 'unique') {   // былинная: имя бронзой, «Былинная вещь», база, числа, свойства синим, присказка бронзой (act1_texts §13–14)
+    const rl = RU_REF && RU_REF['rarity.unique'];
+    L.push([it.name, RARITY.unique.color]);
+    L.push([(rl && rl['Строка в тултипе']) || 'Былинная вещь', RARITY.unique.color]);
+    L.push([it.baseName, 'birch']);
+    const seps = [L.length - 1];
+    if (it.dmg) L.push([`Урон: ${it.dmg[0]}–${it.dmg[1]}`, 'linen']);
+    if (it.speed) L.push([`Атак в секунду: ${String(it.speed).replace('.', ',')}`, 'mist']);
+    if (it.armor != null) L.push([`Броня: ${it.armor}`, it.mods.pctArmor ? 'blue_lt' : 'linen']);
+    if (it.block) L.push([`Блок щитом: ${it.block}%`, 'linen']);
+    L.push([`Требуется уровень: ${it.req}`, 'req']);
+    seps.push(L.length - 1);
+    for (const f of it.fixed) L.push([uniqueModText(f.stat, f.value), 'blue_lt']);
+    if (it.lore) { seps.push(L.length - 1); L.push([it.lore, 'lore']); }
+    return { lines: L, seps };
   }
   const rc = RARITY[it.rarity].color;
   L.push([it.name, rc]);

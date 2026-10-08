@@ -1,12 +1,13 @@
 // Герой: характеристики по GDD §3 (свойства, экипировка), команды (идти / бить / поднять), удар и каст,
 // зелья, опыт, получение урона (блок, сопротивления, оглушение).
 import { Actor } from './actor.js';
+import { CFG } from '../data/config.js';
 import {
   HERO_START, POINTS_PER_LEVEL, HERO_SPEED, MELEE_RANGE, HIT_FRAME, CAST_TIME, CAST_RELEASE, UNARMED, xpToNext, MAX_LEVEL, S as STATS,
 } from '../data/progression.js';
 import { SKILLS, RULES, DASH, rankOf, skillCost, skillNumbers, spellDamage, rankBlock, pointsFree } from '../data/skills.js';
 import { circleFree, sightClear, moveWithCollision } from '../world/collision.js';
-import { POTIONS, BELT_SIZE, BELT_STACK, POTION_COOLDOWN, SLOTS, TYPE_SLOTS, STARTER_KIT, STARTER_BELT, makeItem, makePotion } from '../data/items.js';
+import { POTIONS, BELT_SIZE, BELT_STACK, POTION_COOLDOWN, SLOTS, TYPE_SLOTS, STARTER_KIT, STARTER_BELT, STARTER_BAG, SCROLLS, makeItem, makePotion, makeScroll } from '../data/items.js';
 import { Inventory } from '../systems/inventory.js';
 import { PAL } from '../palette.js';
 
@@ -46,6 +47,7 @@ export class Hero extends Actor {
     // GDD §4.4: на старте 3 слабых зелья жизни и 2 зелья Яри; §6.2 — стартовый комплект (скрамасакс, малый щит, шишак, кольчуга)
     this.belt = STARTER_BELT.map((b) => (b ? { ...b } : null));
     for (const k of STARTER_KIT) this.equip[k.slot] = makeItem(k.base, 'normal', 1, Math.random, k.armor != null ? { armor: k.armor } : {});
+    for (const b of STARTER_BAG) if (b.scroll && SCROLLS[b.scroll]) this.addScroll(b.scroll, b.count);   // GDD §4.4: 3 бересты на старте
     this.recalc();
     this.hp = this.maxHp; this.yar = this.maxYar;
   }
@@ -107,7 +109,8 @@ export class Hero extends Actor {
     this.attackTime = 1 / this.attacksPerSec;
     this.speed = HERO_SPEED * (1 + Math.min(C.frw, g('frw')) / 100);
     this.castTime = CAST_TIME * (1 - Math.min(C.fcr, g('fcr')) / 100);
-    const ra = chur ? chur.resAll : 0;
+    const ra = (chur ? chur.resAll : 0) + g('resAll');     // былинные: «ко всем сопротивлениям» (U4)
+    this.potionPct = g('potionPct');                        // былинные: «к силе зелий» (U4)
     this.res = { fire: Math.min(C.res, g('resFire') + ra), cold: Math.min(C.res, g('resCold') + ra), poison: Math.min(C.res, g('resPoison') + ra) };
     this.block = this.equip.lhand && this.equip.lhand.block ? Math.min(C.block, this.equip.lhand.block) / 100 : 0;
     // навык на ПКМ — для HUD и подсказок
@@ -169,6 +172,44 @@ export class Hero extends Actor {
   /** Скорость шага с учётом замедления («Студёный» элит, GDD §5.3: −30% на 2 с). */
   curSpeed() { return this.slowT > 0 ? this.speed * (1 - (this.slowPct || 0) / 100) : this.speed; }
   lmbSkill() { return this.lmb && SKILLS[this.lmb] && rankOf(this, this.lmb) ? this.lmb : null; }
+  /** Заслон (GDD v1.8 §4.1): цель дальше удара, за 0,3 с герой продвинулся к ней < 0,15 тайла, а другой враг стоит в секторе ±60°
+   *  не дальше удара — бьём его тем же навыком; приказ и выделенная цель остаются, после гибели или ухода заслона приказ продолжается.
+   *  Стены и объекты заслоном не считаются (обход по A*); Shift+ЛКМ и ПКМ правило не включают. */
+  findBlocker(e, game) {
+    const ax = e.x - this.x, ay = e.y - this.y, ad = Math.hypot(ax, ay) || 1, B = CFG.stats.blocker || {};
+    const cosMax = Math.cos(((B.sectorDeg ?? 60) * Math.PI) / 180);
+    let best = null, bd = 1e9;
+    for (const o of game.enemies) {
+      if (o === e || o.dead || o.state === 'rise' || o.buried) continue;
+      const dx = o.x - this.x, dy = o.y - this.y, d = Math.hypot(dx, dy);
+      if (d > MELEE_RANGE + this.r + o.r || d < 1e-6) continue;
+      if ((dx * ax + dy * ay) / (d * ad) < cosMax) continue;
+      if (d < bd) { bd = d; best = o; }
+    }
+    return best;
+  }
+  updateBlocker(c, e, dt, game) {
+    const B = CFG.stats.blocker || {}, win = B.window ?? 0.3, minAdv = B.minAdvance ?? 0.15, d = this.distTo(e);
+    if (c.blocker) {                                                     // уже бьём заслон: пока он жив и стоит на пути — продолжаем
+      const b = c.blocker;
+      if (!b.dead && this.findBlocker(e, game) === b) { this.path = null; this.moving = false; this.startAttack(b, c.skill, game); game.counters.blockerHits = (game.counters.blockerHits || 0) + 1; return true; }
+      c.blocker = null; c.blkT = 0; c.blkD0 = d;
+      return false;
+    }
+    if (c.blkD0 == null) { c.blkD0 = d; c.blkT = 0; }
+    c.blkT += dt;
+    if (c.blkT < win) return false;
+    const adv = c.blkD0 - d;
+    c.blkT = 0; c.blkD0 = d;
+    if (adv >= minAdv) return false;
+    const b = this.findBlocker(e, game);
+    if (!b) return false;
+    c.blocker = b; this.path = null; this.moving = false;
+    this.startAttack(b, c.skill, game);
+    game.counters.blockerHits = (game.counters.blockerHits || 0) + 1;
+    return true;
+  }
+
   attack(target, stand = false, skill = null, lmb = false) {
     if (this.cmd && this.cmd.type === 'attack' && this.cmd.target === target && this.cmd.skill === skill) { this.cmd.swung = false; this.cmd.stand = stand; return; }
     this.cmd = { type: 'attack', target, repath: 0, swung: false, repeat: false, stand, skill, lmb };
@@ -327,14 +368,16 @@ export class Hero extends Actor {
     const p = POTIONS[kind];
     if (p.res !== 'both') this.potionCds[p.res] = POTION_COOLDOWN;
     if (p.res === 'both') {
-      this.hp = Math.min(this.maxHp, this.hp + this.maxHp * p.pct);
-      this.yar = Math.min(this.maxYar, this.yar + this.maxYar * p.pct);
+      const k = p.pct * (1 + (this.potionPct || 0) / 100);
+      this.hp = Math.min(this.maxHp, this.hp + this.maxHp * k);
+      this.yar = Math.min(this.maxYar, this.yar + this.maxYar * k);
     } else {
       // зелья одного вида (жизни / Яри) не складываются: новое перезапускает таймер, прибавляя остаток
       const old = this.effects.find((e) => e.res === p.res);
       const rest = old ? old.rate * old.t : 0;
       this.effects = this.effects.filter((e) => e.res !== p.res);
-      this.effects.push({ kind, res: p.res, rate: (p.amount + rest) / p.dur, t: p.dur });
+      const amt = p.amount * (1 + (this.potionPct || 0) / 100);
+      this.effects.push({ kind, res: p.res, rate: (amt + rest) / p.dur, t: p.dur });
     }
     const col = p.res === 'hp' ? PAL.red_lt : p.res === 'yar' ? PAL.blue_lt : PAL.bronze_hi;
     game.fx.burst(this.x, this.y, col, 12, 30);
@@ -357,6 +400,36 @@ export class Hero extends Actor {
     for (let i = 0; i < BELT_SIZE; i++) { const s = this.belt[i]; if (s && s.kind === kind && s.count < BELT_STACK) { s.count++; return 'belt'; } }
     for (let i = 0; i < BELT_SIZE; i++) if (!this.belt[i]) { this.belt[i] = { kind, count: 1 }; return 'belt'; }
     return this.inv.autoAdd(makePotion(kind)) ? 'bag' : null;
+  }
+
+  // --- береста возврата (GDD §4.4; веха M1c)
+  /** Положить n берест в котомку стопками до SCROLLS[kind].stack (§6.9: 20). Возвращает, сколько не влезло. */
+  addScroll(kind, n = 1) {
+    const max = SCROLLS[kind].stack || 20;
+    for (const it of this.inv.items) {
+      if (n <= 0) break;
+      if (it.kind === 'scroll' && it.scroll === kind && it.count < max) { const k = Math.min(n, max - it.count); it.count += k; n -= k; }
+    }
+    while (n > 0) {
+      const k = Math.min(n, max), it = makeScroll(kind, k);
+      if (!this.inv.autoAdd(it)) break;
+      n -= k;
+    }
+    return n;
+  }
+  scrollCount(kind = 'beresta') { return this.inv.items.reduce((s, it) => s + (it.kind === 'scroll' && it.scroll === kind ? it.count : 0), 0); }
+  /** Начать чтение бересты (каст castTime, GDD: 1 с). Возвращает ключ ошибки ru.json или null. Береста тратится по окончании каста. */
+  readScroll(item, game) {
+    if (this.dead) return 'dead';
+    if (!item || item.kind !== 'scroll') return 'busy';
+    const sc = SCROLLS[item.scroll];
+    const err = game.portalBlocked ? game.portalBlocked() : null;
+    if (err) return err;
+    if (this.dashing || this.stun > 0 || (this.action && !(this.action.fired && this.action.t > this.action.dur * 0.85))) return 'busy';
+    this.cmd = null; this.path = null; this.moving = false;
+    this.action = { type: 'read', item, t: 0, dur: sc.castTime, hitAt: sc.castTime, fired: false };
+    game.counters.berestaReads = (game.counters.berestaReads || 0) + 1;
+    return null;
   }
 
   // --- урон / опыт
@@ -460,6 +533,7 @@ export class Hero extends Actor {
       if (!a.fired && a.t >= a.hitAt) {
         a.fired = true;
         if (a.type === 'attack') game.combat.heroMelee(this, a.target, a.skill);
+        else if (a.type === 'read') game.finishScroll(a.item);
         else game.combat.release(this, a.skill, a.tx, a.ty);
       }
       const cancel = a.type === 'cast' && a.fired && this.cmd && this.cmd.type === 'move';
@@ -486,6 +560,7 @@ export class Hero extends Actor {
         return;
       }
       if (c.stand) { c.swung = true; this.startAttack(e, c.skill, game); return; }    // Shift+ЛКМ — удар на месте
+      if (c.lmb && this.updateBlocker(c, e, dt, game)) return;                       // заслон на пути к цели (GDD v1.8 §4.1)
       c.repath -= dt;
       if (c.repath <= 0 || !this.path) { this.setPath(map, e.x, e.y, true, e); c.repath = 0.25; }
       this.followPath(map, dt, this.curSpeed());

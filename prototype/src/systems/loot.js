@@ -2,12 +2,12 @@
 // серебро подбирается само в радиусе 1 тайла.
 import { rnd } from '../core/math.js';
 import { circleFree } from '../world/collision.js';
-import { POTIONS, DROP_NORMAL, POTION_WEIGHTS, RARITY, pickWeighted, rollItem, silverAmount, potionFor, dropTable } from '../data/items.js';
+import { POTIONS, SCROLLS, DROP_NORMAL, POTION_WEIGHTS, RARITY, pickWeighted, rollItem, silverAmount, potionFor, dropTable, makeScroll } from '../data/items.js';
 import { silverText } from '../core/i18n.js';
 import { PAL } from '../palette.js';
 
 export function itemColor(item) {
-  if (item.kind === 'potion') return PAL.birch;
+  if (item.kind === 'potion' || item.kind === 'scroll') return PAL.birch;
   return PAL[RARITY[item.rarity].color];
 }
 
@@ -28,19 +28,27 @@ export class Loot {
   spawnSilver(x, y, amount) { return this.spawn(x, y, { kind: 'silver', amount, label: silverText(amount, 'ground'), color: PAL.linen }); }   // «86 сер.» (GDD §10.1)
   spawnItem(x, y, item) {
     if (item.kind === 'potion') return this.spawn(x, y, { kind: 'potion', potion: item.potion, item, label: POTIONS[item.potion].name, color: PAL.birch });
+    if (item.kind === 'scroll') return this.spawnScroll(x, y, item.scroll, item.count);
     return this.spawn(x, y, { kind: 'item', item, label: item.name, color: itemColor(item) });
+  }
+
+  spawnScroll(x, y, kind = 'beresta', count = 1) {
+    return this.spawn(x, y, { kind: 'scroll', scroll: kind, count, label: SCROLLS[kind].name + (count > 1 ? ' ×' + count : ''), color: PAL.birch });
+  }
+  /** Класс «зелье/береста» (GDD §6.7: жизни 55, Яри 30, живая вода 10, береста 5). */
+  spawnPotionRoll(x, y, mlvl) {
+    const type = pickWeighted(POTION_WEIGHTS);
+    if (type === 'beresta') { this.game.counters.berestaDrops = (this.game.counters.berestaDrops || 0) + 1; return this.spawnScroll(x, y, 'beresta', 1); }
+    const pk = potionFor(type, mlvl);
+    return this.spawn(x, y, { kind: 'potion', potion: pk, label: POTIONS[pk].name, color: PAL.birch });
   }
 
   dropFrom(enemy) {
     if (enemy.dropTable) return this.dropElite(enemy);
     const what = pickWeighted(DROP_NORMAL);
     if (what === 'silver') this.spawnSilver(enemy.x, enemy.y, silverAmount(enemy.mlvl));
-    else if (what === 'potion') {
-      let type = pickWeighted(POTION_WEIGHTS);
-      if (type === 'beresta') type = 'life';       // береста возврата — в следующих итерациях
-      const pk = potionFor(type, enemy.mlvl);
-      this.spawn(enemy.x, enemy.y, { kind: 'potion', potion: pk, label: POTIONS[pk].name, color: PAL.birch });
-    } else if (what === 'item') this.spawnItem(enemy.x, enemy.y, rollItem(enemy.mlvl, Math.random, this.game.hero.mf));
+    else if (what === 'potion') this.spawnPotionRoll(enemy.x, enemy.y, enemy.mlvl);
+    else if (what === 'item') this.spawnItem(enemy.x, enemy.y, rollItem(enemy.mlvl, Math.random, this.game.hero.mf));
   }
 
   /** Сундук (GDD §6.7): сначала гарантированные предметы (сюжетный сундук тропы — заговорённое оружие ilvl 3),
@@ -56,12 +64,8 @@ export class Loot {
     for (let i = 0; i < rolls; i++) {
       const what = pickWeighted(T.outcome);
       if (what === 'silver') out.push(this.spawnSilver(x, y, silverAmount(ilvl)));
-      else if (what === 'potion') {
-        let type = pickWeighted(POTION_WEIGHTS);
-        if (type === 'beresta') type = 'life';
-        const pk = potionFor(type, ilvl);
-        out.push(this.spawn(x, y, { kind: 'potion', potion: pk, label: POTIONS[pk].name, color: PAL.birch }));
-      } else if (what === 'item') out.push(this.spawnItem(x, y, rollItem(ilvl, Math.random, this.game.hero.mf, { rarity: T.rarity })));
+      else if (what === 'potion') out.push(this.spawnPotionRoll(x, y, ilvl));
+      else if (what === 'item') out.push(this.spawnItem(x, y, rollItem(ilvl, Math.random, this.game.hero.mf, { rarity: T.rarity })));
     }
     return out;
   }
@@ -92,12 +96,8 @@ export class Loot {
     }
     for (const r of plan) {
       if (r === 'silver') out.push(this.spawnSilver(e.x, e.y, silverAmount(e.mlvl)));
-      else if (r === 'potion') {
-        let type = pickWeighted(POTION_WEIGHTS);
-        if (type === 'beresta') type = 'life';
-        const pk = potionFor(type, e.mlvl);
-        out.push(this.spawn(e.x, e.y, { kind: 'potion', potion: pk, label: POTIONS[pk].name, color: PAL.birch }));
-      } else out.push(this.spawnItem(e.x, e.y, rollItem(e.mlvl, Math.random, 0, { forceRarity: r })));
+      else if (r === 'potion') out.push(this.spawnPotionRoll(e.x, e.y, e.mlvl));
+      else out.push(this.spawnItem(e.x, e.y, rollItem(e.mlvl, Math.random, 0, { forceRarity: r })));
     }
     e.drops = out;
     g.counters.eliteDrops = (g.counters.eliteDrops || 0) + 1;
@@ -116,10 +116,17 @@ export class Loot {
       if (!where) { g.notify('Некуда положить', PAL.red_lt, 'full'); g.audio.play('error'); return false; }
       g.log.add('Подобрано: ' + it.label + (where === 'belt' ? ' (пояс)' : ' (котомка)'), PAL.birch);
       g.audio.play('pickup');
+    } else if (it.kind === 'scroll') {        // береста — в котомку стопкой до 20 (GDD §6.9; в пояс — только зелья)
+      const left = h.addScroll(it.scroll, it.count || 1);
+      if (left >= (it.count || 1)) { g.notify('Некуда положить', PAL.red_lt, 'full'); g.audio.play('error'); return false; }
+      if (left > 0) { it.count = left; it.label = SCROLLS[it.scroll].name + (left > 1 ? ' ×' + left : ''); g.log.add('Подобрано: ' + SCROLLS[it.scroll].name, PAL.birch); g.audio.play('pickup'); return false; }
+      g.log.add('Подобрано: ' + it.label + ' (котомка)', PAL.birch);
+      g.audio.play('pickup');
     } else {
       if (!h.inv.autoAdd(it.item)) { g.notify('Некуда положить', PAL.red_lt, 'full'); g.audio.play('error'); return false; }
       g.log.add('Подобрано: ' + it.label, it.color);
       g.audio.play('pickup');
+      if (it.item.rarity === 'unique') { g.counters.bylinaPicked = (g.counters.bylinaPicked || 0) + 1; g.notify(g.t('proto.bylina.got', { item: it.item.name }), PAL.bronze_lt, 'relic'); }
     }
     it.taken = true;
     g.fx.burst(it.x, it.y, PAL.bronze_hi, 6, 4, 30);

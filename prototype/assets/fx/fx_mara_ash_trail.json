@@ -1,0 +1,20 @@
+{
+ "effect": "Пепельный след Мары (bosses.json ashTrail, r 0.6 tile, burns 3 s)",
+ "radius_tiles": 0.6,
+ "draw": "ground decal, native size; engine alpha fade stays",
+ "pivot": [
+  20,
+  16
+ ],
+ "fps": 6,
+ "loop": true,
+ "image": "fx_mara_ash_trail.png",
+ "frame_size": [
+  40,
+  28
+ ],
+ "frame_count": 4,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

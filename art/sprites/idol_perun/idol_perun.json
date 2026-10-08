@@ -1,0 +1,18 @@
+{
+ "object": "Идол Перуна",
+ "frame_size": [
+  80,
+  160
+ ],
+ "pivot": [
+  40,
+  148
+ ],
+ "files": {
+  "burning": "idol_perun_burning.png",
+  "extinguish": "idol_perun_extinguish.png",
+  "smoking": "idol_perun_smoking.png"
+ },
+ "states": "burning (loop, M1 until Кривша dies) -> extinguish (one-shot 8 @8) -> smoking (loop)",
+ "light_hint": "burning: warm light radius 5 tiles at the flame root (y - 70); smoking: none"
+}

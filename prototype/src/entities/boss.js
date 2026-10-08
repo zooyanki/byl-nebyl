@@ -4,6 +4,7 @@
 // подъём из пламени идола, удар когтями (конус, телеграф), огненный след, подъём упырей, прыжок в неосвящённое огнище
 // на 50% HP (2 с неуязвим, огненный ореол, сопр. огню +25%, +25% скорости атаки), возврат к идолу при гибели героя.
 import { Enemy } from './enemy.js';
+import { hitChance } from '../data/progression.js';
 import { CFG } from '../data/config.js';
 import { RU } from '../core/i18n.js';
 import { PAL } from '../palette.js';
@@ -30,6 +31,8 @@ export function spawnMara(game, rng) {
   mara.name = B.name; mara.fem = true; mara.special = 'mara';
   mara.route = { pts: ok, i: 0, speedMul: R.speedMul };
   mara.tick = maraTick; mara.healT = 0; mara.ashT = 0;
+  const anchor = { x: R.center[0], y: R.center[1], r: R.leash ?? 8 };   // v1.8.1: поводок 8 тайлов от центра круга (Мара и свита)
+  mara.anchor = anchor;
   game.enemies.push(mara);
   const n = rng.int(B.retinue.count[0], B.retinue.count[1]);
   for (let i = 0; i < n; i++) {
@@ -37,7 +40,7 @@ export function spawnMara(game, rng) {
       const a = ((i + k * 0.37) / n) * Math.PI * 2, x = sx + Math.cos(a) * 1.3, y = sy + Math.sin(a) * 1.3;
       if (!circleFree(m, x, y, 0.3) || !m.isReachableAt(x, y)) continue;
       const e = new Enemy(B.retinue.kind, x, y, 'mara', B.retinue.mlvl);
-      e.follow = mara; e.followOff = [Math.cos(a) * 1.3, Math.sin(a) * 1.3]; e.special = 'mara';
+      e.follow = mara; e.followOff = [Math.cos(a) * 1.3, Math.sin(a) * 1.3]; e.special = 'mara'; e.anchor = anchor;
       game.enemies.push(e);
       break;
     }
@@ -58,11 +61,13 @@ function maraTick(e, dt, game) {
   // лечение союзника (как у волхва-прислужника): раз в 8 с на 15% его макс. HP — самого раненого в радиусе 6
   e.healT += dt;
   const H = B.heal;
-  if (e.healT >= H.every) {
+  if (e.healAnim != null) { e.healAnim += dt; if (e.healAnim >= 0.6) e.healAnim = null; }   // анимация лечения (косметика, спрайт M1b)
+  if (e.healT >= H.every - 0.3) {
     let best = null;
     for (const o of game.enemies) if (!o.dead && o !== e && o.pack === e.pack && o.hp < o.maxHp && Math.hypot(o.x - e.x, o.y - e.y) <= H.radius && (!best || o.hp / o.maxHp < best.hp / best.maxHp)) best = o;
-    if (best) {
-      e.healT = 0;
+    if (best && e.healT < H.every) { if (e.healAnim == null) e.healAnim = e.healT - (H.every - 0.3); }   // за 0,3 с: кадр 3 (apply_frame) = лечение
+    else if (best) {
+      e.healT = 0; e.healAnim = 0.3;
       const v = Math.max(1, Math.round(best.maxHp * H.pct / 100));
       best.hp = Math.min(best.maxHp, best.hp + v);
       game.fx.text(best.x, best.y, '+' + v, PAL.nebyl, best.def.height + 6, { dur: 0.8 });
@@ -167,9 +172,13 @@ export class Krivsha extends Enemy {
         const J = this.jump, q = Math.min(1, this.t / 0.6);
         this.x = J.x0 + (J.x1 - J.x0) * q; this.y = J.y0 + (J.y1 - J.y0) * q; this.lift = Math.sin(q * Math.PI) * 40;
         this.moving = false;
+        // «огнище питает» (GDD v1.8 §5.4, спрайт fx_krivsha_feed): эффект стартует с кадром 0 fire_emerge (t = неуязвимость − 0,75 с),
+        // +15% HP — на его кадре 6 (через 0,6 с, за 0,15 с до выхода)
+        if (!J.fed && this.t >= B.hearthPhase.invuln - 0.75 + 0.6) { J.fed = true; this.feedHeal(game); }
         if (this.t >= B.hearthPhase.invuln) {
           this.lift = 0; this.state = 'fight'; this.t = 0; this.phase = 2; this.aura = true;
-          this.atkMul = 1 + B.hearthPhase.atkSpeedPct / 100;
+          this.atkMul = 1 + (B.hearthPhase.atkSpeedPct || 0) / 100;      // v1.8: 0 — скорость атаки прежняя
+          if (!J.fed) { J.fed = true; this.feedHeal(game); }
           Object.assign(this.res, B.hearthPhase.res);
           game.fx.burst(this.x, this.y, PAL.flame, 24, 40, 70); game.shake(3, 0.3); game.audio.play('explode');
           game.counters.krivshaPhase2 = (game.counters.krivshaPhase2 || 0) + 1;
@@ -178,6 +187,9 @@ export class Krivsha extends Enemy {
       }
     }
     // призыв упырей: таймер боя идёт и во время удара когтями (раз в 15 с по GDD)
+    // анимация призыва (косметика, спрайт M1b): начинается за 0,5 с до таймера, кадр 5 (spawn_frame) = появление упырей
+    if (this.sumAnim != null) { this.sumAnim += dt; if (this.sumAnim >= 0.8 || this.state === 'jump' || this.state === 'return' || this.state === 'idle') this.sumAnim = null; }
+    else if (this.state === 'fight' && this.summonT > dt && this.summonT <= 0.5 && this.minions.filter((e) => !e.dead).length < this.B.summon.max) this.sumAnim = 0.5 - this.summonT;
     if (this.state === 'fight' || this.state === 'claw') this.updateSummon(dt, game);
     // огненный след: за ним 4 с горит земля
     if (this.x !== px || this.y !== py) {
@@ -200,16 +212,28 @@ export class Krivsha extends Enemy {
     }
   }
 
+  /** v1.8: «огнище его питает» — +15% макс. HP (hearthPhase.healPct). */
+  feedHeal(game) {
+    const heal = Math.round(this.maxHp * (this.B.hearthPhase.healPct || 0) / 100);
+    if (heal <= 0) return;
+    this.hp = Math.min(this.maxHp, this.hp + heal); this.phaseHeal = heal;
+    game.fx.text(this.x, this.y, '+' + heal, PAL.flame, 100, { dur: 1 });
+    game.counters.krivshaFeed = (game.counters.krivshaFeed || 0) + 1;
+  }
+
   startClaw(game) {
     const B = this.B, C = B.claw, h = game.hero;
-    this.state = 'claw'; this.t = 0; this.moving = false; this.path = null;
+    this.state = 'claw'; this.t = 0; this.moving = false; this.path = null; this.clawHitT = null;
     const dir = Math.atan2(h.y - this.y, h.x - this.x), me = this;
-    game.combat.addTele({
+    this.clawTele = game.combat.addTele({
       shape: 'cone', x: this.x, y: this.y, r: C.range, dir, half: (C.halfAngleDeg * Math.PI) / 180, dur: C.telegraph / this.atkMul, src: this,
       onFire(T) {
         const g = game, hh = g.hero;
-        g.counters.krivshaClaws = (g.counters.krivshaClaws || 0) + 1;
+        g.counters.krivshaClaws = (g.counters.krivshaClaws || 0) + 1; me.clawHitT = me.t;   // clawHitT — кадр 6 спрайта (hit_frame) с этого момента
         if (hh.dead || !g.combat.inTele(T, hh.x, hh.y, hh.r * 0.5)) return;
+        if (C.hitRoll && !(Math.random() < hitChance(me.ar, hh.def, me.mlvl, hh.level))) {   // v1.8: проверка попадания (§3.3)
+          g.counters.krivshaClawMiss = (g.counters.krivshaClawMiss || 0) + 1; g.fx.text(hh.x, hh.y, 'Мимо', PAL.mist, 50, { dur: 0.6 }); return;
+        }
         const dmg = Math.round((me.dmgMin + Math.floor(Math.random() * (me.dmgMax - me.dmgMin + 1))) * C.mul);
         const dealt = hh.takeDamage(dmg, g, 'melee', me);
         me.clawDealt = (me.clawDealt || 0) + dealt;
@@ -226,6 +250,7 @@ export class Krivsha extends Enemy {
     this.summonT = S.every;
     this.minions = this.minions.filter((e) => !e.dead);
     const n = Math.min(S.count, S.max - this.minions.length);
+    if (n > 0) this.sumAnim = 0.5;                                     // синхрон кадра 5 с моментом призыва
     let made = 0;
     for (let i = 0; i < n; i++) {
       for (let k = 0; k < 12; k++) {
@@ -233,6 +258,7 @@ export class Krivsha extends Enemy {
         if (!circleFree(game.map, x, y, 0.4) || !game.map.isReachableAt(x, y)) continue;
         const e = new Enemy(S.kind, x, y, 'krivsha', S.mlvl);
         e.state = 'rise'; e.t = 0; e.riseTime = 0.8; e.summoned = true;
+        if (S.xpMul === 0) e.xp = 0; if (S.drop === false) e.noLoot = true;   // v1.8: призванные без опыта и добычи
         game.enemies.push(e); this.minions.push(e); made++;
         game.fx.burst(x, y, PAL.wood_md, 8, 2, 30);
         break;
@@ -249,6 +275,19 @@ export class Krivsha extends Enemy {
     this.state = 'idle'; this.t = 0; this.path = null; this.moving = false;
     this.hp = this.maxHp; this.phase = 1; this.phaseDone = false; this.aura = false; this.atkMul = 1; this.lift = 0;
     this.res = { ...this.def.res }; this.summonT = this.B.summon.first; this.cycleT = 0; this.fightT = 0;
+    this.summonBarked = false; this.sumAnim = null;
+    // GDD v1.8.1 (B-33): призванные рассыпаются вместе со сбросом босса — без опыта, добычи и трупа
+    if (this.B.summon.despawnOnReset !== false) this.crumbleMinions(game);
     game.counters.krivshaResets = (game.counters.krivshaResets || 0) + 1;
+  }
+  crumbleMinions(game) {
+    const gone = new Set(this.minions.filter((e) => !e.dead));
+    for (const e of game.enemies) if (e.summoned && e.pack === 'krivsha' && !e.dead) gone.add(e);
+    for (const e of gone) { game.fx.burst(e.x, e.y, PAL.wood_md, 10, 6, 30); game.fx.burst(e.x, e.y, PAL.slate_lt, 6, 14, 20); }
+    if (gone.size) {
+      game.enemies = game.enemies.filter((e) => !gone.has(e));
+      game.counters.krivshaCrumbled = (game.counters.krivshaCrumbled || 0) + gone.size;
+    }
+    this.minions = [];
   }
 }

@@ -78,9 +78,12 @@ export class Quest {
   lines() {
     const now = this.game.time, fade = this.def.doneFade || 4;
     const recent = this.obj.filter((o) => o.state === 'done' && now - o.doneT < fade);
+    // GDD v1.8.1 §8.2: огнища необязательны — после «Миссия пройдена» открытая цель 3 не вытесняется гаснущими обязательными
     const act = this.obj.filter((o) => o.state === 'active');
-    const next = this.obj.filter((o) => o.state === 'locked');
-    return [...recent, ...act, ...next].slice(0, this.def.maxLines || 3).map((o) => ({
+    const next = this.obj.filter((o) => o.state === 'locked' && !this.missionDone);
+    const optOpen = act.filter((o) => o.def.optional), restAct = act.filter((o) => !o.def.optional);
+    const ordered = this.missionDone && optOpen.length ? [...optOpen, ...recent, ...restAct, ...next] : [...recent, ...act, ...next];
+    return ordered.slice(0, this.def.maxLines || 3).map((o) => ({
       id: o.id, text: this.text(o), count: this.count(o), state: o.state,
       alpha: o.state === 'done' ? Math.max(0, Math.min(1, (fade - (now - o.doneT)) / 1.5)) : 1,
     }));

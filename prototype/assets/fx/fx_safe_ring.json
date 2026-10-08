@@ -29,8 +29,8 @@
   }
  },
  "states": {
-  "dim": "always on: barely visible dark grooves",
-  "lit": "optional: bronze while the hero rests inside"
+  "dim": "dark grooves, shown at 50% when the hero is within 3 tiles of the border",
+  "lit": "bronze, while the hero rests inside"
  },
  "placement": {
   "centre": "zone centre = pivot of the крада / Чуров камень / костёр (ground point, screen px)",
@@ -47,8 +47,9 @@
   "rune_every": 4
  },
  "render_hint": {
-  "opacity_dim": 0.5,
-  "reveal": "fade in to 1.0 when the hero is within 2 tiles of the border, so the ring is noticed where it matters (GDD §12.1.5: «видно у границы»)",
+  "opacity": 0.5,
+  "visible_when": "the hero is within 3 tiles of the border (inside or outside) OR is resting in the zone; otherwise hidden (GDD v1.7.1 §12.1.5 engine rule)",
+  "state_rule": "dim while visible; lit while the hero rests inside",
   "sort": "ground decal layer, under characters and objects"
  },
  "layouts": {

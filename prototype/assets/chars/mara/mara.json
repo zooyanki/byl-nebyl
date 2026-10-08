@@ -1,0 +1,105 @@
+{
+ "character": "Мара Пепельная",
+ "folder": "mara",
+ "frame_size": [
+  64,
+  64
+ ],
+ "pivot": [
+  32,
+  56
+ ],
+ "directions": {
+  "prototype_dirs": "0..7 (0 = towards the camera, 2 = left, 4 = away, 6 = right); BACK = {3,4,5}",
+  "sheet": "dir in {3,4,5} -> *_ne, otherwise -> *_se",
+  "flip": "draw mirrored (scale x = -1 around the pivot) when dirSide(dir, facing) < 0",
+  "rule": "scale.md §4.1 / GDD §12.1.2: 2 drawn directions (SE, NE) + horizontal mirror (SW, NW); the 8 logical directions of the engine map onto these 4 views"
+ },
+ "mirror_rule": "flip horizontally around the frame centre line x = 32.0; pivot stays (32, 56)",
+ "animations": {
+  "mara_idle": {
+   "files": {
+    "se": "mara_idle_se.png",
+    "ne": "mara_idle_ne.png"
+   },
+   "frames": 6,
+   "fps": 8,
+   "loop": true,
+   "events": {}
+  },
+  "mara_walk": {
+   "files": {
+    "se": "mara_walk_se.png",
+    "ne": "mara_walk_ne.png"
+   },
+   "frames": 6,
+   "fps": 8,
+   "loop": true,
+   "events": {}
+  },
+  "mara_cast": {
+   "files": {
+    "se": "mara_cast_se.png",
+    "ne": "mara_cast_ne.png"
+   },
+   "frames": 6,
+   "fps": 10,
+   "loop": false,
+   "events": {
+    "release_frame": 3,
+    "spawn_effect": "fx_mara_bolt (flight), fx_mara_bolt_hit (impact)",
+    "spawn_at_px_se": [
+     51,
+     18
+    ],
+    "spawn_at_px_sw": [
+     13,
+     18
+    ],
+    "sync": "attackTime 2.0 s, hitAt 0.7 s: start the 10 fps anim at t = 0.4 s so frame 3 is at 0.7 s"
+   }
+  },
+  "mara_heal": {
+   "files": {
+    "se": "mara_heal_se.png",
+    "ne": "mara_heal_ne.png"
+   },
+   "frames": 6,
+   "fps": 10,
+   "loop": false,
+   "events": {
+    "apply_frame": 3,
+    "note": "every 8 s (bosses.json heal.every); the nebyl wisps are in her hands, the engine's area burst (radius 6) can stay"
+   }
+  },
+  "mara_hurt": {
+   "files": {
+    "se": "mara_hurt_se.png",
+    "ne": "mara_hurt_ne.png"
+   },
+   "frames": 2,
+   "fps": 8,
+   "loop": false,
+   "events": {}
+  },
+  "mara_death": {
+   "files": {
+    "se": "mara_death_se.png",
+    "ne": "mara_death_ne.png"
+   },
+   "frames": 8,
+   "fps": 10,
+   "loop": false,
+   "events": {
+    "note": "collapses into an ash heap; last frame holds"
+   }
+  }
+ },
+ "retinue": "4-6 анчуток mlvl 2 (bosses.json retinue.kind = anchutka): an existing monster type of the prototype; there is no art sprite for the анчутка yet (grey box in the prototype). Not a new tinted variant.",
+ "fx": {
+  "ash_trail": "fx_mara_ash_trail",
+  "bolt": "fx_mara_bolt",
+  "bolt_hit": "fx_mara_bolt_hit"
+ },
+ "extra_animations": "walk (glide) and heal are not in GDD §12.1.2 (парение, ведовство, урон, гибель); added for the prototype's moves"
+}

@@ -1,0 +1,32 @@
+{
+ "object": "Огнище",
+ "files": {
+  "desecrated": "ognishche_desecrated.png",
+  "consecrate": "ognishche_consecrate.png",
+  "consecrated": "ognishche_consecrated.png",
+  "progress": "ognishche_progress.png"
+ },
+ "frame_size": [
+  64,
+  120
+ ],
+ "pivot": [
+  32,
+  108
+ ],
+ "progress_frame_size": [
+  72,
+  124
+ ],
+ "progress_pivot": [
+  36,
+  108
+ ],
+ "states": {
+  "desecrated": "loop 6 @10",
+  "consecrating": "desecrated loop + ognishche_progress[floor(holdT/3*12)]",
+  "consecrate": "one-shot 6 @10 on completion",
+  "consecrated": "loop 6 @10, same phase as frame 0"
+ },
+ "light_hint": "engine light: desecrated nebyl (pine/nebyl) radius 2.5 tiles; consecrated warm radius 3 tiles"
+}

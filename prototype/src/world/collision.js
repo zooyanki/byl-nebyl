@@ -27,7 +27,7 @@ export function circleFree(map, x, y, r) {
 // (чтобы слипшиеся тела могли разойтись и никто не застревал навсегда).
 export function actorBlocked(e, nx, ny) {
   for (const o of ACTORS) {
-    if (o === e || o.dead) continue;
+    if (o === e || o.dead || o.follow === e) continue;   // вожак (Мара) проходит сквозь свою свиту — иначе стоящая свита запирает её на обходе
     const min = e.r + o.r - 0.02;
     const dxn = nx - o.x, dyn = ny - o.y;
     const dn2 = dxn * dxn + dyn * dyn;

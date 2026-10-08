@@ -1,0 +1,36 @@
+{
+ "object": "Идол Перуна (main idol of the капище, M1), full object sprite: stone plinth, carved oak pillar, silver head with a gold moustache, thunder wheel; 2x2 tiles",
+ "sizes_px": {
+  "body": 104,
+  "flame_body_max": 136,
+  "note": "sparks/smoke rise above"
+ },
+ "layer": "sorted by pivot y; blocks movement (2x2)",
+ "state": "extinguish",
+ "notes": "one-shot after Кривша dies: flames die down, smoke builds; ends on smoking",
+ "visible_height_px": [
+  132,
+  149,
+  149,
+  147,
+  147,
+  145,
+  144,
+  149
+ ],
+ "pivot": [
+  40,
+  148
+ ],
+ "fps": 8,
+ "loop": false,
+ "image": "idol_perun_extinguish.png",
+ "frame_size": [
+  80,
+  160
+ ],
+ "frame_count": 8,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

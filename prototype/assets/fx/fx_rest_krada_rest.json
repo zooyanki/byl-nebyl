@@ -4,7 +4,7 @@
  "footprint": "2x2 tiles (64x32 diamond), centre = pivot; stone ring r 20x10 px (scale.md §3.3, §5 п.7)",
  "sizes_px": {
   "log_crib": 24,
-  "flame_idle_from_ground": 72,
+  "flame_idle_from_ground": 73,
   "flame_rest_from_ground": 86,
   "sparks_rest_top_from_ground": 105
  },

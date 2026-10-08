@@ -1,0 +1,20 @@
+{
+ "effect": "Огненный ореол Кривши в огненной фазе (r 1.5 tile)",
+ "radius_tiles": 1.5,
+ "draw": "ground decal centred on the boss pivot, BEFORE (under) the boss sprite; replaces the ellipse in drawKrivsha",
+ "pivot": [
+  40,
+  26
+ ],
+ "fps": 10,
+ "loop": true,
+ "image": "fx_krivsha_aura.png",
+ "frame_size": [
+  80,
+  48
+ ],
+ "frame_count": 6,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

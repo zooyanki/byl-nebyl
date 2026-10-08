@@ -1,0 +1,45 @@
+{
+ "character": "Анчутка",
+ "animation": "coal_throw",
+ "direction": "ne",
+ "mirror_for": "nw",
+ "mirror_rule": "flip horizontally around the frame centre line x = 16.0; pivot stays (16, 34)",
+ "pivot": [
+  16,
+  34
+ ],
+ "fps": 7,
+ "loop": false,
+ "visible_height_px": [
+  27,
+  27,
+  27,
+  27,
+  27
+ ],
+ "height_rule": "pivot row (ground under the feet) to the top visible pixel, outline included",
+ "notes": "Анчутка (GDD §5.2 E1: мелкий бес-поджигатель, кидает угли и убегает; codex: водится у печей и пожарищ). One sprite for the Залесье packs and Мара's retinue (GDD has no separate retinue variant). Hunched bald soot imp: big head, swept-back pointed ears, bone horn nubs, ember eyes, long arms with ash-dusted forearms, short legs, low tail with a smouldering tuft. Soot/ash greys + ember accents, no red (hero accent). Body 26-27 incl. ears (scale.md 24-28; def.height 26), frame 32x40, pivot (16,34).",
+ "events": {
+  "release_frame": 3,
+  "spawn_at_px_se": [
+   29.0,
+   24.0
+  ],
+  "spawn_at_px_sw": [
+   3.0,
+   24.0
+  ],
+  "spawn_height_px": 10.0,
+  "spawn_effect": "fx_anchutka_coal (flight)",
+  "sync": "attackTime 1.0 s, hitAt 0.45 s (monsters.json): 5 frames at 7 fps, frame 3 starts at 0.43 s = the coal leaves the hand; the anim ends at 0.71 s, hold idle for the rest of attackTime"
+ },
+ "image": "anchutka_coal_throw_ne.png",
+ "frame_size": [
+  32,
+  40
+ ],
+ "frame_count": 5,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

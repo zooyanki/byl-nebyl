@@ -18,7 +18,7 @@ export function generateTrail(seed, zone) {
   const P = zone.path, yc = trailCenter(P);
   const at = (o) => [o.x, yc(o.x) + (o.dy || 0)];
   m.yc = yc;
-  m.packs = zone.packs.map((p) => { const [x, y] = at(p); return { x, y, kinds: [...p.kinds], mlvl: p.mlvl, role: p.role, ambush: !!p.ambush }; });
+  m.packs = zone.packs.map((p) => { const [x, y] = at(p); return { x, y, kinds: [...p.kinds], mlvl: p.mlvl, role: p.role, ambush: !!p.ambush, champions: p.champions || null }; });
   resolveObjects(m, zone, at);
   const LM = zone.landmarks || {};
   const stone = LM.churStone ? at(LM.churStone) : null;

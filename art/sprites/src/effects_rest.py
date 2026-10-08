@@ -81,15 +81,17 @@ def fire_field(shape, cx, base_y, hw, height, i, bright=0.0, n=6, seed=0.0):
         d = np.abs(xx + 0.5 - xc) / np.maximum(half, 0.01)
         v = np.where(ok & (d <= 1), (1 - d) * (1 - 0.55 * t) + 0.25 * (1 - t), 0)
         val = np.maximum(val, v)
-    # detached licks above the tallest tongue (2 per frame, rising)
+    # detached licks above the tallest tongue (2 per frame, rising). Designer fix 08.10: a lick is a
+    # spark in ember/flame with no red rim (pure red is the hero's accent, scale.md §4.4)
+    lick = np.zeros(shape, bool)
     for j in range(2):
         tt = ((i / n) + j * 0.5) % 1.0
         ly = int(round(base_y - height * (0.86 + 0.28 * tt)))
         lx = int(round(cx + (j - 0.5) * hw * 0.6 + math.sin(ph + j) * 1.5))
-        if 0 <= ly < H and 0 <= lx < W:
-            val[ly, lx] = max(val[ly, lx], 0.3 - 0.2 * tt)
-            if ly + 1 < H and tt < 0.5:
-                val[ly + 1, lx] = max(val[ly + 1, lx], 0.35)
+        if 0 <= ly < H and 0 <= lx < W and val[ly, lx] < 0.04:
+            lick[ly, lx] = True
+            if ly + 1 < H and tt < 0.5 and val[ly + 1, lx] < 0.04:
+                lick[ly + 1, lx] = True
     m = val > 0.04
     th_linen, th_flame, th_ember = 0.86 - 0.1 * bright, 0.58 - 0.1 * bright, 0.32 - 0.08 * bright
     low = yy > base_y - height * (0.28 + 0.12 * bright)             # white-hot core only near the wood
@@ -103,6 +105,9 @@ def fire_field(shape, cx, base_y, hw, height, i, bright=0.0, n=6, seed=0.0):
         nb |= np.roll(np.roll(m, dy, 0), dx, 1)
     rim = nb & ~m & (yy < base_y)
     out[rim] = C["red"]
+    lk = lick & ~m & ~rim
+    out[lk] = C["ember"]
+    out[lk & np.roll(lk, -1, 0)] = C["flame"]          # 2-px lick: hot head, ember tail
     return out
 
 

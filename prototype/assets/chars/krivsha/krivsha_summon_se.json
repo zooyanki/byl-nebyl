@@ -1,0 +1,40 @@
+{
+ "character": "Кривша, Обгорелый страж",
+ "animation": "summon",
+ "variant": "normal",
+ "direction": "se",
+ "mirror_for": "sw",
+ "mirror_rule": "flip horizontally around the frame centre line x = 64.0; pivot stays (64, 116)",
+ "pivot": [
+  64,
+  116
+ ],
+ "fps": 10,
+ "loop": false,
+ "visible_height_px": [
+  97,
+  98,
+  98,
+  98,
+  81,
+  74,
+  85,
+  93
+ ],
+ "height_rule": "pivot row (ground under the feet) to the top visible pixel, outline included",
+ "notes": "Кривша, Обгорелый страж (boss M1; «Обгорелый страж» is his title, one character). Hunched keeper of the капище in a burnt sheepskin coat with a ring of bronze keys, ghoul-grey skin, long claws with burning tips, fire in the coat's cracks. Body 96 (scale.md: boss 96, fire halo to 112), frame 128x128, pivot (64,116).",
+ "events": {
+  "spawn_frame": 5,
+  "spawn_effect": "fx_krivsha_summon (at every упырь spawn point, 8 frames @10 = riseTime 0.8 s); the summoned upyri use the normal упырь sprite and its rise from the ground",
+  "note": "frames 0-3 raise the arms, 4-6 slam the ground (embers baked in 5-6). Spawn the upyri on frame 5 (t = 0.5 s); if the engine keeps spawning instantly, start this anim 0.5 s before the summon timer fires"
+ },
+ "image": "krivsha_summon_se.png",
+ "frame_size": [
+  128,
+  128
+ ],
+ "frame_count": 8,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

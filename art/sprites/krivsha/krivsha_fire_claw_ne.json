@@ -1,0 +1,45 @@
+{
+ "character": "Кривша, Обгорелый страж",
+ "animation": "claw",
+ "variant": "fire_phase",
+ "direction": "ne",
+ "mirror_for": "nw",
+ "mirror_rule": "flip horizontally around the frame centre line x = 64.0; pivot stays (64, 116)",
+ "pivot": [
+  64,
+  116
+ ],
+ "fps": 10,
+ "loop": false,
+ "visible_height_px": [
+  108,
+  106,
+  106,
+  105,
+  107,
+  110,
+  99,
+  102
+ ],
+ "height_rule": "pivot row (ground under the feet) to the top visible pixel, outline included",
+ "notes": "Кривша, Обгорелый страж (boss M1; «Обгорелый страж» is his title, one character). Hunched keeper of the капище in a burnt sheepskin coat with a ring of bronze keys, ghoul-grey skin, long claws with burning tips, fire in the coat's cracks. Body 96 (scale.md: boss 96, fire halo to 112), frame 128x128, pivot (64,116).",
+ "events": {
+  "hit_frame": 6,
+  "telegraph_frames": [
+   0,
+   5
+  ],
+  "arc": "front cone (bosses.json claw.halfAngleDeg)",
+  "sync": "GDD v1.8: telegraph 0.6 s, every 2.4 s, same tempo in both phases. Frames 0-5 span the telegraph (10 fps = 0.6 s), frame 6 is shown from the hit moment; if the engine waits after the telegraph (prototype: +0.25 s), hold frame 5",
+  "overlay": "fire crescent baked into frame 6"
+ },
+ "image": "krivsha_fire_claw_ne.png",
+ "frame_size": [
+  128,
+  128
+ ],
+ "frame_count": 8,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

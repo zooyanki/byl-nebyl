@@ -198,10 +198,10 @@ async def run_m1b(pg, G, check, wait, client_of, client_scr, a):
         g.enterZone('trail', 'from_trail' in g.zoneStates.trail.map.entries ? 'from_trail' : 'gate'); out.chadTrail = h.chad; out.regBack = +(h.yarRegen / reg0).toFixed(2);
         g.enterZone('kapishche', 'from_trail'); g.simulate(0.05); out.chadBack = h.chad; return out; })()''')
     c = s['cnt']
-    check('капище: 45 врагов mlvl 4 (упыри 20 / анчутки 14 / поджигатели 11) + 35 mlvl 5 (16 / 10 / 9); вожаки у огнищ 1 и 2 (не поджигатели, ×4 HP), три матёрых упыря у третьего (×3 HP)',
-          s['n'] == 80 and (c.get('u@4'), c.get('a@4'), c.get('c@4'), c.get('u@5'), c.get('a@5'), c.get('c@5')) == (20, 14, 11, 16, 10, 9)
-          and sorted(l['at'][0] for l in s['lead']) == ['hearth1', 'hearth2'] and all(l['k'] != 'chernoyarets_arsonist' and l['hp'] == 4 and l['at'][1] <= 6.5 for l in s['lead'])
-          and len(s['champ']) == 3 and all(x['at'][0] == 'hearth3' and x['hp'] == 3 and x['k'] == 'upyr' for x in s['champ']), s)
+    check('капище (GDD v1.8 §8.2): 90 врагов — 30 mlvl 4 (упыри 14 / анчутки 10 / поджигатели 6) + 60 mlvl 5 (25 / 19 / 16); вожаки у огнищ 1 (mlvl 4) и 2 (mlvl 5), не поджигатели, ×4 HP; 16 матёрых упырей (×3 HP), из них 3 у третьего огнища',
+          s['n'] == 90 and (c.get('u@4'), c.get('a@4'), c.get('c@4'), c.get('u@5'), c.get('a@5'), c.get('c@5')) == (14, 10, 6, 25, 19, 16)
+          and sorted((l['at'][0], l['m']) for l in s['lead']) == [('hearth1', 4), ('hearth2', 5)] and all(l['k'] != 'chernoyarets_arsonist' and l['hp'] == 4 and l['at'][1] <= 6.5 for l in s['lead'])
+          and len(s['champ']) == 16 and all(x['hp'] == 3 and x['k'] == 'upyr' for x in s['champ']) and sum(x['at'][0] == 'hearth3' and x['at'][1] <= 6.5 for x in s['champ']) == 3, s)
     check('«Чад» (GDD §4.4): в капище 3 ступени — Ярь −30%, меткость −15%; на тропе снимается, при возвращении снова 3',
           s['chad'] == 3 and s['reg'] == 0.7 and abs(s['ar'] - 0.85) < 0.01 and s['chadTrail'] == 0 and s['regBack'] == 1.0 and s['chadBack'] == 3, s)
 
@@ -247,13 +247,13 @@ async def run_m1b(pg, G, check, wait, client_of, client_scr, a):
     cl, ph, d = s['claw'], s['phase'], s['dead']
     check('Кривша: встаёт при входе в Круг огнищ (с неотбитыми огнищами — реплика «рано»), 2 с подъёма, полоса здоровья босса',
           s['st0'] == 'dormant' and s['rise'][0] == 'active' and s['rise'][1] == 'circle' and s['rise'][3] > 1.5 and s['early'] and s['hpBar'] and s['fight'] == 'fight', s['rise'])
-    check('Кривша: удар когтями — конус 2 тайла с телеграфом 0,6 с; призыв 2 упырей mlvl 5 раз в 15 с, живых не больше 4',
+    check('Кривша: удар когтями — конус 2 тайла с телеграфом 0,6 с; призыв 2 упырей mlvl 4 (GDD v1.8: раз в 20 с), живых не больше 4',
           cl['tele'] and cl['tele']['shape'] == 'cone' and cl['tele']['r'] == 2 and abs(cl['dt'] - 0.6) <= 0.05
-          and s['summon']['alive'] <= 4 and s['summon']['n'] >= 4 and s['summon']['kinds'] == ['upyr@5'], {'claw': cl, 'summon': s['summon']})
+          and s['summon']['alive'] <= 4 and s['summon']['n'] >= 4 and s['summon']['kinds'] == ['upyr@4'], {'claw': cl, 'summon': s['summon']})
     check('Кривша: на 50% прыгает в неосвящённое огнище (2 с неуязвим), выходит с ореолом, +25% скорости атаки, сопр. огню +25%',
           s['jump']['state'] == 'jump' and s['jump']['inv'] and s['jump']['target'] in ('hearth2', 'hearth3') and s['jump']['hdone'] is False
           and ph['p'] == 2 and ph['aura'] and ph['fire'] == 0.25 and ph['dmgInv'] == 0 and ph['bark'], {'jump': s['jump'], 'phase': ph})
-    check('Кривша пал: 1200 опыта, добыча 4 предмета (≥ 2 заговорённых), идол гаснет, «Одолей Крившу» выполнена; грамота «Приказ Чернояра» закрывает «Найди поджигателя»; миссия сдана; «Громовник» — заглушка',
+    check('Кривша пал: 1200 опыта, добыча 4 предмета (≥ 2 заговорённых), идол гаснет, «Одолей Крившу» выполнена; грамота «Приказ Чернояра» закрывает «Найди поджигателя»; миссия сдана; «Громовник» у подножия идола (вещь — проверки M1c)',
           d['dead'] and d['xp'] == 1200 and len(d['drops']) == 4 and sum(r != 'normal' for r in d['drops']) >= 2 and d['body'] and d['perun'] is False and d['q'] == 'done' and d['bark']
           and s['letter']['name'] == 'Приказ Чернояра' and s['letter']['ars'] == 'done' and s['letter']['mission'] and s['reward'] and s.get('rewardDone'), {'dead': d, 'letter': s['letter']})
 

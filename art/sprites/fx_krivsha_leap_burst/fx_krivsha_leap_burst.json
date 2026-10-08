@@ -1,0 +1,29 @@
+{
+ "effect": "Прыжок Кривши в огнище: вспышка пламени",
+ "events": {
+  "impact_frames": [
+   0,
+   3
+  ],
+  "loop_frames": [
+   4,
+   7
+  ]
+ },
+ "draw": "over the огнище (same 64x120 cell, same pivot) from the landing; frames 0-3 once, then loop 4-7 while he is inside (2 s), then stop when krivsha_fire_emerge starts",
+ "pivot": [
+  32,
+  108
+ ],
+ "fps": 10,
+ "loop": false,
+ "image": "fx_krivsha_leap_burst.png",
+ "frame_size": [
+  64,
+  120
+ ],
+ "frame_count": 8,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

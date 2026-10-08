@@ -1,0 +1,36 @@
+{
+ "object": "Огнище (M1, 3 around the Идол Перуна), full object sprite: 8 standing stones with резы, log crib, flame",
+ "footprint": "2x2 tiles, like the крада (stone ring r 21x10.5); pivot = centre of the footprint",
+ "sizes_px": {
+  "log_crib": 24,
+  "flame_from_ground": 72,
+  "licks_sparks_above": true
+ },
+ "layer": "sorted by pivot y",
+ "state": "consecrated",
+ "notes": "warm flame, резы glow bronze",
+ "visible_height_px": [
+  75,
+  77,
+  80,
+  75,
+  77,
+  80
+ ],
+ "state_machine": "desecrated --(hero holds Interact 3 s)--> consecrate (6 f) --> consecrated",
+ "pivot": [
+  32,
+  108
+ ],
+ "fps": 10,
+ "loop": true,
+ "image": "ognishche_consecrated.png",
+ "frame_size": [
+  64,
+  120
+ ],
+ "frame_count": 6,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

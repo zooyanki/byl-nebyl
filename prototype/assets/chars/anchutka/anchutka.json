@@ -1,0 +1,99 @@
+{
+ "character": "Анчутка",
+ "folder": "anchutka",
+ "frame_size": [
+  32,
+  40
+ ],
+ "pivot": [
+  16,
+  34
+ ],
+ "directions": {
+  "prototype_dirs": "0..7 (0 = towards the camera, 2 = left, 4 = away, 6 = right); BACK = {3,4,5}",
+  "sheet": "dir in {3,4,5} -> *_ne, otherwise -> *_se",
+  "flip": "draw mirrored (scale x = -1 around the pivot) when dirSide(dir, facing) < 0",
+  "rule": "scale.md §4.1 / GDD §12.1.2: 2 drawn directions (SE, NE) + horizontal mirror (SW, NW); the 8 logical directions of the engine map onto these 4 views"
+ },
+ "mirror_rule": "flip horizontally around the frame centre line x = 16.0; pivot stays (16, 34)",
+ "animations": {
+  "anchutka_idle": {
+   "files": {
+    "se": "anchutka_idle_se.png",
+    "ne": "anchutka_idle_ne.png"
+   },
+   "frames": 4,
+   "fps": 6,
+   "loop": true,
+   "events": {}
+  },
+  "anchutka_walk": {
+   "files": {
+    "se": "anchutka_walk_se.png",
+    "ne": "anchutka_walk_ne.png"
+   },
+   "frames": 6,
+   "fps": 12,
+   "loop": true,
+   "events": {
+    "note": "бег (GDD §12.1.2 «бег 6»): used for chase, retreat (keepMin / retreatDist) and the 3 s squealing flee (fear); the scuttle reads fast at speed 4.0"
+   }
+  },
+  "anchutka_coal_throw": {
+   "files": {
+    "se": "anchutka_coal_throw_se.png",
+    "ne": "anchutka_coal_throw_ne.png"
+   },
+   "frames": 5,
+   "fps": 7,
+   "loop": false,
+   "events": {
+    "release_frame": 3,
+    "spawn_at_px_se": [
+     29.0,
+     24.0
+    ],
+    "spawn_at_px_sw": [
+     3.0,
+     24.0
+    ],
+    "spawn_height_px": 10.0,
+    "spawn_effect": "fx_anchutka_coal (flight)",
+    "sync": "attackTime 1.0 s, hitAt 0.45 s (monsters.json): 5 frames at 7 fps, frame 3 starts at 0.43 s = the coal leaves the hand; the anim ends at 0.71 s, hold idle for the rest of attackTime"
+   }
+  },
+  "anchutka_hurt": {
+   "files": {
+    "se": "anchutka_hurt_se.png",
+    "ne": "anchutka_hurt_ne.png"
+   },
+   "frames": 2,
+   "fps": 8,
+   "loop": false,
+   "events": {
+    "note": "2 frames; the squeal mouth (ember gullet) is in frame 0"
+   }
+  },
+  "anchutka_death": {
+   "files": {
+    "se": "anchutka_death_se.png",
+    "ne": "anchutka_death_ne.png"
+   },
+   "frames": 6,
+   "fps": 10,
+   "loop": false,
+   "events": {
+    "note": "squeals, topples, crumbles into a soot heap with dying embers; last frame holds (corpse)"
+   }
+  }
+ },
+ "roles": "Залесье packs (mlvl 1-2), forest trail and капище (mlvl 2-5), Мара's retinue (4-6, mlvl 2), Чернояр's summons in M3: the same sprite everywhere (elite / champion tints are the engine's)",
+ "height_for_engine": {
+  "def.height": 26,
+  "measured_body_px": "26-27 incl. ears (idle, walk, throw)",
+  "r": 0.25
+ },
+ "fx": {
+  "coal": "fx_anchutka_coal"
+ }
+}

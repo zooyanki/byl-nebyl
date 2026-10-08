@@ -1,0 +1,34 @@
+{
+ "object": "Consecration progress overlay (draw OVER the desecrated огнище while the hero holds Interact)",
+ "pivot": [
+  36,
+  108
+ ],
+ "fps": 0,
+ "loop": false,
+ "indexing": "by progress, not by time: frame = min(11, floor(holdT / 3.0 * 12))",
+ "notes": "bronze ring on the ground fills clockwise from the front; the 8 резы light up in order; a warm core grows inside the green flame; motes rise. Frame 72x124 (wider/taller than the hearth so the ring fits), align by pivot. On release before 3 s: hide (or run frames backwards).",
+ "visible_height_px": [
+  43,
+  44,
+  45,
+  58,
+  59,
+  61,
+  62,
+  64,
+  65,
+  66,
+  68,
+  69
+ ],
+ "image": "ognishche_progress.png",
+ "frame_size": [
+  72,
+  124
+ ],
+ "frame_count": 12,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

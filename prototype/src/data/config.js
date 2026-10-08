@@ -3,7 +3,7 @@
 import { applyStats } from './progression.js';
 import { applyMonsters, applyBosses } from './enemies.js';
 import { applySkills } from './skills.js';
-import { applyItems } from './items.js';
+import { applyItems, setItemTexts } from './items.js';
 import { applyRu } from '../core/i18n.js';
 
 export const CONFIG_FILES = ['stats', 'skills', 'monsters', 'bosses', 'items_base', 'affixes', 'droptables', 'uniques', 'ru', 'quests'];
@@ -28,6 +28,7 @@ export async function loadConfig(base = 'data/') {
   applySkills(CFG.skills, CFG.stats);
   applyMonsters(CFG.monsters, CFG.stats);
   applyBosses(CFG.bosses);
-  applyItems(CFG.items_base, CFG.affixes, CFG.droptables);
+  applyItems(CFG.items_base, CFG.affixes, CFG.droptables, CFG.uniques);
+  setItemTexts(CFG.ru);
   return CFG;
 }

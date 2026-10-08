@@ -11,6 +11,7 @@ import { circleFree, sightClear } from '../world/collision.js';
 import { WorldRenderer } from '../render/world.js';
 import { Minimap } from '../render/minimap.js';
 import { Npc } from '../entities/npc.js';
+import { makeUnique } from '../data/items.js';
 
 const SEEDS = { zalesye: MAP_SEED, trail: MAP_SEED + 7919, kapishche: MAP_SEED + 4241 };
 
@@ -71,7 +72,7 @@ export const ZoneMixin = {
 
   /** Точка входа: {at:'start'|'krada'} или координаты; ищем свободное достижимое место рядом. */
   entryPoint(entry) {
-    const m = this.map, e = m.entries[entry] || { at: 'start' };
+    const m = this.map, e = typeof entry === 'object' && entry ? entry : m.entries[entry] || { at: 'start' };   // {x, y} — выход из Чурова прохода (M1c)
     let c;
     if (e.at === 'krada' && m.krada) return this.spotNear(m.krada.x, m.krada.y, 1.6);
     if (e.at === 'start' || e.at == null && e.x == null) c = m.start; else c = e;
@@ -142,11 +143,19 @@ export const ZoneMixin = {
       this.hearthFreed(o);
     } else if (o.type === 'stone') {
       o.done = false; this.touchStone(o);
+    } else if (o.type === 'portal') {
+      o.done = false; this.usePortal(o);
     } else if (o.type === 'reward') {
-      // «Громовник» (U2) у подножия погасшего идола: былинные вещи — веха (в), здесь только отметка
+      // «Громовник» (U2, GDD §6.5) у подножия погасшего идола: награда М1, выдаётся один раз — в котомку (нет места — на землю)
+      const it = makeUnique(o.unique || 'U2');
+      this.rewardsGiven = this.rewardsGiven || {};
+      this.rewardsGiven[o.id] = true;
+      if (o.prop) { o.prop.taken = true; o.prop._spr = null; }
       this.audio.play('pickup');
-      this.log.add(t('item.u2.name') + ' — ' + t('proto.bylina_soon'), PAL.bronze_hi);
-      this.notify(t('item.u2.name') + ': ' + t('proto.bylina_soon'), PAL.bronze_hi, 'relic');
+      if (h.inv.autoAdd(it)) this.log.add(t('ui.sys.item_got', { item: it.name }) + ' — ' + it.lore, PAL.bronze_lt);
+      else this.loot.spawnItem(o.x, o.y + 0.6, it);
+      this.notify(t('proto.bylina.got', { item: it.name }), PAL.bronze_lt, 'relic');
+      this.counters.bylinaPicked = (this.counters.bylinaPicked || 0) + 1;
       this.quest.emit({ event: 'rewardTaken', reward: 'gromovnik' });
     } else if (o.type === 'chest') {
       if (o.prop) { o.prop.open = true; o.prop._spr = null; }
@@ -182,6 +191,7 @@ export const ZoneMixin = {
     if (o.type === 'hearth') return t('ui.obj.hearth');
     if (o.type === 'stone') return t('ui.obj.chur_stone');
     if (o.type === 'reward') return t('item.u2.name');
+    if (o.type === 'portal') return this.portalLabel(o);
     if (o.type === 'gate') return (RU['zone.m1.kapishche'] || {})['Название'] || 'Капище';
     const z = CFG.zones[o.to];
     return t('proto.exit.to', { zone: z ? z.name : o.to });
@@ -193,7 +203,7 @@ export const ZoneMixin = {
     for (const o of this.map.objects) {
       if (o.done) continue;
       const [sx, sy] = this.toS(o.x, o.y), dx = mx - sx, dy = my - sy;
-      const box = o.type === 'hut' ? [13, -58, 4] : o.type === 'chest' || o.type === 'reward' ? [13, -20, 6] : o.type === 'body' ? [17, -12, 7] : o.type === 'hearth' ? [16, -30, 8] : o.type === 'stone' ? [10, -38, 6] : [16, -34, 8];
+      const box = o.type === 'hut' ? [13, -58, 4] : o.type === 'chest' || o.type === 'reward' ? [13, -20, 6] : o.type === 'body' ? [17, -12, 7] : o.type === 'hearth' ? [16, -30, 8] : o.type === 'stone' ? [10, -38, 6] : o.type === 'portal' ? [14, -46, 6] : [16, -34, 8];
       if (Math.abs(dx) <= box[0] && dy >= box[1] && dy <= box[2] && Math.abs(dx) + Math.abs(dy) < bd) { bd = Math.abs(dx) + Math.abs(dy); best = o; }
     }
     return best;

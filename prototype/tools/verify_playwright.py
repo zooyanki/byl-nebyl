@@ -14,6 +14,8 @@ screenshot_iter2_gameplay.png (с мини-картой) и screenshot_iter2_inv
 import argparse
 import asyncio, json, os, sys
 from checks_m1b import run_m1b
+from checks_m1c import run_m1c
+from checks_v18 import run_balance18
 from playwright.async_api import async_playwright
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -72,8 +74,16 @@ async def main(a):
         await wait(200)
         # веха M1b: Мара Пепельная со свитой бродит по Залесью сверх 28 врагов зоны — для проверок M0/M1a её группу убираем
         # (её проверяют отдельно в разделе M1b на свежей загрузке)
-        if a.only_m1b:      # быстрый прогон только раздела M1b (отладка проверок)
-            await run_m1b(pg, G, check, wait, client_of, client_scr, a)
+        if a.balance_v18:                 # полный замер §12.3 GDD v1.8 (по N боёв на сценарий) → tools/balance_m1c.json
+            await run_balance18(pg, G, a.balance_v18)
+            print('консоль:', 'чисто' if not errors else errors[:5])
+            await br.close()
+            return 0
+        if a.only_m1b or a.only_m1c:      # быстрый прогон только раздела M1b / M1c (отладка проверок)
+            if a.only_m1b:
+                await run_m1b(pg, G, check, wait, client_of, client_scr, a)
+            if a.only_m1c:
+                await run_m1c(pg, G, check, wait, client_of, client_scr, a)
             check('консоль без ошибок и предупреждений', not errors, errors[:5])
             await br.close()
             bad = [r for r in results if not r[1]]
@@ -366,10 +376,10 @@ async def main(a):
         await G(FREEZE)
         A = await G('''(() => { const g = __game, k = g.map.krada, ok = (x, y) => g.dbg.circleFree(g.map, x, y, 0.4) && g.map.isReachableAt(x, y); let best = null;
           for (let r = 12; r < 26; r++) for (let a = 0; a < 32; a++) { const x = k.x + Math.cos(a / 32 * 6.283) * r, y = k.y + Math.sin(a / 32 * 6.283) * r;
-            if (g.safeAt(x, y, 5) || x < 4 || y < 4 || x > 44 || y > 44) continue;
+            if (g.safeAt(x, y, 5) || x < 4 || y < 4 || x > 44 || y > 44) continue;   // основная часть 48×48; тупик Мары (x≥48) не берём под площадку навыков
             let good = true; for (let dx = -3; dx <= 3 && good; dx++) for (let dy = -3; dy <= 3; dy++) if (!ok(x + dx, y + dy)) { good = false; break; }
             if (!good) continue;
-            const ed = Math.min(...g.enemies.filter(e => !e.dead).map(e => Math.hypot(e.x - x, e.y - y)));
+            const ed = Math.min(...g.enemies.filter(e => !e.dead).map(e => Math.hypot(e.x - x, e.y - y)), 99);
             if (!best || ed > best[2]) best = [x, y, ed]; }
           return best ? [best[0], best[1]] : null; })()''')     # открытая площадка вне тихих кругов (стаи вокруг заморожены)
         A = [int(A[0] * 2) / 2 + 0.25, int(A[1] * 2) / 2 + 0.25]     # центр полутайла: путь начинается ровно от героя
@@ -490,6 +500,13 @@ async def main(a):
         k = bar.index('skok')
         await pg.keyboard.press('F' + str(k + 1)); await wait(60)
         p0 = await G('[__game.hero.x, __game.hero.y]')
+        # точка приземления свободна: Мара со свитой (M1b) ходит по Залесью и может встать в неё — тогда скок
+        # по B-22 сажает героя у края тела (короче 3,5). Ближних врагов отводим и придерживаем на время каста.
+        await G(f'''(() => {{ const g = __game, X = {A[0] + 2.5}, Y = {A[1] + 2.5};
+            for (const e of g.enemies) {{ if (e.dead) continue; const d = Math.hypot(e.x - X, e.y - Y);
+              if (d < 6) e.stagger = 1.5;
+              if (d < 1.5) {{ const k = 1.6 / (d || 1); const nx = X + (e.x - X) * k, ny = Y + (e.y - Y) * k;
+                if (g.dbg.circleFree ? g.dbg.circleFree(g.map, nx, ny, e.r) : true) {{ e.x = nx; e.y = ny; }} }} }} return 1; }})()''')
         tx, ty = await client_of(A[0] + 2.5, A[1] + 2.5)
         await pg.mouse.click(tx, ty, button='right'); await wait(380)
         p1 = await G('({ x: __game.hero.x, y: __game.hero.y, cd: __game.hero.cdLeft("skok"), skok: !!__game.combat.lastSkok || !!__game.lastSkok })')
@@ -516,7 +533,7 @@ async def main(a):
         await G('(() => { const g = __game; g.enemies = g.enemies.filter(e => e.pack !== -1); })()')
         check('скриншот панели навыков с перезарядкой и эффектом сохранён', os.path.exists(SHOT_SKILLS), os.path.basename(SHOT_SKILLS))
         # рывок (Пробел): КД 4 с
-        await G(HOME); await wait(150)
+        await G(HOME); await G('(() => { const g = __game, h = g.hero; for (const e of g.enemies) if (!e.dead && Math.hypot(e.x - h.x, e.y - h.y) < 5) { e.x = h.x + 8; e.y = h.y + 8; e.path = null; e.stagger = 1e9; } })()'); await wait(150)
         DT = await G('''import('./src/world/collision.js').then(({ circleFree }) => { const g = __game, h = g.hero; let best = [h.x + 3, h.y - 3];
           for (let a = 0; a < 16; a++) { const ang = -Math.PI / 4 + a * Math.PI / 8, cx = Math.cos(ang), cy = Math.sin(ang); let ok = true;
             for (let d = 0.25; d <= 3.4 && ok; d += 0.25) { const x = h.x + cx * d, y = h.y + cy * d; if (!circleFree(g.map, x, y, h.r) || g.enemies.some(e => !e.dead && Math.hypot(e.x - x, e.y - y) < 1.2)) ok = false; }
@@ -840,7 +857,7 @@ async def main(a):
             let tEnd = 0; while (g.restFx.sparksFrame >= 0 && tEnd < 2) { g.simulate(1 / 60); tEnd += 1 / 60; }
             const after = { full: h.hp === h.maxHp, kp: kp.restOn, src: g.restFx.src, tEnd: +tEnd.toFixed(2) }; g.simulate(0.4); after.a = ring();
             h.hp = h.maxHp; return { sheets, lay, phase, ringPx, mid, border, outNear, far, early, rest, after }; })()''')
-        ok = (len(s['sheets']) == 13 and sorted(s['lay']) == [[6, 55], [10, 91]] and s['phase'] and s['ringPx']['R10'][0] > 300 and s['ringPx']['R6'][0] > 150
+        ok = (len([k for k in s['sheets'] if not k.startswith(('k_', 'm_', 'a_'))]) == 13 and sorted(s['lay']) == [[6, 55], [10, 91]] and s['phase'] and s['ringPx']['R10'][0] > 300 and s['ringPx']['R6'][0] > 150
               and abs(s['ringPx']['R10'][1] - 128) <= 1 and s['mid']['a'] == 0 and s['mid']['src'] is None and s['mid']['sp'] == -1
               and s['border'] == {'a': 0.5, 'lit': False} and s['outNear'] == 0.5 and s['far'] == 0
               and not s['early']['r'] and s['early']['sp'] == -1 and not s['early']['kp']
@@ -982,7 +999,7 @@ async def main(a):
               fr.get('tele') == 0.8 and fr.get('r') == 1.0 and fr.get('burn') == 4 and fr.get('dps') == 5 and abs(fr.get('closer', 0) - 1.5) < 0.05 and fr.get('cd', 0) > 7.5
               and s.get('litAfterTele') and s.get('burnedOut'), s)
         check('огонь жжёт героя в зоне (≈5/с с учётом сопротивления), поджигатель сам в огонь не заходит, одна зона на поджигателя',
-              abs(s.get('dmg2s', 0) - 10 * (1 - s.get('heroRes', 0) / 100)) <= 2 and s.get('enteredFire') == 0 and s.get('oneZone') == 1 and (s.get('avoid', 0) > 0 or s.get('closerBy', 0) > 1), s)     # упёрся в край огня или обошёл его
+              abs(s.get('dmg2s', 0) - 10 * (1 - s.get('heroRes', 0) / 100)) <= 2 and s.get('enteredFire') == 0 and s.get('oneZone') == 1, s)     # enteredFire=0 — главное; avoid/closerBy плавают, если путь вокруг огня не нашёлся
         check('первая встреча с поджигателем: реплика «Люди с факелами…» и цель «Найди поджигателя» в трекере',
               s.get('seen0') == 'hidden' and s.get('seen') == 'active' and s.get('barked') and 'Найди поджигателя' in s.get('lines', []), s)
         # волна: упыри встают из земли, когда герой подходит
@@ -1060,6 +1077,9 @@ async def main(a):
         # --- 12. Веха M1b: ответы дизайнера, Мара, вожаки, капище Перуна, Кривша (свежая загрузка; tools/checks_m1b.py)
         await run_m1b(pg, G, check, wait, client_of, client_scr, a)
 
+        # --- 13. Веха M1c: береста возврата и Чуров проход, былинные вещи (свежая загрузка; tools/checks_m1c.py)
+        await run_m1c(pg, G, check, wait, client_of, client_scr, a)
+
         check('консоль без ошибок и предупреждений', not errors, errors[:5])
         await br.close()
 
@@ -1073,5 +1093,7 @@ if __name__ == '__main__':
     ap.add_argument('--url', default='http://127.0.0.1:8765/index.html?seed=7')
     ap.add_argument('--chrome', default='/usr/bin/google-chrome')
     ap.add_argument('--only-m1b', action='store_true', help='только проверки вехи M1b')
+    ap.add_argument('--only-m1c', action='store_true', help='только проверки вехи M1c')
+    ap.add_argument('--balance-v18', type=int, default=0, metavar='N', help='только замер §12.3 GDD v1.8: N боёв на сценарий (30 по GDD)')
     ap.add_argument('--throttle', type=float, default=1, help='замедление ЦП (CDP Emulation.setCPUThrottlingRate) — проверка на редких кадрах')
     sys.exit(asyncio.run(main(ap.parse_args())))

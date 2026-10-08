@@ -1,0 +1,47 @@
+{
+ "character": "Кривша, Обгорелый страж",
+ "animation": "leap",
+ "variant": "normal",
+ "direction": "se",
+ "mirror_for": "sw",
+ "mirror_rule": "flip horizontally around the frame centre line x = 64.0; pivot stays (64, 116)",
+ "pivot": [
+  64,
+  116
+ ],
+ "fps": 10,
+ "loop": false,
+ "visible_height_px": [
+  81,
+  76,
+  97,
+  92,
+  93,
+  72,
+  81,
+  80
+ ],
+ "height_rule": "pivot row (ground under the feet) to the top visible pixel, outline included",
+ "notes": "Кривша, Обгорелый страж (boss M1; «Обгорелый страж» is his title, one character). Hunched keeper of the капище in a burnt sheepskin coat with a ring of bronze keys, ghoul-grey skin, long claws with burning tips, fire in the coat's cracks. Body 96 (scale.md: boss 96, fire halo to 112), frame 128x128, pivot (64,116).",
+ "events": {
+  "arc_frames": [
+   0,
+   5
+  ],
+  "loop_frames": [
+   6,
+   7
+  ],
+  "landing_frame": 6,
+  "note": "frames 0-5 = the 0.6 s arc at 10 fps; the ENGINE moves the sprite along the arc and adds the lift (sin * 40), the art has no baked height. On landing (frame 6) start fx_krivsha_leap_burst on the огнище and loop frames 6-7 while invulnerable (2 s), then play krivsha_fire_emerge"
+ },
+ "image": "krivsha_leap_se.png",
+ "frame_size": [
+  128,
+  128
+ ],
+ "frame_count": 8,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

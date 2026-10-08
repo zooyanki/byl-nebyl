@@ -1,4 +1,5 @@
 // Игра: состояние, обновление, ввод -> команды герою, спавн нечисти, смерть и возвращение у крады, отрисовка.
+import { ART, poseKrivsha, poseMara, poseAnchutka, feedFrame } from './render/boss_art.js';
 import { makeRng } from './core/rng.js';
 import { VIEW_W, VIEW_H, PLAYFIELD_CY, MAP_SEED, DEBUG } from './config.js';
 import { PAL } from './palette.js';
@@ -24,7 +25,7 @@ import { enemyStats } from './data/enemies.js';
 import { CFG } from './data/config.js';
 import { skillShort, rankBlock } from './data/skills.js';
 import { UI_ATLAS } from './ui/assets.js';
-import { makeItem, makePotion, rollItem, pickBase } from './data/items.js';
+import { makeItem, makePotion, rollItem, pickBase, makeUnique, itemLines } from './data/items.js';
 import { dirOf } from './entities/actor.js';
 import { rnd } from './core/math.js';
 import { t, plural, silverText } from './core/i18n.js';
@@ -32,6 +33,7 @@ import { SKILLS, DASH, rankOf } from './data/skills.js';
 import { Quest } from './systems/quest.js';
 import { ZoneMixin } from './systems/zones.js';
 import { KapishcheMixin } from './systems/kapishche.js';
+import { PortalMixin } from './systems/portal.js';
 import { enemyBark } from './entities/boss.js';
 
 const LS_LABELS = 'byl_nebyl_labels';
@@ -60,7 +62,7 @@ export class Game {
     this.t = t;
     this._barks = {};
     // для автотестов и отладки из консоли
-    this.dbg = { circleFree, sightClear, lineWalkable, enemyStats, xpToNext, CFG, UI_ATLAS, SKILLS, t, plural, silverText, pickBase, dirOf, rankOf, cmp: (it) => compareLines(it, this.hero), hitChance, short: skillShort, rankBlock };
+    this.dbg = { circleFree, sightClear, lineWalkable, enemyStats, xpToNext, CFG, UI_ATLAS, SKILLS, t, plural, silverText, pickBase, dirOf, rankOf, ART, poseKrivsha, poseMara, poseAnchutka, feedFrame, cmp: (it) => compareLines(it, this.hero), itemLines, hitChance, short: skillShort, rankBlock };
     // GDD §4.1, QA B-01: потеря фокуса или скрытая вкладка — пауза
     window.addEventListener('blur', () => { if (this.state === 'play') this.paused = true; });
     document.addEventListener('visibilitychange', () => { if (document.hidden && this.state === 'play') this.paused = true; });
@@ -97,7 +99,7 @@ export class Game {
     this.leftMode = null; this.holdT = 0;
     this.notice = null; this._noticeKeys = {};
     // зоны М1: у каждой своё состояние (systems/zones.js); начинаем в Залесье
-    this.zoneStates = {}; this.zs = null; this.hoverObj = null;
+    this.zoneStates = {}; this.zs = null; this.hoverObj = null; this.portal = null;
     this.enterZone('zalesye', 'start');
     this.log.add('Ратибор пришёл в Залесье. ' + t('quest.act') + ': «' + this.quest.title + '».', PAL.bronze_hi);
     // вводная миссии (act1): переносим по ширине журнала
@@ -166,13 +168,13 @@ export class Game {
     this.killsTotal++;
     const h = this.hero;
     h.kills++;
-    const xp = Math.max(1, Math.round(e.xp * xpPenalty(h.level, e.mlvl)));
-    if (!h.dead) {
+    const xp = e.xp > 0 ? Math.max(1, Math.round(e.xp * xpPenalty(h.level, e.mlvl))) : 0;   // призванные Кривши — 0 (GDD v1.8)
+    if (!h.dead && xp > 0) {
       this.fx.text(e.x, e.y, '+' + xp + ' опыта', PAL.bronze_lt, e.def.height + 16 + (this._xpStack = ((this._xpStack || 0) + 1) % 3) * 9, { dur: 1.1 });
       h.gainXp(xp, this);
     }
     this.audio.play('kill');
-    this.loot.dropFrom(e);
+    if (!e.noLoot) this.loot.dropFrom(e);
     this.onEliteKilled(e);
     // GDD §5.2: анчутки при гибели сородича рядом с шансом 30% с визгом удирают на 3 с
     for (const o of this.enemies) {
@@ -537,6 +539,7 @@ export class Game {
     this.log.update(dt);
     this.enemies = this.enemies.filter((e) => !e.dead || e.corpseT < 10);
     this.updateZone(dt);
+    this.updatePortal(dt);
     this.updateCamera();
     this.minimap.reveal(this.hero.x, this.hero.y);
   }
@@ -607,6 +610,8 @@ export class Game {
     return tt;
   }
   give(baseId, rarity = 'normal', opts = {}) {
+    if (baseId.startsWith('scroll:')) { const left = this.hero.addScroll(baseId.slice(7), opts.count || 1); return left === 0; }
+    if (baseId.startsWith('unique:')) { const u = makeUnique(baseId.slice(7)); return this.hero.inv.autoAdd(u) ? u : null; }
     const it = baseId.startsWith('potion:') ? makePotion(baseId.slice(7)) : makeItem(baseId, rarity, opts.ilvl || 6, Math.random, opts);
     if (!this.hero.inv.autoAdd(it)) return null;
     return it;
@@ -616,5 +621,5 @@ export class Game {
   /** Объект зоны по id (двери, сундук, тело, выходы). */
   objectById(id) { return this.map.objects.find((o) => o.id === id) || null; }
 }
-Object.assign(Game.prototype, ZoneMixin, KapishcheMixin);
+Object.assign(Game.prototype, ZoneMixin, KapishcheMixin, PortalMixin);
 

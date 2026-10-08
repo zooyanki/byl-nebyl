@@ -1,0 +1,22 @@
+{
+ "effect": "Призыв упырей: земля трескается, жар, дымки небыли",
+ "events": {
+  "upyr_visible_from_frame": 3
+ },
+ "draw": "one per upyr spawn point; 8 frames @10 = the upyr riseTime 0.8 s; draw under the rising upyr",
+ "pivot": [
+  24,
+  44
+ ],
+ "fps": 10,
+ "loop": false,
+ "image": "fx_krivsha_summon.png",
+ "frame_size": [
+  48,
+  56
+ ],
+ "frame_count": 8,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

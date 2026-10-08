@@ -35,7 +35,8 @@ export function rankOf(hero, id) {
   const b = boughtRank(hero, id);
   if (!b) return 0;
   const sk = SKILLS[id];
-  const bonus = hero.mods ? hero.mods[RULES.bonusStat[sk.branch]] || 0 : 0;
+  // +к ветке (аффиксы), +ко всем навыкам и +к навыку (былинные, GDD §6.5) — только к выученным, как в D2
+  const m = hero.mods || {}, bonus = (m[RULES.bonusStat[sk.branch]] || 0) + (m.skillAll || 0) + (m['skill.' + id] || 0);
   return Math.min(sk.maxRank || RULES.maxRank, b + bonus);
 }
 const val = (pair, rank) => pair[0] + pair[1] * (rank - 1);
