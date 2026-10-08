@@ -4,10 +4,11 @@ import { MAP_W, MAP_H } from '../config.js';
 import { makeRng, hash2 } from '../core/rng.js';
 import { SUB, circleFree } from './collision.js';
 import { generateTrail } from './trail.js';
+import { generateKapishche } from './kapishche.js';
 
 export const T_GRASS = 0, T_DIRT = 1, T_WATER = 2, T_FOREST = 3;   // T_FOREST — пол чащи (непроходим)
 // Что закрывает обзор и останавливает снаряды (вода и крада — нет).
-const OPAQUE = new Set(['tree', 'rock', 'wall', 'palisade', 'izba', 'idol', 'gate']);
+const OPAQUE = new Set(['tree', 'rock', 'wall', 'palisade', 'izba', 'idol', 'gate', 'perun']);
 
 export class GameMap {
   constructor(w, h) {
@@ -108,6 +109,7 @@ export class GameMap {
 
 export function generateMap(seed, zone = null) {
   if (zone && zone.path) return generateTrail(seed, zone);
+  if (zone && zone.id === 'kapishche') return generateKapishche(seed, zone);
   const m = new GameMap(MAP_W, MAP_H);
   const rng = makeRng(seed);
   const W = m.w, H = m.h;

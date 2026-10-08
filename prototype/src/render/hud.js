@@ -10,6 +10,7 @@ import { MINI } from './minimap.js';
 import { SKILLS, DASH, rankOf, skillCost, pointsFree } from '../data/skills.js';
 import { drawSkillTooltip } from '../ui/skills_window.js';
 import { t as tr } from '../core/i18n.js';
+import { eliteTitle } from '../systems/elites.js';
 
 export const LAYOUT = (() => {
   const by = 328, big = 32, sm = 26, beltW = 4 * 24 + 3 * 2 + 6;
@@ -220,6 +221,14 @@ export function drawHud(ctx, game) {
     ctx.save(); ctx.beginPath(); ctx.rect(bx, byy, 12, 12); ctx.clip(); drawIcon(ctx, 'sk_obereg_16', bx - 2, byy - 2, 16, 16); ctx.restore();
     drawText(ctx, bx + 6, byy + 13, String(Math.ceil(h.buffs.chur.t)), PAL.bronze_hi, { align: 'c', outline: true });
   }
+  // дебафф «Чад» капища (GDD §4.4): дымная иконка 12×12 со ступенью рядом с бафами над шаром Жизни
+  if (h.chad > 0) {
+    const bx = L.orbL.cx - 6 + (h.buffs.chur ? 16 : 0), byy = L.orbL.cy - L.orbL.r - 22;
+    rect(ctx, bx - 1, byy - 1, 14, 14, PAL.ink); rect(ctx, bx, byy, 12, 12, PAL.slate_dk);
+    for (let i = 0; i < 3; i++) disc(ctx, bx + 3 + i * 3, byy + 8 - i * 2 + Math.round(Math.sin(t * 3 + i)), 2.5, i === 1 ? PAL.mist : PAL.slate_lt);
+    drawText(ctx, bx + 6, byy + 13, String(h.chad), PAL.nebyl, { align: 'c', outline: true });
+    game._chadIcon = { x: bx, y: byy, s: 12 };
+  } else game._chadIcon = null;
   // серебро
   const S = L.silver;
   drawText(ctx, S.x + S.w - 4, S.y + 14, String(h.silver), PAL.linen, { align: 'r' });
@@ -230,6 +239,7 @@ export function drawHud(ctx, game) {
   // шары
   orb(ctx, L.orbL, h.hp / h.maxHp, 'life', 'Жизнь', Math.ceil(h.hp) + '/' + h.maxHp, t);
   orb(ctx, L.orbR, h.yar / h.maxYar, 'yar', 'Ярь', Math.floor(h.yar) + '/' + h.maxYar, t + 1.7);
+  if (h.chad >= 3) { ctx.save(); ctx.globalAlpha = 0.28; disc(ctx, L.orbR.cx, L.orbR.cy, L.orbR.r - 2, PAL.slate_lt); ctx.restore(); }   // чад: серая дымка на Яри
 
   drawTopUi(ctx, game);
   drawLog(ctx, game);
@@ -278,18 +288,40 @@ function drawTopUi(ctx, game) {
     if (game.audio.muted) { drawText(ctx, VIEW_W - 6, sy, 'Звук выключен (N)', PAL.mist, { align: 'r', outline: true }); sy += 10; }
     if (game.labelsAlways) drawText(ctx, VIEW_W - 6, sy, 'Подписи: всегда (Z)', PAL.mist, { align: 'r', outline: true });
   }
-  if (game.debug) drawText(ctx, VIEW_W - 6, 150, 'FPS ' + Math.round(game.fps), PAL.mist, { align: 'r' });
+  if (game.debug) {
+    // отладочный слой для QA (ответ дизайнера 08.10: счётчика «N/28» в HUD нет — только здесь, по ?debug)
+    drawText(ctx, VIEW_W - 6, 150, 'FPS ' + Math.round(game.fps), PAL.mist, { align: 'r' });
+    const k = game.zoneKills();
+    drawText(ctx, VIEW_W - 6, 160, 'Убито ' + k.killed + '/' + k.total, PAL.mist, { align: 'r' });
+  }
+  // полоса здоровья босса (GDD §5.4): во всю верхнюю середину, имя и фаза; пока босс в бою или поднимается
+  const b = game.boss, bossBar = b && !b.dead && b.state !== 'idle' && !ui.anyOpen;
+  if (bossBar) {
+    const w = 240, x = VIEW_W / 2 - w / 2, y = 4;
+    rect(ctx, x - 3, y - 2, w + 6, 16, PAL.ink);
+    rect(ctx, x - 2, y - 1, w + 4, 14, PAL.bronze_lt);
+    rect(ctx, x - 1, y, w + 2, 12, PAL.ink);
+    rect(ctx, x, y + 1, w, 10, PAL.night); rect(ctx, x, y + 10, w, 1, PAL.red_dk);
+    const fw = Math.round(w * b.hp / b.maxHp);
+    rect(ctx, x, y + 1, fw, 10, b.phase === 2 ? PAL.ember : PAL.red);
+    rect(ctx, x, y + 1, fw, 1, b.phase === 2 ? PAL.flame : PAL.red_lt);
+    if (b.B && b.B.hearthPhase) rect(ctx, x + Math.round(w * b.B.hearthPhase.atHpPct / 100), y + 1, 1, 10, PAL.bronze_hi);   // отметка фазы огнища
+    drawText(ctx, VIEW_W / 2, y + 2, b.name, PAL.bronze_hi, { align: 'c', outline: true });
+    if (b.invuln > 0 && b.state !== 'rise') drawText(ctx, VIEW_W / 2, y + 15, 'Неуязвим', PAL.flame, { align: 'c', outline: true });
+  }
   // цель
   const e = game.hoverEnemy || (game.lastTarget && !game.lastTarget.dead && game.lastTarget.lastHitT < 3 ? game.lastTarget : null);
-  if (e && !ui.anyOpen) {
-    const w = 140, x = VIEW_W / 2 - w / 2, y = 5;
+  if (e && !ui.anyOpen && !(bossBar && e === b)) {
+    const w = 140, x = VIEW_W / 2 - w / 2, y = bossBar ? 30 : 5;
+    const title = eliteTitle(e);
     rect(ctx, x - 2, y - 2, w + 4, 15, PAL.ink);
     rect(ctx, x - 1, y - 1, w + 2, 13, PAL.bronze);
     rect(ctx, x, y, w, 11, PAL.red_dk);
     rect(ctx, x, y, Math.round(w * e.hp / e.maxHp), 11, PAL.red);
     rect(ctx, x, y, Math.round(w * e.hp / e.maxHp), 1, PAL.red_lt);
-    drawText(ctx, VIEW_W / 2, y + 1, e.name + ' · ур. ' + e.mlvl, PAL.linen, { align: 'c', outline: true });
-    drawText(ctx, VIEW_W / 2, y + 15, e.def.family + ' · ' + e.def.realm, e.def.realm === 'Быль' ? PAL.red_lt : PAL.nebyl, { align: 'c', outline: true });
+    drawText(ctx, VIEW_W / 2, y + 1, e.name + ' · ур. ' + e.mlvl, e.elite ? PAL.bronze_hi : PAL.linen, { align: 'c', outline: true });
+    if (title) drawText(ctx, VIEW_W / 2, y + 15, title, PAL.bronze_lt, { align: 'c', outline: true });
+    drawText(ctx, VIEW_W / 2, y + (title ? 26 : 15), e.def.family + ' · ' + e.def.realm, e.def.realm === 'Быль' ? PAL.red_lt : PAL.nebyl, { align: 'c', outline: true });
   }
   // подсказка в начале
   if (game.time < 14 && !game.hero.dead && !ui.anyOpen) {
@@ -305,10 +337,14 @@ function drawTopUi(ctx, game) {
   drawLetter(ctx, game);
   if (game.notice && game.time - game.notice.t < (game.notice.dur || 1.6)) {
     // длинное уведомление (советы tip.*) переносится по словам в ширину 300 px и опускается под трекер
-    const N = game.notice, lines = [];
-    if (textWidth(N.text) <= 300) lines.push(N.text);
-    else { let cur = ''; for (const w of N.text.split(' ')) { const nx = cur ? cur + ' ' + w : w; if (textWidth(nx) > 300 && cur) { lines.push(cur); cur = w; } else cur = nx; } if (cur) lines.push(cur); }
-    const y0 = lines.length > 1 ? 90 : 64;              // несколько строк — ниже трекера (он до y 84)
+    // QA B-27: при открытом окне свободная часть экрана уже — строка уведомления уходит ниже трекера и мини-карты (y ≥ 160)
+    // и переносится по ширине свободной части
+    const N = game.notice, lines = [], win = ui.anyOpen;
+    const maxW = win ? Math.max(120, Math.min(300, 2 * Math.min(game.camCX, VIEW_W - game.camCX) - 16)) : 300;
+    if (textWidth(N.text) <= maxW) lines.push(N.text);
+    else { let cur = ''; for (const w of N.text.split(' ')) { const nx = cur ? cur + ' ' + w : w; if (textWidth(nx) > maxW && cur) { lines.push(cur); cur = w; } else cur = nx; } if (cur) lines.push(cur); }
+    const y0 = win ? 160 : lines.length > 1 ? 90 : 64;   // несколько строк — ниже трекера (он до y 84)
+    game._noticeBox = { x: game.camCX, y: y0, w: Math.max(...lines.map((l) => textWidth(l))), lines: lines.length };
     lines.forEach((l, i) => drawText(ctx, game.camCX, y0 + i * 11, l, N.color, { align: 'c', outline: true }));
   }
 }
@@ -384,9 +420,11 @@ function drawTooltip(ctx, game) {
   else if (inSlot(m, LAYOUT.dash)) { drawSkillTooltip(ctx, h, 'dash', m.mx, PANEL_Y - 6, 'bc'); return; }
   else if (LAYOUT.f.some((f) => inSlot(m, f))) {
     const i = LAYOUT.f.findIndex((f) => inSlot(m, f)), id = h.bar[i];
+    game._tip = { slot: i, id: id || null };   // для автотеста: подсказка F-слота (ответ дизайнера 08.10, п.5)
     if (id && rankOf(h, id)) { drawSkillTooltip(ctx, h, id, m.mx, PANEL_Y - 6, 'bc'); return; }
     txt = 'F' + (i + 1) + ': пусто — наведи на навык в окне «Навыки» (T) и нажми F' + (i + 1);
   } else if (inSlot(m, LAYOUT.lmb) && h.lmbSkill()) { drawSkillTooltip(ctx, h, h.lmbSkill(), m.mx, PANEL_Y - 6, 'bc'); return; }
+  else if (game._chadIcon && inSlot(m, game._chadIcon)) txt = tr('ui.debuff.chad') + ' ' + h.chad + ': ' + tr('ui.debuff.chad.desc', { regen: Math.round(h.chad * (h.chadDef?.regenPctPerStage ?? 10)), ar: Math.round(h.chad * (h.chadDef?.arPctPerStage ?? 5)) });
   else if (inSlot(m, LAYOUT.lmb)) txt = 'Удар оружием — урон ' + h.dmgMin + '–' + h.dmgMax + (h.equip.rhand ? ' (' + h.equip.rhand.name + ')' : ' (без оружия)');
   if (!txt) return;
   const w = textWidth(txt) + 8;

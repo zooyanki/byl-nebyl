@@ -37,6 +37,15 @@ PROTO = {
     "proto.villager": "Селяне",
     "proto.priest_body": "Тело жреца",
     "proto.quest.arsonist_hint": "Черноярцы с факелами — люди Чернояра.",
+    # веха M1b (капище, Мара, Кривша): заглушки прототипа, у сценариста строк нет
+    "proto.respawn.krada": "Ратибор очнулся у крады.",
+    "proto.respawn.chur": "Ратибор очнулся у Чурова камня.",
+    "proto.chur_respawn_hint": "Теперь, если падёшь, очнёшься здесь.",
+    "proto.krivsha_body": "Тело Кривши",
+    "proto.bylina_soon": "Былинные вещи — в следующей вехе.",
+    "proto.reward_ladoga": "Награду выдаст Вышата в Ладоге (в прототипе Ладоги нет).",
+    "proto.idol_perun": "Идол Перуна",
+    "proto.hearth": "Огнище",
 }
 
 def act1_strings():
@@ -51,6 +60,8 @@ def act1_strings():
     out["dialog.m1.mal"] = [[clean(w), clean(t)] for w, t in re.findall(r"> \*\*(.+?):\*\* (.+)", mal)][:3]
     pr = re.search(r"\*\*Грамота жреца\*\*.*?\n\s*> «(.+?)»", a, re.S).group(1)
     out["letter.priest"] = {"name": "Грамота жреца", "text": pr}
+    od = re.search(r"\*\*\\\*Приказ Чернояра\*\*.*?\n\s*> «(.+?)»", a, re.S).group(1)
+    out["letter.order"] = {"name": "Приказ Чернояра", "text": od}
     out["npc.mal"] = "Мал"
     out["npc.ratibor"] = "Ратибор"
     return out
@@ -92,6 +103,16 @@ for i, ln in enumerate(lines):
     else:
         hd = header[1:] if header and len(header) == len(cs) else [str(k) for k in range(len(vals))]
         out[key] = {h: v for h, v in zip(hd, vals)}
+# §9: генератор имён вожаков (А — прозвище и род, Б — примета м./ж.); §14: имена былинных вещей (U1…U9)
+txt = open(SRC, encoding="utf-8").read()
+g9 = txt.split("## 9. Генератор имён вожаков", 1)[1].split("\n## ", 1)[0]
+rows = re.findall(r"^\|\s*(\d+)\s*\|\s*([^|]+?)\s*\|\s*(м\.|ж\.)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|", g9, re.M)
+assert len(rows) == 20, len(rows)
+rule = re.search(r"с шансом (\d+)% Б А", g9)
+out["namegen.leader"] = {"a": [[r[1], "f" if r[2] == "ж." else "m"] for r in rows], "b": [[r[3], r[4]] for r in rows],
+                         "swapPct": int(rule.group(1)) if rule else 25}
+for uid, name in re.findall(r"^\|\s*(U\d)\s*\|\s*«([^»]+)»", txt, re.M):
+    out.setdefault("item." + uid.lower() + ".name", name)
 out.update(OVERRIDE)
 out.update(act1_strings())
 out.update(PROTO)

@@ -11,7 +11,9 @@
 screenshot_iter2_gameplay.png (с мини-картой) и screenshot_iter2_inventory.png (котомка с тултипом).
 Код выхода 1, если что-то не так.
 """
-import argparse, asyncio, json, os, sys
+import argparse
+import asyncio, json, os, sys
+from checks_m1b import run_m1b
 from playwright.async_api import async_playwright
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -68,6 +70,16 @@ async def main(a):
         await pg.mouse.move(960, 540)
         await pg.mouse.click(960, 300)              # жест пользователя: разблокирует WebAudio (и шаг героя)
         await wait(200)
+        # веха M1b: Мара Пепельная со свитой бродит по Залесью сверх 28 врагов зоны — для проверок M0/M1a её группу убираем
+        # (её проверяют отдельно в разделе M1b на свежей загрузке)
+        if a.only_m1b:      # быстрый прогон только раздела M1b (отладка проверок)
+            await run_m1b(pg, G, check, wait, client_of, client_scr, a)
+            check('консоль без ошибок и предупреждений', not errors, errors[:5])
+            await br.close()
+            bad = [r for r in results if not r[1]]
+            print(f'\n{len(results) - len(bad)}/{len(results)} проверок пройдено')
+            return 1 if bad else 0
+        await G('(() => { const g = __game; window.__maraGrp = g.enemies.filter(e => e.special); g.enemies = g.enemies.filter(e => !e.special); })()')
 
         # --- 1. баланс из JSON по GDD v1.2
         s = await G('''(() => { const g = __game, h = g.hero, d = g.dbg;
@@ -234,7 +246,7 @@ async def main(a):
         p1 = await G('(__game.audio.count.pickup || 0) + (__game.audio.count.silver || 0)')
         check('щелчок по подписи поднимает добычу', lab and p1 > p0, (lab, p0, p1))
         await pg.keyboard.up('Alt'); await wait(120)
-        await G('__game.loot.spawnSilver(__game.hero.x + 1.2, __game.hero.y - 0.6, 7)'); await wait(80)
+        await G('(() => { const h = __game.hero; h.cmd = null; h.path = null; h.moving = false; __game.loot.spawnSilver(h.x + 2.2, h.y - 1.0, 7); })()'); await wait(80)
         n2 = await G('__game.labelRects.length')
         await pg.keyboard.press('KeyZ')
         n3 = 0
@@ -260,7 +272,7 @@ async def main(a):
         await G('(() => { const g = __game; g.hero.hp = g.hero.maxHp; g.give("axe_1", "magic", { affixes: [["P01", 30], ["S10", 10]] }); g.give("ring_1", "magic", { affixes: [["S01", 8]] }); g.give("sword_2", "rare", { affixes: [["P01", 25], ["S02", 3]] }); g.give("potion:life1"); })()')
         await pg.keyboard.press('KeyI'); await wait(200)
         L = await G('__game.dbg.UI_ATLAS.inventory_layout')
-        ents = await G('__game.hero.inv.entries.map(e => ({ c: e.c, r: e.r, w: e.item.w, h: e.item.h, base: e.item.base, kind: e.item.kind, uid: e.item.uid }))')
+        ents = await G('__game.hero.inv.entries.map(e => ({ c: e.c, r: e.r, w: e.item.w, h: e.item.h, base: e.item.base, kind: e.item.kind, uid: e.item.uid, rar: e.item.rarity }))')
 
         def cell_center(e):
             return L['gx'] + (e['c'] + e['w'] / 2) * L['cell'], L['gy'] + (e['r'] + e['h'] / 2) * L['cell']
@@ -269,9 +281,10 @@ async def main(a):
             x, y, w, h = L['slots'][name]
             return x + w / 2, y + h / 2
 
-        axe = next(e for e in ents if e['base'] == 'axe_1')
-        sword = next(e for e in ents if e['base'] == 'sword_2')
-        ring = next(e for e in ents if e['base'] == 'ring_1')
+        # выданные тестом вещи — последние такого основания (раньше в котомку мог попасть обычный топор с поля)
+        axe = [e for e in ents if e['base'] == 'axe_1' and e['rar'] == 'magic'][-1]
+        sword = [e for e in ents if e['base'] == 'sword_2' and e['rar'] == 'rare'][-1]
+        ring = [e for e in ents if e['base'] == 'ring_1' and e['rar'] == 'magic'][-1]
         # тултип
         await pg.mouse.move(*(await client_scr(*cell_center(axe)))); await wait(150)
         tip = await G('__game.ui.lastTip && { name: __game.ui.lastTip.item.name, w: __game.ui.lastTip.w, h: __game.ui.lastTip.h }')
@@ -503,8 +516,14 @@ async def main(a):
         await G('(() => { const g = __game; g.enemies = g.enemies.filter(e => e.pack !== -1); })()')
         check('скриншот панели навыков с перезарядкой и эффектом сохранён', os.path.exists(SHOT_SKILLS), os.path.basename(SHOT_SKILLS))
         # рывок (Пробел): КД 4 с
-        await G(HOME); await wait(50)
-        await pg.mouse.move(*(await client_of(A[0] + 3, A[1] - 3)))
+        await G(HOME); await wait(150)
+        DT = await G('''import('./src/world/collision.js').then(({ circleFree }) => { const g = __game, h = g.hero; let best = [h.x + 3, h.y - 3];
+          for (let a = 0; a < 16; a++) { const ang = -Math.PI / 4 + a * Math.PI / 8, cx = Math.cos(ang), cy = Math.sin(ang); let ok = true;
+            for (let d = 0.25; d <= 3.4 && ok; d += 0.25) { const x = h.x + cx * d, y = h.y + cy * d; if (!circleFree(g.map, x, y, h.r) || g.enemies.some(e => !e.dead && Math.hypot(e.x - x, e.y - y) < 1.2)) ok = false; }
+            if (ok) { best = [h.x + cx * 4, h.y + cy * 4]; break; } }
+          return best; })''')                                  # свободное направление (рядом мог оказаться валун или тело)
+        await pg.mouse.move(*(await client_of(DT[0], DT[1]))); await wait(80)
+        await pg.mouse.move(*(await client_of(DT[0], DT[1]))); await wait(50)
         q0 = await G('[__game.hero.x, __game.hero.y, __game.counters.casts.dash || 0]')
         await pg.keyboard.press('Space')
         for _ in range(40):                                   # ждём кадр, который примет Пробел; дальше — фиксированный шаг
@@ -539,9 +558,9 @@ async def main(a):
         s['f0'] = f0; s['swing'] = sw
         check('B-02: ПКМ во время удара (окно 0,3 с) запоминается и срабатывает после замаха', s['f'] == f0 + 1 and s['z'] == z0 + 1, s)
         s = await G('''((id) => { const g = __game, h = g.hero; const e = g.enemies.find(o => o.id === id); h.action = null; h.cmd = null; h.yar = h.maxYar;
-            e.x = h.x + 6; h.useSkill(g, 'zmey', e.x, e.y, e); g.simulate(0.45); const fl = g.combat.projectiles.filter(p => !p.hostile).length;
+            e.x = h.x + 6; h.cds.zmey = 0; const r = h.useSkill(g, 'zmey', e.x, e.y, e); g.simulate(1, () => g.combat.projectiles.some(p => !p.hostile)); const fl = g.combat.projectiles.filter(p => !p.hostile).length;
             const xp0 = h.xp; h.invuln = 0; h.dashing = null; h.takeDamage(99999, g, 'fire'); const after = g.combat.projectiles.filter(p => !p.hostile).length; h.gainXp(50, g);
-            const out = { fl, after, xpSame: h.xp === xp0, st: g.state }; g.enemies = g.enemies.filter(o => o !== e); return out; })''', e['id'])
+            const out = { fl, after, xpSame: h.xp === xp0, st: g.state, r }; g.enemies = g.enemies.filter(o => o !== e); return out; })''', e['id'])
         check('B-03: после гибели снаряды героя исчезают, опыт мёртвому не начисляется', s['fl'] >= 1 and s['after'] == 0 and s['xpSame'] and s['st'] == 'dead', s)
         await wait(2700); await pg.keyboard.press('Enter'); await wait(200)
         await G(FREEZE)
@@ -821,7 +840,7 @@ async def main(a):
             let tEnd = 0; while (g.restFx.sparksFrame >= 0 && tEnd < 2) { g.simulate(1 / 60); tEnd += 1 / 60; }
             const after = { full: h.hp === h.maxHp, kp: kp.restOn, src: g.restFx.src, tEnd: +tEnd.toFixed(2) }; g.simulate(0.4); after.a = ring();
             h.hp = h.maxHp; return { sheets, lay, phase, ringPx, mid, border, outNear, far, early, rest, after }; })()''')
-        ok = (len(s['sheets']) == 11 and sorted(s['lay']) == [[6, 55], [10, 91]] and s['phase'] and s['ringPx']['R10'][0] > 300 and s['ringPx']['R6'][0] > 150
+        ok = (len(s['sheets']) == 13 and sorted(s['lay']) == [[6, 55], [10, 91]] and s['phase'] and s['ringPx']['R10'][0] > 300 and s['ringPx']['R6'][0] > 150
               and abs(s['ringPx']['R10'][1] - 128) <= 1 and s['mid']['a'] == 0 and s['mid']['src'] is None and s['mid']['sp'] == -1
               and s['border'] == {'a': 0.5, 'lit': False} and s['outNear'] == 0.5 and s['far'] == 0
               and not s['early']['r'] and s['early']['sp'] == -1 and not s['early']['kp']
@@ -953,9 +972,9 @@ async def main(a):
             g.simulate(2.3); out.burnedOut = !g.combat.fires.includes(f);
             // не заходит в огонь: зона между поджигателем и героем
             h.x = a.x - 4.5; h.y = a.y; h.hp = h.maxHp; a.stagger = 0; a.torchCd = 99; a.state = 'chase';
-            const f2 = g.combat.throwTorch(a, a.x - 2, a.y); f2.t = f2.tele; let inside = 0;
+            const f2 = g.combat.throwTorch(a, a.x - 2, a.y); f2.t = f2.tele; let inside = 0; const dA0 = Math.hypot(a.x - h.x, a.y - h.y);
             g.simulate(2.5, () => { if (Math.hypot(a.x - f2.x, a.y - f2.y) < f2.r) inside++; return false; });
-            out.enteredFire = inside; out.oneZone = g.combat.zonesOf(a); out.avoid = g.counters.fireAvoid || 0;
+            out.enteredFire = inside; out.oneZone = g.combat.zonesOf(a); out.avoid = g.counters.fireAvoid || 0; out.closerBy = +(dA0 - Math.hypot(a.x - h.x, a.y - h.y)).toFixed(2);
             out.seen = g.quest.get('arsonist').state; out.barked = g._barks['bark.m1.arsonist'] != null;
             out.lines = g.quest.lines().map(l => l.text); g.combat.fires = []; for (const e of g.enemies) e.stagger = 1e9; h.hp = h.maxHp; return out; })()''')
         fr = s.get('fire') or {}
@@ -963,7 +982,7 @@ async def main(a):
               fr.get('tele') == 0.8 and fr.get('r') == 1.0 and fr.get('burn') == 4 and fr.get('dps') == 5 and abs(fr.get('closer', 0) - 1.5) < 0.05 and fr.get('cd', 0) > 7.5
               and s.get('litAfterTele') and s.get('burnedOut'), s)
         check('огонь жжёт героя в зоне (≈5/с с учётом сопротивления), поджигатель сам в огонь не заходит, одна зона на поджигателя',
-              abs(s.get('dmg2s', 0) - 10 * (1 - s.get('heroRes', 0) / 100)) <= 2 and s.get('enteredFire') == 0 and s.get('oneZone') == 1 and s.get('avoid', 0) > 0, s)
+              abs(s.get('dmg2s', 0) - 10 * (1 - s.get('heroRes', 0) / 100)) <= 2 and s.get('enteredFire') == 0 and s.get('oneZone') == 1 and (s.get('avoid', 0) > 0 or s.get('closerBy', 0) > 1), s)     # упёрся в край огня или обошёл его
         check('первая встреча с поджигателем: реплика «Люди с факелами…» и цель «Найди поджигателя» в трекере',
               s.get('seen0') == 'hidden' and s.get('seen') == 'active' and s.get('barked') and 'Найди поджигателя' in s.get('lines', []), s)
         # волна: упыри встают из земли, когда герой подходит
@@ -988,10 +1007,11 @@ async def main(a):
               s['body']['relics'] == ['knife'] and s['body']['letters'] == ['priest'] and s['body']['letter'] == 'Грамота жреца' and s['body']['ev'] == ['relicTaken', 'letterRead'], s)
         # ворота капища: цель «Доберись до капища», капище — следующая веха
         s = await G('''(() => { const g = __game, h = g.hero, o = g.objectById('kapishche_gate'); for (const e of g.enemies) if (!e.dead && Math.hypot(e.x - o.x, e.y - o.y) < 14) e.takeDamage(9999, g, 'melee', null);
-            h.x = o.x - 3.5; h.y = o.y; h.cmd = null; h.moveTo(g.map, o.x, o.y); g.simulate(3, () => g.quest.get('reach').state === 'done');
-            g.simulate(0.2); return { reach: g.quest.get('reach').state, zone: g.zone.id, notice: g.notice && g.notice.text, d: +Math.hypot(h.x - o.x, h.y - o.y).toFixed(2), safe: g.safeAt(h.x, h.y) }; })()''')
-        check('ворота капища: «Доберись до капища» выполнена, капище закрыто до следующей вехи, у ворот тихий круг Чурова камня',
-              s['reach'] == 'done' and s['zone'] == 'trail' and s['notice'] == 'Капище Перуна откроется в следующей вехе.' and s['safe'], s)
+            h.x = o.x - 3.5; h.y = o.y; h.cmd = null; const safe = g.safeAt(h.x, h.y); h.moveTo(g.map, o.x, o.y); g.simulate(3, () => g.quest.get('reach').state === 'done');
+            g.simulate(0.2); const out = { reach: g.quest.get('reach').state, zone: g.zone.id, churTouched: !!g.quest.flag('churTouched'), safe };
+            g.enterZone('trail', 'gate'); out.back = g.zone.id; return out; })()''')
+        check('ворота капища (веха M1b): «Доберись до капища» выполнена, ворота ведут в капище; у ворот тихий круг Чурова камня; мимо камня — не тронут',
+              s['reach'] == 'done' and s['zone'] == 'kapishche' and s['safe'] and not s['churTouched'] and s['back'] == 'trail', s)
         # скриншот: тропа, трекер, поджигатели с факелами и анчутки, телеграф огня
         sc = await G('''(() => { const g = __game, h = g.hero, m = g.map; g.ui.closeAll(); g.letter = null; g.notice = null; g.log.lines.length = 0; h.cmd = null; h.path = null; h.action = null;
             const P = m.packs.findIndex(p => p.x > 76 && p.kinds.includes('chernoyarets_arsonist')); const p = m.packs[P];
@@ -1023,7 +1043,9 @@ async def main(a):
         s = await G('''(() => { const g = __game, h = g.hero; g.enterZone('trail', 'from_zalesye'); const m = g.map;
             const alive0 = g.enemies.filter(e => !e.dead).length, dead0 = g.enemies.filter(e => e.dead).length;
             const w = g.enemies.filter(e => !e.dead && e.def.torch === undefined)[0]; w.hp = Math.max(1, Math.floor(w.maxHp / 3)); w.stagger = 0; w.state = 'chase';
-            const x0 = w.x, y0 = w.y; w.x = w.homeX + 3; w.y = w.homeY; 
+            // раненый — в 3 тайлах от логова, в свободной достижимой точке (раньше мог попасть в камень и застрять: тест плавал)
+            const x0 = w.x, y0 = w.y; const off = [[3, 0], [-3, 0], [0, 3], [0, -3], [2.1, 2.1], [-2.1, -2.1], [2.1, -2.1], [-2.1, 2.1]].find(([dx, dy]) => m.isReachableAt(w.homeX + dx, w.homeY + dy) && !m.blockedAt(w.homeX + dx, w.homeY + dy)) || [3, 0];
+            w.x = w.homeX + off[0]; w.y = w.homeY + off[1]; 
             h.invuln = 0; h.graceT = 0; h.dashing = null; h.takeDamage(99999, g, 'fire'); const st = g.state; g.respawnHero();
             const k = g.map.krada, out = { st, zone: g.zone.id, dk: +Math.hypot(h.x - k.x, h.y - k.y).toFixed(1), repop: !!g.zoneStates.trail.needRepop, hp: h.hp === h.maxHp,
               wState: w.state, alive0 };
@@ -1034,6 +1056,9 @@ async def main(a):
         check('GDD v1.7: гибель на тропе — возвращение у крады Залесья; убитые не возвращаются, раненый уходит к логову и восстанавливает HP',
               s['st'] == 'dead' and s['zone'] == 'zalesye' and s['dk'] < 5 and not s['repop'] and s['hp'] and s['wState'] == 'return'
               and s['alive1'] == s['alive0'] and s['wAfter'][0] == 'idle' and s['wAfter'][1] == s['wAfter'][2], s)
+
+        # --- 12. Веха M1b: ответы дизайнера, Мара, вожаки, капище Перуна, Кривша (свежая загрузка; tools/checks_m1b.py)
+        await run_m1b(pg, G, check, wait, client_of, client_scr, a)
 
         check('консоль без ошибок и предупреждений', not errors, errors[:5])
         await br.close()
@@ -1047,5 +1072,6 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('--url', default='http://127.0.0.1:8765/index.html?seed=7')
     ap.add_argument('--chrome', default='/usr/bin/google-chrome')
+    ap.add_argument('--only-m1b', action='store_true', help='только проверки вехи M1b')
     ap.add_argument('--throttle', type=float, default=1, help='замедление ЦП (CDP Emulation.setCPUThrottlingRate) — проверка на редких кадрах')
     sys.exit(asyncio.run(main(ap.parse_args())))

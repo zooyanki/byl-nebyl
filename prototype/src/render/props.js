@@ -13,6 +13,9 @@ export function drawProp(ctx, p, toS, time) {
   if (p.type === 'fire' && p.krada) { const [x, y] = toS(p.x + p.size / 2, p.y + p.size / 2); if (drawRestSource(ctx, 'krada', p.restOn ? 'rest' : 'idle', x, y, time)) return; }
   if (p.type === 'churstone') { const [x, y] = toS(p.x + 0.5, p.y + 0.5); if (drawRestSource(ctx, 'churov', p.restOn ? 'rest' : 'idle', x, y, time)) return; }
   if (p.type === 'fire') return fire(ctx, p, toS, time);   // анимирован — рисуем каждый кадр
+  if (p.type === 'hearth') return hearth(ctx, p, toS, time);   // огнища капища (веха M1b)
+  if (p.type === 'perun') return perun(ctx, p, toS, time);
+  if (p.type === 'relic') return relic(ctx, p, toS, time);
   if (!p._spr) p._spr = p.shared ? sharedSprite(p) : bake(p);   // остальное статично — запекаем в спрайт
   const [sx, sy] = toS(p.x, p.y);
   ctx.drawImage(p._spr.c, sx - p._spr.ox, sy - p._spr.oy);
@@ -44,7 +47,7 @@ export function propHeight(p) {
   if (p.type === 'tree') return p.birch ? 132 : 166;
   if (p.type === 'palisade') return p.gatepost ? 100 : 86;
   if (p.type === 'fire' && p.krada) return 112;       // спрайт fx_rest_krada: 120 px, опора на 108
-  return { rock: 36, wall: 36, izba: 132, fire: 80, idol: 66, well: 64, churstone: 50, gate: 80, chest: 22, body: 12, bush: 24 }[p.type] || 40;
+  return { rock: 36, wall: 36, izba: 132, fire: 80, hearth: 56, perun: 120, relic: 30, idol: 66, well: 64, churstone: 50, gate: 80, chest: 22, body: 12, bush: 24 }[p.type] || 40;
 }
 
 function drawRaw(ctx, p, toS) {
@@ -347,4 +350,47 @@ function bush(ctx, p, toS) {
   for (const [dx, dy, r] of blobs) disc(ctx, x + dx, y + dy, r, c1);
   for (const [dx, dy, r] of blobs) disc(ctx, x + dx - 1, y + dy - 2, r * 0.45, c2);
   if (k < 0.3) { rect(ctx, x - 5, y - 12, 2, 2, PAL.red_lt); rect(ctx, x + 3, y - 8, 2, 2, PAL.red_lt); }   // ягоды
+}
+
+// Огнище капища (грей-бокс, спрайта нет): кольцо камней Ø 1,2 тайла; пламя осквернённое — зелёное (Небыль), освящённое — тёплое.
+function hearth(ctx, p, toS, time) {
+  const [x, y] = toS(p.x + 0.5, p.y + 0.5);
+  const rx = 0.6 * HALF_W * Math.SQRT2, ry = 0.6 * HALF_H * Math.SQRT2;
+  ellipse(ctx, x, y, rx + 2, ry + 1, PAL.ink, 0.5);
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2;
+    figure(ctx, [{ x: x + Math.cos(a) * rx - 3, y: y + Math.sin(a) * ry - 3, w: 6, h: 5, c: i % 2 ? PAL.slate : PAL.slate_lt }]);
+  }
+  const [c1, c2, c3] = p.cursed ? [PAL.nebyl_dk, PAL.nebyl, PAL.linen] : [PAL.red_lt, PAL.ember, PAL.flame];
+  const f1 = Math.sin(time * 10 + p.x) * 3, f2 = Math.sin(time * 14 + p.y) * 2;
+  poly(ctx, [[x - 9, y - 2], [x + 9, y - 2], [x + f2, y - 36 - f1]], c1);
+  poly(ctx, [[x - 6, y - 2], [x + 6, y - 2], [x - f2, y - 26 + f1]], c2);
+  poly(ctx, [[x - 3, y - 2], [x + 3, y - 2], [x + f2 * 0.5, y - 14]], c3);
+}
+
+// Идол Перуна 2×2 (грей-бокс): резной столб 110 px с усами-молниями; пока жив Кривша — горит.
+function perun(ctx, p, toS, time) {
+  const [ox, oy] = toS(p.x + 0.6, p.y + 0.6);
+  isoBox(ctx, ox, oy, 0.8, 0.8, 104, p.burning ? PAL.wood_md : PAL.slate, p.burning ? PAL.wood : PAL.slate_dk, p.burning ? PAL.wood_dk : PAL.ink);
+  const [x, y] = toS(p.x + 1, p.y + 1);
+  rect(ctx, x - 8, y - 96, 16, 3, PAL.bronze);                       // венец
+  rect(ctx, x - 5, y - 86, 3, 3, PAL.ink); rect(ctx, x + 2, y - 86, 3, 3, PAL.ink);   // очи
+  rect(ctx, x - 7, y - 76, 14, 2, PAL.bronze_lt);                    // усы-молнии
+  rect(ctx, x - 1, y - 70, 2, 30, PAL.wood_dk);
+  if (!p.burning) { rect(ctx, x - 6, y - 104, 12, 6, PAL.ink); return; }   // погас, обуглен
+  const f1 = Math.sin(time * 9) * 4, f2 = Math.sin(time * 13 + 1) * 3;
+  for (const [dx, h0] of [[-9, 60], [8, 54], [0, 70]]) {
+    poly(ctx, [[x + dx - 7, y - 40], [x + dx + 7, y - 40], [x + dx + f2, y - 40 - h0 - f1]], PAL.red_lt);
+    poly(ctx, [[x + dx - 4, y - 40], [x + dx + 4, y - 40], [x + dx - f2 * 0.5, y - 40 - h0 * 0.7 + f1]], PAL.ember);
+  }
+  poly(ctx, [[x - 5, y - 60], [x + 5, y - 60], [x + f1 * 0.5, y - 104]], PAL.flame);
+}
+
+// «Громовник» у подножия погасшего идола (заглушка вехи (в)): секира с бронзовым мерцанием.
+function relic(ctx, p, toS, time) {
+  const [x, y] = toS(p.x + 0.5, p.y + 0.5);
+  ellipse(ctx, x, y, 12, 4, PAL.bronze_hi, 0.25 + 0.15 * Math.sin(time * 4));
+  poly(ctx, [[x - 12, y - 2], [x + 10, y - 7], [x + 11, y - 5], [x - 11, y]], PAL.wood_lt);
+  poly(ctx, [[x + 4, y - 14], [x + 13, y - 10], [x + 12, y - 1], [x + 6, y - 4]], PAL.mist);
+  rect(ctx, x + 6, y - 12, 2, 2, PAL.linen);
 }

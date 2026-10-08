@@ -58,7 +58,7 @@ export function generateTrail(seed, zone) {
       if (dist[j] > dist[i] + 1) { dist[j] = dist[i] + 1; if (dist[j] < 8) q.push(j); }
     }
   }
-  // частокол капища с закрытыми воротами (капище — следующая веха)
+  // частокол капища с воротами (веха M1b: ворота ведут в капище)
   if (gate) {
     const gy = Math.floor(gate.y);
     for (let y = gy - 7; y <= gy + 8; y++) {
@@ -95,6 +95,9 @@ export function generateTrail(seed, zone) {
     const p = m.addProp('churstone', Math.floor(stone[0]), Math.floor(stone[1]), 1);
     m.churStone = { x: p.x + 0.5, y: p.y + 0.5 };
     m.lights.push({ x: m.churStone.x, y: m.churStone.y, r: 50, kind: 'chur' });
+    // Чуров камень у входа в капище — объект «коснуться» (точка возрождения после касания, ответ дизайнера 08.10)
+    for (const o of m.objects) if (o.type === 'stone') { o.x = m.churStone.x; o.y = m.churStone.y; o.sx = o.x; o.sy = o.y + 0.9; o.reach = 1.3; o.prop = p; }
+    if (m.entries.chur) m.entries.chur = { x: m.churStone.x, y: m.churStone.y + 1.6 };
   }
   // сундук и тело жреца (сундук стоит на полутайловом футпринте, тело — плоско на земле)
   for (const o of m.objects) {

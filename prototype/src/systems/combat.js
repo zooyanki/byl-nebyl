@@ -11,7 +11,35 @@ import { baseDamageAvg } from '../data/enemies.js';
 let FIRE_ID = 1;
 
 export class Combat {
-  constructor(game) { this.game = game; this.projectiles = []; this.fires = []; this.lastBlast = null; }
+  constructor(game) { this.game = game; this.projectiles = []; this.fires = []; this.teles = []; this.lastBlast = null; }
+
+  /** Пятно огненного следа (Кривша — 4 с, Мара — 3 с; GDD §5.3–5.4): горит сразу, жжёт pct% макс. HP героя в секунду.
+   *  Перекрывающиеся пятна одного источника жгут как одно (тики источника — src.trail.tick). */
+  addPatch(src, x, y, P) {
+    const f = { id: FIRE_ID++, kind: 'trail', src, x, y, t: 0, tele: 0, flight: 0, lit: true, litT: 0, burn: P.burn, r: P.r, pct: P.pctMaxHpPerSec, tick: P.tick, tickT: 0, acc: 0, ticks: 0, dealt: 0 };
+    this.fires.push(f);
+    return f;
+  }
+  /** Телеграф (красный круг / конус) с действием в конце: T = {shape, x, y, r, dir, half, dur, onFire}. */
+  addTele(T) { T.t = 0; this.teles.push(T); return T; }
+  updateTeles(dt) {
+    for (const T of this.teles) {
+      if (!T.hold) T.t += dt;      // hold — стоп-кадр (скриншоты, автотесты)
+      if (T.src && T.src.dead && !T.keepOnDeath) { T.done = true; continue; }
+      if (T.t >= T.dur) { T.done = true; if (T.onFire) T.onFire(T); }
+    }
+    if (this.teles.some((T) => T.done)) this.teles = this.teles.filter((T) => !T.done);
+  }
+  /** Точка внутри телеграфа T (с запасом pad). */
+  inTele(T, x, y, pad = 0) {
+    const dx = x - T.x, dy = y - T.y, d = Math.hypot(dx, dy);
+    if (d > T.r + pad) return false;
+    if (T.shape !== 'cone' || d < 0.3) return true;
+    let a = Math.atan2(dy, dx) - T.dir;
+    while (a > Math.PI) a -= 2 * Math.PI;
+    while (a < -Math.PI) a += 2 * Math.PI;
+    return Math.abs(a) <= T.half + Math.asin(Math.min(1, pad / d));
+  }
 
   heroMelee(hero, target, skill = null) {
     const g = this.game;
@@ -136,13 +164,14 @@ export class Combat {
     this.game.audio.play('throw');
   }
 
-  /** «Поджог» (GDD v1.5 §5.2 E11): факел летит в точку, телеграф 0,8 с (красный круг), затем зона Ø 2 тайла
-   *  горит 4 с: огонь floor(0,8 × средний урон mlvl) в секунду (тики по 0,5 с с переносом дробной части). */
+  /** «Поджог» (GDD v1.7 §5.2 E11): в момент броска (кадр 3) — красный круг на 0,8 с, факел летит по дуге 0,6 с при любой
+   *  дистанции, огонь вспыхивает в конце телеграфа; зона r 1 горит 4 с: огонь floor(0,8 × средний урон mlvl) в секунду
+   *  (тики по 0,5 с с переносом дробной части). */
   throwTorch(enemy, tx, ty) {
-    const tc = enemy.def.torch, d = Math.hypot(tx - enemy.x, ty - enemy.y);
+    const tc = enemy.def.torch;
     const f = {
       id: FIRE_ID++, src: enemy, x: tx, y: ty, fx: enemy.x, fy: enemy.y, t: 0, lit: false, litT: 0,
-      flight: Math.min(tc.telegraph * 0.9, d / tc.flight), tele: tc.telegraph, burn: tc.burn, r: tc.radius,
+      flight: tc.flightTime ?? 0.6, tele: tc.telegraph, burn: tc.burn, r: tc.radius,
       dps: Math.floor(tc.dpsMul * baseDamageAvg(enemy.mlvl)), tick: tc.tick, tickT: 0, acc: 0, ticks: 0, dealt: 0,
     };
     this.fires.push(f);
@@ -159,7 +188,29 @@ export class Combat {
 
   updateFires(dt) {
     const g = this.game, h = g.hero;
+    this.updateTeles(dt);
+    // огненный след: источник жжёт героя, пока тот стоит хоть в одном его пятне (тик src.trailTick)
+    const burning = new Set();
+    for (const f of this.fires) if (f.kind === 'trail' && !h.dead && Math.hypot(h.x - f.x, h.y - f.y) <= f.r + h.r * 0.5 && !g.safeAt(h.x, h.y)) burning.add(f);
+    const bySrc = new Map();
+    for (const f of burning) if (!bySrc.has(f.src)) bySrc.set(f.src, f);
+    for (const [src, f] of bySrc) {
+      const S = src || f;
+      S._trT = (S._trT || 0) + dt;
+      while (S._trT >= f.tick - 1e-9 && !h.dead) {
+        S._trT -= f.tick;
+        S._trAcc = (S._trAcc || 0) + h.maxHp * f.pct / 100 * f.tick;
+        const n = Math.floor(S._trAcc + 1e-9);
+        if (n >= 1) { S._trAcc -= n; const d = h.takeDamage(n, g, 'fire', null); f.dealt += d; S.trailDealt = (S.trailDealt || 0) + d; g.counters.trailTicks = (g.counters.trailTicks || 0) + 1; }
+      }
+    }
     for (const f of this.fires) {
+      if (f.kind === 'trail') {
+        f.t += dt; f.litT += dt;
+        if (Math.random() < 0.25) g.fx.parts.push({ x: f.x + (Math.random() - 0.5) * f.r, y: f.y + (Math.random() - 0.5) * f.r, ox: 0, oy: -4, vx: 0, vy: -16, g: 0, t: 0, dur: 0.4, color: Math.random() < 0.5 ? PAL.ember : PAL.flame, size: 1 });
+        if (f.litT >= f.burn) f.dead = true;
+        continue;
+      }
       f.t += dt;
       if (!f.lit && f.t >= f.tele) {
         f.lit = true; f.litT = 0;
@@ -202,7 +253,8 @@ export class Combat {
             if (g.safeAt(h.x, h.y)) { this.fizzle(p); g.counters.safeFizzle = (g.counters.safeFizzle || 0) + 1; break; }
             p.dead = true;
             g.fx.burst(p.x, p.y, PAL.ember, 8, 20, 50);
-            h.takeDamage(rndInt(p.dmg[0], p.dmg[1]), g, p.element, null);
+            const dealt = h.takeDamage(rndInt(p.dmg[0], p.dmg[1]), g, p.element, null);
+            if (p.src && p.src.onHitHero) p.src.onHitHero(dealt, g);   // модификаторы элит (Жаркий, Студёный, Кровопийца)
           }
           continue;
         }

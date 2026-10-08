@@ -115,6 +115,12 @@ export class Hero extends Actor {
     this.skillRank = rs ? rankOf(this, rs) : 0;
     this.skillCost = rs ? skillCost(this, rs) : 0;
     if (rs && SKILLS[rs].min) [this.skillMin, this.skillMax] = spellDamage(this, rs); else { this.skillMin = 0; this.skillMax = 0; }
+    // «Чад» капища (GDD §4.4): за каждую ступень −10% восстановления Яри и −5% меткости (числа — kapishche.json → chad)
+    if (this.chad > 0) {
+      const C2 = this.chadDef || { regenPctPerStage: 10, arPctPerStage: 5 };
+      this.yarRegen *= 1 - (this.chad * C2.regenPctPerStage) / 100;
+      this.ar = Math.round(this.ar * (1 - (this.chad * C2.arPctPerStage) / 100));
+    }
     if (this.hp != null) { this.hp = Math.min(this.hp, this.maxHp); this.yar = Math.min(this.yar, this.maxYar); }
   }
 
@@ -160,6 +166,8 @@ export class Hero extends Actor {
     this.setPath(map, x, y, true);
   }
   /** Навык ЛКМ, если выучен. */
+  /** Скорость шага с учётом замедления («Студёный» элит, GDD §5.3: −30% на 2 с). */
+  curSpeed() { return this.slowT > 0 ? this.speed * (1 - (this.slowPct || 0) / 100) : this.speed; }
   lmbSkill() { return this.lmb && SKILLS[this.lmb] && rankOf(this, this.lmb) ? this.lmb : null; }
   attack(target, stand = false, skill = null, lmb = false) {
     if (this.cmd && this.cmd.type === 'attack' && this.cmd.target === target && this.cmd.skill === skill) { this.cmd.swung = false; this.cmd.stand = stand; return; }
@@ -412,7 +420,16 @@ export class Hero extends Actor {
     this.beltT = (this.beltT || 0) - dt;
     if (this.beltT <= 0) { this.beltT = 0.25; if (this.belt.includes(null)) this.fillBelt(); }
     this.invuln = Math.max(0, this.invuln - dt);
+    // GDD v1.7 (ответ дизайнера 08.10): неуязвимость возрождения (2 с) снимается раньше, если герой атакует или кастует
+    if (this.respawnProt) {
+      if (this.invuln <= 0) this.respawnProt = false;
+      else if (this.action && (this.action.type === 'attack' || this.action.type === 'cast')) {
+        this.invuln = 0; this.graceT = 0; this.respawnProt = false;
+        game.counters.respawnInvulnBroken = (game.counters.respawnInvulnBroken || 0) + 1;
+      }
+    }
     if (this.graceT > 0) this.graceT = Math.max(0, this.graceT - dt);
+    if (this.slowT > 0) this.slowT = Math.max(0, this.slowT - dt);
     this.sinceHurt = (this.sinceHurt ?? 99) + dt;
     for (const k in this.cds) this.cds[k] = Math.max(0, this.cds[k] - dt);
     if (this.buffs.chur) { this.buffs.chur.t -= dt; if (this.buffs.chur.t <= 0) { delete this.buffs.chur; this.recalc(); } }
@@ -455,7 +472,7 @@ export class Hero extends Actor {
     const map = game.map;
     if (c.type === 'move') {
       if (!this.path && !this.setPath(map, c.x, c.y, true)) { this.cmd = null; this.moving = false; return; }
-      if (this.followPath(map, dt, this.speed)) {
+      if (this.followPath(map, dt, this.curSpeed())) {
         // упёрлись в тело — пробуем обойти (не больше трёх раз)
         if (Math.hypot(c.x - this.x, c.y - this.y) > 0.4 && c.retries < 3) { c.retries++; this.setPath(map, c.x, c.y, true); }
         else { this.cmd = null; this.moving = false; }
@@ -471,7 +488,7 @@ export class Hero extends Actor {
       if (c.stand) { c.swung = true; this.startAttack(e, c.skill, game); return; }    // Shift+ЛКМ — удар на месте
       c.repath -= dt;
       if (c.repath <= 0 || !this.path) { this.setPath(map, e.x, e.y, true, e); c.repath = 0.25; }
-      this.followPath(map, dt, this.speed);
+      this.followPath(map, dt, this.curSpeed());
     } else if (c.type === 'interact') {
       const o = c.obj;
       if (o.done) { this.cmd = null; this.moving = false; return; }
@@ -491,7 +508,7 @@ export class Hero extends Actor {
       }
       c.repath -= dt;
       if (c.repath <= 0 || !this.path) { this.setPath(map, o.sx, o.sy, true); c.repath = 0.5; }
-      if (this.followPath(map, dt, this.speed) && Math.hypot(o.x - this.x, o.y - this.y) > o.reach) {
+      if (this.followPath(map, dt, this.curSpeed()) && Math.hypot(o.x - this.x, o.y - this.y) > o.reach) {
         c.fails++;
         if (c.fails > 6) { this.cmd = null; game.notify('Не дотянуться', PAL.mist, 'reach'); }
       }
@@ -505,7 +522,7 @@ export class Hero extends Actor {
       }
       c.repath -= dt;
       if (c.repath <= 0 || !this.path) { this.setPath(map, it.x, it.y, true); c.repath = 0.5; }
-      if (this.followPath(map, dt, this.speed) && Math.hypot(it.x - this.x, it.y - this.y) > 0.8) {
+      if (this.followPath(map, dt, this.curSpeed()) && Math.hypot(it.x - this.x, it.y - this.y) > 0.8) {
         c.fails = (c.fails || 0) + 1;
         if (c.fails > 6) { this.cmd = null; game.notify('Не дотянуться', PAL.mist, 'reach'); }
       }

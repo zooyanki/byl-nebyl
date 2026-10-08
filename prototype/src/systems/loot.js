@@ -32,6 +32,7 @@ export class Loot {
   }
 
   dropFrom(enemy) {
+    if (enemy.dropTable) return this.dropElite(enemy);
     const what = pickWeighted(DROP_NORMAL);
     if (what === 'silver') this.spawnSilver(enemy.x, enemy.y, silverAmount(enemy.mlvl));
     else if (what === 'potion') {
@@ -62,6 +63,44 @@ export class Loot {
         out.push(this.spawn(x, y, { kind: 'potion', potion: pk, label: POTIONS[pk].name, color: PAL.birch }));
       } else if (what === 'item') out.push(this.spawnItem(x, y, rollItem(ilvl, Math.random, this.game.hero.mf, { rarity: T.rarity })));
     }
+    return out;
+  }
+
+  /** Элиты, былинные враги и боссы (GDD §5.3–5.4, §6.7): броски по таблице, затем гарантии — extraMagic (вожак: +1 заговорённый),
+   *  magicMin (≥ N заговорённых: простые повышаются, не хватает — добавляются), firstKillRarePct (первое убийство — дивный). */
+  dropElite(e) {
+    const T = dropTable(e.dropTable), g = this.game, out = [];
+    if (!T) return out;
+    const plan = [];
+    for (let i = 0; i < (T.rolls || 1); i++) {
+      const what = pickWeighted(T.outcome);
+      if (what === 'item') { const w = { ...T.rarity }, mf = g.hero.mf, k = 0.5; if (mf) { w.magic += mf * k; w.rare += mf * k; w.unique += mf * k; } plan.push(pickWeighted(w)); }
+      else if (what !== 'none') plan.push(what);
+    }
+    for (let i = 0; i < (T.extraMagic || 0); i++) plan.push('magic');
+    const isItem = (r) => r === 'normal' || r === 'magic' || r === 'rare' || r === 'unique';
+    if (T.magicMin) {
+      let have = plan.filter((r) => isItem(r) && r !== 'normal').length;
+      for (let i = 0; i < plan.length && have < T.magicMin; i++) if (plan[i] === 'normal') { plan[i] = 'magic'; have++; }
+      while (have < T.magicMin) { plan.push('magic'); have++; }
+    }
+    const first = !(g.firstKills || (g.firstKills = {}))[e.kind];
+    g.firstKills[e.kind] = true;
+    if (T.firstKillRarePct && first && Math.random() * 100 < T.firstKillRarePct && !plan.some((r) => r === 'rare' || r === 'unique')) {
+      const j = plan.findIndex((r) => r === 'magic');
+      if (j >= 0 && T.magicMin && plan.filter((r) => r === 'magic').length > T.magicMin) plan[j] = 'rare'; else plan.push('rare');
+    }
+    for (const r of plan) {
+      if (r === 'silver') out.push(this.spawnSilver(e.x, e.y, silverAmount(e.mlvl)));
+      else if (r === 'potion') {
+        let type = pickWeighted(POTION_WEIGHTS);
+        if (type === 'beresta') type = 'life';
+        const pk = potionFor(type, e.mlvl);
+        out.push(this.spawn(e.x, e.y, { kind: 'potion', potion: pk, label: POTIONS[pk].name, color: PAL.birch }));
+      } else out.push(this.spawnItem(e.x, e.y, rollItem(e.mlvl, Math.random, 0, { forceRarity: r })));
+    }
+    e.drops = out;
+    g.counters.eliteDrops = (g.counters.eliteDrops || 0) + 1;
     return out;
   }
 

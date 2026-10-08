@@ -37,6 +37,21 @@ export class Enemy extends Actor {
     this.lastStagger = -99;
     this.age = 0;
     this.torchCd = 0;          // «Поджог» поджигателя (def.torch)
+    // у экземпляра свои сопротивления и темп удара: элиты (GDD §5.3) меняют их модификаторами (systems/elites.js)
+    this.res = { ...def.res };
+    this.attackTime = def.attackTime; this.hitAt = def.hitAt;
+    this.invuln = 0;
+    this.elite = null; this.mods = []; this.leader = false; this.retinue = false;
+  }
+
+  /** Удар по герою прошёл (dealt — нанесённый урон): модификаторы элит (Жаркий, Студёный, Кровопийца). */
+  onHitHero(dealt, game) {
+    if (!this.mods.length || !dealt) return;
+    const M = this.modDefs || {};
+    const h = game.hero;
+    if (M.hot && !h.dead) h.takeDamage(Math.max(1, Math.floor(dealt * M.hot.fireAddPct / 100)), game, 'fire', null);
+    if (M.cold && !h.dead) { h.slowPct = M.cold.slowPct; h.slowT = Math.max(h.slowT || 0, M.cold.slowTime); }
+    if (M.leech) { this.hp = Math.min(this.maxHp, this.hp + Math.max(1, Math.round(dealt * M.leech.lifeStealPct / 100))); }
   }
 
   aggro(game, spread = true) {
@@ -48,8 +63,9 @@ export class Enemy extends Actor {
   /** type: 'melee' | 'fire' | 'cold' | 'thorns'. opts: {crit, kbDir:[dx,dy], kb}. */
   takeDamage(amount, game, type = 'melee', src = null, opts = {}) {
     if (this.dead) return 0;
+    if (this.invuln > 0) { game.fx.text(this.x, this.y, 'Неуязвим', PAL.mist, this.def.height + 6, { dur: 0.5 }); return 0; }
     let dmg = amount;
-    const res = this.def.res[type] || 0;
+    const res = this.res[type] || 0;
     if (res) dmg = dmg * (1 - res);
     dmg = Math.max(1, Math.floor(dmg));
     this.hp -= dmg;
@@ -86,6 +102,22 @@ export class Enemy extends Actor {
     return dmg;
   }
 
+  /** Обход по кругу (Мара Пепельная, GDD §5.3: «бродит по Залесью по кругу»): точки маршрута по очереди. */
+  patrol(game, dt) {
+    const R = this.route, map = game.map;
+    if (!this.path || this.reachedWp) {
+      this.reachedWp = false;
+      for (let k = 0; k < R.pts.length; k++) {
+        R.i = (R.i + 1) % R.pts.length;
+        const [tx, ty] = R.pts[R.i];
+        if (!map.blockedAt(tx, ty) && !game.safeAt(tx, ty, 1) && this.setPath(map, tx, ty) !== false && this.path) break;
+      }
+    }
+    if (this.path) { if (this.followPath(map, dt, this.speed * R.speedMul)) this.reachedWp = true; }
+    else this.moving = false;
+    this.homeX = this.x; this.homeY = this.y;
+  }
+
   scare(dx, dy, time) {
     this.state = 'flee'; this.t = 0; this.fleeTime = time; this.path = null;
     const a = Math.atan2(dy, dx) + rnd(-0.6, 0.6);
@@ -119,8 +151,10 @@ export class Enemy extends Actor {
 
     switch (this.state) {
       case 'idle': {
+        if (this.route) { this.patrol(game, dt); if (heroPresent && !heroSafe && dHero < def.aggro && (this.los || dHero < 2.5)) this.aggro(game); break; }
+        if (this.follow && !this.follow.dead) { this.homeX = this.follow.x + this.followOff[0]; this.homeY = this.follow.y + this.followOff[1]; if (Math.hypot(this.x - this.homeX, this.y - this.homeY) > 2.5) this.wanderT = 0; }
         this.wanderT -= dt;
-        if (this.path) this.followPath(map, dt, this.speed * 0.3);
+        if (this.path) this.followPath(map, dt, this.speed * (this.follow ? 0.6 : 0.3));
         else this.moving = false;
         if (this.wanderT <= 0) {
           this.wanderT = rnd(2, 5);
@@ -164,19 +198,19 @@ export class Enemy extends Actor {
       }
       case 'attack': {
         this.face(hero.x - this.x, hero.y - this.y);
-        if (!this.attackFired && this.t >= def.hitAt && def.ranged) {
+        if (!this.attackFired && this.t >= this.hitAt && def.ranged) {
           this.attackFired = true;
           if (heroTargetable && !heroSafe) game.combat.throwCoal(this, hero.x, hero.y);
         }
-        if (!this.attackFired && this.t >= def.hitAt) {
+        if (!this.attackFired && this.t >= this.hitAt) {
           this.attackFired = true;
           if (heroTargetable && !heroSafe && this.distTo(hero) <= def.reach + hero.r + 0.35) {
             if (Math.random() < hitChance(this.ar, hero.def, this.mlvl, hero.level)) {
-              hero.takeDamage(this.dmgMin + Math.floor(Math.random() * (this.dmgMax - this.dmgMin + 1)), game, 'melee', this);
+              this.onHitHero(hero.takeDamage(this.dmgMin + Math.floor(Math.random() * (this.dmgMax - this.dmgMin + 1)), game, 'melee', this), game);
             } else game.fx.text(hero.x, hero.y, 'Мимо', PAL.mist, 50, { dur: 0.6 });
           }
         }
-        if (this.t >= def.attackTime) {
+        if (this.t >= this.attackTime) {
           this.state = 'chase'; this.t = 0;
           const rg = def.ranged;
           // анчутка: после броска с шансом 30% отбегает на 2–3 тайла; слишком близко к герою — отходит всегда
@@ -206,7 +240,7 @@ export class Enemy extends Actor {
             if (!game.safeAt(tx, ty, tc.radius)) game.combat.throwTorch(this, tx, ty);
           }
         }
-        if (this.t >= tc.windup + 0.3) { this.state = 'chase'; this.t = 0; this.attackFired = false; }
+        if (this.t >= (tc.animTime ?? tc.windup + 0.2)) { this.state = 'chase'; this.t = 0; this.attackFired = false; }
         break;
       }
       case 'rise': {
@@ -231,6 +265,7 @@ export class Enemy extends Actor {
         break;
       }
     }
+    if (this.tick) this.tick(this, dt, game);    // особые враги (Мара Пепельная: пепельный след, лечение, реплики)
     // поджигатель сам в огонь (и под телеграф) не заходит
     if (def.torch && (this.x !== px || this.y !== py) && game.combat.fireAt(this.x, this.y, this.r) && !game.combat.fireAt(px, py, this.r)) {
       this.x = px; this.y = py; this.path = null; this.moving = false;

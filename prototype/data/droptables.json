@@ -72,5 +72,90 @@
    }
   ],
   "ilvl": 3
+ },
+ "champion": {
+  "_about": "GDD §6.7: матёрый — 2 броска, 30/30/15/25; редкость как у свиты 50/40/9/1",
+  "rolls": 2,
+  "outcome": {
+   "none": 30,
+   "silver": 30,
+   "potion": 15,
+   "item": 25
+  },
+  "rarity": {
+   "normal": 50,
+   "magic": 40,
+   "rare": 9,
+   "unique": 1
+  }
+ },
+ "leader": {
+  "_about": "GDD §6.7: вожак — 3 броска + 1 заговорённый, 20/30/15/35; редкость 30/52/15/3",
+  "rolls": 3,
+  "extraMagic": 1,
+  "outcome": {
+   "none": 20,
+   "silver": 30,
+   "potion": 15,
+   "item": 35
+  },
+  "rarity": {
+   "normal": 30,
+   "magic": 52,
+   "rare": 15,
+   "unique": 3
+  }
+ },
+ "retinue": {
+  "_about": "GDD §6.7: свита вожака — 1 бросок, 50/22/12/16; редкость 50/40/9/1",
+  "rolls": 1,
+  "outcome": {
+   "none": 50,
+   "silver": 22,
+   "potion": 12,
+   "item": 16
+  },
+  "rarity": {
+   "normal": 50,
+   "magic": 40,
+   "rare": 9,
+   "unique": 1
+  }
+ },
+ "bylina": {
+  "_about": "GDD §5.3: былинный враг — 4 броска, ≥ 1 заговорённая, 50% дивная (первое убийство); исходы как у вожака (§6.7), редкость «вожак, былинный враг» 30/52/15/3. Былинных вещей в прототипе нет — выпадают дивными (веха в).",
+  "rolls": 4,
+  "magicMin": 1,
+  "firstKillRarePct": 50,
+  "outcome": {
+   "none": 20,
+   "silver": 30,
+   "potion": 15,
+   "item": 35
+  },
+  "rarity": {
+   "normal": 30,
+   "magic": 52,
+   "rare": 15,
+   "unique": 3
+  }
+ },
+ "boss": {
+  "_about": "GDD §5.4 / §6.7: Кривша — 4 предмета, ≥ 2 заговорённых, при первом убийстве 1 дивный; редкость босса 0/60/32/8. Былинные — дивными до вехи (в).",
+  "rolls": 4,
+  "magicMin": 2,
+  "firstKillRarePct": 100,
+  "outcome": {
+   "none": 0,
+   "silver": 0,
+   "potion": 0,
+   "item": 100
+  },
+  "rarity": {
+   "normal": 0,
+   "magic": 60,
+   "rare": 32,
+   "unique": 8
+  }
  }
 }

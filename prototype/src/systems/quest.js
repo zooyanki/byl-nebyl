@@ -55,6 +55,14 @@ export class Quest {
     g.log.add(t('ui.sys.quest_done') + ': ' + this.text(o), PAL.bronze_hi);
     g.audio.play('levelup');
     this.run(o.def.onDone);
+    // миссия сдана, когда выполнены все обязательные цели (GDD §8.2 п.7: обязательны 1, 2, 4, 5)
+    if (!this.missionDone && this.obj.every((x) => !x.def.required || x.state === 'done')) {
+      this.missionDone = true;
+      const m = t('ui.sys.mission_done', { mission: this.title });
+      g.log.add(m, PAL.bronze_hi); g.log.add(t('proto.reward_ladoga'), PAL.bronze_lt);
+      g.notify(m, PAL.bronze_hi, 'mission', 4);
+      this.emit({ event: 'missionDone', mission: this.id });
+    }
   }
   run(actions) {
     const g = this.game;
