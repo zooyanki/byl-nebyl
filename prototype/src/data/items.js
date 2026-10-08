@@ -1,4 +1,4 @@
-// Предметы (GDD v1.2 §6): 10 слотов, базы, редкость, аффиксы (тир T1 для ilvl 1–6, T2 7–12, T3 13+),
+// Предметы (GDD v1.4 §6): 10 слотов, базы, редкость, аффиксы (тир T1 для ilvl 1–6, T2 7–12, T3 13+),
 // таблицы выпадения §6.7, зелья §4.4, серебро §6.6. Все числа — из data/items_base.json, affixes.json,
 // droptables.json (applyItems при старте); здесь только логика.
 
@@ -26,7 +26,11 @@ export function applyItems(ib, af, dt) {
   SLOTS.length = 0; SLOTS.push(...ib.slots);
   Object.assign(SLOT_NAMES, ib.slotNames); Object.assign(TYPE_SLOTS, ib.typeSlots); Object.assign(RARITY, ib.rarity);
   BASES.length = 0;
-  for (const b of ib.bases) { const base = { ...b, g: b.gender }; BASES.push(base); BASE[b.id] = base; }
+  for (const b of ib.bases) {
+    const base = { ...b, g: b.gender, req: b.reqLevel ?? b.req, shortName: b.shortName || b.name };
+    BASE[b.id] = base;
+    if (b.implemented !== false) BASES.push(base);      // посохи описаны, но в прототипе не выпадают
+  }
   for (const [k, p] of Object.entries(ib.potions)) POTIONS[k] = { id: k, ...p };
   STARTER_KIT = ib.starterKit; STARTER_BELT = ib.starterBelt;
   BELT_SIZE = ib.beltSize; BELT_STACK = ib.beltStack; POTION_COOLDOWN = ib.potionCooldown;
@@ -66,7 +70,7 @@ let UID = 1;
 function groupsOf(base) {
   const t = base.type;
   const g = ['all'];
-  if (t === 'sword' || t === 'axe') g.push('weapon'); else if (ARMOR.includes(t)) g.push('armor');
+  if (t === 'sword' || t === 'axe' || t === 'staff') g.push('weapon'); else if (ARMOR.includes(t)) g.push('armor');
   g.push(t);
   return g;
 }
@@ -116,7 +120,8 @@ export function makeItem(baseId, rarity = 'normal', ilvl = 1, rng = Math.random,
     it.name = pick(RARE_ADJ, rng)[ng] + ' ' + noun;
   } else if (rarity === 'magic') {
     const pre = it.affixes.find((a) => a.kind === 'prefix'), suf = it.affixes.find((a) => a.kind === 'suffix');
-    let n = base.name;
+    // act1_texts §12.3: с суффиксом — короткое имя базы («Калёный меч сокола»), без суффикса — полное
+    let n = suf ? base.shortName : base.name;
     if (pre) n = AFFIXES.find((a) => a.id === pre.id).forms[base.g] + ' ' + n[0].toLowerCase() + n.slice(1);
     if (suf) n += ' ' + AFFIXES.find((a) => a.id === suf.id).word;
     it.name = n;
@@ -134,17 +139,27 @@ export function makePotion(kind) {
   return { uid: UID++, kind: 'potion', potion: kind, w: 1, h: 1, name: p.name, icon: p.icon, rarity: 'potion' };
 }
 
-/** Случайный предмет с обычного монстра уровня ilvl. Базы: треб. уровень ≤ ilvl + 3 (с запасом на рост героя). */
+/** Случайный предмет с обычного монстра уровня ilvl. Слот выбирается до базы. Базы: треб. уровень ≤ ilvl;
+ *  тиры = разные треб. уровни баз слота: верхний доступный 50%, предыдущий 35%, прочие вместе 15% (droptables.baseTiers). */
+export function pickBase(type, ilvl, rng = Math.random) {
+  const all = BASES.filter((b) => b.type === type);
+  let cands = all.filter((b) => b.req <= ilvl);
+  if (!cands.length) { const m = Math.min(...all.map((b) => b.req)); cands = all.filter((b) => b.req === m); }
+  const tiers = [...new Set(cands.map((b) => b.req))].sort((a, b) => b - a);   // от верхнего
+  const T = DT.baseTiers;
+  const tw = tiers.map((_, i) => (i === 0 ? T.top : i === 1 ? T.prev : T.rest / (tiers.length - 2)));
+  const W = cands.map((b) => { const i = tiers.indexOf(b.req); return tw[i] / cands.filter((c) => c.req === b.req).length; });
+  let r = rng() * W.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < cands.length; i++) { r -= W[i]; if (r < 0) return cands[i]; }
+  return cands[cands.length - 1];
+}
 export function rollItem(ilvl, rng = Math.random, mf = 0) {
   const w = { ...RARITY_WEIGHTS }, k = DT.mfToWeights;
   if (mf) { w.magic += mf * k; w.rare += mf * k; w.unique += mf * k; }
   const rarity = pickWeighted(w, rng);
   let type = pickWeighted(TYPE_WEIGHTS, rng);
   if (type === 'weapon') type = rng() < DT.weaponSplit.sword ? 'sword' : 'axe';
-  const cands = BASES.filter((b) => b.type === type && b.req <= ilvl + DT.baseReqOverIlvl);
-  const tierW = cands.map((b) => (b.req <= ilvl ? DT.baseWeightAtOrBelow : DT.baseWeightAbove));
-  let r = rng() * tierW.reduce((a, b) => a + b, 0), base = cands[0];
-  for (let i = 0; i < cands.length; i++) { r -= tierW[i]; if (r < 0) { base = cands[i]; break; } }
+  const base = pickBase(type, ilvl, rng);
   return makeItem(base.id, rarity, ilvl, rng);
 }
 

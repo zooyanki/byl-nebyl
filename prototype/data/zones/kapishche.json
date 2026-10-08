@@ -1,0 +1,49 @@
+{
+ "_about": "Капище Перуна с ареной «Круг огнищ» (GDD v1.3 §8.1–8.2, решение дизайнера 08.10: mlvl 4–5, босс Кривша mlvl 6). Зона ещё не сделана — конфиг-заготовка.",
+ "id": "kapishche",
+ "name": "Капище Перуна",
+ "realm": "byl",
+ "mission": "m1",
+ "mlvl": [
+  4,
+  5
+ ],
+ "spawnMix": {
+  "upyr": 45,
+  "anchutka": 30,
+  "chernoyarets_arsonist": 25
+ },
+ "repopulate": "onZoneEnter",
+ "implemented": false,
+ "size": [
+  64,
+  64
+ ],
+ "boss": {
+  "id": "krivsha",
+  "name": "Кривша, Обгорелый страж",
+  "mlvl": 6,
+  "arena": "krug_ognishch",
+  "implemented": false
+ },
+ "packs": [],
+ "enemyCount": {
+  "mlvl4": 45,
+  "mlvl5": 35,
+  "elites": 0,
+  "_note": "GDD v1.5 — на будущее (зона не реализована)"
+ },
+ "safeZones": [
+  {
+   "at": "churStone",
+   "radius": 6,
+   "packMinDist": 8
+  }
+ ],
+ "checkpoint": {
+  "exitLevel": 7,
+  "tolerance": 1,
+  "_note": "GDD v1.5 §9.3"
+ },
+ "hudName": "Капище Перуна"
+}

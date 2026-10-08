@@ -69,6 +69,8 @@ export class Enemy extends Actor {
     }
     // отбрасывание (лёгких — сильнее) и оглушение: удар > 10% макс. HP прерывает на 0,25 с, не чаще раза в 1,5 с
     if (opts.kbDir && opts.kb) this.knock(opts.kbDir[0], opts.kbDir[1], opts.kb / this.def.mass);
+    // замедление холодом («Дыхание Морозко»): всё тело — шаг, замах, бросок — идёт медленнее
+    if (opts.slow) { this.slowPct = opts.slow.pct; this.slowT = Math.max(this.slowT || 0, opts.slow.time); }
     const st = STATS.monsterStagger;
     if (dmg > this.maxHp * st.hpFrac && this.age - this.lastStagger >= st.cooldown) {
       this.stagger = st.time; this.lastStagger = this.age;
@@ -90,6 +92,7 @@ export class Enemy extends Actor {
     this.age += dt;
     if (this.dead) { this.corpseT += dt; this.updateKnock(game.map, dt); return; }
     const hero = game.hero, map = game.map, def = this.def;
+    if (this.slowT > 0) { this.slowT -= dt; dt *= 1 - this.slowPct / 100; }
     if (this.updateKnock(map, dt)) return;
     if (this.stagger > 0) { this.stagger -= dt; this.moving = false; return; }
     const dHero = this.distTo(hero);
@@ -100,6 +103,8 @@ export class Enemy extends Actor {
       this.los = lineWalkable(map, this.x, this.y, hero.x, hero.y, this.r * 0.8);
     }
     const heroTargetable = !hero.dead && hero.invuln <= 0;
+    // тихие круги (крада 10, Чуров камень 6 — QA B-16, решение дизайнера): там нечисть героя не замечает
+    const heroSafe = game.safeAt(hero.x, hero.y);
 
     switch (this.state) {
       case 'idle': {
@@ -109,13 +114,13 @@ export class Enemy extends Actor {
         if (this.wanderT <= 0) {
           this.wanderT = rnd(2, 5);
           const tx = this.homeX + rnd(-1.6, 1.6), ty = this.homeY + rnd(-1.6, 1.6);
-          if (!map.blockedAt(tx, ty)) this.setPath(map, tx, ty);
+          if (!map.blockedAt(tx, ty) && !game.safeAt(tx, ty, 0.5)) this.setPath(map, tx, ty);
         }
-        if (heroTargetable && dHero < def.aggro && (this.los || dHero < 2.5)) this.aggro(game);
+        if (heroTargetable && !heroSafe && dHero < def.aggro && (this.los || dHero < 2.5)) this.aggro(game);
         break;
       }
       case 'chase': {
-        if (!heroTargetable) { this.state = 'return'; this.path = null; break; }
+        if (!heroTargetable || heroSafe) { this.state = 'return'; this.path = null; if (heroSafe) game.counters.safeBreaks = (game.counters.safeBreaks || 0) + 1; break; }
         if (Math.hypot(this.x - this.homeX, this.y - this.homeY) > def.leash && dHero > 3) { this.state = 'return'; this.path = null; break; }
         const rg = def.ranged;
         if (rg && dHero <= rg.range && dHero > 0.3 && sightClear(map, this.x, this.y, hero.x, hero.y)) {
@@ -143,11 +148,11 @@ export class Enemy extends Actor {
         this.face(hero.x - this.x, hero.y - this.y);
         if (!this.attackFired && this.t >= def.hitAt && def.ranged) {
           this.attackFired = true;
-          if (heroTargetable) game.combat.throwCoal(this, hero.x, hero.y);
+          if (heroTargetable && !heroSafe) game.combat.throwCoal(this, hero.x, hero.y);
         }
         if (!this.attackFired && this.t >= def.hitAt) {
           this.attackFired = true;
-          if (heroTargetable && this.distTo(hero) <= def.reach + hero.r + 0.35) {
+          if (heroTargetable && !heroSafe && this.distTo(hero) <= def.reach + hero.r + 0.35) {
             if (Math.random() < hitChance(this.ar, hero.def, this.mlvl, hero.level)) {
               hero.takeDamage(this.dmgMin + Math.floor(Math.random() * (this.dmgMax - this.dmgMin + 1)), game, 'melee', this);
             } else game.fx.text(hero.x, hero.y, 'Мимо', PAL.mist, 50, { dur: 0.6 });
@@ -157,7 +162,11 @@ export class Enemy extends Actor {
           this.state = 'chase'; this.t = 0;
           const rg = def.ranged;
           // анчутка: после броска с шансом 30% отбегает на 2–3 тайла; слишком близко к герою — отходит всегда
-          if (rg && (Math.random() < rg.retreatChance || this.distTo(hero) < rg.keepMin)) {
+          // отход «слишком близко» — не чаще раза в rg.keepMinCooldown с (решение дизайнера 08.10)
+          const now = game.time || 0;
+          const tooClose = this.distTo(hero) < rg?.keepMin && now - (this.lastBackoff ?? -99) >= (rg?.keepMinCooldown ?? 3);
+          if (rg && (Math.random() < rg.retreatChance || tooClose)) {
+            if (tooClose) { this.lastBackoff = now; game.counters && game.counters.backoff++; }
             const dist = rg.retreatDist[0] + Math.random() * (rg.retreatDist[1] - rg.retreatDist[0]);
             this.scare(this.x - hero.x, this.y - hero.y, dist / this.speed);
             this.retreating = true;
@@ -177,7 +186,7 @@ export class Enemy extends Actor {
           if (Math.hypot(this.x - this.homeX, this.y - this.homeY) < 2) { this.state = 'idle'; this.hp = this.maxHp; this.wanderT = rnd(1, 3); }
           this.path = null;
         }
-        if (heroTargetable && dHero < def.aggro * 0.6 && this.los) this.aggro(game);
+        if (heroTargetable && !heroSafe && dHero < def.aggro * 0.6 && this.los) this.aggro(game);
         break;
       }
     }

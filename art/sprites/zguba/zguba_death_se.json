@@ -1,0 +1,34 @@
+{
+ "character": "Згуба",
+ "animation": "death",
+ "direction": "se",
+ "mirror_for": "sw",
+ "mirror_rule": "flip horizontally around the frame centre line x = 32.0; pivot stays (32, 56)",
+ "pivot": [
+  32,
+  56
+ ],
+ "fps": 10,
+ "loop": false,
+ "visible_height_px": [
+  57,
+  51,
+  36,
+  32,
+  27,
+  25,
+  25,
+  25
+ ],
+ "height_rule": "pivot row (soles) to the top visible pixel, outline included",
+ "notes": "Based on the волхв-прислужник (designed here): wolf-skin hood (ears in the 46 px), bone beads, horse-skull staff (57 px: 58 does not fit a 64x64 frame with pivot y 56).",
+ "image": "zguba_death_se.png",
+ "frame_size": [
+  64,
+  64
+ ],
+ "frame_count": 8,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

@@ -40,3 +40,13 @@ Call `theme_rus.activate()` before using pixelkit, because it switches the palet
 | `items_rus.py` | item icons: меч, топор, кольчуга, круглый щит, шелом, гривна, лунница/громовник, перстни, рукавицы, пояс, сапоги, берестяная грамота, самоцветы; `RARITY`, `draw_item` |
 | `screens_common_v2.py` | `scene(shift, dim, hud)`: the gameplay frame shifted, dimmed and with the HUD, used behind open windows |
 | `gameplay_hud_v2.py` | adds `proj(u,v,z)`, a face-culling iso helper. The сруб and the ладья are now built in true 2:1 iso. |
+
+## v1.4 renames (GDD v1.4 §12.1.1 A3/A5/A7/A13, 08.10.2026)
+
+Previous renders kept as `*_v2d_*` (`mockup_*_v2d_*.png`, `hud_buttons_v2d_x3.png`, `skill_icons_v2d_x3.png`, `palette_v2d.*`).
+
+    python3 gameplay_hud_v2.py inventory_v2.py character_v2.py act_map_v2.py   # one by one
+    python3 item_icons_v2.py     # -> ../item_icons_v2_{x3,native}.png: renamed base icons + list of the 27 bases
+
+- `items_rus.py`: new icons `shelom_klep` (клёпаный шелом), `rukavitsy_kozh`, `rukavitsy_boevye` (leather + iron plates), `poyas_kozh` (кожаный пояс), `doshchataya` (дощатая броня). Old icons kept.
+- Silver: ground «86 сер.», HUD and windows «Серебро: 284», act-map reward «Серебро: +300».

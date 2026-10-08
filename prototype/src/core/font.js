@@ -4,7 +4,9 @@ import { PAL } from '../palette.js';
 
 class BitmapFont {
   constructor(def) {
-    this.G = def.glyphs; this.H = def.h; this.SP = def.sp; this.top = def.top || 0;
+    this.G = { ...def.glyphs }; this.H = def.h;
+    // в исходном FONT_RU нет «×» (QA B-07) — дорисовываем по сетке шрифта
+    if (!this.G['\u00d7'] && def.h === 9) this.G['\u00d7'] = ['.....', '.....', '#...#', '.#.#.', '..#..', '.#.#.', '#...#', '.....', '.....']; this.SP = def.sp; this.top = def.top || 0;
     this.index = {};
     let w = 0;
     for (const k of Object.keys(this.G)) { const gw = this.G[k][0].length; this.index[k] = { x: w, w: gw }; w += gw + 1; }

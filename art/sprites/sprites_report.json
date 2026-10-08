@@ -1,0 +1,377 @@
+{
+ "sheets": [
+  "arsonist/arsonist_idle_se.png",
+  "arsonist/arsonist_idle_ne.png",
+  "arsonist/arsonist_walk_se.png",
+  "arsonist/arsonist_walk_ne.png",
+  "arsonist/arsonist_torch_throw_se.png",
+  "arsonist/arsonist_torch_throw_ne.png",
+  "arsonist/arsonist_axe_strike_se.png",
+  "arsonist/arsonist_axe_strike_ne.png",
+  "arsonist/arsonist_hurt_se.png",
+  "arsonist/arsonist_hurt_ne.png",
+  "arsonist/arsonist_death_se.png",
+  "arsonist/arsonist_death_ne.png",
+  "zguba/zguba_idle_se.png",
+  "zguba/zguba_idle_ne.png",
+  "zguba/zguba_walk_se.png",
+  "zguba/zguba_walk_ne.png",
+  "zguba/zguba_cast_se.png",
+  "zguba/zguba_cast_ne.png",
+  "zguba/zguba_raise_fallen_se.png",
+  "zguba/zguba_raise_fallen_ne.png",
+  "zguba/zguba_hurt_se.png",
+  "zguba/zguba_hurt_ne.png",
+  "zguba/zguba_death_se.png",
+  "zguba/zguba_death_ne.png",
+  "arsonist/arsonist_torch_flame.png",
+  "base_ref/base_ref_axeman_servant.png",
+  "fx_torch_flight/fx_torch_flight.png",
+  "fx_burning_ground/fx_burning_ground.png",
+  "fx_rift_scar/fx_rift_scar.png"
+ ],
+ "checks": {
+  "arsonist_idle_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "arsonist_idle_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "arsonist_walk_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "arsonist_walk_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "arsonist_torch_throw_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "arsonist_torch_throw_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "arsonist_axe_strike_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "arsonist_axe_strike_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "arsonist_hurt_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "arsonist_hurt_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "arsonist_death_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "arsonist_death_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "zguba_idle_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "zguba_idle_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "zguba_walk_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "zguba_walk_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "zguba_cast_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "zguba_cast_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "zguba_raise_fallen_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "zguba_raise_fallen_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "zguba_hurt_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "zguba_hurt_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "zguba_death_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "zguba_death_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "arsonist_torch_flame": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "base_ref_axeman_servant": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_torch_flight": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_burning_ground": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_rift_scar": {
+   "palette_ok": true,
+   "alpha_ok": true
+  }
+ },
+ "measures": {
+  "arsonist": {
+   "idle_se": [
+    48,
+    49,
+    48,
+    48
+   ],
+   "idle_ne": [
+    52,
+    53,
+    52,
+    52
+   ],
+   "walk_se": [
+    48,
+    48,
+    47,
+    47,
+    48,
+    45,
+    47,
+    48
+   ],
+   "walk_ne": [
+    52,
+    53,
+    52,
+    52,
+    52,
+    49,
+    51,
+    52
+   ],
+   "torch_throw_se": [
+    55,
+    56,
+    46,
+    44,
+    46
+   ],
+   "torch_throw_ne": [
+    52,
+    55,
+    50,
+    45,
+    46
+   ],
+   "axe_strike_se": [
+    46,
+    55,
+    48,
+    55,
+    45,
+    46
+   ],
+   "axe_strike_ne": [
+    48,
+    54,
+    49,
+    48,
+    48,
+    46
+   ],
+   "hurt_se": [
+    52,
+    52
+   ],
+   "hurt_ne": [
+    53,
+    53
+   ],
+   "death_se": [
+    53,
+    47,
+    35,
+    30,
+    26,
+    23,
+    22,
+    22
+   ],
+   "death_ne": [
+    55,
+    48,
+    34,
+    29,
+    24,
+    21,
+    21,
+    21
+   ],
+   "body_only": {
+    "se": 46,
+    "ne": 46,
+    "torch_raised_max": 56
+   }
+  },
+  "zguba": {
+   "idle_se": [
+    57,
+    57,
+    56,
+    56
+   ],
+   "idle_ne": [
+    57,
+    57,
+    56,
+    56
+   ],
+   "walk_se": [
+    57,
+    56,
+    56,
+    56,
+    57,
+    56,
+    56,
+    56
+   ],
+   "walk_ne": [
+    57,
+    56,
+    56,
+    56,
+    57,
+    56,
+    56,
+    56
+   ],
+   "cast_se": [
+    57,
+    57,
+    57,
+    57,
+    57,
+    57
+   ],
+   "cast_ne": [
+    57,
+    57,
+    57,
+    57,
+    57,
+    57
+   ],
+   "raise_fallen_se": [
+    55,
+    56,
+    56,
+    56,
+    56,
+    57
+   ],
+   "raise_fallen_ne": [
+    55,
+    56,
+    57,
+    57,
+    57,
+    57
+   ],
+   "hurt_se": [
+    57,
+    57
+   ],
+   "hurt_ne": [
+    57,
+    57
+   ],
+   "death_se": [
+    57,
+    51,
+    36,
+    32,
+    27,
+    25,
+    25,
+    25
+   ],
+   "death_ne": [
+    57,
+    50,
+    35,
+    29,
+    24,
+    22,
+    22,
+    22
+   ],
+   "body_only": {
+    "se": 46,
+    "staff_se": 57,
+    "ne": 46,
+    "staff_ne": 57
+   }
+  },
+  "base_ref": {
+   "axeman_se": 46,
+   "axeman_ne": 46,
+   "servant_se": 54,
+   "servant_body_se": 46,
+   "servant_ne": 54,
+   "servant_body_ne": 46
+  },
+  "fx_burning_ground": {
+   "flame_max": 16,
+   "frame": [
+    64,
+    40
+   ],
+   "top_row": 1
+  },
+  "fx_rift_scar": {
+   "scar_height": 88,
+   "core_width_min": 2,
+   "core_width_max": 4
+  },
+  "fx_torch_flight": {
+   "frame": [
+    32,
+    32
+   ]
+  }
+ }
+}

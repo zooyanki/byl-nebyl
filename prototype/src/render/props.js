@@ -39,7 +39,7 @@ export function propCovers(p, toS, r) {
 export function propHeight(p) {
   if (p.type === 'tree') return p.birch ? 132 : 166;
   if (p.type === 'palisade') return p.gatepost ? 100 : 86;
-  return { rock: 36, wall: 36, izba: 132, fire: 80, idol: 66 }[p.type] || 40;
+  return { rock: 36, wall: 36, izba: 132, fire: 80, idol: 66, well: 64, churstone: 40 }[p.type] || 40;
 }
 
 function drawRaw(ctx, p, toS) {
@@ -50,6 +50,8 @@ function drawRaw(ctx, p, toS) {
     case 'palisade': return palisade(ctx, p, toS);
     case 'izba': return izba(ctx, p, toS);
     case 'idol': return idol(ctx, p, toS);
+    case 'well': return well(ctx, p, toS);
+    case 'churstone': return churstone(ctx, p, toS);
   }
 }
 
@@ -239,4 +241,30 @@ function idol(ctx, p, toS) {
   rect(ctx, x - 3, y - 41, 6, 1, PAL.ink);
   rect(ctx, x - 6, y - 30, 12, 2, PAL.wood_dk);
   figure(ctx, [{ x: x - 7, y: y - 62, w: 14, h: 4, c: PAL.wood }]);
+}
+
+function well(ctx, p, toS) {
+  // колодец-сруб 2×2: венцы 18 px, тёмная вода, два столба и ворот (высота 60)
+  const s = p.size, i = 0.25;
+  const [ox, oy] = toS(p.x + i, p.y + i);
+  isoBox(ctx, ox, oy, s - 2 * i, s - 2 * i, 18, PAL.wood_lt, PAL.wood_md, PAL.wood);
+  const top = [toS(p.x + i + 0.18, p.y + i + 0.18), toS(p.x + s - i - 0.18, p.y + i + 0.18), toS(p.x + s - i - 0.18, p.y + s - i - 0.18), toS(p.x + i + 0.18, p.y + s - i - 0.18)].map(([x, y]) => [x, y - 18]);
+  poly(ctx, top, PAL.night);
+  for (let k = 6; k < 18; k += 6) { const [a, b] = toS(p.x + i, p.y + s - i), [c, d] = toS(p.x + s - i, p.y + s - i), [e, f] = toS(p.x + s - i, p.y + i); strokePoly(ctx, [[a, b - k], [c, d - k], [e, f - k]], PAL.wood_dk, false); }
+  const [l1, l2] = toS(p.x + i + 0.1, p.y + s / 2), [r1, r2] = toS(p.x + s - i - 0.1, p.y + s / 2);
+  rect(ctx, l1 - 1, l2 - 58, 3, 42, PAL.wood_dk); rect(ctx, r1 - 1, r2 - 58, 3, 42, PAL.wood_dk);
+  strokePoly(ctx, [[l1, l2 - 54], [r1, r2 - 54]], PAL.wood_lt, false);
+  strokePoly(ctx, [[l1, l2 - 55], [r1, r2 - 55]], PAL.ink, false);
+  const [mx, my] = toS(p.x + s / 2, p.y + s / 2);
+  rect(ctx, mx, my - 53, 1, 26, PAL.slate_lt);
+  rect(ctx, mx - 3, my - 28, 7, 6, PAL.wood_md); rect(ctx, mx - 3, my - 28, 7, 1, PAL.wood_lt);
+}
+
+function churstone(ctx, p, toS) {
+  // Чуров камень: серая стела 0,5×0,35 высотой 34 с резной светящейся руной
+  const [ox, oy] = toS(p.x + 0.25, p.y + 0.32);
+  isoBox(ctx, ox, oy, 0.5, 0.36, 34, PAL.slate_lt, PAL.slate, PAL.slate_dk);
+  const [x, y] = toS(p.x + 0.5, p.y + 0.68);
+  rect(ctx, x - 4, y - 28, 1, 14, PAL.flame); rect(ctx, x - 4, y - 28, 5, 1, PAL.flame); rect(ctx, x - 4, y - 21, 4, 1, PAL.flame);
+  rect(ctx, x + 2, y - 26, 1, 10, PAL.bronze_hi);
 }

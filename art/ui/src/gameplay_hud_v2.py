@@ -890,8 +890,8 @@ def render_world():
             tint(a, x, y, 36, 0.5, WARM)
         tint(a, RIFT[0], RIFT[1] - 36, 105, 0.5, EERIE)
         cv = Canvas(W, H); cv.a[:] = a
-        T.label_ru(cv, SWORD_G[0], SWORD_G[1] - 22, "Меч дружинника", C["blue_lt"])
-        T.label_ru(cv, SILVER_G[0], SILVER_G[1] - 20, "86 серебра", C["birch"])
+        T.label_ru(cv, SWORD_G[0], SWORD_G[1] - 22, "Калёный меч сокола", C["blue_lt"])
+        T.label_ru(cv, SILVER_G[0], SILVER_G[1] - 20, "86 сер.", C["birch"])          # GDD v1.4 §10.1, A13
         _CACHE["w"] = (cv.a.copy(), lit, L, S)
     a, lit, L, S = _CACHE["w"]
     return a.copy(), lit, L, S
@@ -1052,7 +1052,7 @@ def draw_silver(cv, x, y, w=46, amount=None):
     for (a, b) in ((5, 16), (9, 14), (4, 12), (8, 10)):
         cv.rect(x + a, y + b, 6, 2, C["slate_lt"]); cv.rect(x + a, y + b - 1, 6, 1, C["birch"])
         cv.px(x + a + 1, y + b - 1, C["linen"])
-    T.text_ru(cv, x + w - 4, y + 3, "серебро", C["mist"], align="r", outline=False)
+    T.text_ru(cv, x + w - 4, y + 3, "Серебро:", C["mist"], align="r", outline=False)   # «Серебро: 284» (§10.1, A3)
     T.text_ru(cv, x + w - 4, y + 14, amount, C["linen"], align="r")
 
 
@@ -1096,7 +1096,7 @@ def draw_bottom(cv, S, sb=None, xp_ratio=None):
     by = 328
     s_big, s_sm, s_dash = 32, 22, 18
     belt_w = 4 * 24 + 3 * 2 + 6
-    total = s_big + 4 + 3 * s_sm + 4 + 6 + belt_w + 6 + 3 * s_sm + 4 + 4 + s_big + 3 + 30
+    total = s_big + 4 + 3 * s_sm + 4 + 6 + belt_w + 6 + 3 * s_sm + 4 + 4 + s_big + 3 + 36
     x = 127
     assert x + total + 3 + 44 <= 551, total
     skill_slot(cv, x, by, s_big, sb["lmb"][0], mouse="L", active=sb["lmb"][1]); x += s_big + 4
@@ -1116,9 +1116,9 @@ def draw_bottom(cv, S, sb=None, xp_ratio=None):
     x += 2
     skill_slot(cv, x, by, s_big, sb["rmb"][0], mouse="R", active=sb["rmb"][1])
     x += s_big + 3
-    dash_slot(cv, x + 6, by + 2, s_dash, sb.get("dash")); x += 30 + 3
+    dash_slot(cv, x + 9, by + 2, s_dash, sb.get("dash")); x += 36 + 3      # 36-px column: «Пробел» is 35 px
     draw_level(cv, 112, 343)
-    draw_silver(cv, x, 331, w=44)
+    draw_silver(cv, x, 331, w=50)          # v1.4: «Серебро:» label needs 43 px
     (l, lm), (m, mm) = HUD["life"], HUD["yar"]
     draw_orb(cv, S, True, l / lm, "%d/%d" % (l, lm))
     draw_orb(cv, S, False, m / mm, "%d/%d" % (m, mm))
@@ -1192,12 +1192,12 @@ def draw_minimap(cv, lit, L, x, y, w, h):
 
 
 def draw_zone(cv):
-    w = pk.text_width("Старая Ладога — окрестности", FONT_RU) + 10
+    w = pk.text_width("Капище Перуна", FONT_RU) + 10
     cv.remap(W - w, 0, w, 24, pk.DARKEN2)
     cv.dither(W - w, 0, w, 24, C["ink"], 0.3)
     for k in range(0, w, 4):
         cv.px(W - w + k, 23, C["bronze"] if k % 8 else C["bronze_lt"])
-    T.text_ru(cv, 633, 3, "Старая Ладога — окрестности", C["bronze_lt"], align="r")
+    T.text_ru(cv, 633, 3, "Капище Перуна", C["bronze_lt"], align="r")
     T.text_ru(cv, 633, 13, "Акт I · Миссия 1 из 3", C["mist"], align="r")
 
 

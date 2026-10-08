@@ -1,0 +1,19 @@
+{
+ "effect": "Шрам на месте Разлома (финал М3)",
+ "pivot": [
+  48,
+  104
+ ],
+ "fps": 8,
+ "loop": true,
+ "notes": "decor, passable; same 96x112 cell as the Разлом; glow nebyl, core 2-4 px",
+ "image": "fx_rift_scar.png",
+ "frame_size": [
+  96,
+  112
+ ],
+ "frame_count": 6,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

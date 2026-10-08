@@ -3,6 +3,7 @@ import { VIEW_W, VIEW_H } from '../config.js';
 import { PAL } from '../palette.js';
 import { rect } from './shapes.js';
 import { drawText } from '../core/font.js';
+import { t, silverText, plural } from '../core/i18n.js';
 
 function frame(ctx, x, y, w, h) {
   rect(ctx, x, y, w, h, PAL.ink);
@@ -35,13 +36,14 @@ export function drawDeath(ctx, game) {
   ctx.restore();
   if (k < 0.6) return;
   const h = game.hero, d = game.deathInfo || { lost: 0 };
-  drawText(ctx, VIEW_W / 2, 84, 'Пал ты, дружинник…', PAL.red_lt, { align: 'c', outline: true, scale: 3 });
-  drawText(ctx, VIEW_W / 2, 124, 'Но Ярь ещё теплится: огонь крады вернёт тебя в Явь.', PAL.birch, { align: 'c', outline: true });
-  drawText(ctx, VIEW_W / 2, 144, d.lost > 0 ? 'Нечисть растащила ' + d.lost + ' серебра (10% носимого).' : 'Серебра при тебе не было — и терять нечего.', PAL.flame, { align: 'c', outline: true });
+  // тексты гибели — act1_texts §20/§21 (data/ru.json); серебро без склонения: «Потеряно серебра: N» (GDD §10.1)
+  drawText(ctx, VIEW_W / 2, 84, t('death.title'), PAL.red_lt, { align: 'c', outline: true, scale: 3 });
+  drawText(ctx, VIEW_W / 2, 124, t(d.line || 'death.line1'), PAL.birch, { align: 'c', outline: true });
+  drawText(ctx, VIEW_W / 2, 144, d.lost > 0 ? silverText(d.lost, 'lost') + ' (10% из котомки)' : t('ui.death.penalty_none'), PAL.flame, { align: 'c', outline: true });
   drawText(ctx, VIEW_W / 2, 158, 'Опыт и снаряжение остаются при тебе.', PAL.mist, { align: 'c', outline: true });
-  drawText(ctx, VIEW_W / 2, 172, 'Уровень ' + h.level + ' · Упокоено нечисти: ' + game.killsTotal + ' · Смертей: ' + game.deaths, PAL.mist, { align: 'c', outline: true });
+  drawText(ctx, VIEW_W / 2, 172, t('ui.hud.level', { level: h.level }) + ' · ' + game.killsTotal + ' ' + plural(game.killsTotal, 'враг упокоен', 'врага упокоено', 'врагов упокоено') + ' · Смертей: ' + game.deaths, PAL.mist, { align: 'c', outline: true });
   if (game.deathT > 1.5) {
-    button(ctx, DEATH_BTN, 'Очнуться у крады', overDeathButton(game.input));
+    button(ctx, DEATH_BTN, 'Очнуться у крады', overDeathButton(game.input));   // ui.death.button «Очнуться в Ладоге»: крада — замена Ладоги
     drawText(ctx, VIEW_W / 2, 222, 'или Enter', PAL.mist, { align: 'c', outline: true, alpha: 0.7 + 0.3 * Math.sin(game.time * 4) });
   }
 }

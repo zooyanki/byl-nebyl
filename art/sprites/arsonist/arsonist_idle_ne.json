@@ -1,0 +1,51 @@
+{
+ "character": "Черноярец-поджигатель",
+ "animation": "idle",
+ "direction": "ne",
+ "mirror_for": "nw",
+ "mirror_rule": "flip horizontally around the frame centre line x = 32.0; pivot stays (32, 56)",
+ "pivot": [
+  32,
+  56
+ ],
+ "fps": 5,
+ "loop": true,
+ "visible_height_px": [
+  52,
+  53,
+  52,
+  52
+ ],
+ "height_rule": "pivot row (soles) to the top visible pixel, outline included",
+ "notes": "Recolour of the черноярец-топорщик (base designed here) + torch in the LEFT hand. Body 46, raised torch with flame <= 56. Colours (v2 recolour 08.10): soot-grey shirt with smouldering ember stripes; red is reserved for the hero (scale.md §4.4).",
+ "anchors": {
+  "torch_flame_root": [
+   [
+    40.6,
+    17.1
+   ],
+   [
+    40.6,
+    17.1
+   ],
+   [
+    40.6,
+    17.6
+   ],
+   [
+    40.6,
+    17.6
+   ]
+  ]
+ },
+ "torch_flame": "baked into the frames (phase = frame % 6); for an independent 6-frame flame loop overlay arsonist_torch_flame at anchors.torch_flame_root",
+ "image": "arsonist_idle_ne.png",
+ "frame_size": [
+  64,
+  64
+ ],
+ "frame_count": 4,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

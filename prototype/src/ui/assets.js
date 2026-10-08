@@ -2,7 +2,7 @@
 import { UI_ATLAS } from '../data/ui_atlas.js';
 
 export const IMG = {};
-const FILES = { items: 'assets/items.png', winInv: 'assets/win_inventory.png', winChar: 'assets/win_character.png', buttons: 'assets/hud_buttons.png' };
+const FILES = { items: 'assets/items.png', winInv: 'assets/win_inventory.png', winChar: 'assets/win_character.png', buttons: 'assets/hud_buttons.png', winSkills: 'assets/win_skills.png' };
 
 export function loadAssets() {
   return Promise.all(Object.entries(FILES).map(([k, src]) => new Promise((res) => {

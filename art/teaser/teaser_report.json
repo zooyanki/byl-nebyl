@@ -31,7 +31,11 @@
   "scene4_start_hud.png",
   "scene4_start_hud_native.png",
   "scene4_end_hud.png",
-  "scene4_end_hud_native.png"
+  "scene4_end_hud_native.png",
+  "title_bg_nohud.png",
+  "title_bg_native.png",
+  "title_card.png",
+  "title_card_native.png"
  ],
  "checks": {
   "scene1_start_nohud": {
@@ -44,7 +48,7 @@
     255
    ],
    "palette_ok": true,
-   "opaque_share": 0.279
+   "opaque_share": 0.28
   },
   "scene1_start_hud": {
    "colours": 31,
@@ -65,7 +69,7 @@
     255
    ],
    "palette_ok": true,
-   "opaque_share": 0.282
+   "opaque_share": 0.283
   },
   "hud_scene23_b": {
    "alpha_values": [
@@ -73,7 +77,7 @@
     255
    ],
    "palette_ok": true,
-   "opaque_share": 0.282
+   "opaque_share": 0.283
   },
   "scene2_start_hud": {
    "colours": 32,
@@ -94,12 +98,12 @@
    "palette_ok": true
   },
   "scene4_start_vs_end": {
-   "changed_px": 4006,
+   "changed_px": 4016,
    "share": 0.0174,
    "bbox": [
     308,
-    62,
-    498,
+    64,
+    503,
     198
    ]
   },
@@ -111,7 +115,7 @@
     255
    ],
    "palette_ok": true,
-   "opaque_share": 0.282
+   "opaque_share": 0.283
   },
   "hud_scene4_end": {
    "alpha_values": [
@@ -127,7 +131,7 @@
     255
    ],
    "palette_ok": true,
-   "opaque_share": 0.009
+   "opaque_share": 0.008
   },
   "scene4_start_hud": {
    "colours": 32,
@@ -138,26 +142,35 @@
    "colours": 32,
    "palette_ok": true
   },
-  "loot_labels_clear_of_hero": true
+  "loot_labels_clear_of_hero": true,
+  "loot_labels_clear_of_items": true,
+  "title_bg_nohud": {
+   "colours": 22,
+   "palette_ok": true
+  },
+  "title_card": {
+   "colours": 26,
+   "palette_ok": true
+  }
  },
  "loot_label_boxes": [
   [
-   352,
-   146,
-   439,
-   158
+   354,
+   128,
+   441,
+   140
   ],
   [
    403,
-   160,
+   142,
    460,
-   172
+   154
   ],
   [
-   380,
-   174,
-   447,
-   186
+   391,
+   156,
+   436,
+   168
   ]
  ],
  "tracker_boxes": {
@@ -171,13 +184,13 @@
    3,
    3,
    189,
-   92
+   94
   ],
   "s4": [
    3,
    3,
    189,
-   92
+   94
   ]
  },
  "measure": {
@@ -321,9 +334,9 @@
     235
    ],
    "rift_s23": {
-    "top": 84,
+    "top": 85,
     "bottom": 172,
-    "h": 89
+    "h": 88
    },
    "volkolak_s2": {
     "box": [
@@ -397,9 +410,9 @@
     235
    ],
    "rift_s23": {
-    "top": 84,
+    "top": 85,
     "bottom": 172,
-    "h": 89
+    "h": 88
    },
    "volkolak_s3": {
     "box": [
@@ -467,12 +480,12 @@
     247
    ],
    "rift_s4": {
-    "top": 62,
+    "top": 63,
     "bottom": 150,
-    "h": 89,
-    "w_total": 54,
+    "h": 88,
+    "w_total": 59,
     "x0": 445,
-    "x1": 498
+    "x1": 503
    },
    "boss_kneel": {
     "box": [
@@ -543,12 +556,12 @@
     247
    ],
    "rift_s4": {
-    "top": 62,
+    "top": 63,
     "bottom": 150,
-    "h": 89,
-    "w_total": 54,
+    "h": 88,
+    "w_total": 59,
     "x0": 445,
-    "x1": 498
+    "x1": 503
    },
    "pelt": {
     "box": [
@@ -601,5 +614,11 @@
     "w": 26
    }
   }
- }
+ },
+ "title_logo_box": [
+  106,
+  97,
+  429,
+  42
+ ]
 }

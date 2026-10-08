@@ -142,6 +142,9 @@ export function generateMap(seed, zone = null) {
   trail(S.x, S.y, 38, 7);     // к воротам частокола
   trail(S.x, S.y, 17, 35);    // к развалинам
   trail(S.x, S.y, 14, 17);    // к избе
+  const LM = (zone && zone.landmarks) || {};
+  if (LM.well) trail(S.x, S.y, LM.well.x, LM.well.y + 1);            // к колодцу (вторая половина зоны)
+  if (LM.exit) trail(LM.well ? LM.well.x + 1 : S.x, LM.well ? LM.well.y + 2 : S.y, LM.exit.x, LM.exit.y);   // выход на тропу к капищу
 
   // --- спланированные объекты
   const fire = m.addProp('fire', S.x - 4, S.y - 4, 2);      // крада 2×2 (scale.md §3.3)
@@ -163,6 +166,14 @@ export function generateMap(seed, zone = null) {
   for (let y = 33; y <= 39; y++) if (y !== 37) m.addProp('wall', 21, y, 1, { fp: [21, y, 0.5, 1] });
   // отдельная тонкая стена посреди поля (x 30,0–30,5), чтобы было что обходить рядом со стартом
   for (let y = 22; y <= 27; y++) m.addProp('wall', 30, y, 1, { fp: [30, y, 0.5, 1] });
+  // колодец и Чуров камень (тихий круг 6 тайлов), выход на тропу (решение дизайнера по QA итерации 2)
+  if (LM.well) { m.addProp('well', LM.well.x, LM.well.y, LM.well.size || 2); m.lights.push({ x: LM.well.x + 1, y: LM.well.y + 1, r: 50, kind: 'chur' }); }
+  if (LM.churStone) { m.addProp('churstone', LM.churStone.x, LM.churStone.y, 1); m.churStone = { x: LM.churStone.x + 0.5, y: LM.churStone.y + 0.5 }; }
+  if (LM.exit) {
+    m.exit = { x: LM.exit.x, y: LM.exit.y, to: LM.exit.to };
+    // проход сквозь лесную кромку
+    for (let y = Math.floor(LM.exit.y) - 2; y < H; y++) for (let x = Math.floor(LM.exit.x) - 1; x <= Math.floor(LM.exit.x) + 1; x++) m.keepClear = (m.keepClear || []).concat([[x, y]]);
+  }
 
   // стаи нечисти: из data/zones/<зона>.json (центры, состав, mlvl)
   m.packs = (zone && zone.packs ? zone.packs : []).map((p) => ({ x: p.x, y: p.y, kinds: [...p.kinds], mlvl: p.mlvl }));
@@ -172,6 +183,7 @@ export function generateMap(seed, zone = null) {
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       if (m.isBlocked(x, y)) continue;
+      if (m.keepClear && m.keepClear.some(([kx, ky]) => kx === x && ky === y)) continue;
       const e = Math.min(x, y, W - 1 - x, H - 1 - y);
       const p = e < 2 ? 1 : e === 2 ? 0.55 : e === 3 ? 0.18 : 0;
       if (p && rng() < p) m.addProp('tree', x, y, 1, { birch: rng() < 0.2 });
