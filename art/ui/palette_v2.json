@@ -1,0 +1,330 @@
+{
+  "name": "gardariki_v2",
+  "count": 32,
+  "colors": [
+    {
+      "index": 0,
+      "name": "ink",
+      "hex": "#0d0b0a",
+      "use": "outlines"
+    },
+    {
+      "index": 1,
+      "name": "night",
+      "hex": "#1a1c20",
+      "use": "deepest cool shadow"
+    },
+    {
+      "index": 2,
+      "name": "slate_dk",
+      "hex": "#2a2f34",
+      "use": "iron dark / shadow"
+    },
+    {
+      "index": 3,
+      "name": "slate",
+      "hex": "#3f474c",
+      "use": "iron / stone"
+    },
+    {
+      "index": 4,
+      "name": "slate_lt",
+      "hex": "#5e6a70",
+      "use": "iron light"
+    },
+    {
+      "index": 5,
+      "name": "mist",
+      "hex": "#8a9aa2",
+      "use": "northern sky, silver"
+    },
+    {
+      "index": 6,
+      "name": "birch",
+      "hex": "#cbc4ae",
+      "use": "birch bark, bone"
+    },
+    {
+      "index": 7,
+      "name": "linen",
+      "hex": "#f2ecd8",
+      "use": "text white, highlights"
+    },
+    {
+      "index": 8,
+      "name": "wood_dk",
+      "hex": "#2b1b10",
+      "use": "wood shadow"
+    },
+    {
+      "index": 9,
+      "name": "wood",
+      "hex": "#4b2f1b",
+      "use": "wood"
+    },
+    {
+      "index": 10,
+      "name": "wood_md",
+      "hex": "#714829",
+      "use": "wood mid"
+    },
+    {
+      "index": 11,
+      "name": "wood_lt",
+      "hex": "#a8703f",
+      "use": "wood light / skin"
+    },
+    {
+      "index": 12,
+      "name": "bronze_dk",
+      "hex": "#5c3b14",
+      "use": "bronze dark"
+    },
+    {
+      "index": 13,
+      "name": "bronze",
+      "hex": "#9a6826",
+      "use": "bronze"
+    },
+    {
+      "index": 14,
+      "name": "bronze_lt",
+      "hex": "#d39a45",
+      "use": "bronze light"
+    },
+    {
+      "index": 15,
+      "name": "bronze_hi",
+      "hex": "#f2d48a",
+      "use": "bronze shine"
+    },
+    {
+      "index": 16,
+      "name": "pine_dk",
+      "hex": "#0f1f1a",
+      "use": "forest dark"
+    },
+    {
+      "index": 17,
+      "name": "pine",
+      "hex": "#1c3a2b",
+      "use": "spruce"
+    },
+    {
+      "index": 18,
+      "name": "moss",
+      "hex": "#3a5a31",
+      "use": "moss"
+    },
+    {
+      "index": 19,
+      "name": "moss_lt",
+      "hex": "#708440",
+      "use": "dry grass"
+    },
+    {
+      "index": 20,
+      "name": "sea_dk",
+      "hex": "#1b2b3c",
+      "use": "sea dark"
+    },
+    {
+      "index": 21,
+      "name": "sea",
+      "hex": "#34506a",
+      "use": "sea"
+    },
+    {
+      "index": 22,
+      "name": "red_dk",
+      "hex": "#4c0f10",
+      "use": "blood dark"
+    },
+    {
+      "index": 23,
+      "name": "red",
+      "hex": "#8f1d1a",
+      "use": "red cloak / life"
+    },
+    {
+      "index": 24,
+      "name": "red_lt",
+      "hex": "#d4432c",
+      "use": "red light"
+    },
+    {
+      "index": 25,
+      "name": "blue_dk",
+      "hex": "#16306f",
+      "use": "mana dark"
+    },
+    {
+      "index": 26,
+      "name": "blue",
+      "hex": "#2f5fc6",
+      "use": "mana"
+    },
+    {
+      "index": 27,
+      "name": "blue_lt",
+      "hex": "#8db6ee",
+      "use": "mana light"
+    },
+    {
+      "index": 28,
+      "name": "ember",
+      "hex": "#e6862b",
+      "use": "fire"
+    },
+    {
+      "index": 29,
+      "name": "flame",
+      "hex": "#ffd65c",
+      "use": "fire core"
+    },
+    {
+      "index": 30,
+      "name": "nebyl_dk",
+      "hex": "#1d5a40",
+      "use": "Небыль dark glow"
+    },
+    {
+      "index": 31,
+      "name": "nebyl",
+      "hex": "#8af27e",
+      "use": "Небыль glow"
+    }
+  ],
+  "ramps": {
+    "ink": [
+      "ink"
+    ],
+    "stone": [
+      "ink",
+      "night",
+      "slate_dk",
+      "slate",
+      "slate_lt",
+      "mist",
+      "birch",
+      "linen"
+    ],
+    "iron": [
+      "ink",
+      "night",
+      "slate_dk",
+      "slate",
+      "slate_lt",
+      "mist",
+      "linen"
+    ],
+    "birch": [
+      "ink",
+      "slate_dk",
+      "slate_lt",
+      "mist",
+      "birch",
+      "linen"
+    ],
+    "wood": [
+      "ink",
+      "wood_dk",
+      "wood",
+      "wood_md",
+      "wood_lt",
+      "birch"
+    ],
+    "skin": [
+      "ink",
+      "wood_dk",
+      "wood_md",
+      "wood_lt",
+      "bronze_lt",
+      "bronze_hi"
+    ],
+    "bronze": [
+      "ink",
+      "wood_dk",
+      "bronze_dk",
+      "bronze",
+      "bronze_lt",
+      "bronze_hi"
+    ],
+    "grass": [
+      "ink",
+      "pine_dk",
+      "pine",
+      "moss",
+      "moss_lt",
+      "bronze_lt"
+    ],
+    "earth": [
+      "ink",
+      "wood_dk",
+      "wood",
+      "wood_md",
+      "wood_lt"
+    ],
+    "pine": [
+      "ink",
+      "pine_dk",
+      "pine",
+      "moss",
+      "moss_lt"
+    ],
+    "sea": [
+      "ink",
+      "night",
+      "sea_dk",
+      "sea",
+      "slate_lt",
+      "mist",
+      "birch"
+    ],
+    "red": [
+      "ink",
+      "red_dk",
+      "red",
+      "red_lt",
+      "ember"
+    ],
+    "blue": [
+      "ink",
+      "sea_dk",
+      "blue_dk",
+      "blue",
+      "blue_lt"
+    ],
+    "fire": [
+      "red",
+      "red_lt",
+      "ember",
+      "flame",
+      "linen"
+    ],
+    "nebyl": [
+      "ink",
+      "pine_dk",
+      "nebyl_dk",
+      "nebyl",
+      "linen"
+    ],
+    "fur": [
+      "ink",
+      "night",
+      "wood_dk",
+      "slate_dk",
+      "slate",
+      "slate_lt",
+      "mist"
+    ],
+    "ghoul": [
+      "ink",
+      "slate_dk",
+      "slate",
+      "slate_lt",
+      "mist",
+      "birch"
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+ "character": "Черноярец-топорщик (2 кадра: se, ne) и Волхв-прислужник (2 кадра: se, ne)",
+ "animation": "idle still",
+ "pivot": [
+  32,
+  56
+ ],
+ "visible_height_px": [
+  46,
+  46,
+  54,
+  54
+ ],
+ "notes": "Bases designed for this task (no топорщик / прислужник sprite existed). Топорщик: dark-grey shirt, steel accents (v2 recolour 08.10). Поджигатель = this топорщик recoloured (soot-grey, ember stripes) + torch; Згуба = this прислужник + wolf hood, beads, horse-skull staff.",
+ "image": "base_ref_axeman_servant.png",
+ "frame_size": [
+  64,
+  64
+ ],
+ "frame_count": 4,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

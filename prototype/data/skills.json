@@ -1,0 +1,251 @@
+{
+ "_about": "Навыки (GDD v1.4 §3.6, тексты act1_texts §16). Значение [a, b] — a на ранге 1, +b за каждый следующий ранг. Правила: до 10 рангов; ранг N требует уровень req + (N−1); тир 2 требует 1 ранг тира 1 своей ветки, тир 3 — 1 ранг активного навыка тира 2 (needs). Очки навыков: +1 за уровень, +1 за миссию (миссий в прототипе нет). Стартовые ранги 1 «Огненного змея» и «Сшибки» даны бесплатно (rules.starter; «Сшибка» — на ЛКМ, решение дизайнера) — допущение прототипа: по GDD на 1 уровне очков 0, а таблица §9.1 считает огонь уже на 1 уровне. Урон навыков растёт только от ранга (не от уровня героя); Дух даёт +1% урона ведовства по §3.3. Аффиксы P10a «Ратный» / P10b «Вещий» дают +ранг всем изученным навыкам своей ветки. Рывок (dash) — вне дерева, на Пробел.",
+ "rules": {
+  "maxRank": 10,
+  "pointsPerLevel": 1,
+  "pointsPerMission": 1,
+  "pointsAtStart": 0,
+  "starter": {
+   "zmey": 1,
+   "sshibka": 1
+  },
+  "starterBar": [
+   "zmey",
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "starterRmb": "zmey",
+  "bonusStat": {
+   "ratnoe": "skillRat",
+   "vedovstvo": "skillVed"
+  },
+  "starterLmb": "sshibka",
+  "_lmbNote": "Решение дизайнера (QA итерации 2, §7): герой начинает с рангом 1 «Сшибки» на ЛКМ. Не хватает Яри — ЛКМ сам бьёт обычным ударом. Цель: упырь mlvl 1 мечом за 1,5–2,5 с."
+ },
+ "branches": [
+  {
+   "id": "ratnoe",
+   "name": "Ратное дело",
+   "key": "ratnoe"
+  },
+  {
+   "id": "vedovstvo",
+   "name": "Ведовство",
+   "key": "ved"
+  }
+ ],
+ "skills": {
+  "sshibka": {
+   "name": "Сшибка",
+   "branch": "ratnoe",
+   "tier": 1,
+   "req": 1,
+   "type": "melee",
+   "icon": "shield_bash",
+   "element": "phys",
+   "cost": [
+    1,
+    0
+   ],
+   "cd": 0,
+   "dmgPct": [
+    150,
+    10
+   ],
+   "arPct": [
+    20,
+    5
+   ],
+   "knockback": 1.0,
+   "textKey": "skill.ratnoe.sshibka"
+  },
+  "chur": {
+   "name": "Чур-оберег",
+   "branch": "ratnoe",
+   "tier": 2,
+   "req": 6,
+   "needs": "sshibka",
+   "type": "buff",
+   "icon": "obereg",
+   "cost": [
+    15,
+    0
+   ],
+   "cd": 0,
+   "duration": 30,
+   "defPct": [
+    50,
+    15
+   ],
+   "resAll": [
+    5,
+    1
+   ],
+   "castTime": 0.5,
+   "textKey": "skill.ratnoe.chur"
+  },
+  "stat": {
+   "name": "Богатырская стать",
+   "branch": "ratnoe",
+   "tier": 2,
+   "req": 6,
+   "needs": "sshibka",
+   "type": "passive",
+   "icon": "bogatyr",
+   "hpPct": [
+    5,
+    5
+   ],
+   "physPct": [
+    3,
+    3
+   ],
+   "textKey": "skill.ratnoe.stat"
+  },
+  "secha": {
+   "name": "Круговая сеча",
+   "branch": "ratnoe",
+   "tier": 3,
+   "req": 12,
+   "needs": "chur",
+   "type": "channel",
+   "icon": "axe",
+   "cost": [
+    2,
+    0
+   ],
+   "tick": 0.4,
+   "radius": 1.5,
+   "dmgPct": [
+    60,
+    5
+   ],
+   "moveMul": 0.7,
+   "implemented": false,
+   "textKey": "skill.ratnoe.secha"
+  },
+  "zmey": {
+   "name": "Огненный змей",
+   "branch": "vedovstvo",
+   "tier": 1,
+   "req": 1,
+   "type": "projectile",
+   "icon": "fire_serpent",
+   "element": "fire",
+   "cost": [
+    5,
+    0.5
+   ],
+   "cd": 0,
+   "speed": 10,
+   "range": 12,
+   "radius": 1.0,
+   "min": [
+    6,
+    3
+   ],
+   "max": [
+    10,
+    4
+   ],
+   "knockback": 0.55,
+   "textKey": "skill.ved.zmey"
+  },
+  "morozko": {
+   "name": "Дыхание Морозко",
+   "branch": "vedovstvo",
+   "tier": 2,
+   "req": 6,
+   "needs": "zmey",
+   "type": "projectile",
+   "icon": "frost",
+   "element": "cold",
+   "cost": [
+    4,
+    0
+   ],
+   "cd": 0,
+   "speed": 14,
+   "range": 12,
+   "radius": 0,
+   "min": [
+    4,
+    2
+   ],
+   "max": [
+    7,
+    4
+   ],
+   "slowPct": 50,
+   "slowTime": [
+    2,
+    0.3
+   ],
+   "knockback": 0.2,
+   "rangeNote": "дальность в GDD не задана — взята как у «Огненного змея» (12)",
+   "textKey": "skill.ved.morozko"
+  },
+  "veshchee": {
+   "name": "Вещее слово",
+   "branch": "vedovstvo",
+   "tier": 2,
+   "req": 6,
+   "needs": "zmey",
+   "type": "passive",
+   "icon": "veshchee",
+   "regenPct": [
+    10,
+    10
+   ],
+   "elemPct": [
+    6,
+    6
+   ],
+   "textKey": "skill.ved.veshchee"
+  },
+  "skok": {
+   "name": "Перунов скок",
+   "branch": "vedovstvo",
+   "tier": 3,
+   "req": 12,
+   "needs": "morozko",
+   "type": "teleport",
+   "icon": "perun",
+   "element": "fire",
+   "cost": [
+    20,
+    -1
+   ],
+   "cd": 3,
+   "range": [
+    6,
+    0.5
+   ],
+   "radius": 1.0,
+   "min": [
+    5,
+    1
+   ],
+   "max": [
+    10,
+    2
+   ],
+   "textKey": "skill.ved.skok"
+  }
+ },
+ "dash": {
+  "name": "Рывок",
+  "type": "dash",
+  "icon": "ryvok",
+  "key": "Пробел",
+  "cost": 0,
+  "cd": 4,
+  "dist": 3,
+  "time": 0.2,
+  "invuln": 0.15,
+  "textKey": "skill.dash"
+ }
+}

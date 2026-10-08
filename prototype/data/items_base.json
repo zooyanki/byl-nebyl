@@ -1,0 +1,641 @@
+{
+ "_about": "Базы предметов (GDD v1.4 §6.2, act1_texts §11): 27 баз с gender, shortName (суффикс ставится после короткого имени), reqLevel. Посохи (staff_*) описаны, но в прототипе не выпадают (implemented: false: двуручие и иконка — позже). Стартовый комплект: скрамасакс, малый щит, клёпаный шелом, короткая кольчуга. Зелья — §4.4 (КД 1 с, лечение 3 с, повтор добавляет к остатку).",
+ "slots": [
+  "head",
+  "neck",
+  "body",
+  "rhand",
+  "lhand",
+  "gloves",
+  "ring1",
+  "belt",
+  "ring2",
+  "feet"
+ ],
+ "slotNames": {
+  "head": "Голова",
+  "neck": "Шея",
+  "body": "Тело",
+  "rhand": "Десница",
+  "lhand": "Шуйца",
+  "gloves": "Руки",
+  "ring1": "Перстень",
+  "ring2": "Перстень",
+  "belt": "Пояс",
+  "feet": "Ноги"
+ },
+ "typeSlots": {
+  "sword": [
+   "rhand"
+  ],
+  "axe": [
+   "rhand"
+  ],
+  "body": [
+   "body"
+  ],
+  "head": [
+   "head"
+  ],
+  "shield": [
+   "lhand"
+  ],
+  "gloves": [
+   "gloves"
+  ],
+  "feet": [
+   "feet"
+  ],
+  "belt": [
+   "belt"
+  ],
+  "neck": [
+   "neck"
+  ],
+  "ring": [
+   "ring1",
+   "ring2"
+  ],
+  "staff": [
+   "rhand"
+  ]
+ },
+ "rarity": {
+  "normal": {
+   "name": "Простой",
+   "color": "linen",
+   "tint": "slate_dk"
+  },
+  "magic": {
+   "name": "Заговорённый",
+   "color": "blue_lt",
+   "tint": "blue_dk"
+  },
+  "rare": {
+   "name": "Дивный",
+   "color": "flame",
+   "tint": "bronze_dk"
+  },
+  "unique": {
+   "name": "Былинный",
+   "color": "bronze_lt",
+   "tint": "wood"
+  }
+ },
+ "bases": [
+  {
+   "id": "sword_1",
+   "name": "Скрамасакс",
+   "shortName": "Скрамасакс",
+   "gender": "m",
+   "type": "sword",
+   "reqLevel": 1,
+   "w": 1,
+   "h": 3,
+   "icon": "scramasax",
+   "dmg": [
+    2,
+    7
+   ],
+   "speed": 1.4,
+   "crit": 10
+  },
+  {
+   "id": "sword_2",
+   "name": "Меч дружинника",
+   "shortName": "Меч",
+   "gender": "m",
+   "type": "sword",
+   "reqLevel": 6,
+   "w": 1,
+   "h": 3,
+   "icon": "sword",
+   "dmg": [
+    4,
+    11
+   ],
+   "speed": 1.4,
+   "crit": 10
+  },
+  {
+   "id": "sword_3",
+   "name": "Меч-каролинг",
+   "shortName": "Меч-каролинг",
+   "gender": "m",
+   "type": "sword",
+   "reqLevel": 12,
+   "w": 1,
+   "h": 3,
+   "icon": "sword_eq",
+   "dmg": [
+    7,
+    17
+   ],
+   "speed": 1.4,
+   "crit": 10
+  },
+  {
+   "id": "axe_1",
+   "name": "Топорик",
+   "shortName": "Топорик",
+   "gender": "m",
+   "type": "axe",
+   "reqLevel": 1,
+   "w": 1,
+   "h": 3,
+   "icon": "axe",
+   "dmg": [
+    3,
+    8
+   ],
+   "speed": 1.1,
+   "vsNechist": 20
+  },
+  {
+   "id": "axe_2",
+   "name": "Секира",
+   "shortName": "Секира",
+   "gender": "f",
+   "type": "axe",
+   "reqLevel": 6,
+   "w": 1,
+   "h": 3,
+   "icon": "axe",
+   "dmg": [
+    6,
+    14
+   ],
+   "speed": 1.1,
+   "vsNechist": 20
+  },
+  {
+   "id": "axe_3",
+   "name": "Бородовидная секира",
+   "shortName": "Бородовидная секира",
+   "gender": "f",
+   "type": "axe",
+   "reqLevel": 12,
+   "w": 1,
+   "h": 3,
+   "icon": "axe",
+   "dmg": [
+    9,
+    20
+   ],
+   "speed": 1.1,
+   "vsNechist": 20
+  },
+  {
+   "id": "staff_1",
+   "name": "Посох странника",
+   "shortName": "Посох",
+   "gender": "m",
+   "type": "staff",
+   "reqLevel": 1,
+   "w": 1,
+   "h": 4,
+   "icon": "staff",
+   "dmg": [
+    2,
+    6
+   ],
+   "speed": 1.0,
+   "mana": 10,
+   "twoHanded": true,
+   "vedBonusChance": "+1–2 к ветке «Ведовство» (GDD §6.2)",
+   "implemented": false
+  },
+  {
+   "id": "staff_2",
+   "name": "Резной посох",
+   "shortName": "Резной посох",
+   "gender": "m",
+   "type": "staff",
+   "reqLevel": 6,
+   "w": 1,
+   "h": 4,
+   "icon": "staff",
+   "dmg": [
+    4,
+    9
+   ],
+   "speed": 1.0,
+   "mana": 20,
+   "twoHanded": true,
+   "vedBonusChance": "+1–2 к ветке «Ведовство» (GDD §6.2)",
+   "implemented": false
+  },
+  {
+   "id": "staff_3",
+   "name": "Посох-чур",
+   "shortName": "Посох-чур",
+   "gender": "m",
+   "type": "staff",
+   "reqLevel": 12,
+   "w": 1,
+   "h": 4,
+   "icon": "staff",
+   "dmg": [
+    6,
+    13
+   ],
+   "speed": 1.0,
+   "mana": 30,
+   "twoHanded": true,
+   "vedBonusChance": "+1–2 к ветке «Ведовство» (GDD §6.2)",
+   "implemented": false
+  },
+  {
+   "id": "body_1",
+   "name": "Короткая кольчуга",
+   "shortName": "Короткая кольчуга",
+   "gender": "f",
+   "type": "body",
+   "reqLevel": 1,
+   "w": 2,
+   "h": 3,
+   "icon": "steganka",
+   "armor": [
+    8,
+    11
+   ]
+  },
+  {
+   "id": "body_2",
+   "name": "Кольчуга",
+   "shortName": "Кольчуга",
+   "gender": "f",
+   "type": "body",
+   "reqLevel": 5,
+   "w": 2,
+   "h": 3,
+   "icon": "kolchuga_eq",
+   "armor": [
+    18,
+    24
+   ]
+  },
+  {
+   "id": "body_3",
+   "name": "Дощатая броня",
+   "shortName": "Дощатая броня",
+   "gender": "f",
+   "type": "body",
+   "reqLevel": 11,
+   "w": 2,
+   "h": 3,
+   "icon": "kolchuga",
+   "armor": [
+    35,
+    45
+   ]
+  },
+  {
+   "id": "head_1",
+   "name": "Клёпаный шелом",
+   "shortName": "Клёпаный шелом",
+   "gender": "m",
+   "type": "head",
+   "reqLevel": 1,
+   "w": 2,
+   "h": 2,
+   "icon": "shapka",
+   "armor": [
+    3,
+    5
+   ]
+  },
+  {
+   "id": "head_2",
+   "name": "Шелом с наносником",
+   "shortName": "Шелом",
+   "gender": "m",
+   "type": "head",
+   "reqLevel": 5,
+   "w": 2,
+   "h": 2,
+   "icon": "shelom",
+   "armor": [
+    8,
+    11
+   ]
+  },
+  {
+   "id": "head_3",
+   "name": "Шелом с полумаской",
+   "shortName": "Шелом",
+   "gender": "m",
+   "type": "head",
+   "reqLevel": 11,
+   "w": 2,
+   "h": 2,
+   "icon": "shelom",
+   "armor": [
+    15,
+    20
+   ]
+  },
+  {
+   "id": "shield_1",
+   "name": "Малый щит",
+   "shortName": "Малый щит",
+   "gender": "m",
+   "type": "shield",
+   "reqLevel": 1,
+   "w": 2,
+   "h": 2,
+   "icon": "shield_small",
+   "armor": [
+    4,
+    6
+   ],
+   "block": 15
+  },
+  {
+   "id": "shield_2",
+   "name": "Круглый щит",
+   "shortName": "Круглый щит",
+   "gender": "m",
+   "type": "shield",
+   "reqLevel": 5,
+   "w": 2,
+   "h": 2,
+   "icon": "shield_sm",
+   "armor": [
+    9,
+    13
+   ],
+   "block": 20
+  },
+  {
+   "id": "shield_3",
+   "name": "Каплевидный щит",
+   "shortName": "Каплевидный щит",
+   "gender": "m",
+   "type": "shield",
+   "reqLevel": 11,
+   "w": 2,
+   "h": 2,
+   "icon": "shield",
+   "armor": [
+    18,
+    24
+   ],
+   "block": 25
+  },
+  {
+   "id": "gloves_1",
+   "name": "Кожаные рукавицы",
+   "shortName": "Кожаные рукавицы",
+   "gender": "pl",
+   "type": "gloves",
+   "reqLevel": 1,
+   "w": 2,
+   "h": 2,
+   "icon": "rukavitsy",
+   "armor": [
+    2,
+    3
+   ]
+  },
+  {
+   "id": "gloves_2",
+   "name": "Боевые рукавицы",
+   "shortName": "Боевые рукавицы",
+   "gender": "pl",
+   "type": "gloves",
+   "reqLevel": 8,
+   "w": 2,
+   "h": 2,
+   "icon": "rukavitsy",
+   "armor": [
+    6,
+    9
+   ]
+  },
+  {
+   "id": "boots_1",
+   "name": "Поршни",
+   "shortName": "Поршни",
+   "gender": "pl",
+   "type": "feet",
+   "reqLevel": 1,
+   "w": 2,
+   "h": 2,
+   "icon": "porshni",
+   "armor": [
+    2,
+    3
+   ]
+  },
+  {
+   "id": "boots_2",
+   "name": "Сапоги",
+   "shortName": "Сапоги",
+   "gender": "pl",
+   "type": "feet",
+   "reqLevel": 8,
+   "w": 2,
+   "h": 2,
+   "icon": "sapogi",
+   "armor": [
+    6,
+    9
+   ]
+  },
+  {
+   "id": "belt_1",
+   "name": "Кожаный пояс",
+   "shortName": "Кожаный пояс",
+   "gender": "m",
+   "type": "belt",
+   "reqLevel": 1,
+   "w": 2,
+   "h": 1,
+   "icon": "kushak",
+   "armor": [
+    2,
+    2
+   ]
+  },
+  {
+   "id": "belt_2",
+   "name": "Наборный пояс",
+   "shortName": "Наборный пояс",
+   "gender": "m",
+   "type": "belt",
+   "reqLevel": 8,
+   "w": 2,
+   "h": 1,
+   "icon": "poyas",
+   "armor": [
+    5,
+    7
+   ]
+  },
+  {
+   "id": "neck_1",
+   "name": "Оберег-подвеска",
+   "shortName": "Оберег",
+   "gender": "m",
+   "type": "neck",
+   "reqLevel": 1,
+   "w": 1,
+   "h": 1,
+   "icon": "lunnitsa",
+   "icons": [
+    "lunnitsa",
+    "gromovnik"
+   ],
+   "magicOnly": true
+  },
+  {
+   "id": "neck_2",
+   "name": "Гривна",
+   "shortName": "Гривна",
+   "gender": "f",
+   "type": "neck",
+   "reqLevel": 1,
+   "w": 1,
+   "h": 1,
+   "icon": "grivna",
+   "magicOnly": true
+  },
+  {
+   "id": "ring_1",
+   "name": "Перстень",
+   "shortName": "Перстень",
+   "gender": "m",
+   "type": "ring",
+   "reqLevel": 1,
+   "w": 1,
+   "h": 1,
+   "icon": "ring_ruby",
+   "icons": [
+    "ring_ruby",
+    "ring_amber"
+   ],
+   "magicOnly": true
+  }
+ ],
+ "starterKit": [
+  {
+   "slot": "rhand",
+   "base": "sword_1"
+  },
+  {
+   "slot": "lhand",
+   "base": "shield_1",
+   "armor": 5
+  },
+  {
+   "slot": "head",
+   "base": "head_1",
+   "armor": 4
+  },
+  {
+   "slot": "body",
+   "base": "body_1",
+   "armor": 9
+  }
+ ],
+ "starterBelt": [
+  {
+   "kind": "life1",
+   "count": 2
+  },
+  {
+   "kind": "life1",
+   "count": 1
+  },
+  {
+   "kind": "yar1",
+   "count": 2
+  },
+  null
+ ],
+ "potions": {
+  "life1": {
+   "name": "Слабое зелье жизни",
+   "res": "hp",
+   "amount": 45,
+   "dur": 3,
+   "icon": "potion_life",
+   "mlvl": [
+    1,
+    7
+   ],
+   "price": 15
+  },
+  "life2": {
+   "name": "Целебное зелье жизни",
+   "res": "hp",
+   "amount": 90,
+   "dur": 3,
+   "icon": "potion_life",
+   "mlvl": [
+    6,
+    99
+   ],
+   "price": 40
+  },
+  "life3": {
+   "name": "Крепкое зелье жизни",
+   "res": "hp",
+   "amount": 160,
+   "dur": 3,
+   "icon": "potion_life",
+   "mlvl": [
+    12,
+    99
+   ],
+   "price": 90
+  },
+  "yar1": {
+   "name": "Слабое зелье Яри",
+   "res": "yar",
+   "amount": 30,
+   "dur": 3,
+   "icon": "potion_mana",
+   "mlvl": [
+    1,
+    7
+   ],
+   "price": 15
+  },
+  "yar2": {
+   "name": "Зелье Яри",
+   "res": "yar",
+   "amount": 60,
+   "dur": 3,
+   "icon": "potion_mana",
+   "mlvl": [
+    6,
+    99
+   ],
+   "price": 40
+  },
+  "yar3": {
+   "name": "Крепкое зелье Яри",
+   "res": "yar",
+   "amount": 110,
+   "dur": 3,
+   "icon": "potion_mana",
+   "mlvl": [
+    12,
+    99
+   ],
+   "price": 90
+  },
+  "zhivaya": {
+   "name": "Живая вода",
+   "res": "both",
+   "pct": 0.35,
+   "dur": 0,
+   "icon": "potion_zhivaya"
+  }
+ },
+ "beltSize": 4,
+ "beltStack": 5,
+ "potionCooldown": 1.0
+}

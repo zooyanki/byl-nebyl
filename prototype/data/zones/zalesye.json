@@ -1,0 +1,212 @@
+{
+ "_about": "Зона «Залесье» (GDD v1.3 §8.1–8.2; решения дизайнера по QA итерации 2, §7). Первая половина зоны (север: изба 1, изба 2 за частоколом) — mlvl 1; вторая половина (юг и восток: третья изба — развалины, колодец с Чуровым камнем, выход на тропу к капищу) — mlvl 2; ≈60% врагов mlvl 1 / 40% mlvl 2. Стаи: mlvl 1 — упыри 3–4, анчутки 4–5; mlvl 2 — упыри 3, анчутки 4, смешанная не больше 3 упырей + 2 анчуток. Первая встреча — 3 упыря mlvl 1 (изба 1). Всего ровно 30: 18 mlvl 1 + 12 mlvl 2, без элиты (GDD v1.5). Центры стай — не ближе packMinDist = радиус тихого круга + 2 (крада 10 → 12, Чуров камень 6 → 8). Мара Пепельная (mlvl 4, свита 4–6 анчуток mlvl 2) в прототипе не появляется — запись на будущее.",
+ "id": "zalesye",
+ "name": "Залесье",
+ "band": [
+  "Залесье",
+  "Акт I · Миссия 1 из 3"
+ ],
+ "realm": "byl",
+ "mission": "m1",
+ "mlvl": [
+  1,
+  2
+ ],
+ "repopulate": "onHeroRespawn",
+ "respawnPoint": "krada",
+ "safeZones": [
+  {
+   "at": "krada",
+   "radius": 10,
+   "_note": "QA B-16 / решение дизайнера: нечисть не заходит бродить, не замечает героя внутри; если герой забежал внутрь — погоня обрывается, как по поводку",
+   "packMinDist": 12
+  },
+  {
+   "at": "churStone",
+   "radius": 6,
+   "_note": "Чуров камень у колодца во второй половине зоны",
+   "packMinDist": 8
+  }
+ ],
+ "landmarks": {
+  "well": {
+   "x": 35,
+   "y": 37,
+   "size": 2
+  },
+  "churStone": {
+   "x": 33,
+   "y": 36
+  },
+  "exit": {
+   "x": 44.5,
+   "y": 45,
+   "to": "trail"
+  }
+ },
+ "tracker": {
+  "title": "Окрестности Залесья",
+  "goal": "Очисти Залесье"
+ },
+ "packs": [
+  {
+   "x": 9.5,
+   "y": 19.5,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr"
+   ],
+   "mlvl": 1,
+   "role": "izba1",
+   "_note": "первая встреча: 3 упыря mlvl 1"
+  },
+  {
+   "x": 21.5,
+   "y": 9.5,
+   "kinds": [
+    "anchutka",
+    "anchutka",
+    "anchutka",
+    "anchutka"
+   ],
+   "mlvl": 1,
+   "role": "roaming"
+  },
+  {
+   "x": 6.5,
+   "y": 9.5,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr"
+   ],
+   "mlvl": 1,
+   "role": "roaming"
+  },
+  {
+   "x": 36.5,
+   "y": 14.5,
+   "kinds": [
+    "anchutka",
+    "anchutka",
+    "anchutka",
+    "anchutka"
+   ],
+   "mlvl": 1,
+   "role": "roaming"
+  },
+  {
+   "x": 40.5,
+   "y": 4.5,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr",
+    "upyr"
+   ],
+   "mlvl": 1,
+   "role": "izba2"
+  },
+  {
+   "x": 17.5,
+   "y": 36.5,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr"
+   ],
+   "mlvl": 2,
+   "role": "izba3"
+  },
+  {
+   "x": 41.5,
+   "y": 30.5,
+   "kinds": [
+    "anchutka",
+    "anchutka",
+    "anchutka",
+    "anchutka"
+   ],
+   "mlvl": 2,
+   "role": "roaming"
+  },
+  {
+   "x": 42.5,
+   "y": 42.5,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr",
+    "anchutka",
+    "anchutka"
+   ],
+   "mlvl": 2,
+   "role": "exit"
+  }
+ ],
+ "mlvlRules": {
+  "firstHalf": 1,
+  "secondHalf": 2,
+  "izba1": 1,
+  "izba2": 1,
+  "izba3": 2,
+  "well": 2,
+  "exit": 2,
+  "maraRetinue": 2,
+  "packSize": {
+   "1": {
+    "upyr": [
+     3,
+     4
+    ],
+    "anchutka": [
+     4,
+     5
+    ]
+   },
+   "2": {
+    "upyr": [
+     3,
+     3
+    ],
+    "anchutka": [
+     4,
+     4
+    ],
+    "mixedMax": {
+     "upyr": 3,
+     "anchutka": 2
+    }
+   }
+  }
+ },
+ "uniques": [
+  {
+   "id": "mara",
+   "name": "Мара Пепельная",
+   "mlvl": 4,
+   "optional": true,
+   "retinue": {
+    "kind": "anchutka",
+    "count": [
+     4,
+     6
+    ],
+    "mlvl": 2
+   },
+   "implemented": false
+  }
+ ],
+ "enemyCount": {
+  "mlvl1": 18,
+  "mlvl2": 12,
+  "elites": 0,
+  "_note": "GDD v1.5: ровно 18 врагов mlvl 1 + 12 mlvl 2, без элиты"
+ },
+ "checkpoint": {
+  "exitLevel": 2,
+  "tolerance": 1,
+  "_note": "GDD v1.5 §9.3: выход из Залесья — 2-й уровень (±1)"
+ }
+}

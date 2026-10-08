@@ -1,0 +1,20 @@
+{
+ "character": "Черноярец-поджигатель",
+ "animation": "torch flame loop",
+ "pivot": [
+  8,
+  22
+ ],
+ "fps": 10,
+ "loop": true,
+ "notes": "optional overlay; root = pivot; matches the baked flame",
+ "image": "arsonist_torch_flame.png",
+ "frame_size": [
+  16,
+  24
+ ],
+ "frame_count": 6,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

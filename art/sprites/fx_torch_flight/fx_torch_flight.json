@@ -1,0 +1,21 @@
+{
+ "effect": "Поджигатель: полёт факела",
+ "direction": "travels to +x (screen right)",
+ "mirror_for": "travel to -x",
+ "pivot": [
+  16,
+  16
+ ],
+ "fps": 12,
+ "loop": true,
+ "notes": "spins 90 deg per frame; flame streams back; draw the engine shadow on the ground under the arc",
+ "image": "fx_torch_flight.png",
+ "frame_size": [
+  32,
+  32
+ ],
+ "frame_count": 4,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

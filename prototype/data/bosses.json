@@ -1,0 +1,49 @@
+{
+ "_about": "Заготовка боссов (GDD v1.5 §5.3, §15). Конвенция сопротивлений: + — сопротивление, − — уязвимость. Числа HP/урона появятся на этапе контента; в прототипе боссов нет (implemented: false).",
+ "mara": {
+  "name": "Мара Пепельная",
+  "zone": "zalesye",
+  "mlvl": 4,
+  "retinue": {
+   "kind": "anchutka",
+   "count": [
+    4,
+    6
+   ],
+   "mlvl": 2
+  },
+  "res": {
+   "fire": 0.25,
+   "cold": 0,
+   "poison": 0
+  },
+  "implemented": false
+ },
+ "leshy": {
+  "name": "Леший",
+  "res": {
+   "fire": -0.25,
+   "cold": 0,
+   "poison": 0
+  },
+  "implemented": false
+ },
+ "krivsha": {
+  "name": "Кривша",
+  "zone": "kapishche",
+  "mlvl": 6,
+  "res": {
+   "fire": 0,
+   "cold": 0,
+   "poison": 0
+  },
+  "phases": {
+   "fire": {
+    "res": {
+     "fire": 0.25
+    }
+   }
+  },
+  "implemented": false
+ }
+}

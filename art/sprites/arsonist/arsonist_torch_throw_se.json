@@ -1,0 +1,59 @@
+{
+ "character": "Черноярец-поджигатель",
+ "animation": "torch_throw",
+ "direction": "se",
+ "mirror_for": "sw",
+ "mirror_rule": "flip horizontally around the frame centre line x = 32.0; pivot stays (32, 56)",
+ "pivot": [
+  32,
+  56
+ ],
+ "fps": 10,
+ "loop": false,
+ "visible_height_px": [
+  55,
+  56,
+  46,
+  44,
+  46
+ ],
+ "height_rule": "pivot row (soles) to the top visible pixel, outline included",
+ "notes": "Recolour of the черноярец-топорщик (base designed here) + torch in the LEFT hand. Body 46, raised torch with flame <= 56. Colours (v2 recolour 08.10): soot-grey shirt with smouldering ember stripes; red is reserved for the hero (scale.md §4.4).",
+ "anchors": {
+  "torch_flame_root": [
+   [
+    22.9,
+    14.3
+   ],
+   [
+    28.2,
+    11.3
+   ],
+   [
+    51.5,
+    23.2
+   ],
+   null,
+   null
+  ]
+ },
+ "torch_flame": "baked into the frames (phase = frame % 6); for an independent 6-frame flame loop overlay arsonist_torch_flame at anchors.torch_flame_root",
+ "events": {
+  "release_frame": 3,
+  "spawn_effect": "fx_torch_flight",
+  "spawn_at_px": [
+   51.5,
+   23.2
+  ],
+  "note": "torch leaves the hand between frames 2 and 3 (0-based); telegraph 0.8 s (red circle) per GDD E11"
+ },
+ "image": "arsonist_torch_throw_se.png",
+ "frame_size": [
+  64,
+  64
+ ],
+ "frame_count": 5,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

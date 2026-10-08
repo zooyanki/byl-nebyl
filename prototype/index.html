@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Быль и Небыль — прототип (итерация 2)</title>
+  <link rel="icon" href="data:,">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html, body { margin: 0; height: 100%; background: #0d0b0a; overflow: hidden; }
+    body { display: flex; align-items: center; justify-content: center; }
+    canvas { image-rendering: pixelated; image-rendering: crisp-edges; cursor: none; display: block; }
+    #small-warn { position: fixed; left: 0; right: 0; top: 0; padding: 4px 8px; background: #2a1d14; color: #f2ecd8; font: 13px sans-serif; text-align: center; z-index: 2; }
+    noscript { color: #f2ecd8; font-family: sans-serif; }
+  </style>
+</head>
+<body>
+  <canvas id="game" width="640" height="360"></canvas>
+  <noscript>Для игры нужен JavaScript.</noscript>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
