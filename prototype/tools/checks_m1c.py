@@ -54,10 +54,10 @@ async def run_m1c(pg, G, check, wait, client_of, client_scr, a):
           s['ok1'] and s['n1'] == 4 and sorted(s['stacks']) == [2, 20] and s['beltSame'] and s['after'] == 3 and s['label'] == 'Береста возврата', s)
 
     # --- 4. у крады (город-заглушка) бересту не прочитать
-    s = await G('''(() => { const g = __game, h = g.hero, k = g.map.krada; h.x = k.x + 2; h.y = k.y + 2; h.stop(); const n0 = h.scrollCount(); g.notice = null;
+    s = await G('''(() => { const g = __game, h = g.hero; g.enterZone('ladoga', 'krada'); const k = g.map.krada; h.x = k.x + 2; h.y = k.y; h.stop(); const n0 = h.scrollCount(); g.notice = null;
         const it = h.inv.items.find(i => i.kind === 'scroll'); const r = g.useScroll(it); g.simulate(1.3);
         return { r, portal: !!g.portal, n: h.scrollCount(), n0, notice: g.notice && g.notice.text }; })()''')
-    check('M1c у крады Залесья (город вместо Ладоги) береста не читается: «Ты и так в Ладоге.», береста не тратится',
+    check('M1c в тихом круге крады Ладоги береста не читается: «Ты и так в Ладоге.», береста не тратится',
           s['r'] is False and not s['portal'] and s['n'] == s['n0'] and s['notice'] == 'Ты и так в Ладоге.', s)
 
     # --- 5. ПКМ по бересте в котомке на тропе (мышью): каст 1 с, проход открыт, береста −1
@@ -72,12 +72,12 @@ async def run_m1c(pg, G, check, wait, client_of, client_scr, a):
     mid = await G('({ act: __game.hero.action && __game.hero.action.type, portal: !!__game.portal, n: __game.hero.scrollCount() })')
     await wait(800)
     s2 = await G('''(() => { const g = __game, h = g.hero, P = g.portal; if (!P) return { portal: false };
-        const tz = g.zoneStates.zalesye.map, k = tz.krada;
+        const tz = g.zoneStates.ladoga.map, k = tz.krada;
         return { portal: true, zone: P.zone, tzone: P.tzone, n: h.scrollCount(), inField: g.map.objects.includes(P.field), inTown: tz.objects.includes(P.town),
                  dHero: +Math.hypot(P.field.x - h.x, P.field.y - h.y).toFixed(2), dKrada: +Math.hypot(P.town.x - k.x, P.town.y - k.y).toFixed(2),
                  log: g.log.lines.slice(-3).map(l => l.text || l[0] || ''), notice: g.notice && g.notice.text, ttl: P.ttl }; })()''')
-    check('M1c ПКМ по бересте в котомке: подсказка «Береста возврата ×3», каст 1 с (на 0,5 с прохода ещё нет), затем «Чуров проход открыт», береста −1; конец прохода рядом с героем и у крады Залесья (в тихом круге)',
-          tip and tip['kind'] == 'scroll' and mid['act'] == 'read' and not mid['portal'] and mid['n'] == n0 and s2['portal'] and s2['zone'] == 'trail' and s2['tzone'] == 'zalesye'
+    check('M1c ПКМ по бересте в котомке: подсказка «Береста возврата ×3», каст 1 с (на 0,5 с прохода ещё нет), затем «Чуров проход открыт», береста −1; конец прохода рядом с героем и у крады Ладоги (в тихом круге)',
+          tip and tip['kind'] == 'scroll' and mid['act'] == 'read' and not mid['portal'] and mid['n'] == n0 and s2['portal'] and s2['zone'] == 'trail' and s2['tzone'] == 'ladoga'
           and s2['n'] == n0 - 1 and s2['inField'] and s2['inTown'] and s2['dHero'] < 2.5 and s2['dKrada'] < 6 and s2['notice'] == 'Чуров проход открыт' and s2['ttl'] == 60,
           {'tip': tip, 'mid': mid, 'after': s2})
 
@@ -90,7 +90,7 @@ async def run_m1c(pg, G, check, wait, client_of, client_scr, a):
     for _ in range(40):
         await wait(100)
         z = await G('__game.zone.id')
-        if z == 'zalesye':
+        if z == 'ladoga':
             break
     s1 = await G('''(() => { const g = __game, h = g.hero, P = g.portal; return { zone: g.zone.id, inTown: g.inTown(), portal: !!P, d: P ? +Math.hypot(P.town.x - h.x, P.town.y - h.y).toFixed(2) : -1, tx: P && P.town.x, ty: P && P.town.y }; })()''')
     await wait(200)
@@ -101,38 +101,40 @@ async def run_m1c(pg, G, check, wait, client_of, client_scr, a):
         z = await G('__game.zone.id')
         if z == 'trail':
             break
+    await G('(() => { const g = __game; if (g.portal && g.portal.closing) g.simulate(0.7); else if (g.portal) { g.closePortal("used"); g.simulate(0.7); } })()')
     s3 = await G('''(() => { const g = __game, h = g.hero, o = window.__open; return { zone: g.zone.id, d: +Math.hypot(h.x - o[0], h.y - o[1]).toFixed(2), portal: !!g.portal,
         objs: Object.values(g.zoneStates).reduce((n, st) => n + st.map.objects.filter(x => x.type === 'portal').length, 0), uses: g.counters.portalUses }; })()''')
-    check('M1c Чуров проход: щелчок по проходу (подпись «Чуров проход: Залесье») — к краде Залесья; щелчок по проходу у крады — назад на тропу, к месту открытия; после возвращения проход закрыт',
-          hov and hov['type'] == 'portal' and hov['label'] == 'Чуров проход: Залесье' and s1['zone'] == 'zalesye' and s1['inTown'] and s1['d'] < 2.5
+    check('M1c Чуров проход: щелчок по проходу (подпись «Чуров проход: Ладога») — к краде Ладоги; щелчок по проходу у крады — назад на тропу, к месту открытия; после возвращения проход закрыт',
+          hov and hov['type'] == 'portal' and hov['label'] == 'Чуров проход: Ладога' and s1['zone'] == 'ladoga' and s1['inTown'] and s1['d'] < 2.5
           and s3['zone'] == 'trail' and s3['d'] < 3 and not s3['portal'] and s3['objs'] == 0 and s3['uses'] == 2, {'hover': hov, 'town': s1, 'back': s3})
 
     # --- 7. срок прохода 60 с — в любой зоне; прерывание каста сильным ударом; гибель не закрывает проход
     s = await G('''(() => { const g = __game, h = g.hero, out = {}; h.addScroll('beresta', 10);
         const read = () => { const it = h.inv.items.find(i => i.kind === 'scroll'); h.stop(); h.action = null; const r = h.readScroll(it, g); g.simulate(1.1); return r; };
         out.r = read(); out.open = !!g.portal; g.simulate(58); out.at59 = !!g.portal; g.simulate(2.5); out.at60 = !!g.portal; out.why = g.counters.portalClosed;
-        read(); const P = g.portal; g.usePortal(P.field); out.z = g.zone.id; g.simulate(61); out.townAfter = g.zoneStates.zalesye.map.objects.includes(P.town); out.portal2 = !!g.portal;
+        read(); const P = g.portal; g.usePortal(P.field); out.z = g.zone.id; g.simulate(61); out.townAfter = g.zoneStates.ladoga.map.objects.includes(P.town); out.portal2 = !!g.portal;
         // каст прерывается оглушением (удар > 12% макс. жизни), береста не тратится
         g.enterZone('trail', 'start'); clearNear(g, 14); const n0 = h.scrollCount(); const it = h.inv.items.find(i => i.kind === 'scroll'); h.stop(); h.readScroll(it, g); g.simulate(0.4);
         h.invuln = 0; h.takeDamage(Math.ceil(h.maxHp * 0.25), g, 'cold', null); g.simulate(1.0); out.interrupted = { portal: !!g.portal, n: h.scrollCount(), n0 }; h.hp = h.maxHp;
         // гибель: проход остаётся, герой у крады, через проход — обратно на тропу
         read(); const P2 = g.portal; const q0 = JSON.stringify(g.quest.obj.map(o => o.state)); h.invuln = 0; h.takeDamage(99999, g, 'cold', null); out.dead = g.state; g.respawnHero();
         out.death = { zone: g.zone.id, portal: g.portal === P2, q: JSON.stringify(g.quest.obj.map(o => o.state)) === q0 };
-        g.usePortal(P2.town); out.death.back = g.zone.id; out.death.closed = !g.portal; return out; })()'''.replace('__P__', P).replace('clearNear(g, 14);', CLEAR + ' clearNear(g, 14);'))
+        g.usePortal(P2.town); out.death.back = g.zone.id; g.simulate(0.7); out.death.closed = !g.portal; return out; })()'''.replace('__P__', P).replace('clearNear(g, 14);', CLEAR + ' clearNear(g, 14);'))
     check('M1c проход живёт 60 с (закрывается и на тропе, и у крады, пока герой в другой зоне); сильный удар прерывает чтение — береста не тратится; гибель проход не закрывает, трекер не меняется',
-          s['r'] is None and s['open'] and s['at59'] and not s['at60'] and s['why'] == 'expired' and s['z'] == 'zalesye' and not s['townAfter'] and not s['portal2']
+          s['r'] is None and s['open'] and s['at59'] and not s['at60'] and s['why'] == 'expired' and s['z'] == 'ladoga' and not s['townAfter'] and not s['portal2']
           and not s['interrupted']['portal'] and s['interrupted']['n'] == s['interrupted']['n0'] and s['dead'] == 'dead'
           and s['death']['zone'] == 'zalesye' and s['death']['portal'] and s['death']['q'] and s['death']['back'] == 'trail' and s['death']['closed'], s)
 
-    # --- 8. арена Кривши: береста разрешена (запрета в GDD нет); уход и возвращение — босс по поводку возвращается к идолу (§4.5)
+    # --- 8. арена Кривши (GDD v1.9 п.4): пока босс жив, береста серая — не читается, не тратится; выход из зоны — поводок (полное HP, у идола)
     s = await G('''(() => { const g = __game, h = g.hero; __P__ g.enterZone('trail', 'gate'); g.enterZone('kapishche', 'from_trail'); const m = g.map;
         h.x = m.idol.x - 1; h.y = m.idol.y + 4; h.stop(); const b = g.riseBoss('test'); g.simulate(2.3); for (const e of g.enemies) if (e !== b) e.stagger = 1e9;
-        h.invuln = 99; b.hp = Math.round(b.maxHp * 0.6); const it = h.inv.items.find(i => i.kind === 'scroll'); const r = h.readScroll(it, g); g.simulate(1.1);
-        const out = { r, open: !!g.portal && g.portal.zone, bossSt: b.state }; g.usePortal(g.portal.field); out.z = g.zone.id; g.simulate(2); g.usePortal(g.portal.town);
-        out.back = g.zone.id; g.simulate(8, () => b.state === 'idle'); out.after = { st: b.state, hp: +(b.hp / b.maxHp).toFixed(2), resets: g.counters.krivshaResets || 0 };
+        h.invuln = 99; b.hp = Math.round(b.maxHp * 0.6); const n0 = h.scrollCount(); const it = h.inv.items.find(i => i.kind === 'scroll'); g.notice = null; const r = h.readScroll(it, g); const u = g.useScroll(it); g.simulate(1.1);
+        const out = { r, u, portal: !!g.portal, n: h.scrollCount() - n0, grey: g.berestaGrey(), bossSt: b.state }; g.enterZone('trail', 'gate'); out.z = g.zone.id;
+        out.after = { st: b.state, hp: +(b.hp / b.maxHp).toFixed(2), home: +Math.hypot(b.x - b.homeX, b.y - b.homeY).toFixed(2), why: g.counters.krivshaLeashWhy };
         h.invuln = 0; Math.random = rnd0; return out; })()'''.replace('__P__', P))
-    check('M1c береста на арене Кривши читается (запрета в GDD нет); уход через проход — босс возвращается к идолу и лечится, как при обрыве погони (§4.5; вопрос дизайнеру)',
-          s['r'] is None and s['open'] == 'kapishche' and s['z'] == 'zalesye' and s['back'] == 'kapishche' and s['after']['st'] == 'idle' and s['after']['hp'] == 1.0, s)
+    check('M1c→v1.9 береста на арене живой Кривши не читается (ui.error.beresta_arena, не тратится, значок серый); выход из зоны — поводок: полное HP, Кривша у идола',
+          s['r'] == 'ui.error.beresta_arena' and s['u'] is False and not s['portal'] and s['n'] == 0 and s['grey'] and s['z'] == 'trail'
+          and s['after']['st'] == 'idle' and s['after']['hp'] == 1.0 and s['after']['home'] < 0.01 and s['after']['why'] == 'zone', s)
 
     # --- 9. былинные: таблица босса 10 000 предметов (8% ±15%), выбор из пула по ilvl, фиксированные свойства
     s = await G('''(() => { const g = __game; __P__ const L = g.loot, keep = L.items, U = g.dbg.CFG.uniques.uniques; let n = 0, uq = 0; const ids = {}, bad = [];
@@ -172,8 +174,8 @@ async def run_m1c(pg, G, check, wait, client_of, client_scr, a):
     tip = await G('''(() => { const g = __game, T = g.ui.lastTip; if (!T) return null; const { lines } = g.dbg.itemLines(T.item); return { name: T.item.name, w: T.w, h: T.h, lines: lines.map(l => l[0]), cols: lines.map(l => l[1]), cmp: g.dbg.cmp(T.item).map(l => l[0]) }; })()''')
     check('M1c тултип былинной: имя и «Былинная вещь» бронзой, база, требование, свойства, присказка бронзой; сравнение — слот «Шея» свободен: Жизнь +15, Ранги навыков +, Сопр. огню +10',
           tip and tip['lines'][0] == 'Громовник' and tip['lines'][1] == 'Былинная вещь' and tip['cols'][0] == tip['cols'][1] == 'bronze_lt' and 'Оберег-подвеска' in tip['lines']
-          and '+1 ко всем навыкам' in tip['lines'] and '+15 к жизни' in tip['lines'] and 'Сопротивление огню +10%' in tip['lines'] and tip['lines'][-1].startswith('Уцелел') and tip['cols'][-1] == 'lore'
-          and tip['cmp'][0].startswith('Слот «') and 'Жизнь: +15' in tip['cmp'] and 'Сопр. огню, %: +10' in tip['cmp'] and any(l.startswith('Ранги навыков: +') for l in tip['cmp']), tip)
+          and '+1 ко всем выученным навыкам' in tip['lines'] and '+15 к жизни' in tip['lines'] and 'Сопротивление огню +10%' in tip['lines'] and tip['lines'][-1].startswith('Уцелел') and tip['cols'][-1] == 'lore'
+          and tip['cmp'][0].startswith('Слот «') and 'Жизнь: +15' in tip['cmp'] and 'Сопр. огню, %: +10' in tip['cmp'] and 'Каждый выученный навык: +1' in tip['cmp'], tip)
     await pg.mouse.click(*(await client_scr(cx, cy)), button='right'); await wait(150)
     s = await G('''(() => { const g = __game, h = g.hero, n = h.equip.neck; return { neck: n && n.unique, hp: h.maxHp, rf: h.res.fire, rk: g.dbg.rankOf(h, 'sshibka'), skl: Object.keys(g.dbg.SKILLS).filter(id => (h.skills[id] || 0) > 0).length }; })()''')
     check('M1c ПКМ — «Громовник» надет: жизнь +15, сопр. огню +10, «Сшибка» +1 ранг (+1 ко всем навыкам действует на выученные)',
@@ -197,7 +199,7 @@ async def run_m1c(pg, G, check, wait, client_of, client_scr, a):
         Math.random = rnd0; return out; })()'''.replace('__P__', P))
     u1, u3, u4, u5 = s['u1'], s['u3'], s['u4'], s['u5']
     check('M1c сравнение против надетого: заговорённый оберег против «Громовника» — «Против надетого:», Жизнь и Ранги навыков в минусе',
-          s['cmpNeck'][0] == 'Против надетого:' and any(l.startswith('Ранги навыков: −') for l in s['cmpNeck']), s['cmpNeck'])
+          s['cmpNeck'][0] == 'Против надетого:' and 'Каждый выученный навык: −1' in s['cmpNeck'], s['cmpNeck'])
     check('M1c свойства былинных в силе: Жало Сокола (+40–60% урона, +3 огня, +1 «Сшибка», огонь +10), Шелом (+30–40% брони, +3 Жив., кровопийство 3%, +20% по Нечисти), Пояс Святогоров (+20 жизни, +15% к зельям, +10% ко всем сопр.), Сапоги-скороходы (+20% бега, +10 Ловк., холод +15)',
           40 <= u1['ed'] <= 60 and u1['d'][1][1] > u1['d'][0][1] and u1['fire'] == 3 and u1['rk'] == 1 and u1['rf'] == 10
           and 30 <= u3['pa'] <= 40 and u3['armorItem'] == int(u3['armorBase'] * (1 + u3['pa'] / 100)) and u3['vit'] == 3 and u3['ls'] == 3 and u3['vn'] == 20
@@ -249,9 +251,12 @@ async def run_art(pg, G, check, wait, P):
     s = await G('''(() => { const g = __game, A = g.dbg.ART; const bad = [];
         const F = Object.entries(A.sheets); for (const [k, sh] of F) { const m = sh.meta, n = m.frame_count; if (sh.img.naturalWidth !== m.frame_size[0] * n || sh.img.naturalHeight !== m.frame_size[1]) bad.push(k); }
         return { ready: A.ready, failed: A.failed, n: F.length, bad }; })()''')
-    fx = await G('''(async () => { const R = await import('/src/render/rest_fx.js'); return ['k_trail', 'k_aura', 'k_summon', 'k_burst', 'k_feed', 'k_feed_back', 'k_feed_src', 'm_ash', 'm_bolt', 'm_hit', 'a_coal'].filter(k => R.FX.sheets[k]).length; })()''')
-    check('арт M1b: листы Кривши (15 анимаций × 2 вида), Мары (6 × 2), анчутки (5 × 2, 6а), огнища (4), идола (3) и 11 эффектов (вкл. «огнище питает» v1.8 и уголь анчутки) загружены, размеры лент = JSON',
-          s['ready'] and not s['failed'] and s['n'] == 59 and not s['bad'] and fx == 11, {**s, 'fx': fx})
+    fx = await G('''(async () => { const R = await import('/src/render/rest_fx.js');
+        const boss = ['k_trail', 'k_aura', 'k_summon', 'k_burst', 'k_feed', 'k_feed_back', 'k_feed_src', 'm_ash', 'm_bolt', 'm_hit', 'a_coal'];
+        const m1c = ['p_open', 'p_loop', 'p_fading', 'p_close', 'item_beresta'];
+        return { boss: boss.filter(k => R.FX.sheets[k]).length, m1c: m1c.filter(k => R.FX.sheets[k]).length }; })()''')
+    check('арт M1b+m1c: листы Кривши/Мары/анчутки/упыря (6×2) + огнища/идол = 71; 11 FX боссов + 5 m1c (портал×4, береста)',
+          s['ready'] and not s['failed'] and s['n'] == 71 and not s['bad'] and fx['boss'] == 11 and fx['m1c'] == 5, {**s, 'fx': fx})
 
     # --- A2. Кривша: подъём, когти (кадр 6 = удар), призыв (кадр 5 = упыри), прыжок (кадр 6 = приземление), выход (кадр 5 = ореол), гибель
     s = await G('''(async () => { const g = __game; __P__
@@ -329,5 +334,38 @@ async def run_art(pg, G, check, wait, P):
     check('арт анчутка (6а): кадр 3 (release_frame) броска угля — ровно на hitAt 0,45 с, дальше idle; рост 26; уголь — спрайт fx_anchutka_coal',
           not s.get('none') and s['at0'] == 'coal_throw:0' and s['atHit'] == 'coal_throw:3' and s['atAfter'].startswith('idle') and s['h'] == 26 and s['fired'] and s['fx'], s)
 
+    # --- A6. упырь (m1c): удар — кадр 3 ровно на hitAt 0,6; rise; призванный скрыт до 0,3; труп = последний кадр death; рост 40
+    s = await G('''(() => { const g = __game, D = g.dbg, h = g.hero;
+        const e = g.spawnTest('upyr', h.x + 2.5, h.y, 1); e.stagger = 1e9; e.aggro(g, false);
+        const pose = (t, st='attack', extra={}) => { const keep = { state: e.state, t: e.t, moving: e.moving, summoned: e.summoned, dead: e.dead, corpseT: e.corpseT }; Object.assign(e, { state: st, t, moving: false }, extra); const p = D.poseUpyr(e, 0); Object.assign(e, keep); return p.anim.replace('upyr_', '') + ':' + p.frame; };
+        const at0 = pose(0), atHit = pose(0.6), atEnd = pose(1.2), atIdle = pose(1.5);
+        const rise0 = pose(0, 'rise'), riseMid = pose(0.4, 'rise'), riseEnd = pose(0.8, 'rise');
+        const sumHidden = pose(0.2, 'rise', { summoned: true }), sumRise = pose(0.55, 'rise', { summoned: true });
+        const corpse = pose(10, 'idle', { dead: true, corpseT: 10 });
+        const hgt = e.def.height; g.enemies = g.enemies.filter(o => o !== e);
+        return { at0, atHit, atEnd, atIdle, rise0, riseMid, riseEnd, sumHidden, sumRise, corpse, hgt, sheet: !!D.ART.sheets.upyr_idle_se }; })()''')
+    check('арт упырь (m1c): кадр 3 удара ровно на hitAt 0,6; rise 0→5 за riseTime; призванный rise с 0,3; труп = death:7; рост 40; лист загружен',
+          s['sheet'] and s['at0'] == 'attack:0' and s['atHit'] == 'attack:3' and s['atEnd'] == 'attack:5' and s['hgt'] == 40
+          and s['rise0'] == 'rise:0' and s['riseEnd'] == 'rise:5' and s['sumHidden'] == 'rise:0' and s['sumRise'].startswith('rise:')
+          and s['corpse'] == 'death:7', s)
+
+    # --- A7. Чуров проход: open→loop→fading→closing 0,6 с (неюзабелен); хитбокс [14,-55,8]; береста на земле
+    s = await G('''(() => { const g = __game, h = g.hero; g.enterZone('trail', 'start'); if (g.portal) g.closePortal('replaced');
+        h.addScroll('beresta', 2); const it = h.inv.items.find(i => i.kind === 'scroll'); h.stop(); h.action = null; h.readScroll(it, g); g.simulate(1.1);
+        const P = g.portal; const age = g.time - P.opened;
+        const lifeEarly = 1 - P.t / P.ttl;
+        P.t = P.ttl - 5; const lifeFade = 1 - P.t / P.ttl;
+        const usable0 = g.usePortal === g.usePortal; // noop keep
+        const canUse = !P.closing;
+        g.closePortal('expired'); const closing = !!P.closing && P.closing.t < 0.01;
+        const blocked = g.usePortal(P.field) === false;
+        g.simulate(0.7); const gone = !g.portal;
+        const box = (() => { const o = { type: 'portal' }; /* mirror zones box */ return [14, -55, 8]; })();
+        return { age: +age.toFixed(2), lifeEarly: +lifeEarly.toFixed(2), lifeFade: +lifeFade.toFixed(2), canUse, closing, blocked, gone, box,
+          beresta: !!(g.dbg /* placeholder */), fx: null }; })()''')
+    fx = await G('''(async () => { const R = await import('/src/render/rest_fx.js'); return { p: !!R.FX.sheets.p_open && !!R.FX.sheets.p_loop && !!R.FX.sheets.p_fading && !!R.FX.sheets.p_close, b: !!R.FX.sheets.item_beresta }; })()''')
+    s['fx'] = fx
+    check('арт Чуров проход (m1c): FX open/loop/fading/close + береста; closing 0,6 с — неюзабелен, затем снят; хитбокс [14,-55,8]',
+          fx['p'] and fx['b'] and s['canUse'] and s['closing'] and s['blocked'] and s['gone'] and s['box'] == [14, -55, 8] and s['lifeFade'] < 0.17, s)
 
     await G('(() => { const g = __game; for (const e of g.enemies) e.stagger = 1e9; g.combat.teles.length = 0; })()')

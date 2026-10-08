@@ -17,7 +17,11 @@ export const KapishcheMixin = {
     const rng = makeRng(MAP_SEED + 101 + st.id.length * 7919);
     st.leaders = setupZoneElites(this, st, rng);
     if (st.id === 'zalesye' && CFG.bosses.mara) st.mara = spawnMara(this, rng);
-    if (st.id === 'kapishche') st.bossState = 'dormant';
+    if (st.id === 'kapishche') {
+      st.bossState = 'dormant';
+      try { if (sessionStorage.getItem('byl_m1_gromovnik') === 'pending') this.placeGromovnik(st.map); } catch (e) { /* */ }
+    }
+    if (st.id === 'ladoga') this.spawnLadoga();
   },
 
   /** Сколько врагов зоны перебито (для отладочного слоя ?debug; особые — Мара, свита, призванные — не в счёт). */
@@ -109,8 +113,16 @@ export const KapishcheMixin = {
     // идол гаснет; у подножия — «Громовник» (U2, награда М1, GDD §6.5): щелчок — вещь в котомку (systems/zones.js → interact)
     if (m.perun) { m.perun.burning = false; m.perun._spr = null; m.perun.outAt = this.time; }   // outAt — idol_perun_extinguish
     m.lights = m.lights.filter((l) => !l.perun);
+    this.placeGromovnik(m);
+    this.quest.emit({ event: 'bossKilled', boss: 'krivsha' });
+  },
+
+  /** «Громовник» у идола. Подобран — флаг m1.gromovnik, больше не кладётся. Не подобран до конца сессии — снова здесь при загрузке. */
+  placeGromovnik(m) {
+    try { if (sessionStorage.getItem('byl_m1_gromovnik') === 'taken') return; } catch (e) { /* */ }
+    if (m.objects.some((o) => o.id === 'gromovnik')) return;
     const rp = m.addProp('relic', m.idol.x, m.idol.y + 1.2, 1, { fp: [m.idol.x + 0.5, m.idol.y + 1.7, 0, 0] });
     m.objects.push({ id: 'gromovnik', type: 'reward', unique: 'U2', x: m.idol.x + 0.5, y: m.idol.y + 1.7, sx: m.idol.x + 0.5, sy: m.idol.y + 2.4, reach: 1.2, prop: rp, done: false });
-    this.quest.emit({ event: 'bossKilled', boss: 'krivsha' });
+    try { sessionStorage.setItem('byl_m1_gromovnik', 'pending'); } catch (e) { /* */ }
   },
 };

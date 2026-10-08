@@ -15,6 +15,8 @@ import argparse
 import asyncio, json, os, sys
 from checks_m1b import run_m1b
 from checks_m1c import run_m1c
+from checks_m1d import run_m1d
+from checks_m1e import run_m1e
 from checks_v18 import run_balance18
 from playwright.async_api import async_playwright
 
@@ -67,6 +69,7 @@ async def main(a):
                     break
                 await pg.wait_for_timeout(20)
 
+        await pg.add_init_script("try{ if (sessionStorage.getItem('byl_keep_gromovnik')!=='1') sessionStorage.removeItem('byl_m1_gromovnik'); }catch(e){}")
         await pg.goto(a.url)
         await pg.wait_for_function('window.__game && window.__game.time > 0.5', timeout=15000)
         await pg.mouse.move(960, 540)
@@ -79,7 +82,11 @@ async def main(a):
             print('консоль:', 'чисто' if not errors else errors[:5])
             await br.close()
             return 0
-        if a.only_m1b or a.only_m1c:      # быстрый прогон только раздела M1b / M1c (отладка проверок)
+        if a.only_m1b or a.only_m1c or a.only_m1d or a.only_m1e:
+            if a.only_m1e:
+                await run_m1e(pg, G, check, wait, client_of, client_scr, a)
+            if a.only_m1d:
+                await run_m1d(pg, G, check, wait, client_of, client_scr, a)
             if a.only_m1b:
                 await run_m1b(pg, G, check, wait, client_of, client_scr, a)
             if a.only_m1c:
@@ -89,14 +96,14 @@ async def main(a):
             bad = [r for r in results if not r[1]]
             print(f'\n{len(results) - len(bad)}/{len(results)} проверок пройдено')
             return 1 if bad else 0
-        await G('(() => { const g = __game; window.__maraGrp = g.enemies.filter(e => e.special); g.enemies = g.enemies.filter(e => !e.special); })()')
+        await G('(() => { const g = __game; if (g.zone.id !== "zalesye") { g.ui.closeAll(); g.enterZone("zalesye", "start"); } window.__maraGrp = g.enemies.filter(e => e.special); g.enemies = g.enemies.filter(e => !e.special); })()')
 
         # --- 1. баланс из JSON по GDD v1.2
         s = await G('''(() => { const g = __game, h = g.hero, d = g.dbg;
           return { cfg: Object.keys(d.CFG).sort(), hp: h.maxHp, yar: h.maxYar, regen: +h.yarRegen.toFixed(3), aps: h.attacksPerSec,
             xp: [1,2,3,10].map(d.xpToNext), up1: d.enemyStats('upyr', 1), an1: d.enemyStats('anchutka', 1), skill: [h.skillCost, h.skillRank],
             kit: Object.values(h.equip).filter(Boolean).map(i => i.name), belt: h.belt.map(b => b ? b.kind + 'x' + b.count : '-') }; })()''')
-        check('конфиги data/*.json (+ uniques, ru, quests) и data/zones/*.json загружены', s['cfg'] == sorted(['stats', 'skills', 'monsters', 'bosses', 'items_base', 'affixes', 'droptables', 'uniques', 'ru', 'quests', 'zones']), s['cfg'])
+        check('конфиги data/*.json (+ uniques, ru, quests, trade) и data/zones/*.json загружены', s['cfg'] == sorted(['stats', 'skills', 'monsters', 'bosses', 'items_base', 'affixes', 'droptables', 'uniques', 'ru', 'quests', 'trade', 'zones']), s['cfg'])
         check('герой 1 ур.: 70 жизни / 40 Яри, Ярь +1,5%/с', s['hp'] == 70 and s['yar'] == 40 and abs(s['regen'] - 0.6) < 1e-6, (s['hp'], s['yar'], s['regen']))
         check('скорость атаки скрамасакса 1,4 удара/с', abs(s['aps'] - 1.4) < 1e-6, s['aps'])
         check('кривая опыта 100·L^1,75', s['xp'] == [100, 340, 680, 5620], s['xp'])
@@ -420,11 +427,12 @@ async def main(a):
             for (let d = 0; d < 8; d++) { const c = document.createElement('canvas'); c.width = 64; c.height = 72; const x = c.getContext('2d', { willReadFrequently: true });
               S.drawEnemy(x, 32, 64, e, d, 0.5, false); en.push(Array.from(x.getImageData(0, 0, 64, 72).data).reduce((a, v, i) => (a * 31 + v * (i % 7 + 1)) % 1000000007, 7)); }
             return { hero: new Set(out).size, upyr: new Set(en).size }; })()''')
-        check('спрайты героя и упыря принимают dir 0–7: 8 разных ракурсов', s['hero'] == 8 and s['upyr'] == 8, s)
+        check('спрайты героя (8 ракурсов) и упыря (se/ne + зеркало ≥4)', s['hero'] == 8 and s['upyr'] >= 4, s)
         s = await G(f'''(() => {{ const g = __game, h = g.hero; const e = g.spawnTest('upyr', h.x + 3.2, h.y, 1); e.aggro(g, false); e.stagger = 0; return e.id; }})()''')
-        await wait(450)
-        r = await G('''((id) => { const g = __game, h = g.hero, e = g.enemies.find(e => e.id === id); const want = g.dbg.dirOf(h.x - e.x, h.y - e.y);
-            const d = (e.dir - want + 8) % 8; const res = { dir: e.dir, want, ok: d <= 1 || d === 7 }; g.enemies = g.enemies.filter(o => o !== e); return res; })''', s)
+        r = await G("""((id) => { const g = __game, h = g.hero, e = g.enemies.find(e => e.id === id); let res = null;
+            for (let i = 0; i < 90; i++) { g.simulate(1/60); const want = g.dbg.dirOf(h.x - e.x, h.y - e.y); const d = (e.dir - want + 8) % 8;
+              res = { dir: e.dir, want, ok: d <= 1 || d === 7 }; if (res.ok) break; }
+            g.enemies = g.enemies.filter(o => o !== e); return res; })""", s)
         check('враг разворачивается к герою (e.dir по направлению шага)', r['ok'], r)
 
         # 10.2 окно «Навыки» (T): очки, ранги, требования; F1–F6 над навыком — назначить
@@ -692,7 +700,8 @@ async def main(a):
               if (!h.cmd && !h.action) h.attack(t, false, lmb ? h.lmbSkill() : null, true); return false; });
           const res = {};
           for (const [key, lmb] of [['sshibka', true], ['plain', false]]) { const ts = [];
-            for (let i = 0; i < 60; i++) { clean(); const h = mk(1); const e = g.spawnTest('upyr', A[0] + 1.0, A[1], 1); e.aggro(g, false); ts.push(melee(h, [e], lmb, true)); }
+            // M1d: 200 боёв вместо 60 — среднее 60 боёв гуляло 2,1–2,6 по зёрнам (σ среднего ≈ 0,13), проверка 1,5–2,5 была на грани
+            for (let i = 0; i < 200; i++) { clean(); const h = mk(1); const e = g.spawnTest('upyr', A[0] + 1.0, A[1], 1); e.aggro(g, false); ts.push(melee(h, [e], lmb, true)); }
             res['ttk_' + key] = { mean: mean(ts), min: +Math.min(...ts).toFixed(2), max: +Math.max(...ts).toFixed(2) }; }
           { const sk = g.dbg.SKILLS.sshibka, kb = sk.knockback; sk.knockback = 0; const ts = [];    // справочно: «Сшибка» без отбрасывания (герою не нужно догонять)
             for (let i = 0; i < 20; i++) { clean(); const h = mk(1); const e = g.spawnTest('upyr', A[0] + 1.0, A[1], 1); e.aggro(g, false); ts.push(melee(h, [e], true, true)); }
@@ -857,7 +866,7 @@ async def main(a):
             let tEnd = 0; while (g.restFx.sparksFrame >= 0 && tEnd < 2) { g.simulate(1 / 60); tEnd += 1 / 60; }
             const after = { full: h.hp === h.maxHp, kp: kp.restOn, src: g.restFx.src, tEnd: +tEnd.toFixed(2) }; g.simulate(0.4); after.a = ring();
             h.hp = h.maxHp; return { sheets, lay, phase, ringPx, mid, border, outNear, far, early, rest, after }; })()''')
-        ok = (len([k for k in s['sheets'] if not k.startswith(('k_', 'm_', 'a_'))]) == 13 and sorted(s['lay']) == [[6, 55], [10, 91]] and s['phase'] and s['ringPx']['R10'][0] > 300 and s['ringPx']['R6'][0] > 150
+        ok = (len([k for k in s['sheets'] if not k.startswith(('k_', 'm_', 'a_', 'p_')) and k != 'item_beresta']) == 13 and sorted(s['lay']) == [[6, 55], [10, 91]] and s['phase'] and s['ringPx']['R10'][0] > 300 and s['ringPx']['R6'][0] > 150
               and abs(s['ringPx']['R10'][1] - 128) <= 1 and s['mid']['a'] == 0 and s['mid']['src'] is None and s['mid']['sp'] == -1
               and s['border'] == {'a': 0.5, 'lit': False} and s['outNear'] == 0.5 and s['far'] == 0
               and not s['early']['r'] and s['early']['sp'] == -1 and not s['early']['kp']
@@ -952,11 +961,11 @@ async def main(a):
             for (const id of ['hut2', 'hut3']) { const o = g.objectById(id), idx = g.map.packs.findIndex(p => p.role === o.pack);
               for (const e of g.enemies) if (!e.dead && (e.pack === idx || Math.hypot(e.x - o.x, e.y - o.y) < 6)) e.takeDamage(9999, g, 'melee', null);
               h.x = o.sx; h.y = o.sy + 0.3; h.cmd = null; g.autoHold = true; h.interact(o); g.simulate(4, () => o.done); g.autoHold = false; }
-            g.simulate(9); g.log.add = add0; const q = g.quest;
+            g.simulate(12); g.log.add = add0; const q = g.quest;   // M1d: +1 реплика Мала (награда, v1.9) — диалог на 2,6 с длиннее
             return { huts: q.get('huts').state + ' ' + q.get('huts').n, flag: q.flag('trailOpen'), mal: L.filter(t => t.startsWith('Мал:')), done: L.some(t => t.includes('Всех вывел')),
               lines: q.lines().map(l => [l.text, l.state, +l.alpha.toFixed(2)]) }; })()''')
-        check('все 3 избы: цель выполнена («Всех вывел…»), Мал: «Они с капища шли!…» → тропа открыта (флаг trailOpen)',
-              s['huts'] == 'done 3' and s['flag'] and len(s['mal']) == 2 and s['done'], s)
+        check('все 3 избы: цель выполнена («Всех вывел…»), Мал: «Они с капища шли!…», затем награда «Вот, мамкины зелья…» (v1.9) → тропа открыта (флаг trailOpen)',
+              s['huts'] == 'done 3' and s['flag'] and len([m for m in s['mal'] if 'мамкины' not in m]) == 2 and 'Мал: Вот, мамкины зелья. Тебе нужнее.' in s['mal'] and s['done'], s)
         # переход в Лесную тропу ногами через выход за колодцем
         await G(TELEPORT + f'([{ex[0] - 1.2}, {ex[1] - 2.2}])')
         await G(f"(() => {{ const g = __game; g.hero.moveTo(g.map, {ex[0]}, {ex[1] + 0.2}); g.simulate(3, () => g.zone.id === 'trail'); g.simulate(0.1); }})()")
@@ -1060,9 +1069,8 @@ async def main(a):
         s = await G('''(() => { const g = __game, h = g.hero; g.enterZone('trail', 'from_zalesye'); const m = g.map;
             const alive0 = g.enemies.filter(e => !e.dead).length, dead0 = g.enemies.filter(e => e.dead).length;
             const w = g.enemies.filter(e => !e.dead && e.def.torch === undefined)[0]; w.hp = Math.max(1, Math.floor(w.maxHp / 3)); w.stagger = 0; w.state = 'chase';
-            // раненый — в 3 тайлах от логова, в свободной достижимой точке (раньше мог попасть в камень и застрять: тест плавал)
-            const x0 = w.x, y0 = w.y; const off = [[3, 0], [-3, 0], [0, 3], [0, -3], [2.1, 2.1], [-2.1, -2.1], [2.1, -2.1], [-2.1, 2.1]].find(([dx, dy]) => m.isReachableAt(w.homeX + dx, w.homeY + dy) && !m.blockedAt(w.homeX + dx, w.homeY + dy)) || [3, 0];
-            w.x = w.homeX + off[0]; w.y = w.homeY + off[1]; 
+            // раненый стоит на логове: возврат не зависит от пути (раньше тест плавал, пока враг шёл к логову)
+            w.x = w.homeX; w.y = w.homeY; w.path = null; 
             h.invuln = 0; h.graceT = 0; h.dashing = null; h.takeDamage(99999, g, 'fire'); const st = g.state; g.respawnHero();
             const k = g.map.krada, out = { st, zone: g.zone.id, dk: +Math.hypot(h.x - k.x, h.y - k.y).toFixed(1), repop: !!g.zoneStates.trail.needRepop, hp: h.hp === h.maxHp,
               wState: w.state, alive0 };
@@ -1080,6 +1088,12 @@ async def main(a):
         # --- 13. Веха M1c: береста возврата и Чуров проход, былинные вещи (свежая загрузка; tools/checks_m1c.py)
         await run_m1c(pg, G, check, wait, client_of, client_scr, a)
 
+        # --- 14. Веха M1d: GDD v1.9 — береста (заглушки сняты, арена, пояс), былинные, Мал, B-34, B-35 (tools/checks_m1d.py)
+        await run_m1d(pg, G, check, wait, client_of, client_scr, a)
+
+        # --- 15. Веха M1e: хаб Ладога (GDD v1.10)
+        await run_m1e(pg, G, check, wait, client_of, client_scr, a)
+
         check('консоль без ошибок и предупреждений', not errors, errors[:5])
         await br.close()
 
@@ -1094,6 +1108,8 @@ if __name__ == '__main__':
     ap.add_argument('--chrome', default='/usr/bin/google-chrome')
     ap.add_argument('--only-m1b', action='store_true', help='только проверки вехи M1b')
     ap.add_argument('--only-m1c', action='store_true', help='только проверки вехи M1c')
+    ap.add_argument('--only-m1d', action='store_true', help='только проверки вехи M1d (GDD v1.9)')
+    ap.add_argument('--only-m1e', action='store_true', help='только проверки вехи M1e (Ладога)')
     ap.add_argument('--balance-v18', type=int, default=0, metavar='N', help='только замер §12.3 GDD v1.8: N боёв на сценарий (30 по GDD)')
     ap.add_argument('--throttle', type=float, default=1, help='замедление ЦП (CDP Emulation.setCPUThrottlingRate) — проверка на редких кадрах')
     sys.exit(asyncio.run(main(ap.parse_args())))

@@ -1,9 +1,10 @@
 // Грей-бокс «спрайты» персонажей и предметов: простые фигуры в палитре. (sx,sy) — точка ног.
 import { PAL } from '../palette.js';
+import { drawText } from '../core/font.js';
 import { rect, ellipse, ellipseStroke, figure, pline, disc } from './shapes.js';
-import { ART, poseKrivsha, poseMara, poseAnchutka, drawCharArt, drawCharOutline, feedFrame, viewOf } from './boss_art.js';
+import { ART, poseKrivsha, poseMara, poseAnchutka, poseUpyr, drawCharArt, drawCharOutline, restoreUpyrEyes, feedFrame, viewOf } from './boss_art.js';
 import { HALF_W, HALF_H } from '../config.js';
-import { drawFxFrame } from './rest_fx.js';
+import { drawFxFrame, FX } from './rest_fx.js';
 
 export function shadow(ctx, x, y, rx = 9, ry = 3.5) { ellipse(ctx, x, y, rx, ry, PAL.ink, 0.45); }
 
@@ -184,14 +185,14 @@ export function drawArsonist(ctx, x, y, e, dir, time, outline = PAL.ink) {
 export function drawNpc(ctx, x, y, n, time) {
   const f = dirSide(n.dir, n.facing), small = n.kind === 'mal';
   const step = n.moving ? Math.sin(n.walkPhase * 2) : 0, l = Math.round(step * 2);
-  const H = small ? 30 : 38, T = y - H + 1;
+  const H = small ? 30 : (n.def && n.def.height) || 38, T = y - H + 1;
   shadow(ctx, x, y, small ? 6 : 8, 3);
-  const shirt = small ? PAL.red : n.female ? PAL.birch : PAL.linen, hair = n.old ? PAL.mist : small ? PAL.wood_lt : PAL.wood_md;
+  const shirt = n.grey ? PAL.slate : small ? PAL.red : n.female ? PAL.birch : PAL.linen, hair = n.grey ? PAL.slate_lt : n.old ? PAL.mist : small ? PAL.wood_lt : PAL.wood_md;
   figure(ctx, [
     { x: x - 4 + l, y: y - (small ? 8 : 10), w: 3, h: small ? 9 : 11, c: PAL.wood_dk },
     { x: x + 1 - l, y: y - (small ? 8 : 10), w: 3, h: small ? 9 : 11, c: PAL.wood_dk },
     { x: x - 5, y: T + 9, w: 10, h: small ? 13 : 18, c: shirt },
-    ...(n.female ? [{ x: x - 6, y: T + 18, w: 12, h: 12, c: PAL.red_dk }] : []),
+    ...(n.female ? [{ x: x - 6, y: T + 18, w: 12, h: 12, c: n.grey ? PAL.slate_dk : PAL.red_dk }] : []),
     { x: x - 3, y: T + 2, w: 7, h: 7, c: PAL.wood_lt },
     { x: x - 4, y: T, w: 8, h: 3, c: n.female ? PAL.red : hair },
   ]);
@@ -200,11 +201,26 @@ export function drawNpc(ctx, x, y, n, time) {
 }
 
 export function drawEnemy(ctx, x, y, e, dir, time, hovered) {
+  if (e.dummy) {
+    shadow(ctx, x, y, 8, 3);
+    figure(ctx, [
+      { x: x - 3, y: y - 22, w: 6, h: 18, c: PAL.wood_lt },
+      { x: x - 8, y: y - 28, w: 16, h: 10, c: PAL.birch },
+      { x: x - 2, y: y - 34, w: 4, h: 6, c: PAL.birch },
+    ]);
+    drawText(ctx, x, y - 42, e.name || '', PAL.linen, { align: 'c', outline: true });
+    return;
+  }
   // под курсором — красная обводка, замедлен холодом — голубая, вожак и былинный враг — бронзовая (GDD §5.3)
   const ol = hovered ? PAL.red_lt : e.slowT > 0 ? PAL.blue_lt : e.leader || e.elite === 'bylina' || e.boss ? PAL.bronze_hi : PAL.ink;
   if (e.kind === 'krivsha') { drawKrivsha(ctx, x, y, e, dir, time, ol); return; }
   if (e.kind === 'mara') drawMara(ctx, x, y, e, dir, time, ol);
-  else if (e.kind === 'upyr') drawUpyr(ctx, x, y, e, dir, time, ol);
+  else if (e.kind === 'upyr' && ART.sheets.upyr_idle_se) {              // спрайт художника m1c (64×64, pivot 32,56); рост 40
+    const pose = poseUpyr(e, time);
+    if (e.state !== 'rise') shadow(ctx, x, y, 10, 4);                    // в rise яма и земля уже нарисованы в листе
+    if (ol !== PAL.ink) drawCharOutline(ctx, pose, x, y, dir, e.facing, ol);
+    drawCharArt(ctx, pose, x, y, dir, e.facing, { flash: e.flash > 0 });
+  } else if (e.kind === 'upyr') drawUpyr(ctx, x, y, e, dir, time, ol);
   else if (e.def.torch) drawArsonist(ctx, x, y, e, dir, time, ol);
   else if (ART.sheets.anchutka_idle_se) {                               // спрайт художника 6а (32×40, pivot 16,34) — сажа, не красный
     const pose = poseAnchutka(e, time);
@@ -214,6 +230,8 @@ export function drawEnemy(ctx, x, y, e, dir, time, hovered) {
   } else drawAnchutka(ctx, x, y, e, dir, time, ol);
   if (e.elite === 'champion') { ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = PAL.blue_lt; ctx.fillRect(x - 11, y - e.def.height, 22, e.def.height); ctx.restore(); }   // матёрый: холодный тинт
   if (e.slowT > 0) { ctx.save(); ctx.globalAlpha = 0.25; ctx.fillStyle = PAL.blue_lt; ctx.fillRect(x - 10, y - e.def.height, 20, e.def.height); ctx.restore(); }
+  // упырь m1c: жёлтые глаза (flame) поверх тинта — PM 08.10
+  if (e.kind === 'upyr' && ART.sheets.upyr_idle_se && (e.elite === 'champion' || e.slowT > 0)) restoreUpyrEyes(ctx, poseUpyr(e, time), x, y, dir, e.facing);
   // маленькая полоска жизни над недавно раненым
   if (e.lastHitT < 3 || hovered) {
     const w = 16, hy = y - e.def.height - 6;
@@ -228,7 +246,9 @@ export function drawCorpse(ctx, x, y, e) {
   if (a <= 0) return;
   ctx.save();
   ctx.globalAlpha = a;
-  if (e.kind === 'upyr') {
+  if (e.kind === 'upyr' && drawCharArt(ctx, poseUpyr(e, 0), x, y, e.dir, e.facing)) {
+    // труп упыря — последний кадр upyr_death (держится, гаснет движком)
+  } else if (e.kind === 'upyr') {
     figure(ctx, [{ x: x - 13, y: y - 6, w: 20, h: 6, c: PAL.slate_dk }, { x: x + 7, y: y - 8, w: 8, h: 7, c: PAL.birch }]);
     rect(ctx, x - 10, y - 4, 10, 2, PAL.nebyl_dk);
   } else if ((e.kind === 'krivsha' || e.kind === 'mara' || e.kind === 'anchutka') && drawCharArt(ctx, e.kind === 'krivsha' ? poseKrivsha(e, 0) : e.kind === 'mara' ? poseMara(e, 0) : poseAnchutka(e, 0), x, y, e.dir, e.facing)) {
@@ -248,6 +268,7 @@ export function drawCorpse(ctx, x, y, e) {
   ctx.restore();
 }
 
+const loopBeresta = () => Math.floor(performance.now() / 1000 * 6) % 4;
 // Лут на земле (scale.md §3.4): меч 22–24 в длину, щит 13×8, серебро 14×7.
 export function drawGroundItem(ctx, x, y, it) {
   if (it.kind === 'silver') {
@@ -259,7 +280,10 @@ export function drawGroundItem(ctx, x, y, it) {
     const [c, cl] = it.potion.startsWith('life') ? [PAL.red, PAL.red_lt] : it.potion.startsWith('yar') ? [PAL.blue, PAL.blue_lt] : [PAL.bronze, PAL.bronze_hi];
     figure(ctx, [{ cx: x, cy: y - 5, r: 4, c }, { x: x - 1, y: y - 12, w: 3, h: 4, c: PAL.birch }]);
     rect(ctx, x - 2, y - 7, 2, 2, cl);
-  } else if (it.kind === 'scroll') {       // береста возврата: свёрнутый берестяной свиток (грей-бокс, спрайта нет)
+  } else if (it.kind === 'scroll' && FX.sheets.item_beresta) {   // береста возврата на земле — спрайт m1c (18×12, pivot 9,10, 4 кадра @6), тень движковая
+    ellipse(ctx, x, y - 1, 7, 3, PAL.ink, 0.5);
+    drawFxFrame(ctx, 'item_beresta', loopBeresta(), x, y);
+  } else if (it.kind === 'scroll') {       // береста возврата: грей-бокс (если спрайт не загрузился)
     ellipse(ctx, x, y - 1, 7, 3, PAL.ink, 0.5);
     figure(ctx, [{ x: x - 6, y: y - 6, w: 12, h: 5, c: PAL.birch }]);
     rect(ctx, x - 6, y - 6, 2, 5, PAL.wood_lt); rect(ctx, x + 4, y - 6, 2, 5, PAL.wood_lt);

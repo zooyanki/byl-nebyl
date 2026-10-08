@@ -120,11 +120,17 @@ export class Krivsha extends Enemy {
       case 'return': {
         if (!this.path) this.setPath(map, this.homeX, this.homeY, true);
         const done = this.followPath(map, dt, this.speed);
-        if (done || Math.hypot(this.x - this.homeX, this.y - this.homeY) < 0.8) this.reset(game);
+        if (done || Math.hypot(this.x - this.homeX, this.y - this.homeY) < 0.8) {
+          if (this.leashed) { this.leashed = false; this.state = 'idle'; this.t = 0; this.path = null; this.moving = false; }   // уже сброшен поводком
+          else this.reset(game);
+        }
         break;
       }
       case 'fight': {
         if (!present) { this.state = 'return'; this.path = null; break; }
+        // GDD v1.9 §4.4/§8.2 (журнал п.4): поводок пешком — герой дальше arena.leashWalk (25) от идола: сброс сразу
+        const LW = B.arena && B.arena.leashWalk, I = map[(B.arena && B.arena.lockAt) || 'idol'];
+        if (LW && I && Math.hypot(h.x - I.x, h.y - I.y) > LW) { this.leash(game, 'walk'); break; }
         // огненная фаза: на 50% HP — прыжок в ближайшее неосвящённое огнище (если все отбиты — фазы нет)
         const P = B.hearthPhase;
         if (!this.phaseDone && this.hp <= this.maxHp * P.atHpPct / 100) {
@@ -279,6 +285,14 @@ export class Krivsha extends Enemy {
     // GDD v1.8.1 (B-33): призванные рассыпаются вместе со сбросом босса — без опыта, добычи и трупа
     if (this.B.summon.despawnOnReset !== false) this.crumbleMinions(game);
     game.counters.krivshaResets = (game.counters.krivshaResets || 0) + 1;
+  }
+  /** Поводок (GDD v1.9): полное HP, фаза заново, призванные рассыпаются (B-33) — сразу; потом пешком к идолу.
+   *  home = true (герой ушёл из зоны) — босс сразу у идола и ждёт (зона без героя не обновляется). */
+  leash(game, why, home = false) {
+    this.reset(game);
+    game.counters.krivshaLeash = (game.counters.krivshaLeash || 0) + 1; game.counters.krivshaLeashWhy = why;
+    if (home) { this.x = this.homeX; this.y = this.homeY; this.leashed = false; return; }
+    if (Math.hypot(this.x - this.homeX, this.y - this.homeY) >= 0.8) { this.state = 'return'; this.path = null; this.leashed = true; }
   }
   crumbleMinions(game) {
     const gone = new Set(this.minions.filter((e) => !e.dead));

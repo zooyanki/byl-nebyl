@@ -1,0 +1,43 @@
+{
+ "object": "Чуров проход (obj.chur_portal), the passage opened by «Береста возврата»; type 'portal' in the prototype; both ends (field + town at the крада) use the same sheets",
+ "frame_size": [
+  64,
+  84
+ ],
+ "pivot": [
+  32,
+  74
+ ],
+ "sizes_px": {
+  "oval_top": 55,
+  "oval_width": 27,
+  "ground_ring": [
+   36.2,
+   18.1
+  ],
+  "ring_r_tiles": 0.8,
+  "sparks_to": 63
+ },
+ "hitbox_hint": "objectAt box for 'portal': [14, -55, 8] (half-width, top, bottom) instead of [14, -46, 6]",
+ "layer": "sorted by pivot y like the other objects (world.js k 6)",
+ "light_hint": "engine light: warm bronze, radius 2 tiles at y - 28",
+ "state": "fading",
+ "notes": "optional: the last 10 s of the 60 (prototype life < 0.17): gutters, flicker baked in — use it INSTEAD of the alpha flicker in drawPortal",
+ "visible_height_px": [
+  59,
+  61,
+  61,
+  62,
+  64,
+  58,
+  59,
+  58
+ ],
+ "fps": 10,
+ "loop": true,
+ "image": "fx_chur_portal_fading.png",
+ "frame_count": 8,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

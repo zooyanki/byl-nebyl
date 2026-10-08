@@ -72,22 +72,35 @@ export class WorldRenderer {
       } else if (o.k === 2) {
         const [sx, sy] = toS(o.e.x, o.e.y);
         if (!vis(sx, sy)) continue;
-        if (o.e.state === 'rise' && !o.e.boss) {          // волна: упырь встаёт из земли (видна только часть над землёй)
-          const k = Math.min(1, o.e.t / (o.e.riseTime || 0.8)), hgt = o.e.def.height + 8;
-          if (o.e.summoned && drawFxFrame(ctx, 'k_summon', Math.floor(o.e.t * 10), sx, sy)) {   // призыв Кривши: 8 кадров @10 = riseTime 0,8 с; упырь виден с кадра 3
-            if (o.e.t < 0.3) continue;
+        if (o.e.state === 'rise' && !o.e.boss) {
+          // упырь со спрайтом: яма уже в кадрах rise — без clip/offset/эллипса; призванный скрыт до t=0,3
+          if (o.e.kind === 'upyr' && ART.sheets.upyr_rise_se) {
+            if (o.e.summoned) {
+              drawFxFrame(ctx, 'k_summon', Math.floor(o.e.t * 10), sx, sy);
+              if (o.e.t < 0.3) continue;
+            }
+            drawEnemy(ctx, sx, sy, o.e, o.e.dir, time, game.hoverEnemy === o.e);
+          } else {
+            const k = Math.min(1, o.e.t / (o.e.riseTime || 0.8)), hgt = o.e.def.height + 8;
+            if (o.e.summoned && drawFxFrame(ctx, 'k_summon', Math.floor(o.e.t * 10), sx, sy)) {
+              if (o.e.t < 0.3) continue;
+            }
+            ctx.save(); ctx.beginPath(); ctx.rect(sx - 30, sy - hgt - 10, 60, hgt + 12); ctx.clip();
+            drawEnemy(ctx, sx, sy + Math.round((1 - k) * hgt), o.e, o.e.dir, time, game.hoverEnemy === o.e);
+            ctx.restore();
+            ellipse(ctx, sx, sy, 12, 4, PAL.wood_dk, 0.8 * (1 - k * 0.5));
           }
-          ctx.save(); ctx.beginPath(); ctx.rect(sx - 30, sy - hgt - 10, 60, hgt + 12); ctx.clip();
-          drawEnemy(ctx, sx, sy + Math.round((1 - k) * hgt), o.e, o.e.dir, time, game.hoverEnemy === o.e);
-          ctx.restore();
-          ellipse(ctx, sx, sy, 12, 4, PAL.wood_dk, 0.8 * (1 - k * 0.5));
         } else drawEnemy(ctx, sx, sy, o.e, o.e.dir, time, game.hoverEnemy === o.e);
       } else if (o.k === 6) {
         const [sx, sy] = toS(o.o.x, o.o.y), P = game.portal;
-        drawPortal(ctx, sx, sy, time, P ? Math.max(0, 1 - P.t / P.ttl) : 1);
+        drawPortal(ctx, sx, sy, time, P ? Math.max(0, 1 - P.t / P.ttl) : 1, P ? { opened: P.opened, closingT: P.closing && P.closing.t } : null);
       } else if (o.k === 5) {
         const [sx, sy] = toS(o.n.x, o.n.y);
         ctx.save(); ctx.globalAlpha = o.n.alpha ?? 1; drawNpc(ctx, sx, sy, o.n, time); ctx.restore();
+        if (o.n.role) {
+          drawText(ctx, sx, sy - (o.n.def.height || 40) - 16, o.n.name, PAL.linen, { align: 'c', outline: true });
+          if (o.n.mark) drawText(ctx, sx + textWidth(o.n.name) / 2 + 8, sy - (o.n.def.height || 40) - 16, o.n.mark, PAL.bronze_hi, { align: 'c', outline: true });
+        }
       } else if (o.k === 3) {
         const [sx, sy] = toS(hero.x, hero.y);
         if (hero.buffs.chur) drawChurRunes(ctx, sx, sy, hero.buffs.chur, time, false);
@@ -111,6 +124,7 @@ export class WorldRenderer {
     }
 
     this.renderFx(ctx, game, toS);
+    if (game.map.captions) for (const c of game.map.captions) { const [sx, sy] = toS(c.x, c.y); drawText(ctx, sx, sy, c.text, PAL.mist, { align: 'c', outline: true }); }
     this.renderLight(ctx, game, toS);
     this.renderFxText(ctx, game, toS);
     this.renderObjects(ctx, game, toS);
@@ -284,7 +298,7 @@ export class WorldRenderer {
       const src = game.restFx && game.restFx.src, F = CFG.stats.restFx || {};
       const restL = (l.krada && src === 'krada') || (l.kind === 'chur' && src === 'churov');
       const r = (l.r + (l.kind === 'fire' ? Math.sin(game.time * 7) * 4 : 0)) * (restL && l.krada ? (F.kradaLightRestMul ?? 1.333) : 1);
-      hole(sx, sy - 8, r, 1); warm.push([sx, sy - 8, r, 0.22 * (restL ? (F.kradaLightRestIntensity ?? 1.25) : 1)]);
+      hole(sx, sy - 8, r, 1); warm.push([sx, sy - 8, r, 0.22 * (restL ? (F.kradaLightRestIntensity ?? 1.25) : 1), l.hearth ? lightTint(l, game) : null]);
     }
     const pr = game.map.perun;                                       // горящий Идол Перуна: тёплый свет ~5 тайлов от корня пламени (y − 70), подсказка художника
     if (pr && pr.burning) { const [sx, sy] = toS(pr.x + 1, pr.y + 1), r = 5 * HALF_W * Math.SQRT2 + Math.sin(game.time * 7) * 4; hole(sx, sy - 70, r, 1); warm.push([sx, sy - 70, r, 0.15]); }
@@ -296,10 +310,11 @@ export class WorldRenderer {
     // тёплый подсвет от огня
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    for (const [sx, sy, r, a] of warm) {
+    for (const [sx, sy, r, a, rgb] of warm) {
+      const col = rgb || '230,134,43';
       const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
-      g.addColorStop(0, `rgba(230,134,43,${a})`);
-      g.addColorStop(1, 'rgba(230,134,43,0)');
+      g.addColorStop(0, `rgba(${col},${a})`);
+      g.addColorStop(1, `rgba(${col},0)`);
       ctx.fillStyle = g;
       ctx.fillRect(sx - r, sy - r, r * 2, r * 2);
     }
@@ -448,4 +463,15 @@ function drawChurRunes(ctx, sx, sy, buff, time, front) {
   }
   ctx.restore();
   if (!front) ellipseStroke(ctx, sx, sy, 16, 7, PAL.bronze_lt, 0.5 * fade, 1);
+}
+
+/** Цвет света огнища: nebyl, пока осквернено, ember после освящения, переход за время удержания (GDD v1.10 §8.2). */
+export function lightTint(l, game) {
+  if (!l || !l.hearth) return '230,134,43';
+  const o = l.hearth;
+  let k = o.done ? 1 : 0;
+  const c = game && game.hero && game.hero.cmd;
+  if (!o.done && c && c.type === 'interact' && c.obj === o && c.holdT) k = Math.min(1, c.holdT / (o.hold || 3));
+  const a = [138, 242, 126], b = [230, 134, 43];
+  return a.map((v, i) => Math.round(v + (b[i] - v) * k)).join(',');
 }

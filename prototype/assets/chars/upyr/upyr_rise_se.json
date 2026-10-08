@@ -1,0 +1,36 @@
+{
+ "character": "Упырь",
+ "animation": "rise",
+ "direction": "se",
+ "mirror_for": "sw",
+ "mirror_rule": "flip horizontally around the frame centre line x = 32.0; pivot stays (32, 56)",
+ "pivot": [
+  32,
+  56
+ ],
+ "fps": 8,
+ "loop": false,
+ "visible_height_px": [
+  12,
+  22,
+  22,
+  27,
+  32,
+  40
+ ],
+ "height_rule": "pivot row (ground under the feet) to the top visible pixel, outline included",
+ "notes": "Упырь (GDD §5.2 E2; act1: мертвец, вставший из могилы, медленный, бьёт больно, ходит толпой). One sprite for the Залесье packs, the ambush waves (rise from the ground) and Кривша's summons. Hunched grave-ghoul (concept: art/ui/src/sprites_rus.upyr): head pushed forward under the hump, grey-blue dead skin, ribs, sunken sockets with yellow embers, hanging jaw with fangs, long arms with bone claws, rotten brown shroud over the back + loin rag, rot (nebyl_dk), blood only red_dk. Body 37-39 hunched (scale.md 40, def.height 40), frame 64x64, pivot (32,56).",
+ "events": {
+  "frames": "0 a clawed hand breaks the ground, 1 head and both hands, 2 head and shoulders, 3 waist-deep, 4 climbs out on one knee, 5 stands shaking the earth off (≈ idle 0)",
+  "sync": "riseTime 0.8 s (zones ambush.rise, Кривша summon): frame = min(5, floor(t / riseTime * 6)); the grave (hole, soil, torn turf) is part of the frames, so DRAW IT AT THE PIVOT WITHOUT the grey-box clip/slide (world.js 'rise'). Summoned by Кривша: fx_krivsha_summon frames 0-2 come first (upyr_visible_from_frame 3): play rise over the remaining 0.5 s -> frame = min(5, floor((t - 0.3) / 0.5 * 6)), nothing before t = 0.3"
+ },
+ "image": "upyr_rise_se.png",
+ "frame_size": [
+  64,
+  64
+ ],
+ "frame_count": 6,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

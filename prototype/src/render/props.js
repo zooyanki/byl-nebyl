@@ -16,6 +16,9 @@ export function drawProp(ctx, p, toS, time) {
   if (p.type === 'fire') return fire(ctx, p, toS, time);   // анимирован — рисуем каждый кадр
   if (p.type === 'hearth') return hearth(ctx, p, toS, time);   // огнища капища (веха M1b)
   if (p.type === 'perun') return perun(ctx, p, toS, time);
+  if (p.type === 'ladya') return ladya(ctx, p, toS);
+  if (p.type === 'cart') return cart(ctx, p, toS);
+  if (p.type === 'anvil') return anvil(ctx, p, toS);
   if (p.type === 'relic') return relic(ctx, p, toS, time);
   if (!p._spr) p._spr = p.shared ? sharedSprite(p) : bake(p);   // остальное статично — запекаем в спрайт
   const [sx, sy] = toS(p.x, p.y);
@@ -48,7 +51,7 @@ export function propHeight(p) {
   if (p.type === 'tree') return p.birch ? 132 : 166;
   if (p.type === 'palisade') return p.gatepost ? 100 : 86;
   if (p.type === 'fire' && p.krada) return 112;       // спрайт fx_rest_krada: 120 px, опора на 108
-  return { rock: 36, wall: 36, izba: 132, fire: 80, hearth: 56, perun: 120, relic: 30, idol: 66, well: 64, churstone: 50, gate: 80, chest: 22, body: 12, bush: 24 }[p.type] || 40;
+  return { rock: 36, wall: 36, izba: 132, fire: 80, hearth: 56, perun: 120, relic: 30, idol: 66, well: 64, churstone: 50, gate: 80, chest: 22, body: 12, bush: 24, ladya: 28, cart: 24, anvil: 16 }[p.type] || 40;
 }
 
 function drawRaw(ctx, p, toS) {
@@ -429,4 +432,21 @@ function ashPile(ctx, p, toS) {
   disc(ctx, x - 2, y - 1, 4, PAL.slate_dk);
   disc(ctx, x + 3, y, 3, PAL.slate);
   disc(ctx, x, y - 2, 2, PAL.slate_lt);
+}
+
+function ladya(ctx, p, toS) {
+  const len = p.len || 12, beam = p.beam || 3;
+  const pts = [[p.x, p.y + beam / 2], [p.x + 1.2, p.y], [p.x + len - 1.2, p.y], [p.x + len, p.y + beam / 2], [p.x + len - 1.2, p.y + beam], [p.x + 1.2, p.y + beam]].map(([x, y]) => toS(x, y));
+  poly(ctx, pts, PAL.slate);
+  strokePoly(ctx, pts, PAL.ink, true);
+}
+function cart(ctx, p, toS) {
+  const [x, y] = toS(p.x + 1.5, p.y + 1);
+  rect(ctx, x - 16, y - 10, 32, 8, PAL.slate);
+  rect(ctx, x - 14, y - 16, 28, 6, PAL.wood_md);
+}
+function anvil(ctx, p, toS) {
+  const [x, y] = toS(p.x + 0.5, p.y + 0.5);
+  rect(ctx, x - 6, y - 8, 12, 5, PAL.slate_lt);
+  rect(ctx, x - 2, y - 3, 4, 4, PAL.slate);
 }

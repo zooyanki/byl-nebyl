@@ -1,0 +1,20 @@
+{
+ "item": "Береста возврата",
+ "key": "beresta",
+ "files": {
+  "icon": "item_beresta_icon.png",
+  "ground": "item_beresta_ground.png"
+ },
+ "icon_size": [
+  20,
+  20
+ ],
+ "ground_frame": [
+  18,
+  12
+ ],
+ "ground_pivot": [
+  9,
+  10
+ ]
+}

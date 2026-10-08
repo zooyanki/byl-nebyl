@@ -6,8 +6,8 @@ import { applySkills } from './skills.js';
 import { applyItems, setItemTexts } from './items.js';
 import { applyRu } from '../core/i18n.js';
 
-export const CONFIG_FILES = ['stats', 'skills', 'monsters', 'bosses', 'items_base', 'affixes', 'droptables', 'uniques', 'ru', 'quests'];
-export const ZONE_FILES = ['zalesye', 'trail', 'kapishche'];   // data/zones/*.json — по зоне на файл (GDD §15); kapishche — веха M1b
+export const CONFIG_FILES = ['stats', 'skills', 'monsters', 'bosses', 'items_base', 'affixes', 'droptables', 'uniques', 'ru', 'quests', 'trade'];
+export const ZONE_FILES = ['zalesye', 'trail', 'kapishche', 'ladoga'];   // data/zones/*.json — по зоне на файл (GDD §15); kapishche — веха M1b
 export const CFG = {};
 
 export async function loadConfig(base = 'data/') {

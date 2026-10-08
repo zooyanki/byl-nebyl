@@ -15,7 +15,9 @@ const SHEETS = {
   torch: 'fx_torch_flight', burning: 'fx_burning_ground',       // «Поджог» поджигателя (веха M1b)
   k_trail: 'fx_krivsha_fire_trail', k_aura: 'fx_krivsha_aura', k_summon: 'fx_krivsha_summon', k_burst: 'fx_krivsha_leap_burst',   // Кривша (спрайты M1b)
   k_feed: 'fx_krivsha_feed', k_feed_back: 'fx_krivsha_feed_back', k_feed_src: 'fx_krivsha_feed_source',                                 // «огнище питает» (v1.8)
-  m_ash: 'fx_mara_ash_trail', m_bolt: 'fx_mara_bolt', m_hit: 'fx_mara_bolt_hit', a_coal: 'fx_anchutka_coal',                                                     // Мара (спрайты M1b)
+  m_ash: 'fx_mara_ash_trail', m_bolt: 'fx_mara_bolt', m_hit: 'fx_mara_bolt_hit', a_coal: 'fx_anchutka_coal',
+  p_open: 'fx_chur_portal_open', p_loop: 'fx_chur_portal_loop', p_fading: 'fx_chur_portal_fading', p_close: 'fx_chur_portal_close',   // Чуров проход (m1c)
+  item_beresta: '../items/item_beresta_ground',                                                                                       // береста на земле (m1c)                                                     // Мара (спрайты M1b)
 };
 export const FX = { sheets: {}, ring: null, ready: false };
 

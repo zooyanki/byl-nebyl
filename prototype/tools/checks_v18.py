@@ -6,16 +6,22 @@ import os
 from checks_m1b import REF_HERO, SEEDED
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BAL_OUT = os.path.join(ROOT, 'tools', 'balance_m1c.json')
+BAL_OUT = os.path.join(ROOT, 'tools', os.environ.get('BAL_OUT', 'balance_m1d.json'))   # M1d: замер с воспроизводимым ботом (B-35); m1c — история
 
 # Бот замера (GDD v1.8 §9.3 «Условия замера»): эталонный герой 6 ур. §9.1, «Сшибка» 3, бьёт стоя, телеграфы не обходит.
 # hearths: сколько огнищ НЕ отбито (0 — фазы нет); refill — HP восполняется (замер времени); clear — «сначала призванные»;
 # kit — запас зелий {life1, zhivaya, yar1}: жизнь при HP < 50% (КД 1 с), живая вода при HP < 25%, Ярь при Яри < 3.
 # Цель — ЛКМ по Кривше (lmb: правило заслона §4.1 v1.8 само бьёт призванного, вставшего на пути).
 FIGHT = '''(() => { window.__fight = async (o) => { const g = __game; ''' + REF_HERO + '''
-  const res = [];
+  const res = []; const { makeRng } = await import('/src/core/rng.js');
+  // B-35 (M1d): воспроизводимость. Живой цикл держим (g.simHold) — кадры rAF между await не двигают бой и не тратят зерно;
+  // каждый бой засевается своим зерном (o.seed + i·7919), зоны строятся заново — итог не зависит от порядка сценариев,
+  // числа предыдущих боёв, звука (косметика — crand) и частоты кадров (--throttle).
+  g.simHold = true;
   for (let i = 0; i < o.runs; i++) {
-    delete g.zoneStates.kapishche; g.enterZone('trail', 'gate'); g.enterZone('kapishche', 'from_trail'); const m = g.map; g.enemies = []; g.buried = [];
+    Math.random = makeRng(((o.seed || 20261008) + i * 7919) >>> 0);
+    delete g.zoneStates.kapishche; delete g.zoneStates.trail; g.combat.teles = []; g.combat.projectiles = [];
+    g.enterZone('trail', 'gate'); g.enterZone('kapishche', 'from_trail'); const m = g.map; g.enemies = []; g.buried = [];
     m.hearths.forEach((x, j) => { if (j < 3 - o.hearths) { x.done = true; if (x.prop) x.prop.cursed = false; } });
     const h = await mkRef(6, [m.idol.x, m.idol.y + 3]); g.applyChad(); const b = g.riseBoss('test'); const kit = o.kit ? { ...o.kit } : null;
     const used = { life1: 0, zhivaya: 0, yar1: 0 }; let tt = 0, hpMin = 1; g.counters.krivshaSummons = 0; g.counters.blockerHits = 0; g.counters.krivshaClaws = 0; g.counters.krivshaClawHits = 0;
@@ -34,12 +40,15 @@ FIGHT = '''(() => { window.__fight = async (o) => { const g = __game; ''' + REF_
                claws: g.counters.krivshaClaws, clawHits: g.counters.krivshaClawHits || 0, used, hpMin: +hpMin.toFixed(2) });
     g.state = 'play';
   }
+  g.simHold = false;
   const won = res.filter(r => r.won), ts = won.map(r => r.t), avg = (a) => a.length ? +(a.reduce((x, y) => x + y, 0) / a.length).toFixed(1) : null;
   const sum = (k) => res.reduce((a, r) => a + r.used[k], 0);
   return { runs: res.length, won: won.length, deaths: res.filter(r => r.died).length, mean: avg(ts), min: ts.length ? Math.min(...ts) : null, max: ts.length ? Math.max(...ts) : null,
            phase: res.filter(r => r.phase === 2).length, heal: Math.max(...res.map(r => r.heal)), summonsAvg: avg(res.map(r => r.summons)), blockerHits: res.reduce((a, r) => a + r.blk, 0),
            clawHitPct: +(100 * res.reduce((a, r) => a + r.clawHits, 0) / Math.max(1, res.reduce((a, r) => a + r.claws, 0))).toFixed(0),
-           potions: { life1: sum('life1'), zhivaya: sum('zhivaya'), yar1: sum('yar1') } };
+           potions: { life1: sum('life1'), zhivaya: sum('zhivaya'), yar1: sum('yar1') },
+           sig: res.map(r => (r.died ? 'D' : r.won ? 'W' : '-') + r.t).join(',').split('').reduce((a, c) => (Math.imul(a, 31) + c.charCodeAt(0)) | 0, 7) >>> 0,
+           diedRuns: res.map((r, j) => r.died ? j : -1).filter(j => j >= 0) };
 }; return 1; })()'''
 
 # опыт М1 по контрольным точкам §9.3 (свежие зоны; опыт по коду прототипа — сумма e.xp без штрафа уровня; призванные не в счёт)

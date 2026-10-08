@@ -4,7 +4,7 @@ import { VIEW_W, VIEW_H, PANEL_Y } from '../config.js';
 import { PAL } from '../palette.js';
 import { rect, poly, disc, pline, figure } from './shapes.js';
 import { drawText, textWidth } from '../core/font.js';
-import { POTIONS } from '../data/items.js';
+import { POTIONS, SCROLLS } from '../data/items.js';
 import { IMG, UI_ATLAS, drawIcon } from '../ui/assets.js';
 import { MINI } from './minimap.js';
 import { SKILLS, DASH, rankOf, skillCost, pointsFree } from '../data/skills.js';
@@ -188,7 +188,8 @@ export function drawHud(ctx, game) {
     woodSlot(ctx, s.x, s.y, s.s, hv);
     const b = h.belt[i];
     if (b) {
-      drawIcon(ctx, POTIONS[b.kind].icon, s.x, s.y + 1, s.s, s.s);
+      drawIcon(ctx, b.scroll ? SCROLLS[b.scroll].icon : POTIONS[b.kind].icon, s.x, s.y + 1, s.s, s.s);
+      if (b.scroll && game.berestaGrey()) { ctx.save(); ctx.globalAlpha = 0.6; rect(ctx, s.x + 1, s.y + 1, s.s - 2, s.s - 2, PAL.slate_dk); ctx.restore(); }   // береста серая на арене живого босса
       if (b.count > 1) drawText(ctx, s.x + 3, s.y + 2, String(b.count), PAL.linen, { outline: true });
     }
     drawText(ctx, s.x + s.s - 7, s.y + s.s - 10, String(i + 1), PAL.bronze_hi, { outline: true });
@@ -239,6 +240,7 @@ export function drawHud(ctx, game) {
   // шары
   orb(ctx, L.orbL, h.hp / h.maxHp, 'life', 'Жизнь', Math.ceil(h.hp) + '/' + h.maxHp, t);
   orb(ctx, L.orbR, h.yar / h.maxYar, 'yar', 'Ярь', Math.floor(h.yar) + '/' + h.maxYar, t + 1.7);
+  if (h.yarTier) drawText(ctx, L.orbR.cx, L.orbR.cy - L.orbR.r + 4, 'I', PAL.bronze_hi, { align: 'c', outline: true });
   if (h.chad >= 3) { ctx.save(); ctx.globalAlpha = 0.28; disc(ctx, L.orbR.cx, L.orbR.cy, L.orbR.r - 2, PAL.slate_lt); ctx.restore(); }   // чад: серая дымка на Яри
 
   drawTopUi(ctx, game);
@@ -415,7 +417,7 @@ function drawTooltip(ctx, game) {
   let txt = null;
   if (game.hoverBelt >= 0) {
     const b = h.belt[game.hoverBelt];
-    txt = b ? POTIONS[b.kind].name + ' ×' + b.count + ' — клавиша ' + (game.hoverBelt + 1) : 'Пустая ячейка пояса';
+    txt = b ? (b.scroll ? SCROLLS[b.scroll].name : POTIONS[b.kind].name) + ' ×' + b.count + ' — клавиша ' + (game.hoverBelt + 1) : 'Пустая ячейка пояса';
   } else if (inSlot(m, LAYOUT.rmb) && h.rmb) { drawSkillTooltip(ctx, h, h.rmb, m.mx, PANEL_Y - 6, 'bc'); return; }
   else if (inSlot(m, LAYOUT.dash)) { drawSkillTooltip(ctx, h, 'dash', m.mx, PANEL_Y - 6, 'bc'); return; }
   else if (LAYOUT.f.some((f) => inSlot(m, f))) {

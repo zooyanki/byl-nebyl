@@ -1,6 +1,7 @@
 // Эффекты: всплывающие цифры урона, частицы, кольца взрывов. Позиции — в мировых координатах,
 // смещения по высоте — в экранных пикселях.
-import { rnd } from '../core/math.js';
+import { crand } from '../core/rng.js';
+const rnd = (lo, hi) => lo + crand() * (hi - lo);   // B-35: косметика не тратит игровое зерно
 
 export class FX {
   constructor() { this.texts = []; this.parts = []; this.rings = []; this.flashes = []; this.bolts = []; }
@@ -11,7 +12,7 @@ export class FX {
   burst(x, y, color, n = 8, z = 10, speed = 40) {
     for (let i = 0; i < n; i++) {
       const a = rnd(0, Math.PI * 2);
-      this.parts.push({ x, y, ox: 0, oy: -z, vx: Math.cos(a) * rnd(0.3, 1) * speed, vy: Math.sin(a) * rnd(0.3, 1) * speed * 0.6 - speed * 0.5, g: 120, t: 0, dur: rnd(0.35, 0.7), color, size: Math.random() < 0.3 ? 2 : 1 });
+      this.parts.push({ x, y, ox: 0, oy: -z, vx: Math.cos(a) * rnd(0.3, 1) * speed, vy: Math.sin(a) * rnd(0.3, 1) * speed * 0.6 - speed * 0.5, g: 120, t: 0, dur: rnd(0.35, 0.7), color, size: crand() < 0.3 ? 2 : 1 });
     }
   }
   rise(x, y, color, n = 20, h = 40) {

@@ -1,0 +1,112 @@
+{
+ "character": "Упырь",
+ "folder": "upyr",
+ "frame_size": [
+  64,
+  64
+ ],
+ "pivot": [
+  32,
+  56
+ ],
+ "directions": {
+  "prototype_dirs": "0..7 (0 = towards the camera, 2 = left, 4 = away, 6 = right); BACK = {3,4,5}",
+  "sheet": "dir in {3,4,5} -> *_ne, otherwise -> *_se",
+  "flip": "draw mirrored (scale x = -1 around the pivot) when dirSide(dir, facing) < 0",
+  "rule": "scale.md §4.1 / GDD §12.1.2: 2 drawn directions (SE, NE) + horizontal mirror (SW, NW); the 8 logical directions of the engine map onto these 4 views"
+ },
+ "mirror_rule": "flip horizontally around the frame centre line x = 32.0; pivot stays (32, 56)",
+ "animations": {
+  "upyr_idle": {
+   "files": {
+    "se": "upyr_idle_se.png",
+    "ne": "upyr_idle_ne.png"
+   },
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "events": {}
+  },
+  "upyr_walk": {
+   "files": {
+    "se": "upyr_walk_se.png",
+    "ne": "upyr_walk_ne.png"
+   },
+   "frames": 8,
+   "fps": 10,
+   "loop": true,
+   "events": {
+    "note": "slow shamble (speed 2.5 tiles/s): 8 frames @10, 2 steps per cycle; raise fps with speed for elites (Прыткий +30% -> 13 fps)"
+   }
+  },
+  "upyr_attack": {
+   "files": {
+    "se": "upyr_attack_se.png",
+    "ne": "upyr_attack_ne.png"
+   },
+   "frames": 6,
+   "fps": 5,
+   "loop": false,
+   "events": {
+    "hit_frame": 3,
+    "telegraph_frames": [
+     0,
+     2
+    ],
+    "sync": "attackTime 1.8 s, hitAt 0.6 s (monsters.json): 6 frames at 5 fps, frame 3 (the smash) starts at exactly 0.6 s; the anim ends at 1.2 s, hold idle for the rest of attackTime. Heavy two-handed overhead blow (GDD: «редкий тяжёлый удар»), dirt kicked up at the claws on frames 3-4"
+   }
+  },
+  "upyr_hurt": {
+   "files": {
+    "se": "upyr_hurt_se.png",
+    "ne": "upyr_hurt_ne.png"
+   },
+   "frames": 2,
+   "fps": 8,
+   "loop": false,
+   "events": {
+    "note": "2 frames, head snaps back; play over idle/walk"
+   }
+  },
+  "upyr_death": {
+   "files": {
+    "se": "upyr_death_se.png",
+    "ne": "upyr_death_ne.png"
+   },
+   "frames": 8,
+   "fps": 10,
+   "loop": false,
+   "events": {
+    "collapse_frames": [
+     0,
+     3
+    ],
+    "nebyl_wisp_frames": [
+     4,
+     6
+    ],
+    "note": "recoils, buckles, falls on its face; the Небыль leaves the body as a small green wisp (4-6); last frame holds (corpse, the engine fades it out)"
+   }
+  },
+  "upyr_rise": {
+   "files": {
+    "se": "upyr_rise_se.png",
+    "ne": "upyr_rise_ne.png"
+   },
+   "frames": 6,
+   "fps": 8,
+   "loop": false,
+   "events": {
+    "frames": "0 a clawed hand breaks the ground, 1 head and both hands, 2 head and shoulders, 3 waist-deep, 4 climbs out on one knee, 5 stands shaking the earth off (≈ idle 0)",
+    "sync": "riseTime 0.8 s (zones ambush.rise, Кривша summon): frame = min(5, floor(t / riseTime * 6)); the grave (hole, soil, torn turf) is part of the frames, so DRAW IT AT THE PIVOT WITHOUT the grey-box clip/slide (world.js 'rise'). Summoned by Кривша: fx_krivsha_summon frames 0-2 come first (upyr_visible_from_frame 3): play rise over the remaining 0.5 s -> frame = min(5, floor((t - 0.3) / 0.5 * 6)), nothing before t = 0.3"
+   }
+  }
+ },
+ "roles": "Залесье packs (mlvl 1-2), ambush waves rising from the ground (zone.ambush), forest trail and капище (mlvl 2-5), Кривша's summons (mlvl 4) — the same sprite everywhere; elite / champion tints and outlines are the engine's",
+ "height_for_engine": {
+  "def.height": 40,
+  "measured_body_px": "37-39 (idle, walk; head top incl. outline)",
+  "raised_claws_px": "attack wind-up up to 49, hurt 42 (not the body)",
+  "r": 0.35
+ }
+}

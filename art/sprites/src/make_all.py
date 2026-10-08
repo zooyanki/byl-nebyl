@@ -11,6 +11,7 @@ import zguba as ZG
 import effects as FX
 import make_rest  # GDD v1.7 §12.1.5 rest fx (fx_rest_*, fx_safe_ring)
 import make_m1b   # M1 milestone (b): krivsha, mara, ognishche, idol_perun, fx_krivsha_*, fx_mara_*
+import make_m1c   # M1 milestone (c): upyr, item_beresta, fx_chur_portal (the last grey boxes)
 
 ROOT = X.ROOT
 VIEWS = ("se", "ne")
@@ -168,6 +169,7 @@ if __name__ == "__main__":
     effects()
     make_rest.run(MEAS)
     make_m1b.run(MEAS)
+    make_m1c.run(MEAS)
     X.REPORT["measures"] = MEAS
     with open(os.path.join(ROOT, "sprites_report.json"), "w") as f:
         json.dump(X.REPORT, f, ensure_ascii=False, indent=1)

@@ -1,6 +1,7 @@
 // «Капище Перуна» М1 (GDD v1.7 §8.1–8.2, §5.4; act1.md М1 п.5–7): двор 64×64 в лесной кромке, вход с запада
 // (ворота с Лесной тропы), горящий идол Перуна в центре арены «Круг огнищ» 24×24, три огнища по краю арены.
 // Стаи и огнища — data/zones/kapishche.json. Тихих кругов в зоне нет (Чуров камень входа — на тропе у ворот).
+import { HALF_W } from '../config.js';
 import { makeRng, hash2 } from '../core/rng.js';
 import { SUB } from './collision.js';
 import { GameMap, T_DIRT, resolveObjects } from './map.js';
@@ -24,7 +25,8 @@ export function generateKapishche(seed, zone) {
     const prop = m.addProp('hearth', Math.floor(h.x), Math.floor(h.y), 1, { cursed: true });
     const o = { ...h, type: 'hearth', x: prop.x + 0.5, y: prop.y + 0.5, sx: prop.x + 0.5, sy: prop.y + 1.6, reach: 1.25, hold, done: false, prop };
     m.objects.push(o); m.hearths.push(o);
-    m.lights.push({ x: o.x, y: o.y, r: 70, kind: 'fire', hearth: o });
+    const HL = zone.light || { r: 3 };
+    m.lights.push({ x: o.x, y: o.y, r: (HL.r || 3) * HALF_W * Math.SQRT2, rTiles: HL.r || 3, kind: 'fire', hearth: o });
   }
   // земля: утоптанный круг у идола, тропа от ворот, пятна у огнищ
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {

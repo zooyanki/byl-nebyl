@@ -1,0 +1,65 @@
+{
+ "price": {
+  "base": {
+   "weapon": 30,
+   "body": 40,
+   "other": 20,
+   "neck": 50
+  },
+  "rarity": {
+   "normal": 1,
+   "magic": 3,
+   "rare": 6,
+   "unique": 10
+  },
+  "sellDiv": 5
+ },
+ "refreshMs": 600000,
+ "buyback": 10,
+ "tverdyata": {
+  "slots": 12,
+  "normalPct": 0.6,
+  "split": {
+   "weapon": 4,
+   "body": 2,
+   "head": 2,
+   "shield": 2,
+   "gloves": 1,
+   "feet": 1
+  }
+ },
+ "vedana": {
+  "slots": 8,
+  "magicOnly": true,
+  "split": {
+   "ring": 3,
+   "obereg": 1,
+   "grivna": 1,
+   "belt": 3
+  },
+  "potions": {
+   "life1": 1,
+   "yar1": 1,
+   "life2": 6,
+   "yar2": 6,
+   "life3": 12,
+   "yar3": 12
+  },
+  "beresta": "beresta",
+  "berestaPrice": 25
+ },
+ "heal": {
+  "fullHp": true,
+  "fullYar": true,
+  "clearPorcha": true,
+  "clearPorchaNebyli": true,
+  "clearChad": false
+ },
+ "respec": {
+  "after": "m1.turnedIn",
+  "once": true,
+  "stats": true,
+  "skills": true,
+  "keepStarterRanks": true
+ }
+}

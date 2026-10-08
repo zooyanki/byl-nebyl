@@ -1,0 +1,428 @@
+{
+ "id": "ladoga",
+ "name": "Ладога",
+ "band": [
+  "Ладога",
+  "Акт I · Город"
+ ],
+ "realm": "byl",
+ "mission": "hub",
+ "mlvl": [],
+ "repopulate": "onNewSession",
+ "implemented": true,
+ "noAttack": true,
+ "safeAll": true,
+ "size": [
+  48,
+  48
+ ],
+ "rest": {
+  "pctPerSec": 20,
+  "noDamageSec": 2,
+  "area": "all"
+ },
+ "krada": [
+  23,
+  21
+ ],
+ "portalTown": [
+  24.0,
+  25.2
+ ],
+ "respawn": [
+  24.0,
+  18.8
+ ],
+ "waterFromY": 41,
+ "pier": [
+  23,
+  41,
+  3,
+  6
+ ],
+ "gangway": [
+  26,
+  44
+ ],
+ "roads": {
+  "ns": [
+   22,
+   25,
+   0,
+   40
+  ],
+  "we": [
+   0,
+   47,
+   20,
+   23
+  ]
+ },
+ "sand": [
+  38,
+  40
+ ],
+ "palisade": {
+  "x0": 8,
+  "x1": 39,
+  "y0": 6,
+  "y1": 37,
+  "gaps": [
+   [
+    39,
+    21,
+    1,
+    2
+   ],
+   [
+    23,
+    6,
+    2,
+    1
+   ],
+   [
+    8,
+    21,
+    1,
+    2
+   ],
+   [
+    23,
+    37,
+    2,
+    1
+   ]
+  ]
+ },
+ "props": [
+  [
+   "izba",
+   17,
+   26,
+   4,
+   [
+    17,
+    26,
+    4,
+    4
+   ]
+  ],
+  [
+   "izba",
+   27,
+   26,
+   5,
+   [
+    27,
+    26,
+    5,
+    4
+   ]
+  ],
+  [
+   "izba",
+   33,
+   14,
+   5,
+   [
+    33,
+    14,
+    5,
+    5
+   ]
+  ],
+  [
+   "izba",
+   10,
+   8,
+   4,
+   [
+    10,
+    8,
+    4,
+    4
+   ]
+  ],
+  [
+   "izba",
+   15,
+   8,
+   4,
+   [
+    15,
+    8,
+    4,
+    4
+   ]
+  ],
+  [
+   "izba",
+   29,
+   8,
+   6,
+   [
+    29,
+    8,
+    6,
+    4
+   ]
+  ],
+  [
+   "izba",
+   12,
+   31,
+   4,
+   [
+    12,
+    31,
+    4,
+    4
+   ]
+  ],
+  [
+   "izba",
+   9,
+   26,
+   3,
+   [
+    9,
+    26,
+    3,
+    3
+   ]
+  ],
+  [
+   "izba",
+   33,
+   31,
+   3,
+   [
+    33,
+    31,
+    3,
+    3
+   ]
+  ],
+  [
+   "cart",
+   17,
+   16,
+   3,
+   [
+    17,
+    16,
+    3,
+    2
+   ]
+  ],
+  [
+   "cart",
+   28,
+   16,
+   3,
+   [
+    28,
+    16,
+    3,
+    2
+   ]
+  ],
+  [
+   "anvil",
+   26,
+   29,
+   1,
+   [
+    26,
+    29,
+    1,
+    1
+   ]
+  ],
+  [
+   "idol",
+   37,
+   19,
+   1,
+   [
+    37,
+    19,
+    1,
+    1
+   ]
+  ],
+  [
+   "churstone",
+   27,
+   19,
+   1,
+   [
+    27,
+    19,
+    1,
+    1
+   ]
+  ],
+  [
+   "ladya",
+   26,
+   43,
+   12,
+   [
+    27,
+    43,
+    10,
+    3
+   ]
+  ]
+ ],
+ "captions": [
+  {
+   "x": 24.5,
+   "y": 42.2,
+   "text": "Пристань"
+  },
+  {
+   "x": 24,
+   "y": 17.2,
+   "text": "Торг"
+  },
+  {
+   "x": 29.5,
+   "y": 30.4,
+   "text": "Кузня"
+  }
+ ],
+ "npcs": [
+  {
+   "id": "vyshata",
+   "nameKey": "npc.vyshata",
+   "role": "vyshata",
+   "pier": [
+    24.5,
+    41.5
+   ],
+   "court": [
+    34.5,
+    19.5
+   ]
+  },
+  {
+   "id": "vedana",
+   "nameKey": "npc.vedana",
+   "role": "vedana",
+   "female": true,
+   "x": 21.5,
+   "y": 27.5
+  },
+  {
+   "id": "tverdyata",
+   "nameKey": "npc.tverdyata",
+   "role": "tverdyata",
+   "x": 26.5,
+   "y": 27.5
+  }
+ ],
+ "mal": {
+  "nameKey": "npc.mal",
+  "route": [
+   [
+    22.0,
+    25.5
+   ],
+   [
+    26.0,
+    24.5
+   ],
+   [
+    33.0,
+    21.0
+   ],
+   [
+    21.0,
+    19.5
+   ]
+  ],
+  "speed": 3,
+  "pause": 5,
+  "stop": 2
+ },
+ "dummy": [
+  19.5,
+  39.5
+ ],
+ "objects": [
+  {
+   "id": "stash",
+   "type": "stash",
+   "x": 27.5,
+   "y": 44.5,
+   "reach": 1.6
+  },
+  {
+   "id": "to_zalesye",
+   "type": "exit",
+   "x": 46.5,
+   "y": 22.0,
+   "r": 1.4,
+   "to": "zalesye",
+   "entry": "from_ladoga"
+  },
+  {
+   "id": "to_sopki",
+   "type": "exit",
+   "x": 24.0,
+   "y": 0.6,
+   "r": 1.3,
+   "opens": "m1.turnedIn",
+   "lockedKey": "ui.error.gate_closed",
+   "approach": 2
+  },
+  {
+   "id": "to_bor",
+   "type": "exit",
+   "x": 0.6,
+   "y": 22.0,
+   "r": 1.3,
+   "opens": "m2.turnedIn",
+   "lockedKey": "ui.error.gate_closed",
+   "approach": 2
+  }
+ ],
+ "entries": {
+  "start": {
+   "x": 26.5,
+   "y": 44.5
+  },
+  "krada": {
+   "at": "krada"
+  },
+  "from_zalesye": {
+   "x": 44.5,
+   "y": 22.0
+  },
+  "from_sopki": {
+   "x": 24.0,
+   "y": 3.5
+  },
+  "from_bor": {
+   "x": 3.5,
+   "y": 22.0
+  },
+  "respawn": {
+   "x": 24.0,
+   "y": 18.8
+  }
+ },
+ "safeZones": [
+  {
+   "at": "krada",
+   "radius": 10,
+   "rest": {
+    "pctPerSec": 20,
+    "noDamageSec": 2
+   }
+  }
+ ],
+ "packs": []
+}
