@@ -1,0 +1,126 @@
+{
+ "_about": "Формулы героя и монстров, капы, кривая опыта (GDD v1.2 §3.2–3.5, §4.2, §4.5, §5.1). Грузится fetch() при старте.",
+ "attrs": [
+  {
+   "id": "str",
+   "name": "Сила"
+  },
+  {
+   "id": "dex",
+   "name": "Ловкость"
+  },
+  {
+   "id": "vit",
+   "name": "Живучесть"
+  },
+  {
+   "id": "ene",
+   "name": "Дух"
+  }
+ ],
+ "resourceName": "Ярь",
+ "heroStart": {
+  "str": 20,
+  "dex": 20,
+  "vit": 25,
+  "ene": 15
+ },
+ "pointsPerLevel": 5,
+ "maxLevel": 20,
+ "hp": {
+  "base": 20,
+  "perVit": 2,
+  "perLevel": 4
+ },
+ "yar": {
+  "base": 10,
+  "perEne": 2,
+  "perLevel": 2
+ },
+ "yarRegenPctPerSec": 1.5,
+ "hpRegenPerSec": 0,
+ "ar": {
+  "perDex": 5,
+  "perLevel": 5
+ },
+ "defDexDiv": 4,
+ "hitChance": {
+  "min": 0.05,
+  "max": 0.95
+ },
+ "crit": {
+  "base": 5,
+  "perDex": 0.1,
+  "cap": 50,
+  "mult": 1.5
+ },
+ "caps": {
+  "ias": 50,
+  "fcr": 30,
+  "frw": 30,
+  "res": 75,
+  "block": 50
+ },
+ "heroSpeed": 4.5,
+ "meleeRange": 1.2,
+ "hitFrame": 0.6,
+ "castTime": 0.8,
+ "castRelease": 0.3,
+ "unarmed": {
+  "min": 1,
+  "max": 2,
+  "speed": 1.2
+ },
+ "hitStop": 0.05,
+ "heroStun": {
+  "hpFrac": 0.12,
+  "time": 0.2
+ },
+ "monsterStagger": {
+  "hpFrac": 0.1,
+  "time": 0.25,
+  "cooldown": 1.5
+ },
+ "xpCurve": {
+  "base": 100,
+  "exp": 1.75,
+  "roundTo": 10
+ },
+ "monsterXp": {
+  "base": 6,
+  "k": 3,
+  "exp": 1.35
+ },
+ "xpPenalty": {
+  "freeDiff": 5,
+  "perLevel": 0.2,
+  "min": 0.1
+ },
+ "monsterScale": {
+  "hp": [
+   15,
+   7
+  ],
+  "dmgMin": [
+   1,
+   1
+  ],
+  "dmgMax": [
+   3,
+   2
+  ],
+  "ar": [
+   10,
+   8
+  ],
+  "def": [
+   8,
+   6
+  ]
+ },
+ "death": {
+  "silverLossPct": 10,
+  "respawnInvuln": 2
+ },
+ "skillRankEveryLevels": 2
+}

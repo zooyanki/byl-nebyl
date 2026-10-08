@@ -1,0 +1,261 @@
+// Отрисовка мира: пол (пререндер), сортировка по глубине пропсов/персонажей/добычи, свет, эффекты, подписи.
+import { VIEW_W, VIEW_H, HALF_W, HALF_H, PANEL_Y } from '../config.js';
+import { PAL } from '../palette.js';
+import { w2s } from '../core/iso.js';
+import { hash2 } from '../core/rng.js';
+import { T_GRASS, T_DIRT, T_WATER } from '../world/map.js';
+import { diamond, rect, ellipse, ellipseStroke } from './shapes.js';
+import { drawProp, propHeight, propCovers } from './props.js';
+import { drawHero, drawEnemy, drawCorpse, drawGroundItem, drawProjectile } from './sprites.js';
+import { drawText, textWidth } from '../core/font.js';
+
+export class WorldRenderer {
+  constructor(map) {
+    this.map = map;
+    this.floor = buildFloor(map);
+    this.dark = document.createElement('canvas');
+    this.dark.width = VIEW_W; this.dark.height = VIEW_H;
+    this.dctx = this.dark.getContext('2d');
+  }
+
+  render(ctx, game) {
+    const { map, hero, cam } = game;
+    const time = game.time;
+    const toS = (x, y) => game.toS(x, y);
+
+    ctx.fillStyle = PAL.pine_dk;
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    ctx.drawImage(this.floor, Math.round(-map.h * HALF_W - cam.x + game.camCX + game.shakeX), Math.round(-cam.y + game.camCY + game.shakeY));
+
+    // трупы и добыча — плоско на земле, всегда под персонажами (scale.md §4.1)
+    for (const e of game.enemies) if (e.dead) { const [sx, sy] = toS(e.x, e.y); drawCorpse(ctx, sx, sy, e); }
+    for (const it of game.loot.items) {
+      const k = Math.min(1, it.dropT / 0.35);
+      const [sx, sy] = toS(it.fromX + (it.x - it.fromX) * k, it.fromY + (it.y - it.fromY) * k);
+      drawGroundItem(ctx, sx, sy - Math.round(Math.sin(k * Math.PI) * 16), it);
+    }
+
+    // список для сортировки по глубине
+    const list = [];
+    const vis = (sx, sy, h = 40) => sx > -60 && sx < VIEW_W + 60 && sy > -10 && sy - h < VIEW_H + 10;
+    for (const p of map.props) {
+      const [sx, sy] = toS(p.x + p.size / 2, p.y + p.size / 2);
+      if (!vis(sx, sy + p.size * HALF_H, propHeight(p) + p.size * HALF_H)) continue;
+      list.push({ d: p.depth, k: 0, p });
+    }
+    for (const e of game.enemies) if (!e.dead) list.push({ d: e.x + e.y, k: 2, e });
+    if (!hero.dead) list.push({ d: hero.x + hero.y, k: 3 });
+    for (const p of game.combat.projectiles) list.push({ d: p.x + p.y, k: 4, p });
+    list.sort((a, b) => a.d - b.d);
+
+    // «рентген» (scale.md §4.4): то, что стоит перед героем или врагом под курсором и закрывает их, полупрозрачно
+    const xray = [];
+    if (!hero.dead) { const [sx, sy] = toS(hero.x, hero.y); xray.push({ d: hero.x + hero.y, x: sx - 10, y: sy - 46, w: 20, h: 48 }); }
+    if (game.hoverEnemy) { const e = game.hoverEnemy, [sx, sy] = toS(e.x, e.y); xray.push({ d: e.x + e.y, x: sx - 10, y: sy - e.def.height, w: 20, h: e.def.height }); }
+    const covers = (p, d) => xray.some((q) => d > q.d && propCovers(p, toS, q));
+    for (const o of list) {
+      if (o.k === 0) {
+        if (o.p.type !== 'fire' && covers(o.p, o.d)) { ctx.save(); ctx.globalAlpha = 0.45; drawProp(ctx, o.p, toS, time); ctx.restore(); }
+        else drawProp(ctx, o.p, toS, time);
+      } else if (o.k === 2) {
+        const [sx, sy] = toS(o.e.x, o.e.y);
+        if (vis(sx, sy)) drawEnemy(ctx, sx, sy, o.e, time, game.hoverEnemy === o.e);
+      } else if (o.k === 3) {
+        const [sx, sy] = toS(hero.x, hero.y);
+        drawHero(ctx, sx, sy, hero, time);
+      } else {
+        const [sx, sy] = toS(o.p.x, o.p.y);
+        drawProjectile(ctx, sx, sy, o.p, time);
+      }
+    }
+    // силуэт героя, если он за препятствием
+    if (!hero.dead) {
+      const [sx, sy] = toS(hero.x, hero.y);
+      ctx.save(); ctx.globalAlpha = 0.28; drawHero(ctx, sx, sy, hero, time); ctx.restore();
+    } else {
+      const [sx, sy] = toS(hero.x, hero.y);
+      ctx.fillStyle = PAL.ink; ctx.fillRect(sx - 15, sy - 7, 30, 8);
+      ctx.fillStyle = PAL.red_dk; ctx.fillRect(sx - 14, sy - 6, 22, 6);
+      ctx.fillStyle = PAL.slate_lt; ctx.fillRect(sx + 7, sy - 7, 7, 6);
+    }
+
+    this.renderFx(ctx, game, toS);
+    this.renderLight(ctx, game, toS);
+    this.renderFxText(ctx, game, toS);
+    this.renderLabels(ctx, game, toS);
+  }
+
+  renderFx(ctx, game, toS) {
+    const fx = game.fx;
+    for (const r of fx.rings) {
+      const [sx, sy] = toS(r.x, r.y);
+      const k = r.t / r.dur;
+      const rr = r.radius * (0.3 + 0.7 * k);
+      ellipse(ctx, sx, sy, rr * HALF_W * Math.SQRT2, rr * HALF_H * Math.SQRT2, PAL.flame, 0.35 * (1 - k));
+      ellipseStroke(ctx, sx, sy, rr * HALF_W * Math.SQRT2, rr * HALF_H * Math.SQRT2, r.color, 1 - k, 2);
+    }
+    for (const p of fx.parts) {
+      if (p.t < 0) continue;
+      const [sx, sy] = toS(p.x, p.y);
+      ctx.globalAlpha = Math.max(0, 1 - p.t / p.dur);
+      rect(ctx, sx + p.ox, sy + p.oy, p.size, p.size, p.color);
+    }
+    ctx.globalAlpha = 1;
+    // столп света при новом уровне
+    const h = game.hero;
+    if (h.levelFx > 0) {
+      const [sx, sy] = toS(h.x, h.y);
+      const a = Math.min(1, h.levelFx) * 0.45;
+      ctx.save(); ctx.globalAlpha = a;
+      rect(ctx, sx - 12, sy - 96, 24, 96, PAL.bronze_hi);
+      ctx.globalAlpha = a * 0.6;
+      rect(ctx, sx - 16, sy - 110, 32, 110, PAL.flame);
+      ctx.restore();
+    }
+  }
+
+  renderLight(ctx, game, toS) {
+    const d = this.dctx;
+    d.globalCompositeOperation = 'source-over';
+    d.clearRect(0, 0, VIEW_W, VIEW_H);
+    d.fillStyle = 'rgba(8,10,20,0.5)';
+    d.fillRect(0, 0, VIEW_W, VIEW_H);
+    d.globalCompositeOperation = 'destination-out';
+    const hole = (sx, sy, r, a = 1) => {
+      const g = d.createRadialGradient(sx, sy, 0, sx, sy, r);
+      g.addColorStop(0, `rgba(0,0,0,${a})`);
+      g.addColorStop(0.55, `rgba(0,0,0,${a * 0.7})`);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      d.fillStyle = g;
+      d.fillRect(sx - r, sy - r, r * 2, r * 2);
+    };
+    const [hx, hy] = toS(game.hero.x, game.hero.y);
+    hole(hx, hy - 20, 190, 0.95);
+    const warm = [];
+    for (const l of game.map.lights) {
+      const [sx, sy] = toS(l.x, l.y);
+      const r = l.r + Math.sin(game.time * 7) * 4;
+      hole(sx, sy - 8, r, 1); warm.push([sx, sy - 8, r, 0.22]);
+    }
+    for (const p of game.combat.projectiles) { const [sx, sy] = toS(p.x, p.y); hole(sx, sy - 12, 60, 0.9); warm.push([sx, sy - 12, 50, 0.25]); }
+    for (const f of game.fx.flashes) { const [sx, sy] = toS(f.x, f.y); const k = 1 - f.t / f.dur; hole(sx, sy, f.r, k); warm.push([sx, sy, f.r, 0.35 * k]); }
+    ctx.drawImage(this.dark, 0, 0);
+    // тёплый подсвет от огня
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const [sx, sy, r, a] of warm) {
+      const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
+      g.addColorStop(0, `rgba(230,134,43,${a})`);
+      g.addColorStop(1, 'rgba(230,134,43,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(sx - r, sy - r, r * 2, r * 2);
+    }
+    ctx.restore();
+  }
+
+  renderFxText(ctx, game, toS) {
+    for (const t of game.fx.texts) {
+      const [sx, sy] = toS(t.x, t.y);
+      const k = t.t / t.dur;
+      const a = k > 0.7 ? 1 - (k - 0.7) / 0.3 : 1;
+      drawText(ctx, sx + t.ox, sy - t.z - k * 16, t.str, t.color, { align: 'c', outline: true, alpha: a, scale: t.big ? 2 : 1 });
+    }
+  }
+
+  // Подписи предметов на земле (как в Diablo II): видны, пока зажат Alt (или включены всегда — Z);
+  // без них подписывается только предмет под курсором. Плашки раздвигаются, чтобы не перекрывались.
+  renderLabels(ctx, game, toS) {
+    const rects = [];
+    const show = game.labelsShown;
+    const items = game.loot.items.filter((it) => it.dropT > 0.3 && (show || it === game.hoverGround));
+    const pos = items.map((it) => { const [sx, sy] = toS(it.x, it.y); return { it, sx, sy }; });
+    pos.sort((a, b) => b.sy - a.sy);
+    for (const p of pos) {
+      const w = textWidth(p.it.label) + 7, h = 13;
+      let x = Math.round(p.sx - w / 2), y = p.sy - 26;
+      if (x + w < 0 || x > VIEW_W || y > PANEL_Y || y + h < 0) continue;
+      for (let guard = 0; guard < 10; guard++) {
+        const hit = rects.find((r) => x < r.x + r.w && x + w > r.x && y < r.y + r.h + 1 && y + h + 1 > r.y);
+        if (!hit) break;
+        y = hit.y - h - 1;
+      }
+      rects.push({ x, y, w, h, item: p.it });
+    }
+    const m = game.input;
+    let hovered = null;
+    if (!game.overUi) for (const r of rects) if (m.mx >= r.x && m.mx < r.x + r.w && m.my >= r.y && m.my < r.y + r.h) hovered = r.item;
+    for (const r of rects) {
+      const hv = r.item === hovered || r.item === game.hoverGround;
+      ctx.save();
+      ctx.globalAlpha = hv ? 0.9 : 0.72;
+      ctx.fillStyle = PAL.ink;
+      ctx.fillRect(r.x, r.y, r.w, r.h);
+      ctx.restore();
+      ctx.strokeStyle = hv ? PAL.bronze_lt : PAL.wood_md;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+      for (const [px, py] of [[r.x, r.y], [r.x + r.w - 1, r.y], [r.x, r.y + r.h - 1], [r.x + r.w - 1, r.y + r.h - 1]]) rect(ctx, px, py, 1, 1, PAL.bronze_lt);
+      drawText(ctx, r.x + 4, r.y + 2, r.item.label, hv ? PAL.bronze_hi : r.item.color);
+    }
+    game.labelRects = show ? rects : [];
+    game.hoverLabel = show ? hovered : null;
+  }
+}
+
+// ромб сабтайла 16×8 (½ тайла по каждой оси)
+function subDiamond(ctx, x, y, c) {
+  ctx.fillStyle = c;
+  for (let r = 0; r < 8; r++) {
+    const half = r < 4 ? 2 * (r + 1) : 2 * (8 - r);
+    ctx.fillRect(x + 8 - half, y + r, half * 2, 1);
+  }
+}
+
+function buildFloor(map) {
+  const c = document.createElement('canvas');
+  c.width = (map.w + map.h) * HALF_W;
+  c.height = (map.w + map.h) * HALF_H + 2;
+  const ctx = c.getContext('2d');
+  const ox = map.h * HALF_W;
+  const noise = (x, y) => Math.sin(x * 0.35) + Math.sin(y * 0.29 + 1) + Math.sin((x + y) * 0.17 + 2);
+  const wet = (sx, sy) => map.waterSub(sx, sy) || sx < 0 || sy < 0 || sx >= map.sw || sy >= map.sh;
+  for (let y = 0; y < map.h; y++) {
+    for (let x = 0; x < map.w; x++) {
+      const [ix, iy] = w2s(x, y);
+      const px = ix + ox - HALF_W, py = iy;
+      const g = map.groundAt(x, y);
+      const h = hash2(x, y, 1), n = noise(x, y);
+      let base, spk, spk2;
+      if (g === T_WATER) {
+        const shore = [[1, 0], [0, -1], [1, -1]].some(([dx, dy]) => map.groundAt(x + dx, y + dy) !== T_WATER && map.inside(x + dx, y + dy));
+        base = shore ? PAL.sea : PAL.sea_dk; spk = PAL.sea; spk2 = shore ? PAL.birch : PAL.slate_lt;
+      } else if (g === T_DIRT) {
+        base = h < 0.5 ? PAL.wood_md : PAL.wood; spk = PAL.wood_dk; spk2 = PAL.wood_lt;
+      } else {
+        base = n < -1.1 ? PAL.pine : (n > 1.6 && h < 0.5 ? PAL.moss_lt : PAL.moss); spk = PAL.pine; spk2 = PAL.moss_lt;
+      }
+      diamond(ctx, px, py, base);
+      for (let i = 0; i < 7; i++) {
+        const a = hash2(x * 7 + i, y * 13 - i, 5), b = hash2(x * 3 - i, y * 11 + i, 9);
+        const sx = Math.floor(6 + a * 20), sy = Math.floor(4 + b * 8);
+        ctx.fillStyle = i % 3 === 0 ? spk2 : spk;
+        if (g === T_WATER) ctx.fillRect(px + sx, py + sy, 3, 1);
+        else ctx.fillRect(px + sx, py + sy, 1, 1);
+      }
+      if (g === T_GRASS && h > 0.8) { ctx.fillStyle = PAL.moss_lt; ctx.fillRect(px + 14, py + 6, 1, 2); ctx.fillRect(px + 16, py + 5, 1, 3); }
+      // берег с точностью до сабтайла: вода на части тайла
+      if (g !== T_WATER) {
+        for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) {
+          const sx = x * 2 + i, sy = y * 2 + j;
+          if (!map.waterSub(sx, sy)) continue;
+          const [qx, qy] = w2s(sx / 2, sy / 2);
+          const edge = !wet(sx + 1, sy) || !wet(sx, sy - 1) || !wet(sx + 1, sy - 1);
+          subDiamond(ctx, qx + ox - 8, qy, edge ? PAL.sea : PAL.sea_dk);
+          ctx.fillStyle = edge ? PAL.birch : PAL.sea;
+          ctx.fillRect(qx + ox - 3 + Math.floor(hash2(sx, sy, 4) * 4), qy + 3, 3, 1);
+        }
+      }
+    }
+  }
+  return c;
+}
