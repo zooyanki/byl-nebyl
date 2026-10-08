@@ -362,7 +362,7 @@ def forest_world():
     stump(lit, fx + 34, fy - 4, seed=2)
     MEAS["fallen_idol_1"] = fallen_idol(lit, fx, fy, k=1, seed=4)
     snap_before_rift = snapshot(lit)
-    tear = rift_tear(lit, rx, ry, th=89, hw=13, seed=1, stars=4)
+    tear = rift_tear(lit, rx, ry, th=88, hw=13, seed=1, stars=4)
     trows = np.where(tear["inside"] & (tear["dx"] <= tear["half"] + 0.5))[0]
     MEAS["rift_s23"] = dict(top=int(trows.min()), bottom=int(trows.max()), h=int(trows.max() - trows.min() + 1))
     return lit, rng, tear
@@ -536,8 +536,8 @@ def forest_edges_4(lit, rng):
 
 def rift_double(lit):
     rx, ry = S4["rift"]
-    t2 = rift_tear(lit, rx + 13, ry - 4, th=76, hw=12, seed=8, stars=3)
-    t1 = rift_tear(lit, rx - 8, ry, th=89, hw=15, seed=3, stars=4)
+    t2 = rift_tear(lit, rx + 18, ry - 4, th=76, hw=12, seed=8, stars=3)
+    t1 = rift_tear(lit, rx - 8, ry, th=88, hw=15, seed=3, stars=4)
     m1 = t1["inside"] & (t1["dx"] <= t1["half"] + 0.5)
     m2 = t2["inside"] & (t2["dx"] <= t2["half"] + 0.5)
     rows = np.where(m1.any(1))[0]

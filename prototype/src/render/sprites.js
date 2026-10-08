@@ -4,15 +4,29 @@ import { rect, ellipse, ellipseStroke, figure, pline, disc } from './shapes.js';
 
 export function shadow(ctx, x, y, rx = 9, ry = 3.5) { ellipse(ctx, x, y, rx, ry, PAL.ink, 0.45); }
 
+// --- 8 направлений (API спрайтов: dir 0–7; 0 — к камере, далее по часовой через «влево»: 2 — влево, 4 — от камеры, 6 — вправо)
+const BACK = new Set([3, 4, 5]), FRONT = new Set([7, 0, 1]);
+export const dirSide = (dir, fallback = 1) => (dir >= 5 ? 1 : dir >= 1 && dir <= 3 ? -1 : fallback);
+export function dirUnit(dir) { const a = Math.PI / 2 + dir * Math.PI / 4; return [Math.cos(a), Math.sin(a)]; }
+// грей-бокс указатель взгляда: клинышек на краю тени у ног
+export function dirMarker(ctx, x, y, dir, rx, ry, c) {
+  const [ux, uy] = dirUnit(dir);
+  const px = Math.round(x + ux * (rx + 2)), py = Math.round(y + uy * (ry + 1));
+  rect(ctx, px - 1, py, 3, 1, c); rect(ctx, px, py - 1, 1, 3, c);
+  rect(ctx, Math.round(px + ux * 2), Math.round(py + uy * 1.5), 1, 1, c);
+}
+
 // Герой по design/scale.md §2: рост 44 px (шпиль 0–2, шелом до 7, лицо и бармица 7–12, плечи 13,
 // пояс 26, колени 35, подошвы 44 — ровно на строке pivot), плечи 14, щит 13×15, клинок 16×2.
-export function drawHero(ctx, x, y, h, time, outline = PAL.ink) {
-  const f = h.facing;
+export function drawHero(ctx, x, y, h, dir, time, outline = PAL.ink) {
+  if (dir == null) dir = h.dir || 0;
+  const f = dirSide(dir, h.facing);
+  const back = BACK.has(dir), front = FRONT.has(dir);
   const a = h.action;
   const step = h.moving ? Math.sin(h.walkPhase * 1.8) : 0;
   const bob = h.moving ? Math.round(Math.abs(step)) : 0;
   const l = Math.round(step * 2);
-  if (!h.dead) shadow(ctx, x, y, 9, 3.5);
+  if (!h.dead) { shadow(ctx, x, y, 9, 3.5); dirMarker(ctx, x, y, dir, 9, 3.5, PAL.bronze_lt); }
   const T = y - 43 - bob;               // верхняя строка силуэта
   const parts = [
     { x: x - 8 - f, y: T + 12, w: 16, h: 22, c: PAL.red },             // плащ (цветовой акцент)
@@ -27,10 +41,17 @@ export function drawHero(ctx, x, y, h, time, outline = PAL.ink) {
     { x: x - 1, y: T, w: 2, h: 2, c: PAL.birch },                      // шпиль
     { cx: x - f * 8, cy: T + 21, r: 6.5, c: PAL.red_lt },              // щит Ø13
   ];
+  if (back) {                                                        // спиной к камере: плащ поверх кольчуги, лица не видно
+    parts.splice(5, 0, { x: x - 8 + f, y: T + 12, w: 16, h: 22, c: PAL.red });
+    parts.find((q) => q.c === PAL.wood_lt).c = PAL.slate_lt;
+  }
   figure(ctx, parts, h.flash > 0, outline);
   rect(ctx, x - 7, T + 26, 14, 2, PAL.bronze);                       // пояс
   rect(ctx, x - 4, T + 10, 8, 3, PAL.slate_lt);                      // бармица
-  rect(ctx, x + (f > 0 ? 0 : -2), T + 8, 2, 1, PAL.ink);             // глаза
+  if (back) rect(ctx, x - 1, T + 13, 2, 12, PAL.red_dk);             // шов плаща
+  else if (dir === 0) { rect(ctx, x - 3, T + 8, 2, 1, PAL.ink); rect(ctx, x + 1, T + 8, 2, 1, PAL.ink); } // анфас — оба глаза
+  else if (front) { rect(ctx, x + (f > 0 ? -1 : -2), T + 8, 2, 1, PAL.ink); rect(ctx, x + (f > 0 ? 2 : -4), T + 8, 1, 1, PAL.ink); }
+  else rect(ctx, x + (f > 0 ? 1 : -3), T + 8, 2, 1, PAL.ink);         // профиль
   rect(ctx, x - 3, T + 4, 1, 3, PAL.linen);                          // блик шелома
   rect(ctx, x - 5, y - 2, 4, 2, PAL.ink); rect(ctx, x + 1, y - 2, 4, 2, PAL.ink); // сапоги
   const sx = x - f * 8;                                              // умбон и крест щита
@@ -68,12 +89,12 @@ export function drawHero(ctx, x, y, h, time, outline = PAL.ink) {
 }
 
 // Упырь: рост 40 (сутулый), силуэт 22–24 px, r 0.35.
-export function drawUpyr(ctx, x, y, e, time, outline = PAL.ink) {
-  const f = e.facing;
+export function drawUpyr(ctx, x, y, e, dir, time, outline = PAL.ink) {
+  const f = dirSide(dir, e.facing), back = BACK.has(dir);
   const step = e.moving ? Math.sin(e.walkPhase * 1.4) : 0;
   const l = Math.round(step * 2);
   const lunge = e.state === 'attack' ? Math.round(Math.sin(Math.min(1, e.t / e.def.attackTime) * Math.PI) * 5) : 0;
-  shadow(ctx, x, y, 10, 4);
+  shadow(ctx, x, y, 10, 4); dirMarker(ctx, x, y, dir, 10, 4, PAL.slate);
   const T = y - 39;
   const parts = [
     { x: x - 6 + l, y: y - 10, w: 4, h: 11, c: PAL.slate_dk },
@@ -86,17 +107,19 @@ export function drawUpyr(ctx, x, y, e, time, outline = PAL.ink) {
   figure(ctx, parts, e.flash > 0, outline);
   rect(ctx, x - 9, T + 22, 18, 2, PAL.slate_dk);                     // лохмотья
   rect(ctx, x - 8, T + 26, 3, 4, PAL.slate_dk); rect(ctx, x + 3, T + 27, 3, 3, PAL.slate_dk);
-  rect(ctx, x + f * 7 - 1, T + 3, 2, 2, PAL.red_lt);                 // глаза
-  rect(ctx, x + f * 3 - 1, T + 3, 2, 2, PAL.red_lt);
+  if (!back) {                                                       // глаза (спиной — не видно, виден горб)
+    rect(ctx, x + f * 7 - 1, T + 3, 2, 2, PAL.red_lt);
+    rect(ctx, x + f * 3 - 1, T + 3, 2, 2, PAL.red_lt);
+  } else rect(ctx, x - 7 + f * 2, T + 7, 12, 3, PAL.slate_dk);
   rect(ctx, x - 4 + f * 6, T + 7, 9, 2, PAL.nebyl_dk);               // трупная зелень
   rect(ctx, x + f * 9 - (f < 0 ? 6 : 0) + f * lunge, T + 27, 6, 2, PAL.birch); // когти
 }
 
 // Анчутка: рост 26, силуэт 16–18, r 0.25.
-export function drawAnchutka(ctx, x, y, e, time, outline = PAL.ink) {
-  const f = e.facing;
+export function drawAnchutka(ctx, x, y, e, dir, time, outline = PAL.ink) {
+  const f = dirSide(dir, e.facing), back = BACK.has(dir);
   const hop = e.moving ? Math.round(Math.abs(Math.sin(e.walkPhase * 2.2)) * 4) : Math.round(Math.abs(Math.sin(time * 3 + e.id)) * 1);
-  shadow(ctx, x, y, 7, 3);
+  shadow(ctx, x, y, 7, 3); dirMarker(ctx, x, y, dir, 7, 3, PAL.red_dk);
   const by = y - hop;
   const parts = [
     { x: x - 5, y: by - 6, w: 3, h: 7, c: PAL.wood_dk },
@@ -107,18 +130,21 @@ export function drawAnchutka(ctx, x, y, e, time, outline = PAL.ink) {
     { x: x + 4 + f, y: by - 26, w: 2, h: 3, c: PAL.birch },
   ];
   figure(ctx, parts, e.flash > 0, outline);
-  rect(ctx, x + f * 3, by - 21, 2, 2, PAL.flame);                    // глаза
-  rect(ctx, x + f * 3 - f * 4, by - 21, 2, 2, PAL.flame);
+  if (!back) {
+    rect(ctx, x + f * 3, by - 21, 2, 2, PAL.flame);                  // глаза
+    rect(ctx, x + f * 3 - f * 4, by - 21, 2, 2, PAL.flame);
+  }
   rect(ctx, x - 7, by - 9, 14, 2, PAL.red_dk);
   pline(ctx, x - f * 7, by - 8, x - f * 12, by - 13, PAL.ink);       // хвост
   pline(ctx, x - f * 12, by - 13, x - f * 11, by - 15, PAL.ink);
   if (e.state === 'attack') { disc(ctx, x + f * 9, by - 14, 3, PAL.ember); disc(ctx, x + f * 9, by - 14, 1.5, PAL.flame); }
 }
 
-export function drawEnemy(ctx, x, y, e, time, hovered) {
-  const ol = hovered ? PAL.red_lt : PAL.ink;   // враг под курсором — красная обводка 1 px
-  if (e.kind === 'upyr') drawUpyr(ctx, x, y, e, time, ol);
-  else drawAnchutka(ctx, x, y, e, time, ol);
+export function drawEnemy(ctx, x, y, e, dir, time, hovered) {
+  const ol = hovered ? PAL.red_lt : e.slowT > 0 ? PAL.blue_lt : PAL.ink;   // под курсором — красная обводка, замедлен холодом — голубая
+  if (e.kind === 'upyr') drawUpyr(ctx, x, y, e, dir, time, ol);
+  else drawAnchutka(ctx, x, y, e, dir, time, ol);
+  if (e.slowT > 0) { ctx.save(); ctx.globalAlpha = 0.25; ctx.fillStyle = PAL.blue_lt; ctx.fillRect(x - 10, y - e.def.height, 20, e.def.height); ctx.restore(); }
   // маленькая полоска жизни над недавно раненым
   if (e.lastHitT < 3 || hovered) {
     const w = 16, hy = y - e.def.height - 6;
@@ -188,6 +214,12 @@ export function drawProjectile(ctx, x, y, p, time) {
     disc(ctx, x, y - z, 2.2, PAL.red);
     disc(ctx, x, y - z, 1.4, PAL.ember);
     rect(ctx, x, y - z - 1, 1, 1, PAL.flame);
+    return;
+  }
+  if (p.element === 'cold') {          // «Дыхание Морозко»: ледяная стрела по направлению полёта
+    ellipse(ctx, x, y, 3, 1.5, PAL.ink, 0.3);
+    const sx = (p.vx - p.vy), sy = (p.vx + p.vy) / 2, d = Math.hypot(sx, sy) || 1, ux = sx / d, uy = sy / d, z = 20;
+    for (let i = 0; i < 7; i++) rect(ctx, Math.round(x - ux * i), Math.round(y - z - uy * i), i < 2 ? 2 : 1, i < 2 ? 2 : 1, i < 2 ? PAL.linen : i < 4 ? PAL.blue_lt : PAL.blue);
     return;
   }
   ellipse(ctx, x, y, 4, 2, PAL.ink, 0.35);

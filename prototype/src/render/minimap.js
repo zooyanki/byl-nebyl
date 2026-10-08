@@ -150,7 +150,9 @@ export class Minimap {
     const [hx, hy] = L.P(game.hero.x, game.hero.y);
     const offX = Math.round(game.camCX - hx), offY = Math.round(157 - hy);
     ctx.save();
-    ctx.globalAlpha = 0.8;
+    // тёмная подложка под большой картой (Tab/M), чтобы линии не терялись на пёстром мире
+    ctx.globalAlpha = 0.62; ctx.fillStyle = PAL.ink; ctx.fillRect(clip.x, clip.y, clip.w, clip.h);
+    ctx.globalAlpha = 0.9;
     ctx.drawImage(L.out, offX, offY);
     ctx.globalAlpha = 1;
     this.markers(ctx, game, L, offX, offY, clip);

@@ -4,7 +4,8 @@ import { Actor } from './actor.js';
 import {
   HERO_START, POINTS_PER_LEVEL, HERO_SPEED, MELEE_RANGE, HIT_FRAME, CAST_TIME, CAST_RELEASE, UNARMED, xpToNext, MAX_LEVEL, S as STATS,
 } from '../data/progression.js';
-import { serpentRank, serpentCost, serpentDamage } from '../data/skills.js';
+import { SKILLS, RULES, DASH, rankOf, skillCost, skillNumbers, spellDamage, rankBlock, pointsFree } from '../data/skills.js';
+import { circleFree, sightClear, moveWithCollision } from '../world/collision.js';
 import { POTIONS, BELT_SIZE, BELT_STACK, POTION_COOLDOWN, SLOTS, TYPE_SLOTS, STARTER_KIT, STARTER_BELT, makeItem, makePotion } from '../data/items.js';
 import { Inventory } from '../systems/inventory.js';
 import { PAL } from '../palette.js';
@@ -29,6 +30,14 @@ export class Hero extends Actor {
     this.stun = 0;        // оглушение от сильного удара
     this.invuln = 0;
     this.levelFx = 0;
+    // навыки (GDD §3.6): купленные ранги, панель F1–F6, навык на ПКМ, перезарядки, баффы
+    this.skills = { ...RULES.starter };
+    this.bar = [...RULES.starterBar];
+    this.rmb = RULES.starterRmb;
+    this.lmb = RULES.starterLmb || null;   // «Сшибка» на ЛКМ (решение дизайнера); null — обычный удар
+    this.cds = {};
+    this.buffs = {};
+    this.dashing = null;
     this.equip = Object.fromEntries(SLOTS.map((s) => [s, null]));
     this.inv = new Inventory();
     // GDD §4.4: на старте 3 слабых зелья жизни и 2 зелья Яри; §6.2 — стартовый комплект (скрамасакс, малый щит, шишак, кольчуга)
@@ -71,7 +80,15 @@ export class Hero extends Actor {
     this.critMult = F.crit.mult;
     const w = this.equip.rhand;
     const wd = w ? w.dmg : [UNARMED.min, UNARMED.max], ws = w ? w.speed : UNARMED.speed;
-    this.dmgMul = 1 + this.str / 100 + g('ed') / 100;
+    const stat = rankOf(this, 'stat') ? skillNumbers(this, 'stat') : null;          // «Богатырская стать»
+    const vesh = rankOf(this, 'veshchee') ? skillNumbers(this, 'veshchee') : null;  // «Вещее слово»
+    const chur = this.buffs && this.buffs.chur ? this.buffs.chur : null;            // «Чур-оберег»
+    if (stat) this.maxHp = Math.floor(this.maxHp * (1 + stat.hpPct / 100));
+    if (vesh) this.yarRegen *= 1 + vesh.regenPct / 100;
+    if (chur) this.def = Math.floor(this.def * (1 + chur.defPct / 100));
+    this.elemPct = vesh ? vesh.elemPct : 0;
+    this.spellMul = 1 + this.ene / 100 + g('spellPct') / 100 + this.elemPct / 100;
+    this.dmgMul = 1 + this.str / 100 + g('ed') / 100 + (stat ? stat.physPct / 100 : 0);
     this.dmgMin = Math.max(1, Math.floor(wd[0] * this.dmgMul));
     this.dmgMax = Math.max(this.dmgMin, Math.floor(wd[1] * this.dmgMul));
     this.fireDmg = g('fireDmg'); this.coldDmg = g('coldDmg');
@@ -83,12 +100,14 @@ export class Hero extends Actor {
     this.attackTime = 1 / this.attacksPerSec;
     this.speed = HERO_SPEED * (1 + Math.min(C.frw, g('frw')) / 100);
     this.castTime = CAST_TIME * (1 - Math.min(C.fcr, g('fcr')) / 100);
-    this.res = { fire: Math.min(C.res, g('resFire')), cold: Math.min(C.res, g('resCold')), poison: Math.min(C.res, g('resPoison')) };
+    const ra = chur ? chur.resAll : 0;
+    this.res = { fire: Math.min(C.res, g('resFire') + ra), cold: Math.min(C.res, g('resCold') + ra), poison: Math.min(C.res, g('resPoison') + ra) };
     this.block = this.equip.lhand && this.equip.lhand.block ? Math.min(C.block, this.equip.lhand.block) / 100 : 0;
-    this.skillRank = serpentRank(L, g('skillVed'));
-    this.skillCost = serpentCost(this.skillRank);
-    const [a, b] = serpentDamage(this.skillRank), sm = 1 + this.ene / 100 + g('spellPct') / 100;
-    this.skillMin = Math.floor(a * sm); this.skillMax = Math.floor(b * sm);
+    // навык на ПКМ — для HUD и подсказок
+    const rs = this.rmb && SKILLS[this.rmb] ? this.rmb : null;
+    this.skillRank = rs ? rankOf(this, rs) : 0;
+    this.skillCost = rs ? skillCost(this, rs) : 0;
+    if (rs && SKILLS[rs].min) [this.skillMin, this.skillMax] = spellDamage(this, rs); else { this.skillMin = 0; this.skillMax = 0; }
     if (this.hp != null) { this.hp = Math.min(this.hp, this.maxHp); this.yar = Math.min(this.yar, this.maxYar); }
   }
 
@@ -133,31 +152,115 @@ export class Hero extends Actor {
     this.cmd = { type: 'move', x, y, retries: 0 };
     this.setPath(map, x, y, true);
   }
-  attack(target, stand = false) {
-    if (this.cmd && this.cmd.type === 'attack' && this.cmd.target === target) { this.cmd.swung = false; this.cmd.stand = stand; return; }
-    this.cmd = { type: 'attack', target, repath: 0, swung: false, repeat: false, stand };
+  /** Навык ЛКМ, если выучен. */
+  lmbSkill() { return this.lmb && SKILLS[this.lmb] && rankOf(this, this.lmb) ? this.lmb : null; }
+  attack(target, stand = false, skill = null, lmb = false) {
+    if (this.cmd && this.cmd.type === 'attack' && this.cmd.target === target && this.cmd.skill === skill) { this.cmd.swung = false; this.cmd.stand = stand; return; }
+    this.cmd = { type: 'attack', target, repath: 0, swung: false, repeat: false, stand, skill, lmb };
   }
   pickup(item) { this.cmd = { type: 'pickup', item, repath: 0 }; }
   stop() { this.cmd = null; this.path = null; this.moving = false; }
 
-  tryCast(game, tx, ty) {
-    if (this.dead || this.stun > 0) return false;
-    if (this.action && !(this.action.type === 'cast' && this.action.fired && this.action.t > this.action.dur * 0.85)) return false;
-    if (this.yar < this.skillCost) {
-      game.notify('Ярь на исходе', PAL.blue_lt, 'noyar');
-      return false;
+  // --- навыки
+  get skillPoints() { return pointsFree(this); }
+  /** Купить ранг навыка (окно «Навыки»). Новый активный навык встаёт в свободную ячейку F1–F6. */
+  learn(id, game) {
+    const why = rankBlock(this, id);
+    if (why) return why;
+    const first = !this.skills[id];
+    this.skills[id] = (this.skills[id] || 0) + 1;
+    const sk = SKILLS[id];
+    if (first && sk.type !== 'passive') {
+      if (!this.bar.includes(id)) { const k = this.bar.indexOf(null); if (k >= 0) this.bar[k] = id; }
     }
-    this.yar -= this.skillCost;
-    this.action = { type: 'cast', tx, ty, t: 0, dur: this.castTime, hitAt: Math.min(CAST_RELEASE, this.castTime * 0.5), fired: false };
+    const oldMax = this.maxHp;
+    this.recalc();
+    this.hp += Math.max(0, this.maxHp - oldMax);
+    return null;
+  }
+  setRmb(id) { if (!id || !SKILLS[id] || !rankOf(this, id) || SKILLS[id].type === 'passive') return false; this.rmb = id; this.recalc(); return true; }
+  cdLeft(id) { return this.cds[id] || 0; }
+
+  /** Применить навык. Возвращает 'ok' | 'busy' | 'yar' | 'cd' | 'none' | 'stun' | 'dead'. */
+  useSkill(game, id, tx, ty, target = null) {
+    if (this.dead) return 'dead';
+    if (this.stun > 0 || this.dashing) return 'busy';
+    const sk = SKILLS[id];
+    if (!sk || !rankOf(this, id) || sk.type === 'passive') return 'none';
+    if (this.action && !(this.action.type === 'cast' && this.action.fired && this.action.t > this.action.dur * 0.85)) return 'busy';
+    if (this.cdLeft(id) > 0) return 'cd';            // перезарядка видна сектором и цифрой на ячейке (GDD §12.2.1: без текста)
+    const cost = skillCost(this, id);
+    if (this.yar < cost) { game.notify(game.t('ui.error.no_yar'), PAL.blue_lt, 'noyar'); return 'yar'; }
+    if (sk.type === 'melee') {
+      // «Сшибка»: по врагу — подойти и ударить; по земле — удар на месте в сторону курсора
+      if (target) { this.attack(target, false, id); return 'ok'; }
+      this.yar -= cost;
+      this.face(tx - this.x, ty - this.y);
+      this.action = { type: 'attack', skill: id, target: null, t: 0, dur: this.attackTime, hitAt: this.attackTime * HIT_FRAME, fired: false };
+      this.path = null; this.moving = false; this.cmd = null;
+      return 'ok';
+    }
+    if (sk.type === 'teleport') {
+      const dest = this.teleportPoint(game.map, tx, ty, skillNumbers(this, id).range);
+      if (!dest) return 'none';
+      tx = dest[0]; ty = dest[1];
+    }
+    this.yar -= cost;
+    const ct = sk.castTime ? sk.castTime * (this.castTime / CAST_TIME) : this.castTime;
+    this.action = { type: 'cast', skill: id, tx, ty, t: 0, dur: ct, hitAt: Math.min(CAST_RELEASE, ct * 0.5), fired: false };
+    if (sk.cd) this.cds[id] = sk.cd;
     this.face(tx - this.x, ty - this.y);
     this.path = null; this.moving = false;
     if (this.cmd && this.cmd.type !== 'attack') this.cmd = null;
     game.audio.play('skill');
-    return true;
+    game.counters.casts[id] = (game.counters.casts[id] || 0) + 1;
+    return 'ok';
+  }
+  // совместимость: ПКМ текущим навыком
+  tryCast(game, tx, ty, target = null) { return this.useSkill(game, this.rmb, tx, ty, target) === 'ok'; }
+
+  /** «Перунов скок»: видимая проходимая точка не дальше range; если курсор дальше или в стене — ближайшая годная по линии. */
+  teleportPoint(map, tx, ty, range) {
+    let dx = tx - this.x, dy = ty - this.y, d = Math.hypot(dx, dy);
+    if (d < 0.3) return null;
+    if (d > range) { dx *= range / d; dy *= range / d; d = range; }
+    for (let k = 1; k >= 0.1; k -= 0.05) {
+      const x = this.x + dx * k, y = this.y + dy * k;
+      if (circleFree(map, x, y, this.r) && sightClear(map, this.x, this.y, x, y) && map.isReachableAt(x, y)) return [x, y];
+    }
+    return null;
   }
 
-  startAttack(target) {
-    this.action = { type: 'attack', target, t: 0, dur: this.attackTime, hitAt: this.attackTime * HIT_FRAME, fired: false };
+  /** Рывок (Пробел): 3 тайла за 0,2 с, неуязвимость 0,15 с, КД 4 с, Яри не стоит, сквозь стены не проходит. */
+  dash(game, tx, ty) {
+    if (this.dead || this.stun > 0 || this.dashing) return 'busy';
+    if (this.action && !this.action.fired) return 'busy';
+    if (this.cdLeft('dash') > 0) return 'cd';
+    let dx = tx - this.x, dy = ty - this.y, d = Math.hypot(dx, dy);
+    if (d < 0.05) { [dx, dy] = this.dirVec(); d = 1; }
+    this.face(dx, dy);
+    this.action = null; this.cmd = null; this.path = null;
+    this.dashing = { vx: (dx / d) * DASH.dist / DASH.time, vy: (dy / d) * DASH.dist / DASH.time, t: DASH.time, x0: this.x, y0: this.y };
+    this.invuln = Math.max(this.invuln, DASH.invuln);
+    this.cds.dash = DASH.cd;
+    game.audio.play('dash');
+    game.counters.casts.dash = (game.counters.casts.dash || 0) + 1;
+    return 'ok';
+  }
+
+  startAttack(target, skill = null, game = null) {
+    if (skill) {            // «Сшибка» платит Ярь в начале замаха
+      const cost = skillCost(this, skill);
+      if (this.yar < cost && this.cmd && this.cmd.lmb) {
+        skill = null;                                   // ЛКМ без Яри — обычный удар (решение дизайнера)
+        if (game) game.counters.lmbFallback = (game.counters.lmbFallback || 0) + 1;
+      } else if (this.yar < cost) { if (game) game.notify(game.t('ui.error.no_yar'), PAL.blue_lt, 'noyar'); this.cmd = null; return; }
+      else {
+        this.yar -= cost;
+        if (game) { game.audio.play('skill'); game.counters.casts[skill] = (game.counters.casts[skill] || 0) + 1; }
+      }
+    }
+    this.action = { type: 'attack', skill, target, t: 0, dur: this.attackTime, hitAt: this.attackTime * HIT_FRAME, fired: false };
     this.face(target.x - this.x, target.y - this.y);
     this.path = null; this.moving = false;
   }
@@ -167,13 +270,29 @@ export class Hero extends Actor {
     if (this.dead) return;
     const s = this.belt[slot];
     if (!s) { game.notify('Ячейка ' + (slot + 1) + ' пуста', PAL.mist, 'empty'); return; }
-    if (this.potionCd > 0) return;
+    if (!this.canDrink(s.kind, game)) return;
     this.applyPotion(s.kind, game);
     s.count--;
     if (s.count <= 0) {
       this.belt[slot] = null;
       this.refillBelt(slot, s.kind);
     }
+  }
+  /** Можно ли выпить зелье сейчас: общий КД зелий (с пояса и из котомки — QA B-15) и полная шкала (QA B-04). */
+  canDrink(kind, game) {
+    if (this.dead) return false;
+    if (this.potionCd > 0) { game.counters.potionCdBlocked = (game.counters.potionCdBlocked || 0) + 1; return false; }
+    const p = POTIONS[kind];
+    const hpFull = this.hp >= this.maxHp, yarFull = this.yar >= this.maxYar;
+    if ((p.res === 'hp' && hpFull) || (p.res === 'yar' && yarFull) || (p.res === 'both' && hpFull && yarFull)) {
+      game.notify(p.res === 'yar' ? 'Ярь и так полна' : 'Жизнь и так полна', PAL.mist, 'full_' + p.res);
+      return false;
+    }
+    return true;
+  }
+  /** Пустые ячейки пояса добираются зельями из котомки (QA B-05: и если ячейка опустела раньше, чем зелья появились). */
+  fillBelt() {
+    for (let i = 0; i < BELT_SIZE; i++) if (!this.belt[i] && this.inv.items.some((it) => it.kind === 'potion')) this.refillBelt(i, null);
   }
   applyPotion(kind, game) {
     const p = POTIONS[kind];
@@ -195,8 +314,11 @@ export class Hero extends Actor {
   }
   // пустую ячейку пояса пополняем зельями того же вида из котомки
   refillBelt(slot, kind) {
-    const fromBag = this.inv.items.filter((it) => it.kind === 'potion' && it.potion === kind);
+    // сначала зелья того же вида, иначе — любого (QA B-05)
+    let fromBag = this.inv.items.filter((it) => it.kind === 'potion' && it.potion === kind);
+    if (!fromBag.length) { const any = this.inv.items.find((it) => it.kind === 'potion'); if (any) fromBag = this.inv.items.filter((it) => it.kind === 'potion' && it.potion === any.potion); }
     if (!fromBag.length) return;
+    kind = fromBag[0].potion;
     const n = Math.min(BELT_STACK, fromBag.length);
     for (let i = 0; i < n; i++) this.inv.remove(fromBag[i]);
     this.belt[slot] = { kind, count: n };
@@ -240,7 +362,7 @@ export class Hero extends Actor {
   }
 
   gainXp(n, game) {
-    if (this.level >= MAX_LEVEL) return;
+    if (this.dead || this.level >= MAX_LEVEL) return;      // посмертно опыт не идёт (QA B-03)
     this.xp += n;
     while (this.level < MAX_LEVEL && this.xp >= this.xpNext) {
       this.level++;
@@ -257,7 +379,11 @@ export class Hero extends Actor {
     this.flash = Math.max(0, this.flash - dt);
     this.levelFx = Math.max(0, this.levelFx - dt);
     this.potionCd = Math.max(0, this.potionCd - dt);
+    this.beltT = (this.beltT || 0) - dt;
+    if (this.beltT <= 0) { this.beltT = 0.25; if (this.belt.includes(null)) this.fillBelt(); }
     this.invuln = Math.max(0, this.invuln - dt);
+    for (const k in this.cds) this.cds[k] = Math.max(0, this.cds[k] - dt);
+    if (this.buffs.chur) { this.buffs.chur.t -= dt; if (this.buffs.chur.t <= 0) { delete this.buffs.chur; this.recalc(); } }
     this.yar = Math.min(this.maxYar, this.yar + this.yarRegen * dt);   // жизнь сама не восстанавливается (GDD §3.3)
     for (const e of this.effects) {
       const a = e.rate * Math.min(dt, e.t);
@@ -266,6 +392,15 @@ export class Hero extends Actor {
       e.t -= dt;
     }
     this.effects = this.effects.filter((e) => e.t > 0);
+    if (this.dashing) {
+      const D = this.dashing, st = Math.min(dt, D.t);
+      moveWithCollision(game.map, this, D.vx * st, D.vy * st);
+      this.moving = true; this.walkPhase += st * 20;
+      if (Math.random() < 0.8) game.fx.parts.push({ x: this.x, y: this.y, ox: 0, oy: -20, vx: 0, vy: 0, g: 0, t: 0, dur: 0.25, color: PAL.mist, size: 2 });
+      D.t -= dt;
+      if (D.t <= 0) { this.dashing = null; this.moving = false; }
+      return;
+    }
     if (this.updateKnock(game.map, dt)) return;
     if (this.stun > 0) { this.stun -= dt; this.moving = false; return; }
 
@@ -275,8 +410,8 @@ export class Hero extends Actor {
       a.t += dt;
       if (!a.fired && a.t >= a.hitAt) {
         a.fired = true;
-        if (a.type === 'attack') game.combat.heroMelee(this, a.target);
-        else game.combat.castSkill(this, a.tx, a.ty);
+        if (a.type === 'attack') game.combat.heroMelee(this, a.target, a.skill);
+        else game.combat.release(this, a.skill, a.tx, a.ty);
       }
       const cancel = a.type === 'cast' && a.fired && this.cmd && this.cmd.type === 'move';
       if (a.t < a.dur && !cancel) return;
@@ -298,10 +433,10 @@ export class Hero extends Actor {
       if (e.dead || (c.swung && !c.repeat)) { this.cmd = null; this.moving = false; return; }
       if (this.distTo(e) <= MELEE_RANGE + e.r * 0.5 || (c.stand && this.distTo(e) <= MELEE_RANGE + 0.6)) {
         c.swung = true;
-        this.startAttack(e);
+        this.startAttack(e, c.skill, game);
         return;
       }
-      if (c.stand) { c.swung = true; this.startAttack(e); return; }    // Shift+ЛКМ — удар на месте
+      if (c.stand) { c.swung = true; this.startAttack(e, c.skill, game); return; }    // Shift+ЛКМ — удар на месте
       c.repath -= dt;
       if (c.repath <= 0 || !this.path) { this.setPath(map, e.x, e.y, true, e); c.repath = 0.25; }
       this.followPath(map, dt, this.speed);

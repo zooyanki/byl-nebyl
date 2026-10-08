@@ -302,6 +302,89 @@ def gem(kind):
     return _mk(m)
 
 
+# ---- GDD v1.4 (A13) base renames: new icons; the older functions above are kept for v2a-v2d ----
+def shelom_klep(w=26, h=26):
+    """Клёпаный шелом (head_1, v1.4; was «Шелом-шишак»): the same ogival cone, built from
+    riveted plates; no nasal (the nasal belongs to tier 2 «Шелом с наносником»)."""
+    m = MatCanvas(w, h)
+    m.poly([(3, 15), (5, 8), (9, 3), (13, 0), (17, 3), (21, 8), (23, 15)], "H")
+    m.poly([(13, 1), (17, 3), (21, 8), (23, 15), (16, 15)], "h")
+    m.rect(2, 14, 23, 3, "L")                                   # leather brow band
+    for (x0, y0, x1, y1) in ((13, 1, 8, 14), (13, 1, 18, 14)):  # plate seams with rivets
+        m.line(x0, y0, x1, y1, "Z")
+    for (x, y) in ((11, 5), (10, 9), (9, 12), (15, 5), (16, 9), (17, 12)):
+        m.px(x, y, "t")
+    for k in range(4, 24, 4):
+        m.px(k, 15, "t")                                        # rivets on the band
+    m.px(13, 0, "Z")
+    m.poly([(3, 17), (10, 17), (10, 20), (7, 24), (4, 23)], "M")  # aventail
+    m.poly([(16, 17), (23, 17), (22, 23), (19, 24), (16, 20)], "m")
+    return _mk(m)
+
+
+def rukavitsy_kozh():
+    """Кожаные рукавицы (gloves_1): plain leather mittens with leather cuffs."""
+    m = MatCanvas(22, 22)
+    m.ellipse(7, 7, 5, 6.5, "l"); m.ellipse(1.8, 9, 1.8, 3, "o")
+    m.rect(2, 13, 10, 7, "L"); m.rect(2, 12, 10, 1, "o")
+    m.ellipse(16, 9, 5, 6.5, "l"); m.ellipse(21, 11, 1.6, 3, "o")
+    m.rect(11, 15, 10, 7, "L"); m.rect(11, 14, 10, 1, "o")
+    m.line(5, 3, 8, 3, "o"); m.line(14, 5, 17, 5, "o")
+    m.line(3, 16, 10, 16, "q"); m.line(12, 18, 19, 18, "q")    # stitching
+    return _mk(m)
+
+
+def rukavitsy_boevye():
+    """Боевые рукавицы (gloves_2, v1.4; was «Кольчужные рукавицы»): leather gauntlets
+    with riveted iron plates (бляхи) over the back of the hand and the cuff."""
+    m = MatCanvas(22, 22)
+    m.ellipse(7, 7, 5, 6.5, "l"); m.ellipse(1.8, 9, 1.8, 3, "o")
+    m.rect(2, 12, 10, 8, "L")
+    m.ellipse(16, 9, 5, 6.5, "l"); m.ellipse(21, 11, 1.6, 3, "o")
+    m.rect(11, 14, 10, 8, "L")
+    for (x, y) in ((4, 4), (8, 4), (4, 8), (8, 8)):              # plates on the left mitt
+        m.rect(x, y, 3, 3, "H"); m.px(x + 1, y + 1, "t")
+    for (x, y) in ((13, 6), (17, 6), (13, 10), (17, 10)):
+        m.rect(x, y, 3, 3, "h"); m.px(x + 1, y + 1, "t")
+    for x in (3, 7):                                             # cuff splints
+        m.rect(x, 13, 3, 6, "H")
+    for x in (12, 16):
+        m.rect(x, 15, 3, 6, "h")
+    return _mk(m)
+
+
+def poyas_kozh(w=40):
+    """Кожаный пояс (belt_1, v1.4; was «Кушак»): plain leather strap, iron buckle, hanging tongue."""
+    m = MatCanvas(w, 14)
+    m.rect(0, 3, w, 6, "l")
+    m.rect(0, 8, w, 1, "L")
+    m.line(0, 4, w - 1, 4, "o")
+    m.rect(w - 12, 1, 7, 10, "H"); m.rect(w - 10, 3, 3, 6, "k"); m.rect(w - 9, 3, 1, 6, "h")   # iron buckle
+    m.poly([(w - 6, 6), (w - 1, 6), (w - 1, 13), (w - 4, 13)], "l")                            # hanging tongue
+    m.px(w - 3, 12, "t")                                                                       # iron tip
+    for k in range(4, w - 14, 6):
+        m.px(k, 6, "L")                                                                        # punched holes
+    return _mk(m)
+
+
+def doshchataya(w=44, h=66):
+    """Дощатая броня (body_3, v1.4; was «Кольчуга с зерцалом»): mail shirt with a corselet
+    of narrow iron plates (дощечки) laced over the chest and belly."""
+    m = MatCanvas(w, h)
+    m.poly([(10, 4), (16, 2), (28, 2), (34, 4), (43, 18), (36, 24), (34, 18), (34, 62), (10, 62), (10, 18), (8, 24), (1, 18)], "M")
+    m.poly([(34, 18), (34, 62), (30, 62), (30, 20)], "m")
+    m.poly([(16, 2), (28, 2), (25, 8), (19, 8)], "k")
+    for r in range(5):                                           # rows of lamellae
+        y = 12 + r * 8
+        for c in range(6):
+            x = 11 + c * 4
+            m.rect(x, y, 3, 7, "H" if x < 28 else "h")
+            m.px(x + 1, y + 1, "t")
+        m.line(11, y + 7, 34, y + 7, "L")                        # lacing
+    m.rect(10, 60, 25, 3, "Z")
+    return _mk(m)
+
+
 def build():
     return {
         "sword": sword(), "axe": axe(), "kolchuga": kolchuga(), "shield": round_shield(),
@@ -313,6 +396,9 @@ def build():
         "gem_nebyl": gem("nebyl"), "sword_eq": sword(70), "kolchuga_eq": kolchuga(44, 60),
         "shield_small": round_shield(34), "scramasax": scramasax(), "steganka": steganka(),
         "shapka": shapka(), "porshni": porshni(), "kushak": kushak(), "beresta": beresta(),
+        # v1.4 names (GDD §6.2, A13)
+        "shelom_klep": shelom_klep(), "rukavitsy_kozh": rukavitsy_kozh(), "rukavitsy_boevye": rukavitsy_boevye(),
+        "poyas_kozh": poyas_kozh(), "doshchataya": doshchataya(),
     }
 
 

@@ -84,6 +84,12 @@ export class Audio {
       case 'throw': this.noise(0.12, 0.1, 'bandpass', 1800, 1, 0, 700); break;
       case 'ui': this.tone('square', 700, 700, 0.03, 0.06); break;
       case 'error': this.tone('square', 160, 140, 0.12, 0.1); break;
+      case 'learn': [659, 988].forEach((f, i) => this.tone('triangle', f, f, 0.14, 0.18, i * 0.07)); break;
+      case 'dash': this.noise(0.18, 0.3, 'bandpass', 1200, 0.8, 0, 3000); break;
+      case 'bash': this.noise(0.12, 0.45, 'lowpass', 900, 1); this.tone('square', 120, 60, 0.14, 0.25); break;
+      case 'frost': this.tone('sine', 1800, 2600, 0.18, 0.08); this.noise(0.2, 0.12, 'highpass', 4000, 0.6); break;
+      case 'thunder': this.noise(0.5, 0.55, 'lowpass', 2000, 0.6, 0, 80); this.tone('square', 1400, 200, 0.12, 0.15); break;
+      case 'buff': [392, 587, 784].forEach((f, i) => this.tone('sine', f, f * 1.01, 0.3, 0.14, i * 0.08)); break;
     }
   }
 }

@@ -88,9 +88,10 @@ def stack(n):
 def main():
     """Котомка (I) for the level-4 hero of mission 1 (GDD §6, §10, §12.1.1 A5):
     no weapon-set tabs, no gems/sockets, no durability, no attribute requirement.
-    Worn gear matches the «Витязь» window: Защита 29 = простая кольчуга 10 +
-    простой шелом 4 + малый щит 5 + рукавицы 3 + поршни 2 + ⌊22/4⌋; перстень +14 к жизни;
-    гривна +8 к Яри, +10% сопр. огню (designer 08.10: шелом + кольчуга are canon)."""
+    Worn gear (GDD v1.4 §6.2 стартовый комплект + A5/A13) matches the «Витязь» window:
+    Защита 31 = короткая кольчуга 10 + клёпаный шелом 4 + малый щит 5 + кожаные рукавицы 3 +
+    поршни 2 + кожаный пояс 2 + ⌊22/4⌋ 5; перстень «…живота» +10 к жизни (T1 max, ilvl <= 6);
+    гривна «Ярая … Сварога»: +8 к Яри, +10% сопр. огню (both T1)."""
     cv, HS = SC.scene(shift=-205)
     S = IR.build()
     ix, iy, iw, ih = U.window(cv, WX, WY, WW, WH, title="КОТОМКА")
@@ -99,15 +100,15 @@ def main():
     top = iy + 12
     silhouette(cv, cx, top + 2)
     ey = top + 12
-    equip_slot(cv, S, cx - 16, ey - 10, 32, 32, "shelom", "normal")                    # простой шелом
+    equip_slot(cv, S, cx - 16, ey - 10, 32, 32, "shelom_klep", "normal")               # клёпаный шелом (простой)
     equip_slot(cv, S, cx + 22, ey - 2, 24, 24, "grivna", "magic")                      # гривна
-    equip_slot(cv, S, cx - 25, ey + 26, 50, 66, "kolchuga_eq", "normal")               # простая кольчуга
+    equip_slot(cv, S, cx - 25, ey + 26, 50, 66, "kolchuga_eq", "normal")               # короткая кольчуга (простая)
     equip_slot(cv, S, ix + 8, ey, 46, 76, "scramasax", "magic")                        # десница: скрамасакс
     equip_slot(cv, S, ix + iw - 54, ey, 46, 76, "shield_small", "normal")              # шуйца: малый щит
     by = ey + 88
-    equip_slot(cv, S, ix + 12, by - 4, 32, 30, "rukavitsy", "normal")                  # рукавицы
+    equip_slot(cv, S, ix + 12, by - 4, 32, 30, "rukavitsy_kozh", "normal")             # кожаные рукавицы
     equip_slot(cv, S, cx - 49, by, 22, 22, "ring_ruby", "magic")                       # перстень
-    equip_slot(cv, S, cx - 25, by + 1, 50, 20, "kushak", "normal")                     # кушак
+    equip_slot(cv, S, cx - 25, by + 1, 50, 20, "poyas_kozh", "normal")                 # кожаный пояс (v1.4, было «кушак»)
     equip_slot(cv, S, cx + 27, by, 22, 22, None, label="")                             # перстень (пусто)
     cv.disc(cx + 38, by + 12, 4.5, C["slate_dk"]); cv.disc(cx + 38, by + 12, 2.5, C["night"])
     equip_slot(cv, S, ix + iw - 44, by - 4, 32, 30, "porshni", "normal")               # поршни
@@ -121,10 +122,10 @@ def main():
     grid(cv, gx, gy)
     used = 0
     for (it, c, r, w, h, rar, hov) in (
-            ("sword", 0, 0, 1, 3, "magic", True),          # Калёный меч дружинника сокола (треб. ур. 6)
+            ("sword", 0, 0, 1, 3, "magic", True),          # Калёный меч сокола (база «Меч дружинника», треб. ур. 6)
             ("axe", 1, 0, 1, 3, "normal", False),          # Топорик
             ("shield", 2, 0, 2, 2, "normal", False),       # Круглый щит (треб. ур. 5)
-            ("rukavitsy", 2, 2, 2, 2, "magic", False),
+            ("rukavitsy_kozh", 2, 2, 2, 2, "magic", False),  # кожаные (боевые треб. 8 > ilvl)
             (potion("life"), 4, 0, 1, 1, None, False),
             (potion("life"), 5, 0, 1, 1, None, False),
             (potion("mana"), 4, 1, 1, 1, None, False),
@@ -149,15 +150,18 @@ def main():
     sx, sy, _, _ = cell_rect(gx, gy, 0, 0)
     curx, cury = sx + 14, sy + 30
     lines = [
-        ("Калёный меч дружинника сокола", C["blue_lt"]),
+        # GDD v1.4: short name + suffix (§6.2), rarity line «… вещь» (§6.3, A13), affixes at T1 (ilvl <= 6):
+        # Урон = 4–11 × 1,20 (Калёный +20%) = 4–13
+        ("Калёный меч сокола", C["blue_lt"]),
+        ("Заговорённая вещь", C["blue"]),
         ("Меч дружинника", C["birch"]),
-        ("Урон: 6–14", C["linen"]),
+        ("Урон: 4–13", C["linen"]),
         ("Требуется уровень: 6", C["red_lt"]),
-        ("+28% к урону", C["blue_lt"]),
+        ("+20% к урону", C["blue_lt"]),
         ("+10% к скорости атаки", C["blue_lt"]),
         ("Снарядить можно с 6-го уровня", C["mist"]),
     ]
-    U.tooltip(cv, WX - 3, cury - 40, lines, anchor="tr", sep_after=(1, 3, 5))
+    U.tooltip(cv, WX - 3, cury - 40, lines, anchor="tr", sep_after=(2, 4, 6))
     U.cursor(cv, curx, cury)
     SC.export(cv, "mockup_inventory_v2")
 

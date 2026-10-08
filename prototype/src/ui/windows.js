@@ -7,6 +7,7 @@ import { IMG, drawIcon, UI_ATLAS } from './assets.js';
 import { itemLines, RARITY, SLOT_NAMES, TYPE_SLOTS } from '../data/items.js';
 import { ATTRS, hitChance } from '../data/progression.js';
 import { itemColor } from '../systems/loot.js';
+import { SkillsWindow } from './skills_window.js';
 
 const INV = UI_ATLAS.inventory_layout, CHR = UI_ATLAS.character_layout;
 const CELL = INV.cell;
@@ -21,16 +22,20 @@ export class InventoryUI {
     this.hand = null;          // предмет «на курсоре»
     this.drag = null;          // {x, y} — откуда начали тащить
     this.hover = {};
+    this.skillsOpen = false;
+    this.skills = new SkillsWindow(game);   // окно «Навыки» (T) — справа, как «Котомка» (открытие одного закрывает другое)
   }
 
-  get anyOpen() { return this.invOpen || this.charOpen; }
+  get anyOpen() { return this.invOpen || this.charOpen || this.skillsOpen; }
+  get rightOpen() { return this.invOpen || this.skillsOpen; }
   overInv(mx, my) { const [x, y, w, h] = INV.win; return this.invOpen && inR(mx, my, x - 2, y - 4, w + 4, h + 6); }
   overChar(mx, my) { const [x, y, w, h] = CHR.win; return this.charOpen && inR(mx, my, x - 2, y - 4, w + 4, h + 6); }
-  over(mx, my) { return this.overInv(mx, my) || this.overChar(mx, my); }
+  over(mx, my) { return this.overInv(mx, my) || this.overChar(mx, my) || (this.skillsOpen && this.skills.over(mx, my)); }
 
-  toggleInv(v = !this.invOpen) { this.invOpen = v; if (!v) this.returnHand(); this.game.audio.play('ui'); }
+  toggleInv(v = !this.invOpen) { this.invOpen = v; if (v) this.skillsOpen = false; if (!v) this.returnHand(); this.game.audio.play('ui'); }
+  toggleSkills(v = !this.skillsOpen) { this.skillsOpen = v; if (v) { this.invOpen = false; this.returnHand(); } this.game.audio.play('ui'); }
   toggleChar(v = !this.charOpen) { this.charOpen = v; this.game.audio.play('ui'); }
-  closeAll() { const any = this.anyOpen; this.invOpen = false; this.charOpen = false; this.returnHand(); return any; }
+  closeAll() { const any = this.anyOpen; this.invOpen = false; this.charOpen = false; this.skillsOpen = false; this.returnHand(); return any; }
 
   // предмет с курсора — обратно в котомку, а если некуда — на землю
   returnHand() {
@@ -66,6 +71,7 @@ export class InventoryUI {
       const [cx, cy, cs] = CHR.close;
       if (inR(mx, my, cx, cy, cs, cs)) H.closeChar = true;
     }
+    if (this.skillsOpen) this.skills.computeHover(mx, my);
     return H;
   }
 
@@ -102,7 +108,10 @@ export class InventoryUI {
 
   quickEquip(entry) {
     const g = this.game, h = g.hero, it = entry.item;
-    if (it.kind === 'potion') { h.inv.remove(it); h.applyPotion(it.potion, g); return; }
+    if (it.kind === 'potion') {   // ПКМ по зелью в котомке — тот же КД и та же проверка, что и с пояса (QA B-15)
+      if (!h.canDrink(it.potion, g)) { if (h.potionCd > 0) g.audio.play('error'); return; }
+      h.inv.remove(it); h.applyPotion(it.potion, g); return;
+    }
     const slot = h.slotFor(it);
     const err = h.canEquip(it, slot);
     if (err === 'level') { g.notify('Требуется уровень ' + it.req, PAL.red_lt, 'eqlvl'); g.audio.play('error'); return; }
@@ -128,6 +137,7 @@ export class InventoryUI {
     const g = this.game, h = g.hero, mx = input.mx, my = input.my;
     const H = this.computeHover(mx, my);
     const over = this.over(mx, my);
+    if (this.skillsOpen && this.skills.over(mx, my) && !this.hand) return this.skills.handle(input);
     if (input.leftPressed) {
       if (H.closeInv) { this.toggleInv(false); return true; }
       if (H.closeChar) { this.toggleChar(false); return true; }
@@ -166,6 +176,7 @@ export class InventoryUI {
     const g = this.game, h = g.hero, m = g.input;
     if (this.charOpen) this.drawChar(ctx, h);
     if (this.invOpen) this.drawInv(ctx, h);
+    if (this.skillsOpen) this.skills.draw(ctx);
     // подсказка
     const H = this.hover;
     let tip = null;
@@ -329,9 +340,8 @@ export function drawItemTooltip(ctx, it, hero, ax, ay, compare = true, anchor = 
   if (it.kind === 'gear') {
     if (hero.level < it.req) { sepSet.add(L.length - 1); L.push([`Снарядить можно с ${it.req}-го уровня`, PAL.mist]); }
     if (compare) {
-      const slot = TYPE_SLOTS[it.type][0], cur = hero.equip[slot];
-      const cmp = compareLine(it, cur);
-      if (cmp) { sepSet.add(L.length - 1); L.push(cmp); }
+      const cmp = compareLines(it, hero);
+      if (cmp.length) { sepSet.add(L.length - 1); L.push(...cmp); }
     }
   }
   const pad = 5, lh = 11;
@@ -351,19 +361,49 @@ export function drawItemTooltip(ctx, it, hero, ax, ay, compare = true, anchor = 
   return { x, y, w, h };
 }
 
-function compareLine(it, cur) {
-  const fmt = (v) => (Math.abs(v - Math.round(v)) < 1e-6 ? String(Math.round(v)) : v.toFixed(1).replace('.', ','));
-  if (it.dmg) {
-    const a = (it.dmg[0] + it.dmg[1]) / 2, b = cur && cur.dmg ? (cur.dmg[0] + cur.dmg[1]) / 2 : 1.5;
-    const d = a - b;
-    if (Math.abs(d) < 1e-6) return ['Средний урон как у надетого', PAL.mist];
-    return [`Средний урон: ${d > 0 ? '+' : '−'}${fmt(Math.abs(d))} к надетому`, d > 0 ? PAL.nebyl : PAL.red_lt];
+/** Снимок итоговых характеристик героя (то, что видно в «Витязе»). */
+function heroSnap(h) {
+  const dps = ((h.dmgMin + h.dmgMax) / 2) * h.attacksPerSec * (1 + h.crit * (h.critMult - 1));
+  return { dps, dpsN: dps * (1 + (h.vsNechist || 0)), def: h.def, hp: h.maxHp, yar: h.maxYar, ar: h.ar, block: h.block * 100, rf: h.res.fire, rc: h.res.cold, rp: h.res.poison,
+    speed: h.speed, ls: h.lifesteal * 100, mf: h.mf, thorns: h.thorns, fire: h.fireDmg, cold: h.coldDmg, spell: h.spellMul * 100 };
+}
+/** Как изменятся характеристики, если надеть предмет в слот (примерка с откатом). */
+export function tryOn(h, it, slot) {
+  const hp = h.hp, yar = h.yar, old = h.equip[slot];
+  const before = heroSnap(h);
+  h.equip[slot] = it; h.recalc();
+  const after = heroSnap(h);
+  h.equip[slot] = old; h.recalc(); h.hp = hp; h.yar = yar;
+  return [before, after];
+}
+const CMP_KEYS = [
+  ['dps', 'Урон в секунду', 1], ['dpsN', 'по нечисти', 1], ['def', 'Защита', 0], ['hp', 'Жизнь', 0], ['yar', 'Ярь', 0], ['ar', 'Меткость', 0], ['block', 'Блок, %', 0],
+  ['rf', 'Сопр. огню, %', 0], ['rc', 'Сопр. холоду, %', 0], ['rp', 'Сопр. яду, %', 0], ['spell', 'Сила чар, %', 0], ['fire', 'Урон огнём', 0], ['cold', 'Урон холодом', 0],
+  ['ls', 'Кража жизни, %', 0], ['thorns', 'Шипы', 0], ['mf', 'Удача в добыче, %', 0], ['speed', 'Скорость бега', 2],
+];
+/** Сравнение с надетым (QA B-17/B-18): по итоговым числам героя, с учётом свойств; для перстней — с обоими. */
+export function compareLines(it, hero) {
+  const fmt = (v, dp) => (dp ? v.toFixed(dp) : String(Math.round(v))).replace('.', ',');
+  const slots = TYPE_SLOTS[it.type] || [];
+  const free = slots.find((s) => !hero.equip[s]);
+  const targets = it.type === 'ring' ? (free ? [free] : slots) : slots.slice(0, 1);
+  const out = [];
+  for (const slot of targets) {
+    const cur = hero.equip[slot];
+    if (cur === it) continue;
+    const [a, b] = tryOn(hero, it, slot);
+    const diffs = [];
+    for (const [k, name, dp] of CMP_KEYS) {
+      const d = b[k] - a[k];
+      if (Math.abs(d) < (dp ? Math.pow(10, -dp) / 2 : 0.5)) continue;
+      if (k === 'dpsN' && Math.abs(d - (b.dps - a.dps)) < 0.05) continue;   // «по нечисти» — только если отличается от общего
+      diffs.push([`${name}: ${d > 0 ? '+' : '−'}${fmt(Math.abs(d), dp)}`, d > 0 ? PAL.nebyl : PAL.red_lt]);
+    }
+    const head = !cur ? 'Слот «' + SLOT_NAMES[slot] + '» свободен' : targets.length > 1 ? 'Вместо «' + cur.name + '»:' : 'Против надетого:';
+    if (!cur && !diffs.length) { out.push([head, PAL.nebyl]); continue; }
+    out.push([head, !cur ? PAL.nebyl : PAL.mist]);
+    if (!diffs.length) out.push(['без изменений', PAL.mist]);
+    else out.push(...diffs.slice(0, 5));
   }
-  if (it.armor != null) {
-    const d = it.armor - (cur && cur.armor ? cur.armor : 0);
-    if (d === 0) return ['Броня как у надетого', PAL.mist];
-    return [`Броня: ${d > 0 ? '+' : '−'}${Math.abs(d)} к надетому`, d > 0 ? PAL.nebyl : PAL.red_lt];
-  }
-  if (!cur) return ['Слот «' + SLOT_NAMES[TYPE_SLOTS[it.type][0]] + '» свободен', PAL.nebyl];
-  return null;
+  return out;
 }

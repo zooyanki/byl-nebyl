@@ -7,6 +7,7 @@ export class Actor {
     this.x = x; this.y = y; this.r = r;
     this.path = null;
     this.facing = 1;          // знак экранного X: 1 — смотрит вправо, -1 — влево
+    this.dir = 0;             // 8 направлений на экране: 0 — вниз (к камере), 1 — вниз-влево, 2 — влево, 3 — вверх-влево, 4 — вверх, 5 — вверх-вправо, 6 — вправо, 7 — вниз-вправо
     this.moving = false;
     this.walkPhase = 0;
     this.flash = 0;           // вспышка при получении урона
@@ -26,7 +27,10 @@ export class Actor {
   face(dx, dy) {
     const sx = dx - dy; // экранный X ~ (x - y)
     if (Math.abs(sx) > 0.02) this.facing = sx > 0 ? 1 : -1;
+    if (Math.abs(dx) + Math.abs(dy) > 1e-3) this.dir = dirOf(dx, dy);
   }
+  /** Единичный мировой вектор текущего направления взгляда. */
+  dirVec() { return dirVector(this.dir); }
 
   knock(dx, dy, dist, dur = 0.14) {
     const d = Math.hypot(dx, dy) || 1;
@@ -82,3 +86,18 @@ export class Actor {
   distTo(o) { return Math.hypot(o.x - this.x, o.y - this.y); }
   gapTo(o) { return this.distTo(o) - this.r - o.r; }
 }
+
+/** Направление 0–7 по мировому вектору: угол на экране (изометрия 2:1), 0 — вниз, по часовой стрелке через «влево». */
+export function dirOf(dx, dy) {
+  const sx = (dx - dy) * 16, sy = (dx + dy) * 8;
+  const a = Math.atan2(sy, sx);
+  return ((Math.round((a - Math.PI / 2) / (Math.PI / 4)) % 8) + 8) % 8;
+}
+export function dirVector(dir) {
+  const a = Math.PI / 2 + dir * Math.PI / 4;
+  const sx = Math.cos(a), sy = Math.sin(a);
+  const dx = (sx / 16 + sy / 8) / 2, dy = (sy / 8 - sx / 16) / 2, d = Math.hypot(dx, dy);
+  return [dx / d, dy / d];
+}
+/** Экранный единичный вектор направления (для отрисовки). */
+export function dirScreen(dir) { const a = Math.PI / 2 + dir * Math.PI / 4; return [Math.cos(a), Math.sin(a)]; }

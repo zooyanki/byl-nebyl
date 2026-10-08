@@ -4,9 +4,10 @@ import { applyStats } from './progression.js';
 import { applyMonsters } from './enemies.js';
 import { applySkills } from './skills.js';
 import { applyItems } from './items.js';
+import { applyRu } from '../core/i18n.js';
 
-export const CONFIG_FILES = ['stats', 'skills', 'monsters', 'items_base', 'affixes', 'droptables'];
-export const ZONE_FILES = ['zalesye'];          // data/zones/*.json — по зоне на файл (GDD §15)
+export const CONFIG_FILES = ['stats', 'skills', 'monsters', 'bosses', 'items_base', 'affixes', 'droptables', 'uniques', 'ru'];
+export const ZONE_FILES = ['zalesye', 'trail', 'kapishche'];   // data/zones/*.json — по зоне на файл (GDD §15); trail/kapishche — заготовки (implemented: false)
 export const CFG = {};
 
 export async function loadConfig(base = 'data/') {
@@ -23,6 +24,7 @@ export async function loadConfig(base = 'data/') {
     CFG.zones[id] = await r.json();
   }
   applyStats(CFG.stats);
+  applyRu(CFG.ru);
   applySkills(CFG.skills, CFG.stats);
   applyMonsters(CFG.monsters, CFG.stats);
   applyItems(CFG.items_base, CFG.affixes, CFG.droptables);

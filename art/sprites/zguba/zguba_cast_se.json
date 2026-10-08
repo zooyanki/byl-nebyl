@@ -1,0 +1,36 @@
+{
+ "character": "Згуба",
+ "animation": "cast",
+ "direction": "se",
+ "mirror_for": "sw",
+ "mirror_rule": "flip horizontally around the frame centre line x = 32.0; pivot stays (32, 56)",
+ "pivot": [
+  32,
+  56
+ ],
+ "fps": 10,
+ "loop": false,
+ "visible_height_px": [
+  57,
+  57,
+  57,
+  57,
+  57,
+  57
+ ],
+ "height_rule": "pivot row (soles) to the top visible pixel, outline included",
+ "notes": "Based on the волхв-прислужник (designed here): wolf-skin hood (ears in the 46 px), bone beads, horse-skull staff (57 px: 58 does not fit a 64x64 frame with pivot y 56).",
+ "events": {
+  "release_frame": 3,
+  "spawn_effect": "зелёный огонь прислужника (GDD §12.1.5, not in this set)"
+ },
+ "image": "zguba_cast_se.png",
+ "frame_size": [
+  64,
+  64
+ ],
+ "frame_count": 6,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

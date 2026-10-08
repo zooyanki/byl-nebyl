@@ -59,10 +59,12 @@ export class WorldRenderer {
         else drawProp(ctx, o.p, toS, time);
       } else if (o.k === 2) {
         const [sx, sy] = toS(o.e.x, o.e.y);
-        if (vis(sx, sy)) drawEnemy(ctx, sx, sy, o.e, time, game.hoverEnemy === o.e);
+        if (vis(sx, sy)) drawEnemy(ctx, sx, sy, o.e, o.e.dir, time, game.hoverEnemy === o.e);
       } else if (o.k === 3) {
         const [sx, sy] = toS(hero.x, hero.y);
-        drawHero(ctx, sx, sy, hero, time);
+        if (hero.buffs.chur) drawChurRunes(ctx, sx, sy, hero.buffs.chur, time, false);
+        drawHero(ctx, sx, sy, hero, hero.dir, time);
+        if (hero.buffs.chur) drawChurRunes(ctx, sx, sy, hero.buffs.chur, time, true);
       } else {
         const [sx, sy] = toS(o.p.x, o.p.y);
         drawProjectile(ctx, sx, sy, o.p, time);
@@ -71,7 +73,7 @@ export class WorldRenderer {
     // силуэт героя, если он за препятствием
     if (!hero.dead) {
       const [sx, sy] = toS(hero.x, hero.y);
-      ctx.save(); ctx.globalAlpha = 0.28; drawHero(ctx, sx, sy, hero, time); ctx.restore();
+      ctx.save(); ctx.globalAlpha = 0.28; drawHero(ctx, sx, sy, hero, hero.dir, time); ctx.restore();
     } else {
       const [sx, sy] = toS(hero.x, hero.y);
       ctx.fillStyle = PAL.ink; ctx.fillRect(sx - 15, sy - 7, 30, 8);
@@ -101,6 +103,21 @@ export class WorldRenderer {
       rect(ctx, sx + p.ox, sy + p.oy, p.size, p.size, p.color);
     }
     ctx.globalAlpha = 1;
+    // молнии «Перунова скока»
+    for (const b of fx.bolts) {
+      const k = b.t / b.dur, [sx, sy] = toS(b.x1, b.y1), [ox, oy] = toS(b.x0, b.y0);
+      ctx.save();
+      ctx.globalAlpha = 1 - k;
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = PAL.blue_lt;
+      ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(ox + 0.5, oy - 20.5); ctx.lineTo(sx + 0.5, sy - 20.5); ctx.stroke(); ctx.setLineDash([]);
+      for (const [w, c] of [[3, PAL.blue_lt], [1, PAL.linen]]) {
+        ctx.lineWidth = w; ctx.strokeStyle = c; ctx.beginPath();
+        b.seg.forEach(([dx, f], i) => { const x = sx + dx + 0.5, y = sy - 150 * (1 - f); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
     // столп света при новом уровне
     const h = game.hero;
     if (h.levelFx > 0) {
@@ -134,7 +151,7 @@ export class WorldRenderer {
     const warm = [];
     for (const l of game.map.lights) {
       const [sx, sy] = toS(l.x, l.y);
-      const r = l.r + Math.sin(game.time * 7) * 4;
+      const r = l.r + (l.kind === 'fire' ? Math.sin(game.time * 7) * 4 : 0);
       hole(sx, sy - 8, r, 1); warm.push([sx, sy - 8, r, 0.22]);
     }
     for (const p of game.combat.projectiles) { const [sx, sy] = toS(p.x, p.y); hole(sx, sy - 12, 60, 0.9); warm.push([sx, sy - 12, 50, 0.25]); }
@@ -170,16 +187,32 @@ export class WorldRenderer {
     const items = game.loot.items.filter((it) => it.dropT > 0.3 && (show || it === game.hoverGround));
     const pos = items.map((it) => { const [sx, sy] = toS(it.x, it.y); return { it, sx, sy }; });
     pos.sort((a, b) => b.sy - a.sy);
+    // тела героя и врага под курсором — препятствия для плашек (подписи не закрывают героя и цель)
+    const blockers = [];
+    const body = (a, hgt, half) => { const [bx, by] = toS(a.x, a.y); blockers.push({ x: bx - half, y: by - hgt - 2, w: half * 2, h: hgt + 4, block: true }); };
+    if (!game.hero.dead) body(game.hero, 46, 10);
+    if (game.hoverEnemy && !game.hoverEnemy.dead) body(game.hoverEnemy, game.hoverEnemy.def.height, 11);
+    const overlaps = (x, y, w, h, list) => list.find((r) => x < r.x + r.w && x + w > r.x && y < r.y + r.h + 1 && y + h + 1 > r.y);
     for (const p of pos) {
       const w = textWidth(p.it.label) + 7, h = 13;
-      let x = Math.round(p.sx - w / 2), y = p.sy - 26;
-      if (x + w < 0 || x > VIEW_W || y > PANEL_Y || y + h < 0) continue;
-      for (let guard = 0; guard < 10; guard++) {
-        const hit = rects.find((r) => x < r.x + r.w && x + w > r.x && y < r.y + r.h + 1 && y + h + 1 > r.y);
-        if (!hit) break;
-        y = hit.y - h - 1;
+      const x0 = Math.round(p.sx - w / 2), y0 = p.sy - 26;
+      if (x0 + w < 0 || x0 > VIEW_W || y0 > PANEL_Y || y0 + h < 0) continue;
+      // столбик вверх; если упёрлись в верх экрана — соседние столбики (QA B-08: большая куча добычи)
+      let best = null;
+      for (const off of [0, 1, -1, 2, -2, 3, -3]) {
+        let x = x0 + off * Math.round(w / 2 + 24), y = y0;
+        if (off && (x < 0 || x + w > VIEW_W)) continue;
+        for (let guard = 0; guard < 60; guard++) {
+          const hit = overlaps(x, y, w, h, rects) || overlaps(x, y, w, h, blockers);
+          if (!hit) break;
+          y = hit.y - h - 1;
+        }
+        if (y >= 2) { best = { x, y }; break; }
       }
-      rects.push({ x, y, w, h, item: p.it });
+      const fit = !!best;
+      if (!best) best = { x: x0, y: y0 };
+      const r = { x: best.x, y: best.y, w, h, item: p.it, faded: !fit && !!overlaps(best.x, best.y, w, h, blockers) };
+      rects.push(r);
     }
     const m = game.input;
     let hovered = null;
@@ -187,7 +220,8 @@ export class WorldRenderer {
     for (const r of rects) {
       const hv = r.item === hovered || r.item === game.hoverGround;
       ctx.save();
-      ctx.globalAlpha = hv ? 0.9 : 0.72;
+      const fa = r.faded && !hv ? 0.4 : 1;   // не нашли места — плашка поверх героя полупрозрачна
+      ctx.globalAlpha = (hv ? 0.9 : 0.72) * fa;
       ctx.fillStyle = PAL.ink;
       ctx.fillRect(r.x, r.y, r.w, r.h);
       ctx.restore();
@@ -195,7 +229,7 @@ export class WorldRenderer {
       ctx.lineWidth = 1;
       ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
       for (const [px, py] of [[r.x, r.y], [r.x + r.w - 1, r.y], [r.x, r.y + r.h - 1], [r.x + r.w - 1, r.y + r.h - 1]]) rect(ctx, px, py, 1, 1, PAL.bronze_lt);
-      drawText(ctx, r.x + 4, r.y + 2, r.item.label, hv ? PAL.bronze_hi : r.item.color);
+      drawText(ctx, r.x + 4, r.y + 2, r.item.label, hv ? PAL.bronze_hi : r.item.color, fa < 1 ? { alpha: fa } : undefined);
     }
     game.labelRects = show ? rects : [];
     game.hoverLabel = show ? hovered : null;
@@ -258,4 +292,20 @@ function buildFloor(map) {
     }
   }
   return c;
+}
+
+// «Чур-оберег»: кольцо рез вокруг героя (задняя половина — под героем, передняя — поверх)
+function drawChurRunes(ctx, sx, sy, buff, time, front) {
+  const fade = Math.min(1, buff.t / 2);
+  ctx.save();
+  ctx.globalAlpha = 0.85 * fade;
+  for (let i = 0; i < 8; i++) {
+    const a = time * 1.2 + (i * Math.PI) / 4;
+    const s = Math.sin(a);
+    if ((s > 0) !== front) continue;
+    const x = Math.round(sx + Math.cos(a) * 16), y = Math.round(sy - 14 + s * 7);
+    rect(ctx, x, y - 3, 1, 6, PAL.bronze_hi); rect(ctx, x - 1, y - 2 + (i % 3), 3, 1, PAL.bronze_hi);
+  }
+  ctx.restore();
+  if (!front) ellipseStroke(ctx, sx, sy, 16, 7, PAL.bronze_lt, 0.5 * fade, 1);
 }

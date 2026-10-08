@@ -1,7 +1,8 @@
 // Мышь и клавиатура. Координаты мыши — в нативных пикселях (640x360).
 import { VIEW_W, VIEW_H } from '../config.js';
 
-const PREVENT = new Set(['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Tab', 'AltLeft', 'AltRight', 'Space', 'F1', 'F5', 'KeyZ']);
+// F1–F6 — горячие клавиши навыков (как в D2), поэтому браузерные F1 (справка) и F5 (обновить) в игре гасятся; Ctrl+R работает
+const PREVENT = new Set(['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Tab', 'AltLeft', 'AltRight', 'Space', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'KeyZ']);
 
 export class Input {
   constructor(canvas) {
@@ -16,7 +17,9 @@ export class Input {
     this.gesture = false;                                 // был ли жест пользователя (для WebAudio)
     this.onGesture = null;
 
-    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    window.addEventListener('contextmenu', (e) => e.preventDefault());      // и на чёрных полях вокруг холста (QA B-09)
+    this.wheel = 0;
+    canvas.addEventListener('wheel', (e) => { this.wheel += Math.sign(e.deltaY); e.preventDefault(); }, { passive: false });
     canvas.addEventListener('mousemove', (e) => this._pos(e));
     canvas.addEventListener('mousedown', (e) => {
       this._pos(e); this._mods(e); this._gesture();
@@ -57,7 +60,7 @@ export class Input {
   get altHeld() { return this.keysDown.has('AltLeft') || this.keysDown.has('AltRight'); }
 
   endFrame() {
-    this.leftPressed = false; this.rightPressed = false;
+    this.leftPressed = false; this.rightPressed = false; this.wheel = 0;
     this.leftReleased = false; this.rightReleased = false;
     this.keysPressed.clear();
   }

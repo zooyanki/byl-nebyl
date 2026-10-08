@@ -1,0 +1,23 @@
+{
+ "effect": "Поджигатель: горящая земля Ø 2 тайла",
+ "pivot": [
+  32,
+  24
+ ],
+ "fps": 10,
+ "loop": true,
+ "footprint": "ellipse 64x32 = circle of 2 tiles (tile 32x16), centre = pivot",
+ "layer": "ground decal, drawn under characters (scale.md §4.1)",
+ "duration_s": 4,
+ "flame_max_height_px": 16,
+ "notes": "telegraph 0.8 s before (red circle, GDD E11) is a separate effect",
+ "image": "fx_burning_ground.png",
+ "frame_size": [
+  64,
+  40
+ ],
+ "frame_count": 6,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

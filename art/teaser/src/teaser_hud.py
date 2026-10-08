@@ -62,7 +62,7 @@ def draw_quest_t(cv, x, y, title, act, goals, max_right=229):
         lines = [a, b]
         tw = max(pk.text_width(a, FONT_USTAV), pk.text_width(b, FONT_USTAV))
     w = max(186, 26 + 4 + tw + 6 + 14 + 4, gw + 16)
-    lh = 12
+    lh = 14      # 14: keeps the Ё dots of line 2 clear of line 1
     h = 80 + (len(lines) - 1) * lh
     assert x + w <= max_right, (w, title)
     ix, iy, iw, ih = U.carved_frame(cv, x, y, w, h, fill="dim")

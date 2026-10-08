@@ -1,0 +1,45 @@
+{
+ "_about": "Лесная тропа (GDD v1.3 §8.1, решение дизайнера 08.10: mlvl 2→3 по ходу тропы). Зона ещё не сделана — конфиг-заготовка; стаи появятся с картой зоны. mlvlGradient: mlvl растёт от входа к выходу.",
+ "id": "trail",
+ "name": "Лесная тропа",
+ "realm": "byl_to_nebyl",
+ "mission": "m1",
+ "mlvl": [
+  2,
+  3
+ ],
+ "spawnMix": {
+  "upyr": 45,
+  "anchutka": 30,
+  "chernoyarets_arsonist": 25
+ },
+ "repopulate": "onZoneEnter",
+ "implemented": false,
+ "size": [
+  128,
+  48
+ ],
+ "mlvlGradient": {
+  "from": 2,
+  "to": 3
+ },
+ "packs": [],
+ "enemyCount": {
+  "mlvl2": 25,
+  "mlvl3": 45,
+  "elites": 0,
+  "_note": "GDD v1.5 — на будущее (зона не реализована)"
+ },
+ "safeZones": [
+  {
+   "at": "churStone",
+   "radius": 6,
+   "packMinDist": 8
+  }
+ ],
+ "checkpoint": {
+  "exitLevel": 4,
+  "tolerance": 1,
+  "_note": "GDD v1.5 §9.3"
+ }
+}

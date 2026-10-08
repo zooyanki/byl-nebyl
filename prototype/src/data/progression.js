@@ -40,6 +40,7 @@ export function xpPenalty(heroLevel, mlvl) {
 }
 // Шанс попадания (только физический урон): clamp(2·AR/(AR+DEF) · L_A/(L_A+L_D), 5%, 95%)
 export function hitChance(arA, defD, lvlA, lvlD) {
-  const h = ((2 * arA) / (arA + defD)) * (lvlA / (lvlA + lvlD));
+  // GDD v1.5 §4: множитель уровней (L_A+5)/(L_A+L_D+10) для обеих сторон (было L_A/(L_A+L_D)); при равных уровнях — то же 0,5
+  const h = ((2 * arA) / (arA + defD)) * ((lvlA + 5) / (lvlA + lvlD + 10));
   return Math.min(S.hitChance.max, Math.max(S.hitChance.min, h));
 }

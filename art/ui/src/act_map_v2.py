@@ -249,8 +249,8 @@ def info_panel(cv, x, y, w, h):
     U.section_title(cv, x + 4, ty, w - 8, "Награда")
     ty += 13
     U.silver_icon(cv, x + 8, ty)
-    T.text_ru(cv, x + 22, ty + 1, "Серебро · первый уровень Яри", C["linen"], outline=False)
-    T.text_ru(cv, x + 7, ty + 12, "Амулет «Громовник»", C["blue_lt"], outline=False)
+    T.text_ru(cv, x + 22, ty + 1, "Серебро: +300 · «Ярь I»", C["linen"], outline=False)   # GDD v1.4 §10.1
+    T.text_ru(cv, x + 7, ty + 12, "Амулет «Громовник»", C["bronze_lt"], outline=False)
     T.text_ru(cv, x + 7, ty + 24, "Сложность: ", C["mist"], outline=False)
     T.text_ru(cv, x + 7 + pk.text_width("Сложность: ", FONT_RU), ty + 24, "уровень 1–6", C["flame"], outline=False)
     # missions list
@@ -273,13 +273,16 @@ def info_panel(cv, x, y, w, h):
 
 M2_GOALS = (("— Осмотри сопки", "0/5"), ("— Собери обережные камни", "0/3"), ("— Найди вход в курган", ""),
             ("— Узнай, кто будит мёртвых", ""), ("— Одолей Курганного князя", ""))      # act1 v1.1, GDD v1.3 A6
+# GDD v1.4 §8.1 / act1_texts §1.1: HUD zone «Сопки»; parts announced on entry
+M2_ZONE = (("Зона «Сопки»: Берег Волхова,", "mist"), ("Разрытый курган,", "mist"), ("Каменные врата", "mist"))
 
 
 def m2_card(cv, x, y):
     """Hover card of the locked mission 2 (GDD §12.1.1 A6: level 7-11, goals verbatim)."""
     w = 4 + max(pk.text_width(g, FONT_RU) + (pk.text_width(n, FONT_RU) + 8 if n else 0) for g, n in M2_GOALS) + 8
-    w = max(w, pk.text_width("Закрыто · после миссии 1", FONT_RU) + 14)
-    h = 34 + 14 + len(M2_GOALS) * 10 + 5
+    w = max(w, pk.text_width("Закрыто · после миссии 1", FONT_RU) + 14,
+            max(pk.text_width(t, FONT_RU) for t, _ in M2_ZONE) + 14)
+    h = 34 + 14 + len(M2_GOALS) * 10 + 5 + 8 + len(M2_ZONE) * 10
     cv.rect(x, y, w, h, C["night"])
     cv.frame(x, y, w, h, C["wood_md"]); cv.frame(x - 1, y - 1, w + 2, h + 2, C["ink"])
     for (px_, py_) in ((x, y), (x + w - 1, y), (x, y + h - 1), (x + w - 1, y + h - 1)):
@@ -294,6 +297,11 @@ def m2_card(cv, x, y):
         T.text_ru(cv, x + 6, ty, g, C["mist"], outline=False)
         if n:
             T.text_ru(cv, x + w - 6, ty, n, C["mist"], align="r", outline=False)
+        ty += 10
+    U.divider(cv, x + 4, ty + 1, w - 8)
+    ty += 8
+    for t, c in M2_ZONE:
+        T.text_ru(cv, x + 6, ty, t, C["slate_lt"], outline=False)
         ty += 10
     return (x, y, w, h)
 
@@ -327,7 +335,7 @@ def main():
     map_label(cv, M3[0] + 14, M3[1] - 24, "3 · Разлом в Чёрном бору", C["slate"])
     info_panel(cv, 434, 30, 192, 316)
     # cursor hovers the locked M2 -> its card (M1 stays selected in the panel)
-    card = m2_card(cv, 249, 128)
+    card = m2_card(cv, 249, 100)          # v1.4: taller (zone line)
     assert card[0] + card[2] <= 424 and card[1] + card[3] < M2[1] - 9, card
     U.cursor(cv, M2[0] + 3, M2[1] + 2)
     SC.export(cv, "mockup_act_map_v2")

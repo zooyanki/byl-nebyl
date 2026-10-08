@@ -7,21 +7,26 @@ import { drawText, textWidth } from '../core/font.js';
 import { POTIONS } from '../data/items.js';
 import { IMG, UI_ATLAS, drawIcon } from '../ui/assets.js';
 import { MINI } from './minimap.js';
+import { SKILLS, DASH, rankOf, skillCost, pointsFree } from '../data/skills.js';
+import { drawSkillTooltip } from '../ui/skills_window.js';
+import { t as tr } from '../core/i18n.js';
 
 export const LAYOUT = (() => {
   const by = 328, big = 32, sm = 26, beltW = 4 * 24 + 3 * 2 + 6;
-  let x = 136;
-  const L = { lmb: { x, y: by, s: big } }; x += big + 6;
+  let x = 128;
+  const L = { lmb: { x, y: by, s: big } }; x += big + 4;
   L.f = [];
   for (let i = 0; i < 3; i++) { L.f.push({ x, y: by + 3, s: sm, key: 'F' + (i + 1) }); x += sm + 2; }
-  x += 8;
+  x += 6;
   L.belt = { x, y: by + 1, w: beltW, slots: [] };
   for (let i = 0; i < 4; i++) L.belt.slots.push({ x: x + 3 + i * 26, y: by + 4, s: 24 });
-  x += beltW + 10;
+  x += beltW + 6;
   for (let i = 3; i < 6; i++) { L.f.push({ x, y: by + 3, s: sm, key: 'F' + (i + 1) }); x += sm + 2; }
-  x += 4;
+  x += 2;
   L.rmb = { x, y: by, s: big };
-  L.silver = { x: x + big + 3, y: 331, w: 46 };
+  // слот рывка 18×18 справа от ПКМ в одном ряду, зазор 2 px (GDD §10)
+  L.dash = { x: x + big + 2, y: by + big - 18, s: 18 };
+  L.silver = { x: L.dash.x + 18 + 3, y: 331, w: 42 };
   L.level = { cx: 112, cy: 343 };
   L.xp = { x: 96, y: 322, w: VIEW_W - 192 };
   L.orbL = { cx: 40, cy: 322, r: 27 };
@@ -65,14 +70,6 @@ function iconSword(ctx, x, y, s) {
   rect(ctx, x + 2, y + s - 4, 3, 3, PAL.bronze);
 }
 
-function iconFire(ctx, x, y, s, t) {
-  const cx = x + s * 0.62, cy = y + s * 0.4;
-  poly(ctx, [[x + 4, y + s - 4], [cx - 2, cy - 4], [cx + 3, cy + 4]], PAL.red);
-  poly(ctx, [[x + 6, y + s - 6], [cx - 1, cy - 2], [cx + 2, cy + 2]], PAL.ember);
-  disc(ctx, cx, cy, s * 0.22 + 1, PAL.red_lt);
-  disc(ctx, cx, cy, s * 0.22, PAL.ember);
-  disc(ctx, cx - 1, cy - 1, s * 0.12 + Math.sin(t * 8) * 0.5, PAL.flame);
-}
 
 function potionIcon(ctx, x, y, kind) {
   const c = kind === 'life' ? PAL.red : PAL.blue, cl = kind === 'life' ? PAL.red_lt : PAL.blue_lt;
@@ -144,10 +141,9 @@ function drawStatic(ctx) {
     for (let x = 0; x < VIEW_W; x += 3) { rect(c, x, PANEL_Y - 3, 2, 1, PAL.bronze_lt); rect(c, x + 1, PANEL_Y - 2, 2, 1, PAL.bronze); }
     rect(c, 0, PANEL_Y - 1, VIEW_W, 1, PAL.ink);
     housing(c, true); housing(c, false);
-    for (const f of L.f) {
-      woodSlot(c, f.x, f.y, f.s);
-      drawText(c, f.x + 4, f.y + 3, f.key, PAL.slate_lt);
-    }
+    for (const f of L.f) woodSlot(c, f.x, f.y, f.s);
+    const D = L.dash;
+    rect(c, D.x, D.y, D.s, D.s, PAL.ink); rect(c, D.x + 1, D.y + 1, D.s - 2, D.s - 2, PAL.wood_md);
     const B = L.belt;
     rect(c, B.x, B.y, B.w, 30, PAL.ink);
     rect(c, B.x + 1, B.y + 1, B.w - 2, 28, PAL.wood_dk);
@@ -157,7 +153,7 @@ function drawStatic(ctx) {
     rect(c, S.x, S.y, S.w, 26, PAL.ink);
     rect(c, S.x + 1, S.y + 1, S.w - 2, 24, PAL.wood_dk);
     for (const [a, b] of [[5, 16], [9, 14], [4, 12]]) { rect(c, S.x + a, S.y + b, 6, 2, PAL.slate_lt); rect(c, S.x + a, S.y + b - 1, 6, 1, PAL.birch); }
-    drawText(c, S.x + S.w - 4, S.y + 3, 'серебро', PAL.mist, { align: 'r' });
+    drawText(c, S.x + S.w - 4, S.y + 3, 'Серебро:', PAL.mist, { align: 'r' });   // «Серебро: N» (GDD §10.1)
     const lv = L.level;
     disc(c, lv.cx, lv.cy, 14, PAL.ink); disc(c, lv.cx, lv.cy, 13, PAL.bronze);
     disc(c, lv.cx, lv.cy, 11, PAL.ink); disc(c, lv.cx, lv.cy, 10, PAL.wood_dk);
@@ -180,7 +176,9 @@ export function drawHud(ctx, game) {
 
   // слоты
   woodSlot(ctx, L.lmb.x, L.lmb.y, L.lmb.s);
-  iconSword(ctx, L.lmb.x + 3, L.lmb.y + 3, L.lmb.s - 6);
+  const ls = h.lmbSkill();
+  if (ls) skillIcon(ctx, h, ls, L.lmb.x + 3, L.lmb.y + 3, 26, false, true);   // GDD v1.5: без Яри ЛКМ не сереет — базовый удар доступен
+  else iconSword(ctx, L.lmb.x + 3, L.lmb.y + 3, L.lmb.s - 6);
   drawText(ctx, L.lmb.x + 3, L.lmb.y + L.lmb.s - 11, 'ЛКМ', PAL.birch, { outline: true });
   // пояс
   const B = L.belt;
@@ -194,16 +192,38 @@ export function drawHud(ctx, game) {
     }
     drawText(ctx, s.x + s.s - 7, s.y + s.s - 10, String(i + 1), PAL.bronze_hi, { outline: true });
   });
-  // ПКМ — Огненный змей
+  // F1–F6: навыки панели; КД — сектор по часовой и цифра, нехватка Яри — серая иконка (GDD §10)
+  L.f.forEach((f, i) => {
+    const id = h.bar[i];
+    if (id && SKILLS[id] && rankOf(h, id)) {
+      skillIcon(ctx, h, id, f.x + 3, f.y + 3, 20, h.rmb === id);
+      if (h.rmb === id) { ctx.strokeStyle = PAL.flame; ctx.lineWidth = 1; ctx.strokeRect(f.x + 0.5, f.y + 0.5, f.s - 1, f.s - 1); }
+    }
+    drawText(ctx, f.x + 3, f.y + 2, f.key, id ? PAL.bronze_hi : PAL.slate_lt, { outline: !!id, shadow: !id });
+  });
+  // ПКМ — навык, назначенный F-клавишей / колесом / в окне «Навыки»
   const R = L.rmb;
   woodSlot(ctx, R.x, R.y, R.s, true);
-  iconFire(ctx, R.x + 3, R.y + 3, R.s - 6, t);
-  if (h.yar < h.skillCost) { ctx.save(); ctx.globalAlpha = 0.55; rect(ctx, R.x + 3, R.y + 3, R.s - 6, R.s - 6, PAL.blue_dk); ctx.restore(); }
+  if (h.rmb && SKILLS[h.rmb]) skillIcon(ctx, h, h.rmb, R.x + 3, R.y + 3, 26, false);
   drawText(ctx, R.x + 3, R.y + R.s - 11, 'ПКМ', PAL.birch, { outline: true });
+  // рывок (Пробел)
+  const D = L.dash;
+  drawIcon(ctx, 'sk_ryvok_16', D.x + 1, D.y + 1, 16, 16);
+  cooldownSector(ctx, D.x + 1, D.y + 1, 16, h.cdLeft('dash') / DASH.cd, h.cdLeft('dash'));
+  if (h.cds.dash != null && h.cdLeft('dash') === 0 && (h._dashReadyAt == null || h._dashReadyAt > t)) h._dashReadyAt = t;
+  if (h.cdLeft('dash') > 0) h._dashReadyAt = null;
+  if (h._dashReadyAt != null && t - h._dashReadyAt < 0.25) { ctx.strokeStyle = PAL.bronze_hi; ctx.strokeRect(D.x + 0.5, D.y + 0.5, D.s - 1, D.s - 1); }   // вспышка рамки в конце КД
+  // бафф «Чур-оберег» — иконка 12×12 над шаром Жизни (GDD §10)
+  if (h.buffs.chur) {
+    const bx = L.orbL.cx - 6, byy = L.orbL.cy - L.orbL.r - 22;
+    rect(ctx, bx - 1, byy - 1, 14, 14, PAL.ink);
+    ctx.save(); ctx.beginPath(); ctx.rect(bx, byy, 12, 12); ctx.clip(); drawIcon(ctx, 'sk_obereg_16', bx - 2, byy - 2, 16, 16); ctx.restore();
+    drawText(ctx, bx + 6, byy + 13, String(Math.ceil(h.buffs.chur.t)), PAL.bronze_hi, { align: 'c', outline: true });
+  }
   // серебро
   const S = L.silver;
   drawText(ctx, S.x + S.w - 4, S.y + 14, String(h.silver), PAL.linen, { align: 'r' });
-  if (h.points > 0) { disc(ctx, L.level.cx + 10, L.level.cy - 11, 4, PAL.ink); disc(ctx, L.level.cx + 10, L.level.cy - 11, 3, PAL.red_lt); drawText(ctx, L.level.cx + 11, L.level.cy - 15, '+', PAL.linen, { align: 'c' }); }
+  if (h.points > 0 || pointsFree(h) > 0) { disc(ctx, L.level.cx + 10, L.level.cy - 11, 4, PAL.ink); disc(ctx, L.level.cx + 10, L.level.cy - 11, 3, PAL.red_lt); drawText(ctx, L.level.cx + 11, L.level.cy - 15, '+', PAL.linen, { align: 'c' }); }
   // уровень
   const lv = L.level;
   drawText(ctx, lv.cx + 1, lv.cy - 1, String(h.level), PAL.bronze_hi, { align: 'c', outline: true });
@@ -232,7 +252,8 @@ function drawTopUi(ctx, game) {
     plate(ctx, 4, 4, 150, 30);
     const tr = game.zone.tracker;
     drawText(ctx, 9, 7, tr.title, PAL.bronze_hi);
-    drawText(ctx, 9, 19, tr.goal + ': ' + game.killsTotal + '/' + game.enemyTotal, game.killsTotal >= game.enemyTotal ? PAL.nebyl : PAL.linen);
+    const left = game.enemies.filter((e) => !e.dead).length, cleared = Math.max(0, game.enemyTotal - left);
+    drawText(ctx, 9, 19, tr.goal + ': ' + cleared + '/' + game.enemyTotal, left === 0 ? PAL.nebyl : PAL.linen);
   }
   // зона, мини-карта и кнопки меню (как на макете HUD v2); под окном «Котомка» прячутся
   if (game.topRightVisible) {
@@ -244,6 +265,10 @@ function drawTopUi(ctx, game) {
     drawText(ctx, VIEW_W - 7, 13, z2, PAL.mist, { align: 'r', outline: true });
     if (game.showMinimap) game.minimap.drawCorner(ctx, game);
     if (IMG.buttons && IMG.buttons.complete) ctx.drawImage(IMG.buttons, BTN.x, BTN.y);
+    // свободные очки: «+» на кнопках «Витязь» (свойства) и «Навыки»
+    const dot = (key) => { const i = BTN.keys.indexOf(key), bx = BTN.x + i * (BTN.s + BTN.g) + BTN.s - 3; disc(ctx, bx, BTN.y + 3, 3.5, PAL.ink); disc(ctx, bx, BTN.y + 3, 2.5, PAL.red_lt); };
+    if (h.points > 0) dot('C');
+    if (pointsFree(h) > 0) dot('T');
     const hb = buttonAt(game.input.mx, game.input.my);
     if (hb >= 0) {
       const bx = BTN.x + hb * (BTN.s + BTN.g);
@@ -275,7 +300,7 @@ function drawTopUi(ctx, game) {
   // подсказка в начале
   if (game.time < 14 && !game.hero.dead && !ui.anyOpen) {
     const a = game.time < 11 ? 1 : (14 - game.time) / 3;
-    const s = 'ЛКМ — идти/бить/поднять · ПКМ — Огненный змей · Alt — подписи · Tab — карта · I/C — котомка/витязь · N — звук';
+    const s = 'ЛКМ — идти/бить · ПКМ — навык · F1–F6 — выбрать навык · Пробел — рывок · T — навыки · Alt — подписи · Tab — карта';
     const w = textWidth(s) + 10;
     ctx.save(); ctx.globalAlpha = a;
     plate(ctx, VIEW_W / 2 - w / 2, 290, w, 14, 0.6);
@@ -306,13 +331,52 @@ function drawTooltip(ctx, game) {
   if (game.hoverBelt >= 0) {
     const b = h.belt[game.hoverBelt];
     txt = b ? POTIONS[b.kind].name + ' ×' + b.count + ' — клавиша ' + (game.hoverBelt + 1) : 'Пустая ячейка пояса';
-  } else if (inSlot(m, LAYOUT.rmb)) txt = 'Огненный змей, ранг ' + h.skillRank + ': ' + h.skillMin + '–' + h.skillMax + ' огнём, взрыв 1 тайл · ' + h.skillCost + ' яри';
+  } else if (inSlot(m, LAYOUT.rmb) && h.rmb) { drawSkillTooltip(ctx, h, h.rmb, m.mx, PANEL_Y - 6, 'bc'); return; }
+  else if (inSlot(m, LAYOUT.dash)) { drawSkillTooltip(ctx, h, 'dash', m.mx, PANEL_Y - 6, 'bc'); return; }
+  else if (LAYOUT.f.some((f) => inSlot(m, f))) {
+    const i = LAYOUT.f.findIndex((f) => inSlot(m, f)), id = h.bar[i];
+    if (id && rankOf(h, id)) { drawSkillTooltip(ctx, h, id, m.mx, PANEL_Y - 6, 'bc'); return; }
+    txt = 'F' + (i + 1) + ': пусто — наведи на навык в окне «Навыки» (T) и нажми F' + (i + 1);
+  } else if (inSlot(m, LAYOUT.lmb) && h.lmbSkill()) { drawSkillTooltip(ctx, h, h.lmbSkill(), m.mx, PANEL_Y - 6, 'bc'); return; }
   else if (inSlot(m, LAYOUT.lmb)) txt = 'Удар оружием — урон ' + h.dmgMin + '–' + h.dmgMax + (h.equip.rhand ? ' (' + h.equip.rhand.name + ')' : ' (без оружия)');
   if (!txt) return;
   const w = textWidth(txt) + 8;
   const x = Math.max(2, Math.min(VIEW_W - w - 2, m.mx - w / 2));
   plate(ctx, x, PANEL_Y - 22, w, 13, 0.9);
   drawText(ctx, x + 4, PANEL_Y - 20, txt, PAL.linen);
+}
+
+/** Иконка навыка с перезарядкой и серым при нехватке Яри. */
+function skillIcon(ctx, h, id, x, y, s, active, noGrey = false) {
+  const sk = SKILLS[id];
+  drawIcon(ctx, 'sk_' + sk.icon + '_' + (s >= 26 ? 26 : 20), x, y, s, s);
+  const cd = h.cdLeft(id);
+  if (cd > 0) cooldownSector(ctx, x, y, s, cd / sk.cd, cd);
+  else if (!noGrey && sk.type !== 'passive' && h.yar < skillCost(h, id)) { ctx.save(); ctx.globalAlpha = 0.6; rect(ctx, x, y, s, s, PAL.slate_dk); ctx.restore(); }
+}
+/** Затемнение по часовой стрелке (доля k оставшейся перезарядки) и цифра секунд. */
+function cooldownSector(ctx, x, y, s, k, secs) {
+  if (!(k > 0)) return;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x, y, s, s); ctx.clip();
+  ctx.globalAlpha = 0.68; ctx.fillStyle = PAL.ink;
+  const cx = x + s / 2, cy = y + s / 2;
+  ctx.beginPath(); ctx.moveTo(cx, cy);
+  ctx.arc(cx, cy, s, -Math.PI / 2 + (1 - k) * Math.PI * 2, Math.PI * 1.5);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+  drawText(ctx, x + s / 2, y + s / 2 - 4, String(Math.ceil(secs)), PAL.linen, { align: 'c', outline: true });
+}
+
+/** Ячейка HUD под курсором: { kind: 'f', i } | { kind: 'lmb' } | { kind: 'rmb' } | { kind: 'dash' } | null. */
+export function hudSlotAt(mx, my) {
+  const m = { mx, my }, L = LAYOUT;
+  const i = L.f.findIndex((f) => inSlot(m, f));
+  if (i >= 0) return { kind: 'f', i };
+  if (inSlot(m, L.lmb)) return { kind: 'lmb' };
+  if (inSlot(m, L.rmb)) return { kind: 'rmb' };
+  if (inSlot(m, L.dash)) return { kind: 'dash' };
+  return null;
 }
 
 function inSlot(m, s) { return m.mx >= s.x && m.mx < s.x + s.s && m.my >= s.y && m.my < s.y + s.s; }

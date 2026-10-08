@@ -1,0 +1,59 @@
+{
+ "ttk_sshibka": {
+  "mean": 3.04,
+  "min": 1.4,
+  "max": 6.32
+ },
+ "ttk_plain": {
+  "mean": 3.65,
+  "min": 2.08,
+  "max": 5.32
+ },
+ "ttk_sshibka_noKnockback": {
+  "mean": 2.46,
+  "min": 1.27,
+  "max": 4.42
+ },
+ "zoneXp": {
+  "total": 278,
+  "level": 2,
+  "progress": 0.52
+ },
+ "ttk_fire": {
+  "mean": 1.58,
+  "min": 1.13,
+  "max": 1.97
+ },
+ "fight_L1_vs3upyr_m1": {
+  "runs": 30,
+  "deaths": 0,
+  "time": 9.82,
+  "hpLeftPct": 87,
+  "yarEnd": 33.15
+ },
+ "fight_L2_vs3upyr_m2": {
+  "runs": 30,
+  "deaths": 0,
+  "time": 11.69,
+  "hpLeftPct": 72,
+  "yarEnd": 34.26
+ },
+ "stand_L3": {
+  "mean": 14.37,
+  "min": 9.78,
+  "max": 17.12,
+  "hp": 78
+ },
+ "stand_L6": {
+  "mean": 7.03,
+  "min": 4.28,
+  "max": 9.78,
+  "hp": 90
+ },
+ "stand_L10": {
+  "mean": 5.02,
+  "min": 2.45,
+  "max": 7.95,
+  "hp": 106
+ }
+}

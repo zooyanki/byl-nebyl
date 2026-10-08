@@ -1,4 +1,5 @@
 // Игра: состояние, обновление, ввод -> команды герою, спавн нечисти, смерть и возвращение у крады, отрисовка.
+import { makeRng } from './core/rng.js';
 import { VIEW_W, VIEW_H, PLAYFIELD_CY, MAP_SEED, DEBUG } from './config.js';
 import { PAL } from './palette.js';
 import { w2s, s2w } from './core/iso.js';
@@ -15,15 +16,18 @@ import { Loot, itemColor } from './systems/loot.js';
 import { Audio } from './systems/audio.js';
 import { WorldRenderer } from './render/world.js';
 import { Minimap } from './render/minimap.js';
-import { drawHud, drawHudTooltip, drawCursor, isOverHud, beltSlotAt, buttonAt, BTN } from './render/hud.js';
+import { drawHud, drawHudTooltip, drawCursor, isOverHud, beltSlotAt, buttonAt, hudSlotAt, BTN } from './render/hud.js';
 import { drawDeath, drawPause, overDeathButton, pauseButtonAt } from './render/screens.js';
-import { InventoryUI } from './ui/windows.js';
-import { xpPenalty, xpToNext, S as STATS } from './data/progression.js';
+import { InventoryUI, compareLines } from './ui/windows.js';
+import { xpPenalty, xpToNext, hitChance, S as STATS } from './data/progression.js';
 import { enemyStats } from './data/enemies.js';
 import { CFG } from './data/config.js';
 import { UI_ATLAS } from './ui/assets.js';
-import { makeItem, makePotion, rollItem } from './data/items.js';
+import { makeItem, makePotion, rollItem, pickBase } from './data/items.js';
+import { dirOf } from './entities/actor.js';
 import { rnd } from './core/math.js';
+import { t, plural, silverText } from './core/i18n.js';
+import { SKILLS, DASH, rankOf } from './data/skills.js';
 
 const LS_LABELS = 'byl_nebyl_labels';
 
@@ -42,10 +46,14 @@ export class Game {
     this.labelsAlways = false;
     try { this.labelsAlways = localStorage.getItem(LS_LABELS) === '1'; } catch (e) { /* нет localStorage */ }
     this.showMinimap = true;
-    this.counters = { hitStop: 0, shake: 0 };
+    this.counters = { hitStop: 0, shake: 0, backoff: 0, casts: {}, cdBlocked: 0, barks: 0, barksSuppressed: 0 };
+    this.t = t;
+    this._barks = {};
     // для автотестов и отладки из консоли
-    this.dbg = { circleFree, sightClear, lineWalkable, enemyStats, xpToNext, CFG, UI_ATLAS };
-    window.addEventListener('blur', () => { if (this.state === 'play') this.paused = true; });   // GDD §4.1: потеря фокуса — пауза
+    this.dbg = { circleFree, sightClear, lineWalkable, enemyStats, xpToNext, CFG, UI_ATLAS, SKILLS, t, plural, silverText, pickBase, dirOf, rankOf, cmp: (it) => compareLines(it, this.hero), hitChance };
+    // GDD §4.1, QA B-01: потеря фокуса или скрытая вкладка — пауза
+    window.addEventListener('blur', () => { if (this.state === 'play') this.paused = true; });
+    document.addEventListener('visibilitychange', () => { if (document.hidden && this.state === 'play') this.paused = true; });
     this.reset();
   }
 
@@ -55,6 +63,7 @@ export class Game {
     this.paused = false;
     this.mapOverlay = false;
     this.deathT = 0;
+    if (window.__seed != null) Math.random = makeRng(window.__seed);   // ?seed=N: новая игра повторяет случайность (QA B-14)
     this.deaths = 0;
     this.deathInfo = null;
     this.hero = new Hero(this.map.start.x, this.map.start.y);
@@ -116,9 +125,9 @@ export class Game {
     this.cam.x = Math.round(ix); this.cam.y = Math.round(iy);
     // открыта одна панель — герой смещается в свободную половину экрана (как в D2)
     const ui = this.ui;
-    this.camCX = ui.invOpen && !ui.charOpen ? 161 : ui.charOpen && !ui.invOpen ? 479 : VIEW_W / 2;
+    this.camCX = ui.rightOpen && !ui.charOpen ? 161 : ui.charOpen && !ui.rightOpen ? 479 : VIEW_W / 2;
   }
-  get topRightVisible() { return !this.ui.invOpen && !this.mapOverlay; }
+  get topRightVisible() { return !this.ui.rightOpen && !this.mapOverlay; }
   get labelsShown() { return this.labelsAlways || this.input.altHeld; }
 
   // --- «сочность» удара
@@ -126,7 +135,8 @@ export class Game {
   shake(px, t) { this.counters.shake++; this.shakeAmp = Math.max(this.shakeAmp, px); this.shakeT = Math.max(this.shakeT, t); this.shakeDur = Math.max(this.shakeDur, t); }
 
   notify(text, color, key) {
-    if (key && this._noticeKeys[key] && this.time - this._noticeKeys[key] < 1.2) return;
+    // повтор глушим, только если на экране уже это же сообщение (QA B-19)
+    if (key && this._noticeKeys[key] && this.time - this._noticeKeys[key] < 1.2 && this.notice && this.notice.text === text) return;
     if (key) this._noticeKeys[key] = this.time;
     this.notice = { text, color, t: this.time };
   }
@@ -137,9 +147,11 @@ export class Game {
     const h = this.hero;
     h.kills++;
     const xp = Math.max(1, Math.round(e.xp * xpPenalty(h.level, e.mlvl)));
-    this.fx.text(e.x, e.y, '+' + xp + ' опыта', PAL.bronze_lt, e.def.height + 16, { dur: 1.1 });
+    if (!h.dead) {
+      this.fx.text(e.x, e.y, '+' + xp + ' опыта', PAL.bronze_lt, e.def.height + 16 + (this._xpStack = ((this._xpStack || 0) + 1) % 3) * 9, { dur: 1.1 });
+      h.gainXp(xp, this);
+    }
     this.audio.play('kill');
-    h.gainXp(xp, this);
     this.loot.dropFrom(e);
     // GDD §5.2: анчутки при гибели сородича рядом с шансом 30% с визгом удирают на 3 с
     for (const o of this.enemies) {
@@ -152,7 +164,7 @@ export class Game {
     }
   }
   onLevelUp(h) {
-    this.log.add('Новый уровень: ' + h.level + '! +5 очков свойств (C).', PAL.bronze_hi);
+    this.log.add(t('ui.sys.level_up', { n: h.level }) + ' ' + t('ui.sys.level_points') + ' (C, T)', PAL.bronze_hi);
     this.fx.text(h.x, h.y, 'Новый уровень!', PAL.bronze_hi, 60, { dur: 1.8, big: true });
     this.fx.rise(h.x, h.y, PAL.bronze_hi, 26, 40);
     this.audio.play('levelup');
@@ -168,8 +180,10 @@ export class Game {
     this.deathInfo = { lost, x: h.x, y: h.y };
     this.ui.closeAll();
     this.mapOverlay = false;
+    this.combat.projectiles = this.combat.projectiles.filter((p) => p.hostile);   // снаряды героя гаснут (QA B-03)
     this.audio.play('death');
-    this.log.add('Ратибор пал…' + (lost ? ' Потеряно ' + lost + ' серебра.' : ''), PAL.red_lt);
+    this.log.add('Ратибор пал…' + (lost ? ' ' + silverText(lost, 'lost') + '.' : ''), PAL.red_lt);
+    this.deathInfo.line = 'death.line' + (1 + Math.floor(Math.random() * 5));
   }
   /** Возвращение у крады (замена Ладоги в однозонном прототипе): полные жизнь и Ярь, 2 с неуязвимости.
    *  Нечисть теряет след; перебитые стаи собираются заново (замена правила GDD «при повторном входе в зону»). */
@@ -200,7 +214,7 @@ export class Game {
     this.fx.rise(h.x, h.y, PAL.ember, 20, 36);
     this.audio.play('respawn');
     this.log.add('Ратибор очнулся у крады.', PAL.flame);
-    if (back) this.log.add('Нечисть снова собралась в округе (' + back + ').', PAL.nebyl);
+    if (back) this.log.add('Нечисть снова собралась в округе: ' + back + ' ' + plural(back, 'враг', 'врага', 'врагов') + '.', PAL.nebyl);
   }
   // стаи добираются до исходного состава; трупы убираются
   repopulate() {
@@ -212,8 +226,7 @@ export class Game {
       for (const k of alive) { const j = need.indexOf(k); if (j >= 0) need.splice(j, 1); }
       if (need.length) n += this.spawnPack(i, need);
     });
-    this.enemyTotal += n;
-    return n;
+    return n;   // численность зоны (enemyTotal) не растёт — счётчик цели считает живых (QA B-06)
   }
 
   // --- наведение мыши
@@ -263,6 +276,7 @@ export class Game {
     if (key === 'C') this.ui.toggleChar();
     else if (key === 'I') this.ui.toggleInv();
     else if (key === 'M') { this.mapOverlay = !this.mapOverlay; this.audio.play('ui'); }
+    else if (key === 'T') this.ui.toggleSkills();
     else if (key === 'ESC') { this.paused = true; this.audio.play('ui'); }
     else { this.notify(BTN.labels[i] + ' — в следующей итерации', PAL.mist, 'soon'); this.audio.play('ui'); }
   }
@@ -294,7 +308,15 @@ export class Game {
     if (inp.pressed('Tab') || inp.pressed('KeyM')) this.mapOverlay = !this.mapOverlay;
     if (inp.pressed('KeyI') || inp.pressed('KeyB')) ui.toggleInv();
     if (inp.pressed('KeyC')) ui.toggleChar();
-    if (inp.pressed('KeyT')) this.notify('Навыки — в следующей итерации', PAL.mist, 'soon');
+    if (inp.pressed('KeyT')) ui.toggleSkills();
+    // F1–F6 (как в D2): над навыком в окне «Навыки» — положить его в ячейку; иначе — назначить навык ячейки на ПКМ
+    for (let k = 0; k < 6; k++) if (inp.pressed('F' + (k + 1))) this.pressF(k);
+    if (inp.wheel) this.cycleRmb(inp.wheel);
+    if (inp.pressed('Space')) {
+      const [wx, wy] = this.toWorld(inp.mx, inp.my);
+      const r = h.dash(this, wx, wy);
+      if (r === 'cd') { this.counters.cdBlocked++; this.audio.play('error'); }
+    }
     if (inp.pressed('KeyJ')) this.notify('Летопись — в следующей итерации', PAL.mist, 'soon');
     ['Digit1', 'Digit2', 'Digit3', 'Digit4'].forEach((k, i) => { if (inp.pressed(k)) h.drink(i, this); });
 
@@ -307,9 +329,13 @@ export class Game {
       const hb = this.topRightVisible ? buttonAt(inp.mx, inp.my) : -1;
       if (hb >= 0) this.menuButton(hb);
       else if (this.hoverBelt >= 0) h.drink(this.hoverBelt, this);
-      else if (this.overUi) { /* клик по HUD */ }
+      else if (this.overUi) {   // клик по HUD: F-ячейка — навык на ПКМ; ячейка ЛКМ — «Сшибка» ↔ обычный удар
+        const hs = hudSlotAt(inp.mx, inp.my);
+        if (hs && hs.kind === 'f') this.pressF(hs.i);
+        else if (hs && hs.kind === 'lmb') { h.lmb = h.lmb ? null : (rankOf(h, 'sshibka') ? 'sshibka' : null); this.audio.play('ui'); this.notify('ЛКМ: ' + (h.lmb ? SKILLS[h.lmb].name : 'обычный удар'), PAL.bronze_lt, 'lmb'); }
+      }
       else if (this.hoverLabel || this.hoverGround) { h.pickup(this.hoverLabel || this.hoverGround); this.leftMode = 'pickup'; }
-      else if (this.hoverEnemy) { h.attack(this.hoverEnemy, inp.shift); this.lastTarget = this.hoverEnemy; this.leftMode = 'attack'; }
+      else if (this.hoverEnemy) { h.attack(this.hoverEnemy, inp.shift, h.lmbSkill(), true); this.lastTarget = this.hoverEnemy; this.leftMode = 'attack'; }
       else if (inp.shift) { h.stop(); const [wx, wy] = this.toWorld(inp.mx, inp.my); h.face(wx - h.x, wy - h.y); }
       else {
         const [wx, wy] = this.toWorld(inp.mx, inp.my);
@@ -330,11 +356,63 @@ export class Game {
     } else this.leftMode = null;
     if (h.cmd && h.cmd.type === 'attack') h.cmd.repeat = inp.left && this.leftMode === 'attack';
 
+    // ПКМ — навык панели; нажатие во время замаха запоминается на 0,3 с (QA B-02)
     if ((inp.rightPressed || inp.right) && !this.overUi && !ui.hand) {
-      const t = this.hoverEnemy;
-      const [wx, wy] = t ? [t.x, t.y] : this.toWorld(inp.mx, inp.my);
-      if (h.tryCast(this, wx, wy) && t) this.lastTarget = t;
+      const tg = this.hoverEnemy, id = h.rmb;
+      const [wx, wy] = tg ? [tg.x, tg.y] : this.toWorld(inp.mx, inp.my);
+      if (inp.rightPressed || h.cdLeft(id) <= 0) {
+        const r = h.useSkill(this, id, wx, wy, tg);
+        if (r === 'ok') { this.rmbBuf = null; if (tg) this.lastTarget = tg; }
+        else if (r === 'busy' && inp.rightPressed) { this.rmbBuf = { t: 0.3, id, wx, wy, tg }; this.counters.buffered = (this.counters.buffered || 0) + 1; }
+        else if (r === 'cd' && inp.rightPressed) { this.counters.cdBlocked++; this.audio.play('error'); }
+      }
+    } else if (this.rmbBuf) {
+      const b = this.rmbBuf;
+      b.t -= dt;
+      if (b.t <= 0 || h.dead) this.rmbBuf = null;
+      else if (!h.action || (h.action.fired && h.action.t > h.action.dur * 0.85)) {
+        const r = h.useSkill(this, b.id, b.tg && !b.tg.dead ? b.tg.x : b.wx, b.tg && !b.tg.dead ? b.tg.y : b.wy, b.tg && !b.tg.dead ? b.tg : null);
+        if (r !== 'busy') {
+          this.rmbBuf = null;
+          if (r === 'ok') this.counters.bufferedFired = (this.counters.bufferedFired || 0) + 1;
+          else if (r === 'cd') { this.counters.cdBlocked++; this.audio.play('error'); }
+        }
+      }
     }
+  }
+
+  pressF(k) {
+    const h = this.hero, ui = this.ui;
+    const hov = ui.skillsOpen ? ui.skills.hover.skill : null;
+    if (hov) {
+      if (!rankOf(h, hov) || SKILLS[hov].type === 'passive') { this.audio.play('error'); return; }
+      const old = h.bar.indexOf(hov);
+      if (old >= 0) h.bar[old] = null;
+      h.bar[k] = hov;
+      this.audio.play('ui');
+      this.notify(SKILLS[hov].name + ' → F' + (k + 1), PAL.bronze_lt, 'bind');
+      return;
+    }
+    const id = h.bar[k];
+    if (id && h.setRmb(id)) { this.audio.play('ui'); this.notify('ПКМ: ' + SKILLS[id].name, PAL.bronze_lt, 'rmb'); }
+    else this.audio.play('error');
+  }
+  // колесо мыши — перебор навыков панели на ПКМ (GDD §4.1)
+  cycleRmb(dir) {
+    const h = this.hero, list = h.bar.filter((id) => id && rankOf(h, id));
+    if (list.length < 2) return;
+    const i = list.indexOf(h.rmb);
+    h.setRmb(list[(i + (dir > 0 ? 1 : -1) + list.length) % list.length]);
+    this.audio.play('ui');
+  }
+  /** Реплика над головой: одна и та же — не чаще раза в 15 с (GDD v1.4 §10.1). */
+  bark(actor, key, text = null) {
+    const last = this._barks[key];
+    if (last != null && this.time - last < 15) { this.counters.barksSuppressed++; return false; }
+    this._barks[key] = this.time;
+    this.counters.barks++;
+    this.fx.text(actor.x, actor.y, text || t(key), PAL.linen, (actor.def ? actor.def.height : 46) + 12, { dur: 2.6 });
+    return true;
   }
 
   toggleLabels() {
@@ -415,7 +493,27 @@ export class Game {
     this.input.endFrame();
   }
 
+  /** Точка в «тихом» круге (крада, Чуров камень): нечисть туда не бродит, не замечает героя, погоня обрывается. */
+  safeAt(x, y, pad = 0) {
+    const zs = this.zone.safeZones;
+    if (!zs) return false;
+    for (const z of zs) {
+      const c = this.map[z.at];
+      if (c && Math.hypot(x - c.x, y - c.y) < z.radius + pad) return true;
+    }
+    return false;
+  }
+
   // --- отладка и автотесты (window.__game)
+  /** Тестовый враг вне стай (для замеров TTK и выживания). */
+  spawnTest(kind, x, y, mlvl = 1) { const e = new Enemy(kind, x, y, -1, mlvl); this.enemies.push(e); return e; }
+  /** Прогнать мир на sec игровых секунд фиксированным шагом (без рендера); stop() — досрочный выход. */
+  simulate(sec, stop = null, dt = 1 / 60) {
+    this.input.endFrame();
+    let tt = 0;
+    while (tt < sec) { this.update(dt); this.input.endFrame(); tt += dt; if (stop && stop()) break; }
+    return tt;
+  }
   give(baseId, rarity = 'normal', opts = {}) {
     const it = baseId.startsWith('potion:') ? makePotion(baseId.slice(7)) : makeItem(baseId, rarity, opts.ilvl || 6, Math.random, opts);
     if (!this.hero.inv.autoAdd(it)) return null;

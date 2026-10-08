@@ -168,7 +168,7 @@ def main():
     save_layer(lay4, "hud_scene4")
     save_layer(lay4e, "hud_scene4_end")
     loot, lboxes = TH.loot_layer((("Посох Чернояра", "bronze_lt", 398, 128), ("Меч князя", "ember", 432, 142),
-                                  ("312 серебра", "linen", 414, 156)))
+                                  ("312 сер.", "linen", 414, 156)))
     save_layer(loot, "hud_scene4_loot")
     save_rgb(TH.composite(a4, lay4), "scene4_start_hud", "scene4_start_hud_native")
     check_composite("scene4_start_nohud", "hud_scene4", "scene4_start_hud")

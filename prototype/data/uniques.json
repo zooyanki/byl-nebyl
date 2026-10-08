@@ -1,0 +1,131 @@
+{
+ "_about": "Былинные предметы (GDD v1.4 §6.5). pool: random — случайный пул, reward — награда миссии (выдаётся один раз). В прототипе былинные ещё не выпадают (implemented: false; редкость «Былинный» превращается в «Дивный»); Громовник/Лунница и их места — этап контента.",
+ "implemented": false,
+ "uniques": [
+  {
+   "id": "U1",
+   "name": "Жало Сокола",
+   "base": "sword_1",
+   "reqLevel": 4,
+   "pool": "random",
+   "mods": {
+    "ed": [
+     40,
+     60
+    ],
+    "fireDmg": 3,
+    "skill.sshibka": 1,
+    "resFire": 10
+   }
+  },
+  {
+   "id": "U2",
+   "name": "Громовник",
+   "base": "neck_1",
+   "reqLevel": 5,
+   "pool": "reward",
+   "reward": "m1",
+   "mods": {
+    "skillAll": 1,
+    "hp": 15,
+    "resFire": 10
+   }
+  },
+  {
+   "id": "U3",
+   "name": "Шелом Курганного князя",
+   "base": "head_2",
+   "reqLevel": 6,
+   "pool": "random",
+   "mods": {
+    "pctArmor": [
+     30,
+     40
+    ],
+    "vit": 3,
+    "lifesteal": 3,
+    "vsNechist": 20
+   }
+  },
+  {
+   "id": "U4",
+   "name": "Пояс Святогоров",
+   "base": "belt_2",
+   "reqLevel": 8,
+   "pool": "random",
+   "mods": {
+    "hp": 20,
+    "potionPct": 15,
+    "resAll": 10
+   }
+  },
+  {
+   "id": "U5",
+   "name": "Сапоги-скороходы",
+   "base": "boots_2",
+   "reqLevel": 9,
+   "pool": "random",
+   "mods": {
+    "frw": 20,
+    "dex": 10,
+    "resCold": 15
+   }
+  },
+  {
+   "id": "U6",
+   "name": "Перстень Водяного",
+   "base": "ring_1",
+   "reqLevel": 10,
+   "pool": "random",
+   "mods": {
+    "resPoison": 25,
+    "lifesteal": 4,
+    "mana": 15
+   }
+  },
+  {
+   "id": "U7",
+   "name": "Посох Чернояра",
+   "base": "staff_3",
+   "reqLevel": 12,
+   "pool": "random",
+   "guaranteedFrom": "chernoyar",
+   "mods": {
+    "skill.morozko": 2,
+    "spellPct": 30,
+    "fcr": 10,
+    "mana": 25
+   }
+  },
+  {
+   "id": "U8",
+   "name": "Броня Муромца",
+   "base": "body_3",
+   "reqLevel": 15,
+   "pool": "random",
+   "mods": {
+    "pctArmor": [
+     60,
+     80
+    ],
+    "hp": 40,
+    "resFire": 20,
+    "skill.chur": 1
+   }
+  },
+  {
+   "id": "U9",
+   "name": "Лунница",
+   "base": "neck_1",
+   "reqLevel": 10,
+   "pool": "reward",
+   "reward": "m2",
+   "mods": {
+    "mana": 20,
+    "regenPct": 15,
+    "resCold": 15,
+    "resPoison": 10
+   }
+  }
+ ]
+}
