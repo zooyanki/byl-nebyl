@@ -1,5 +1,5 @@
 """Teaser sprites (scale.md §2): hero poses 44 px (64x64, pivot 32,56), upyr variants 40 px,
-волколак leap (96x96, pivot 48,88), Чернояр-Волкодлак 104 standing / ~80 kneeling
+волколак leap (96x96, pivot 48,88), Чернояр-Лютоволк 104 standing / ~80 kneeling
 (128x144, pivot 64,132), loot (prince's sword 24, staff ~30, pelt 36x10).
 Hero handedness: faces right; sword in the right hand (screen-left/back side),
 shield on the left arm (screen-right, toward the enemy)."""
@@ -11,7 +11,7 @@ from sprites_rus import MAT, _shield, SMat
 
 TM = dict(MAT)
 TM.update({
-    "b": ("fur", 3, True, False, "fur"),      # black wolf pelt (Волкодлак)
+    "b": ("fur", 3, True, False, "fur"),      # black wolf pelt (Лютоволк)
     "j": ("fur", 2, False, False, "fur"),     # pelt shadow
     "I": ("birch", 3, True, False),           # volkhv shirt (grey linen)
     "i": ("birch", 2, False, False),

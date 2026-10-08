@@ -9,6 +9,7 @@ from pixelkit import C, Canvas
 from fonts_ru import FONT_RU, FONT_USTAV
 import theme_rus as T
 import ui_rus as U
+import gameplay_hud_v2 as G
 
 W, H = SC.W, SC.H
 MX, MY, MW, MH = 20, 34, 404, 306          # bark map rect
@@ -234,11 +235,15 @@ def info_panel(cv, x, y, w, h):
     ty += 4
     U.section_title(cv, x + 4, ty, w - 8, "Цели")
     ty += 13
-    for ln, n, c in (("— Отбей огнища у упырей", "2/3", C["linen"]), ("— Одолей Крившу", "", C["slate_lt"]),
-                     ("— Закрой разлом Небыли", "", C["nebyl"])):
+    # level-4 state, act1 v1.1 / GDD v1.3 A2: same 3 lines as the HUD tracker
+    for ln, n, c, done in (("— Спаси выживших", "3/3", C["slate_lt"], True), ("— Отбей огнища у упырей", "2/3", C["linen"], False),
+                           ("— Одолей Крившу", "", C["slate_lt"], False)):
         T.text_ru(cv, x + 7, ty, ln, c, outline=False)
+        rx = x + w - 8
+        if done:
+            G.tick(cv, rx - 7, ty + 1, C["bronze_lt"]); rx -= 10
         if n:
-            T.text_ru(cv, x + w - 8, ty, n, c, align="r", outline=False)
+            T.text_ru(cv, rx, ty, n, c, align="r", outline=False)
         ty += 10
     ty += 4
     U.section_title(cv, x + 4, ty, w - 8, "Награда")
@@ -264,6 +269,33 @@ def info_panel(cv, x, y, w, h):
         T.text_ru(cv, x + w - 9, yy, lv, col, align="r", outline=False)
     # buttons
     U.button(cv, x + 8, y + h - 24, w - 16, 18, "Продолжить", state="hover")
+
+
+M2_GOALS = (("— Осмотри сопки", "0/5"), ("— Собери обережные камни", "0/3"), ("— Найди вход в курган", ""),
+            ("— Узнай, кто будит мёртвых", ""), ("— Одолей Курганного князя", ""))      # act1 v1.1, GDD v1.3 A6
+
+
+def m2_card(cv, x, y):
+    """Hover card of the locked mission 2 (GDD §12.1.1 A6: level 7-11, goals verbatim)."""
+    w = 4 + max(pk.text_width(g, FONT_RU) + (pk.text_width(n, FONT_RU) + 8 if n else 0) for g, n in M2_GOALS) + 8
+    w = max(w, pk.text_width("Закрыто · после миссии 1", FONT_RU) + 14)
+    h = 34 + 14 + len(M2_GOALS) * 10 + 5
+    cv.rect(x, y, w, h, C["night"])
+    cv.frame(x, y, w, h, C["wood_md"]); cv.frame(x - 1, y - 1, w + 2, h + 2, C["ink"])
+    for (px_, py_) in ((x, y), (x + w - 1, y), (x, y + h - 1), (x + w - 1, y + h - 1)):
+        cv.px(px_, py_, C["bronze_lt"])
+    T.text_ru(cv, x + 6, y + 4, "2 · Сопки Волхова", C["bronze_lt"])
+    T.text_ru(cv, x + 6, y + 14, "Закрыто · после миссии 1", C["slate_lt"], outline=False)
+    T.text_ru(cv, x + 6, y + 24, "Сложность: ", C["mist"], outline=False)
+    T.text_ru(cv, x + 6 + pk.text_width("Сложность: ", FONT_RU), y + 24, "уровень 7–11", C["flame"], outline=False)
+    U.divider(cv, x + 4, y + 36, w - 8)
+    ty = y + 43
+    for g, n in M2_GOALS:
+        T.text_ru(cv, x + 6, ty, g, C["mist"], outline=False)
+        if n:
+            T.text_ru(cv, x + w - 6, ty, n, C["mist"], align="r", outline=False)
+        ty += 10
+    return (x, y, w, h)
 
 
 def main():
@@ -294,7 +326,10 @@ def main():
     map_label(cv, M2[0] + 4, M2[1] + 11, "2 · Сопки Волхова", C["slate"])
     map_label(cv, M3[0] + 14, M3[1] - 24, "3 · Разлом в Чёрном бору", C["slate"])
     info_panel(cv, 434, 30, 192, 316)
-    U.cursor(cv, M1[0] + 5, M1[1] + 4)
+    # cursor hovers the locked M2 -> its card (M1 stays selected in the panel)
+    card = m2_card(cv, 249, 128)
+    assert card[0] + card[2] <= 424 and card[1] + card[3] < M2[1] - 9, card
+    U.cursor(cv, M2[0] + 3, M2[1] + 2)
     SC.export(cv, "mockup_act_map_v2")
 
 

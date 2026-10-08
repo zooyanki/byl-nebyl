@@ -20,7 +20,7 @@ export function enemyStats(kind, mlvl) {
     dmgMin: Math.max(1, Math.floor(f(s.dmgMin) * d.dmgMul)),
     dmgMax: Math.max(1, Math.floor(f(s.dmgMax) * d.dmgMul)),
     ar: f(s.ar),
-    def: f(s.def),
+    dfn: f(s.def),              // защита (DEF); `def` у врага — запись из monsters.json
     xp: monsterXp(m, d.xpMul),
   };
 }

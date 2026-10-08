@@ -1063,26 +1063,28 @@ SKILLBAR = dict(lmb=("sword", False), rmb=("fire_serpent", True),
                 belt=("life", "life", "mana", "zhivaya"), dash=(0.85, "4"), xp=None)
 
 
-def dash_slot(cv, x, y, s, cd=None):
-    """Рывок: separate small slot left of the bar, «Пробел» caption under it,
-    cooldown shown as a clock sector (remaining share cd[0], seconds cd[1])."""
-    T.wood_slot(cv, x, y, s, s)
-    isz = s - 6
-    T.ICONS["ryvok"](cv, x + 3, y + 3, isz)
+def dash_slot(cv, x, y, s=18, cd=None):
+    """Рывок (GDD §10, §12.1.1 A4): small 18x18 slot right of ПКМ, 16x16 icon,
+    «Пробел» caption under it; cooldown = clock sector (remaining share cd[0],
+    seconds cd[1]). Designer 08.10: separate slot, not in F1-F6, CD 4 s."""
+    cv.rect(x, y, s, s, C["ink"])
+    isz = s - 2
+    T.ICONS["ryvok"](cv, x + 1, y + 1, isz)
     if cd is not None and cd[0] > 0:
         yy, xx = np.mgrid[0:H, 0:W]
         cx, cy = x + s / 2 - 0.5, y + s / 2 - 0.5
         ang = (np.arctan2(xx - cx, -(yy - cy)) % (2 * math.pi)) / (2 * math.pi)     # 0 at 12 o'clock, clockwise
-        box = (xx >= x + 3) & (xx < x + 3 + isz) & (yy >= y + 3) & (yy < y + 3 + isz)
-        pie = box & (ang >= 1 - cd[0])                                                 # remaining part of the sweep
+        box = (xx >= x + 1) & (xx < x + 1 + isz) & (yy >= y + 1) & (yy < y + 1 + isz)
+        pie = box & (ang >= 1 - cd[0])
         cv.a[pie] = np.asarray(pk.DARKEN1, dtype=np.uint8)[cv.a[pie]]
-        cv.a[box & ~pie] = cv.a[box & ~pie]
-        # sweep edge (bronze hand from the centre to 12 o'clock and to the current angle)
         a1 = (1 - cd[0]) * 2 * math.pi
         for r in np.arange(0, isz / 2, 0.5):
             cv.px(int(round(cx)), int(round(cy - r)), C["bronze_lt"])
             cv.px(int(round(cx + math.sin(a1) * r)), int(round(cy - math.cos(a1) * r)), C["bronze_lt"])
-        T.text_ru(cv, x + s - 6, y + s - 11, cd[1], C["bronze_hi"], align="c")
+        T.text_ru(cv, x + s - 5, y + s - 10, cd[1], C["bronze_hi"], align="c")
+    cv.frame(x, y, s, s, C["bronze"])
+    for (px_, py_) in ((x, y), (x + s - 1, y), (x, y + s - 1), (x + s - 1, y + s - 1)):
+        cv.px(px_, py_, C["bronze_lt"])
     T.text_ru(cv, x + s // 2 + 1, y + s + 1, "Пробел", C["mist"], align="c", outline=False)
 
 
@@ -1092,12 +1094,11 @@ def draw_bottom(cv, S, sb=None, xp_ratio=None):
     draw_housing(cv, True); draw_housing(cv, False)
     draw_xp(cv, xp_ratio if xp_ratio is not None else sb.get("xp"))
     by = 328
-    s_big, s_sm, s_dash = 32, 22, 22
+    s_big, s_sm, s_dash = 32, 22, 18
     belt_w = 4 * 24 + 3 * 2 + 6
-    total = 32 + 3 + s_big + 4 + 3 * s_sm + 4 + 6 + belt_w + 6 + 3 * s_sm + 4 + 4 + s_big
+    total = s_big + 4 + 3 * s_sm + 4 + 6 + belt_w + 6 + 3 * s_sm + 4 + 4 + s_big + 3 + 30
     x = 127
     assert x + total + 3 + 44 <= 551, total
-    dash_slot(cv, x + 5, by, s_dash, sb.get("dash")); x += 32 + 3
     skill_slot(cv, x, by, s_big, sb["lmb"][0], mouse="L", active=sb["lmb"][1]); x += s_big + 4
     fs = list(sb["f"])
     for i in range(3):
@@ -1114,8 +1115,10 @@ def draw_bottom(cv, S, sb=None, xp_ratio=None):
         x += s_sm + 2
     x += 2
     skill_slot(cv, x, by, s_big, sb["rmb"][0], mouse="R", active=sb["rmb"][1])
+    x += s_big + 3
+    dash_slot(cv, x + 6, by + 2, s_dash, sb.get("dash")); x += 30 + 3
     draw_level(cv, 112, 343)
-    draw_silver(cv, x + s_big + 3, 331, w=44)
+    draw_silver(cv, x, 331, w=44)
     (l, lm), (m, mm) = HUD["life"], HUD["yar"]
     draw_orb(cv, S, True, l / lm, "%d/%d" % (l, lm))
     draw_orb(cv, S, False, m / mm, "%d/%d" % (m, mm))
@@ -1252,16 +1255,17 @@ def draw_target(cv, cx, y, name="Упырь", ratio=0.58, sub="Нечисть ·
 
 
 QUEST = dict(title="ОГОНЬ НА КАПИЩЕ", act="Задание · Акт I",
-             goals=(("— Отбей огнища у упырей", "2/3", "linen"),       # designer 08.10 (act1 М1): the burning
-                    ("— Одолей Крившу", "", "slate_lt"),                  # крада in the scene is one of the огнища
-                    ("— Закрой разлом Небыли", "", "nebyl")))
+             goals=(("— Спаси выживших", "3/3", "slate_lt", True),       # GDD v1.3 A2, act1 v1.1 §8.2: done, fades
+                    ("— Отбей огнища у упырей", "2/3", "linen"),          # the burning крада counts as one огнище
+                    ("— Одолей Крившу", "", "slate_lt")))                  # grey: not active yet (designer 08.10)
 
 
 def draw_quest(cv, x, y):
     """Quest tracker in a carved wooden frame, ustav title with a буквица."""
     first, rest = QUEST["title"][0], QUEST["title"][1:]
     tw = pk.text_width(rest, FONT_USTAV)
-    gw = max(pk.text_width(g, FONT_RU) + (pk.text_width(n, FONT_RU) + 8 if n else 0) for g, n, _ in QUEST["goals"])
+    gw = max(pk.text_width(q[0], FONT_RU) + (pk.text_width(q[1], FONT_RU) + 8 if q[1] else 0) + (10 if len(q) > 3 else 0)
+             for q in QUEST["goals"])
     w, h = max(186, 26 + 4 + tw + 6 + 14 + 4, gw + 16), 80
     ix, iy, iw, ih = U.carved_frame(cv, x, y, w, h, fill="dim")
     bw, bh = U.bukvitsa(cv, ix + 1, iy + 1, first)
@@ -1269,10 +1273,24 @@ def draw_quest(cv, x, y):
     T.text_ru(cv, tx, iy + 2, QUEST["act"], C["mist"])
     T.text_ru(cv, tx, iy + 15 - FONT_USTAV.get("top", 0), rest, C["bronze_hi"], font=FONT_USTAV)
     oy = iy + bh + 3
-    for i, (g, n, col) in enumerate(QUEST["goals"]):
+    for i, q in enumerate(QUEST["goals"]):
+        g, n, col = q[:3]
         T.text_ru(cv, ix + 3, oy + 10 * i, g, C[col])
+        rx = ix + iw - 3
+        if len(q) > 3 and q[3]:                      # done: tick at the right edge
+            tick(cv, rx - 7, oy + 10 * i + 1, C["bronze_lt"])
+            rx -= 10
         if n:
-            T.text_ru(cv, ix + iw - 3, oy + 10 * i, n, C[col], align="r")
+            T.text_ru(cv, rx, oy + 10 * i, n, C[col], align="r")
+
+
+def tick(cv, x, y, c):
+    pts = ((6, 0), (5, 1), (4, 2), (0, 2), (3, 3), (1, 3), (2, 4))
+    for (dx, dy) in pts:
+        for (ox, oy) in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            cv.px(x + dx + ox, y + dy + oy, C["ink"])
+    for (dx, dy) in pts:
+        cv.px(x + dx, y + dy, c)
 
 
 def compose(parts=("minimap", "zone", "buttons", "target", "quest", "bottom"), elite=False):

@@ -103,7 +103,7 @@ export class GameMap {
   }
 }
 
-export function generateMap(seed) {
+export function generateMap(seed, zone = null) {
   const m = new GameMap(MAP_W, MAP_H);
   const rng = makeRng(seed);
   const W = m.w, H = m.h;
@@ -164,17 +164,8 @@ export function generateMap(seed) {
   // отдельная тонкая стена посреди поля (x 30,0–30,5), чтобы было что обходить рядом со стартом
   for (let y = 22; y <= 27; y++) m.addProp('wall', 30, y, 1, { fp: [30, y, 0.5, 1] });
 
-  // --- стаи нечисти (центры) и уровень монстров (mlvl): ближе к краде слабее (GDD §8.2: М1 начинается с mlvl 1–3)
-  m.packs = [
-    { x: 32.5, y: 29.5, kinds: ['anchutka', 'anchutka', 'anchutka', 'anchutka'], mlvl: 1 },
-    { x: 17.5, y: 29.5, kinds: ['upyr', 'upyr'], mlvl: 2 },
-    { x: 17.5, y: 36.5, kinds: ['upyr', 'upyr', 'upyr'], mlvl: 2 },
-    { x: 40.5, y: 4.5, kinds: ['upyr', 'upyr', 'anchutka', 'anchutka', 'anchutka'], mlvl: 3 },
-    { x: 9.5, y: 19.5, kinds: ['anchutka', 'anchutka', 'anchutka', 'anchutka', 'anchutka'], mlvl: 2 },
-    { x: 37.5, y: 17.5, kinds: ['upyr', 'upyr', 'upyr'], mlvl: 3 },
-    { x: 29.5, y: 40.5, kinds: ['upyr', 'upyr', 'anchutka', 'anchutka'], mlvl: 3 },
-    { x: 41.5, y: 33.5, kinds: ['anchutka', 'anchutka', 'anchutka', 'anchutka'], mlvl: 2 },
-  ];
+  // стаи нечисти: из data/zones/<зона>.json (центры, состав, mlvl)
+  m.packs = (zone && zone.packs ? zone.packs : []).map((p) => ({ x: p.x, y: p.y, kinds: [...p.kinds], mlvl: p.mlvl }));
   const nearPack = (x, y, r) => m.packs.some((p) => d(x + 0.5, y + 0.5, p.x, p.y) < r);
 
   // --- лесная кромка по периметру: сплошная чаща (весь тайл непроходим)

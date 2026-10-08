@@ -173,7 +173,8 @@ export class InventoryUI {
       if (H.slot && h.equip[H.slot]) tip = h.equip[H.slot];
       else if (H.entry) tip = H.entry.item;
     }
-    if (tip) drawItemTooltip(ctx, tip, h, INV.win[0] - 3, m.my - 40, tip.kind === 'gear' && !Object.values(h.equip).includes(tip));
+    this.lastTip = null;
+    if (tip) this.lastTip = { item: tip, ...drawItemTooltip(ctx, tip, h, INV.win[0] - 3, m.my - 40, tip.kind === 'gear' && !Object.values(h.equip).includes(tip)) };
     else if (H.plus) drawPlainTip(ctx, plusTip(H.plus), m.mx + 8, m.my + 10);
     if (this.hand) {
       const [iw, ih] = [this.hand.w * CELL, this.hand.h * CELL];

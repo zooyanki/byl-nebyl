@@ -1,0 +1,605 @@
+{
+ "files": [
+  "scene1_start_nohud.png",
+  "scene1_start_native.png",
+  "hud_scene1.png",
+  "hud_scene1_native.png",
+  "scene1_start_hud.png",
+  "scene1_start_hud_native.png",
+  "scene2_start_nohud.png",
+  "scene2_start_native.png",
+  "scene3_start_nohud.png",
+  "scene3_start_native.png",
+  "hud_scene23_a.png",
+  "hud_scene23_a_native.png",
+  "hud_scene23_b.png",
+  "hud_scene23_b_native.png",
+  "scene2_start_hud.png",
+  "scene2_start_hud_native.png",
+  "scene3_start_hud.png",
+  "scene3_start_hud_native.png",
+  "scene4_start_nohud.png",
+  "scene4_start_native.png",
+  "scene4_end_nohud.png",
+  "scene4_end_native.png",
+  "hud_scene4.png",
+  "hud_scene4_native.png",
+  "hud_scene4_end.png",
+  "hud_scene4_end_native.png",
+  "hud_scene4_loot.png",
+  "hud_scene4_loot_native.png",
+  "scene4_start_hud.png",
+  "scene4_start_hud_native.png",
+  "scene4_end_hud.png",
+  "scene4_end_hud_native.png"
+ ],
+ "checks": {
+  "scene1_start_nohud": {
+   "colours": 25,
+   "palette_ok": true
+  },
+  "hud_scene1": {
+   "alpha_values": [
+    0,
+    255
+   ],
+   "palette_ok": true,
+   "opaque_share": 0.279
+  },
+  "scene1_start_hud": {
+   "colours": 31,
+   "palette_ok": true
+  },
+  "composite scene1_start_hud": true,
+  "scene2_start_nohud": {
+   "colours": 25,
+   "palette_ok": true
+  },
+  "scene3_start_nohud": {
+   "colours": 27,
+   "palette_ok": true
+  },
+  "hud_scene23_a": {
+   "alpha_values": [
+    0,
+    255
+   ],
+   "palette_ok": true,
+   "opaque_share": 0.282
+  },
+  "hud_scene23_b": {
+   "alpha_values": [
+    0,
+    255
+   ],
+   "palette_ok": true,
+   "opaque_share": 0.282
+  },
+  "scene2_start_hud": {
+   "colours": 32,
+   "palette_ok": true
+  },
+  "scene3_start_hud": {
+   "colours": 32,
+   "palette_ok": true
+  },
+  "composite scene2_start_hud": true,
+  "composite scene3_start_hud": true,
+  "scene4_start_nohud": {
+   "colours": 27,
+   "palette_ok": true
+  },
+  "scene4_end_nohud": {
+   "colours": 26,
+   "palette_ok": true
+  },
+  "scene4_start_vs_end": {
+   "changed_px": 4006,
+   "share": 0.0174,
+   "bbox": [
+    308,
+    62,
+    498,
+    198
+   ]
+  },
+  "scene4_changes_inside_zones": true,
+  "scene4_outside_zones_px": 0,
+  "hud_scene4": {
+   "alpha_values": [
+    0,
+    255
+   ],
+   "palette_ok": true,
+   "opaque_share": 0.282
+  },
+  "hud_scene4_end": {
+   "alpha_values": [
+    0,
+    255
+   ],
+   "palette_ok": true,
+   "opaque_share": 0.265
+  },
+  "hud_scene4_loot": {
+   "alpha_values": [
+    0,
+    255
+   ],
+   "palette_ok": true,
+   "opaque_share": 0.009
+  },
+  "scene4_start_hud": {
+   "colours": 32,
+   "palette_ok": true
+  },
+  "composite scene4_start_hud": true,
+  "scene4_end_hud": {
+   "colours": 32,
+   "palette_ok": true
+  },
+  "loot_labels_clear_of_hero": true
+ },
+ "loot_label_boxes": [
+  [
+   352,
+   146,
+   439,
+   158
+  ],
+  [
+   403,
+   160,
+   460,
+   172
+  ],
+  [
+   380,
+   174,
+   447,
+   186
+  ]
+ ],
+ "tracker_boxes": {
+  "s1": [
+   3,
+   3,
+   206,
+   80
+  ],
+  "s23": [
+   3,
+   3,
+   189,
+   92
+  ],
+  "s4": [
+   3,
+   3,
+   189,
+   92
+  ]
+ },
+ "measure": {
+  "scene1": {
+   "palisade": {
+    "h_mean": 79.66412213740458,
+    "h_min": 76,
+    "h_max": 84,
+    "top_centre": 18,
+    "top_x100": 34,
+    "base_centre": 102,
+    "base_x440": 106
+   },
+   "fence_posts": [
+    20,
+    20,
+    21,
+    20,
+    21,
+    19,
+    21,
+    21,
+    19,
+    21,
+    20,
+    21,
+    20,
+    19,
+    19,
+    21,
+    21,
+    20,
+    20,
+    20,
+    20,
+    21
+   ],
+   "perun_idol": {
+    "box": [
+     219,
+     47,
+     244,
+     150
+    ],
+    "h": 104,
+    "w": 26
+   },
+   "krada_flame_top": 142,
+   "upyr2": {
+    "box": [
+     391,
+     127,
+     412,
+     166
+    ],
+    "h": 40,
+    "w": 22
+   },
+   "hero": {
+    "box": [
+     303,
+     123,
+     333,
+     178
+    ],
+    "h": 56,
+    "w": 31
+   },
+   "upyr1": {
+    "box": [
+     338,
+     151,
+     369,
+     190
+    ],
+    "h": 40,
+    "w": 32
+   },
+   "upyr3": {
+    "box": [
+     412,
+     197,
+     443,
+     222
+    ],
+    "h": 26,
+    "w": 32
+   },
+   "upyr3_visible": 24,
+   "spruces": [
+    150,
+    170,
+    142,
+    160,
+    148
+   ],
+   "spruce_fg": 232
+  },
+  "scene2": {
+   "pines": [
+    176,
+    160,
+    186,
+    170,
+    182,
+    158,
+    176,
+    164,
+    172,
+    188,
+    166,
+    184,
+    176
+   ],
+   "spruces": [
+    140,
+    128,
+    156,
+    150,
+    160,
+    150,
+    160,
+    146,
+    158
+   ],
+   "inverted_pine": 92,
+   "chur_idol": {
+    "box": [
+     523,
+     69,
+     537,
+     128
+    ],
+    "h": 60,
+    "w": 15
+   },
+   "fallen_idol_1": [
+    150,
+    221,
+    209,
+    235
+   ],
+   "rift_s23": {
+    "top": 84,
+    "bottom": 172,
+    "h": 89
+   },
+   "volkolak_s2": {
+    "box": [
+     421,
+     117,
+     466,
+     176
+    ],
+    "h": 60,
+    "w": 46
+   },
+   "volkolak_s2_visible": {
+    "top": 117,
+    "bottom": 176,
+    "left": 421,
+    "right": 453
+   },
+   "hero_s2": {
+    "box": [
+     300,
+     135,
+     333,
+     178
+    ],
+    "h": 44,
+    "w": 34
+   }
+  },
+  "scene3": {
+   "pines": [
+    176,
+    160,
+    186,
+    170,
+    182,
+    158,
+    176,
+    164,
+    172,
+    188,
+    166,
+    184,
+    176
+   ],
+   "spruces": [
+    140,
+    128,
+    156,
+    150,
+    160,
+    150,
+    160,
+    146,
+    158
+   ],
+   "inverted_pine": 92,
+   "chur_idol": {
+    "box": [
+     523,
+     69,
+     537,
+     128
+    ],
+    "h": 60,
+    "w": 15
+   },
+   "fallen_idol_1": [
+    150,
+    221,
+    209,
+    235
+   ],
+   "rift_s23": {
+    "top": 84,
+    "bottom": 172,
+    "h": 89
+   },
+   "volkolak_s3": {
+    "box": [
+     377,
+     121,
+     448,
+     168
+    ],
+    "h": 48,
+    "w": 72
+   },
+   "hero_s3": {
+    "box": [
+     305,
+     135,
+     347,
+     178
+    ],
+    "h": 44,
+    "w": 43
+   },
+   "fire_clump": {
+    "centre": [
+     347,
+     152
+    ],
+    "size": 11
+   }
+  },
+  "scene4_start": {
+   "pines": [
+    176,
+    160,
+    186,
+    168
+   ],
+   "spruces": [
+    140,
+    156,
+    150,
+    152,
+    160,
+    146
+   ],
+   "inverted_pines_s4": [
+    86,
+    80
+   ],
+   "fallen_idol_s4_0": [
+    120,
+    103,
+    179,
+    117
+   ],
+   "fallen_idol_s4_1": [
+    170,
+    246,
+    229,
+    260
+   ],
+   "fallen_idol_s4_2": [
+    530,
+    233,
+    589,
+    247
+   ],
+   "rift_s4": {
+    "top": 62,
+    "bottom": 150,
+    "h": 89,
+    "w_total": 54,
+    "x0": 445,
+    "x1": 498
+   },
+   "boss_kneel": {
+    "box": [
+     374,
+     99,
+     439,
+     178
+    ],
+    "h": 80,
+    "w": 66
+   },
+   "prince_sword": {
+    "box": [
+     417,
+     180,
+     442,
+     190
+    ],
+    "h": 11,
+    "w": 26
+   },
+   "hero_s4": {
+    "box": [
+     308,
+     122,
+     334,
+     178
+    ],
+    "h": 57,
+    "w": 27
+   }
+  },
+  "scene4_end": {
+   "pines": [
+    176,
+    160,
+    186,
+    168
+   ],
+   "spruces": [
+    140,
+    156,
+    150,
+    152,
+    160,
+    146
+   ],
+   "inverted_pines_s4": [
+    86,
+    80
+   ],
+   "fallen_idol_s4_0": [
+    120,
+    103,
+    179,
+    117
+   ],
+   "fallen_idol_s4_1": [
+    170,
+    246,
+    229,
+    260
+   ],
+   "fallen_idol_s4_2": [
+    530,
+    233,
+    589,
+    247
+   ],
+   "rift_s4": {
+    "top": 62,
+    "bottom": 150,
+    "h": 89,
+    "w_total": 54,
+    "x0": 445,
+    "x1": 498
+   },
+   "pelt": {
+    "box": [
+     389,
+     171,
+     426,
+     182
+    ],
+    "h": 12,
+    "w": 38
+   },
+   "staff": {
+    "box": [
+     381,
+     178,
+     411,
+     192
+    ],
+    "h": 15,
+    "w": 31
+   },
+   "prince_sword_end": {
+    "box": [
+     417,
+     180,
+     442,
+     190
+    ],
+    "h": 11,
+    "w": 26
+   },
+   "silver": {
+    "box": [
+     407,
+     191,
+     420,
+     198
+    ],
+    "h": 8,
+    "w": 14
+   },
+   "hero_s4_end": {
+    "box": [
+     308,
+     135,
+     333,
+     178
+    ],
+    "h": 44,
+    "w": 26
+   }
+  }
+ }
+}

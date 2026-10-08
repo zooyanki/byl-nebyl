@@ -66,6 +66,7 @@ export function findPath(map, sx, sy, tx, ty, r = 0.3, opts = {}) {
   const gt = nearestNode(pass, NW, NH, tx * SUB, ty * SUB, 14);
   if (!st || !gt) return null;
   const exactGoal = Math.abs(gt[0] / SUB - tx) < 0.3 && Math.abs(gt[1] / SUB - ty) < 0.3 && circleFree(map, tx, ty, r);
+  const otx = tx, oty = ty;
   if (!exactGoal) { tx = gt[0] / SUB; ty = gt[1] / SUB; }
   const start = st[1] * NW + st[0], goal = gt[1] * NW + gt[0];
   // штраф у тел (кроме тех, что совсем рядом с целью или стартом)
@@ -116,6 +117,17 @@ export function findPath(map, sx, sy, tx, ty, r = 0.3, opts = {}) {
   const pts = [[sx, sy]];
   for (let k = 1; k < nodes.length; k++) pts.push([(nodes[k] % NW) / SUB, ((nodes[k] / NW) | 0) / SUB]);
   if (found) { if (pts.length > 1) pts[pts.length - 1] = [tx, ty]; else pts.push([tx, ty]); }
+  // цель внутри препятствия: дошагиваем от узла к ней, насколько пускает полутайловая сетка (встать вплотную к стене)
+  if (found && !exactGoal) {
+    const d = Math.hypot(otx - tx, oty - ty);
+    let bx = tx, by = ty;
+    for (let k = 1; k * 0.05 <= d; k++) {
+      const qx = tx + ((otx - tx) * k * 0.05) / d, qy = ty + ((oty - ty) * k * 0.05) / d;
+      if (!circleFree(map, qx, qy, r)) break;
+      bx = qx; by = qy;
+    }
+    if (Math.hypot(bx - tx, by - ty) > 0.04) pts.push([bx, by]);
+  }
   if (pts.length < 2) return null;
   // string pulling
   const out = [];

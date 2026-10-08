@@ -3,6 +3,7 @@ import { VIEW_W, VIEW_H } from './config.js';
 import { makeRng } from './core/rng.js';
 import { Game } from './game.js';
 import { loadAssets } from './ui/assets.js';
+import { loadConfig } from './data/config.js';
 
 // ?seed=N — детерминированная случайность (бой, добыча) для отладки и автотестов.
 const seedParam = new URLSearchParams(location.search).get('seed');
@@ -21,6 +22,7 @@ function fit() {
 window.addEventListener('resize', fit);
 fit();
 
+await loadConfig();
 await loadAssets();
 const game = new Game(canvas);
 window.__ready = true;

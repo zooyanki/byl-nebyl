@@ -1,0 +1,114 @@
+{
+ "_about": "Зона «Залесье» (GDD v1.3 §8.1–8.2): mlvl 1–2, доли врагов упырь 65% / анчутка 35%. Стаи с координатами карты прототипа. repopulate: GDD — при повторном входе в зону; в однозонном прототипе — при возвращении у крады после гибели.",
+ "id": "zalesye",
+ "name": "Залесье",
+ "band": [
+  "Залесье — окрестности",
+  "Акт I · Миссия 1 из 3"
+ ],
+ "realm": "byl",
+ "mission": "m1",
+ "mlvl": [
+  1,
+  2
+ ],
+ "spawnMix": {
+  "upyr": 65,
+  "anchutka": 35
+ },
+ "repopulate": "onHeroRespawn",
+ "respawnPoint": "krada",
+ "tracker": {
+  "title": "Окрестности Залесья",
+  "goal": "Очисти Залесье"
+ },
+ "packs": [
+  {
+   "x": 32.5,
+   "y": 29.5,
+   "kinds": [
+    "anchutka",
+    "anchutka",
+    "anchutka",
+    "anchutka"
+   ],
+   "mlvl": 1
+  },
+  {
+   "x": 17.5,
+   "y": 29.5,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr"
+   ],
+   "mlvl": 1
+  },
+  {
+   "x": 17.5,
+   "y": 36.5,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr",
+    "upyr"
+   ],
+   "mlvl": 2
+  },
+  {
+   "x": 40.5,
+   "y": 4.5,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr",
+    "anchutka",
+    "anchutka"
+   ],
+   "mlvl": 2
+  },
+  {
+   "x": 9.5,
+   "y": 19.5,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr"
+   ],
+   "mlvl": 2
+  },
+  {
+   "x": 37.5,
+   "y": 17.5,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr"
+   ],
+   "mlvl": 2
+  },
+  {
+   "x": 29.5,
+   "y": 40.5,
+   "kinds": [
+    "upyr",
+    "upyr",
+    "upyr",
+    "upyr",
+    "anchutka"
+   ],
+   "mlvl": 2
+  },
+  {
+   "x": 41.5,
+   "y": 33.5,
+   "kinds": [
+    "anchutka",
+    "anchutka",
+    "anchutka",
+    "anchutka"
+   ],
+   "mlvl": 1
+  }
+ ]
+}

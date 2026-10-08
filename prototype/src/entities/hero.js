@@ -24,7 +24,7 @@ export class Hero extends Actor {
     this.kills = 0;
     this.cmd = null;      // {type:'move'|'attack'|'pickup', ...}
     this.action = null;   // {type:'attack'|'cast', t, dur, hitAt, fired}
-    this.effects = [];    // действие выпитых отваров
+    this.effects = [];    // действие выпитых зелий
     this.potionCd = 0;
     this.stun = 0;        // оглушение от сильного удара
     this.invuln = 0;

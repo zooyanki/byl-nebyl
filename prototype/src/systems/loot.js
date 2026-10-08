@@ -2,7 +2,7 @@
 // серебро подбирается само в радиусе 1 тайла.
 import { rnd } from '../core/math.js';
 import { circleFree } from '../world/collision.js';
-import { POTIONS, DROP_NORMAL, POTION_WEIGHTS, RARITY, pickWeighted, rollItem, silverAmount } from '../data/items.js';
+import { POTIONS, DROP_NORMAL, POTION_WEIGHTS, RARITY, pickWeighted, rollItem, silverAmount, potionFor } from '../data/items.js';
 import { PAL } from '../palette.js';
 
 export function itemColor(item) {
@@ -34,8 +34,9 @@ export class Loot {
     const what = pickWeighted(DROP_NORMAL);
     if (what === 'silver') this.spawnSilver(enemy.x, enemy.y, silverAmount(enemy.mlvl));
     else if (what === 'potion') {
-      let pk = pickWeighted(POTION_WEIGHTS);
-      if (pk === 'beresta') pk = 'life';           // береста возврата — в следующих итерациях
+      let type = pickWeighted(POTION_WEIGHTS);
+      if (type === 'beresta') type = 'life';       // береста возврата — в следующих итерациях
+      const pk = potionFor(type, enemy.mlvl);
       this.spawn(enemy.x, enemy.y, { kind: 'potion', potion: pk, label: POTIONS[pk].name, color: PAL.birch });
     } else if (what === 'item') this.spawnItem(enemy.x, enemy.y, rollItem(enemy.mlvl, Math.random, this.game.hero.mf));
   }

@@ -230,12 +230,13 @@ function drawTopUi(ctx, game) {
   // задание (под окном «Витязь» не рисуем)
   if (!ui.charOpen) {
     plate(ctx, 4, 4, 150, 30);
-    drawText(ctx, 9, 7, 'Окрестности Залесья', PAL.bronze_hi);
-    drawText(ctx, 9, 19, 'Упокой нечисть: ' + game.killsTotal + '/' + game.enemyTotal, game.killsTotal >= game.enemyTotal ? PAL.nebyl : PAL.linen);
+    const tr = game.zone.tracker;
+    drawText(ctx, 9, 7, tr.title, PAL.bronze_hi);
+    drawText(ctx, 9, 19, tr.goal + ': ' + game.killsTotal + '/' + game.enemyTotal, game.killsTotal >= game.enemyTotal ? PAL.nebyl : PAL.linen);
   }
   // зона, мини-карта и кнопки меню (как на макете HUD v2); под окном «Котомка» прячутся
   if (game.topRightVisible) {
-    const z1 = 'Залесье — окрестности', z2 = 'Акт I · Миссия 1 из 3';
+    const [z1, z2] = game.zone.band;
     const w = textWidth(z1) + 10;
     ctx.save(); ctx.globalAlpha = 0.62; rect(ctx, VIEW_W - w, 0, w, 24, PAL.ink); ctx.restore();
     for (let k = 0; k < w; k += 4) rect(ctx, VIEW_W - w + k, 23, 1, 1, k % 8 ? PAL.bronze : PAL.bronze_lt);

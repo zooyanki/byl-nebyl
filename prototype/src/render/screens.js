@@ -35,7 +35,7 @@ export function drawDeath(ctx, game) {
   ctx.restore();
   if (k < 0.6) return;
   const h = game.hero, d = game.deathInfo || { lost: 0 };
-  drawText(ctx, VIEW_W / 2, 84, 'Пал ты, витязь…', PAL.red_lt, { align: 'c', outline: true, scale: 3 });
+  drawText(ctx, VIEW_W / 2, 84, 'Пал ты, дружинник…', PAL.red_lt, { align: 'c', outline: true, scale: 3 });
   drawText(ctx, VIEW_W / 2, 124, 'Но Ярь ещё теплится: огонь крады вернёт тебя в Явь.', PAL.birch, { align: 'c', outline: true });
   drawText(ctx, VIEW_W / 2, 144, d.lost > 0 ? 'Нечисть растащила ' + d.lost + ' серебра (10% носимого).' : 'Серебра при тебе не было — и терять нечего.', PAL.flame, { align: 'c', outline: true });
   drawText(ctx, VIEW_W / 2, 158, 'Опыт и снаряжение остаются при тебе.', PAL.mist, { align: 'c', outline: true });
@@ -63,7 +63,7 @@ export function drawPause(ctx, game) {
     ['Shift + ЛКМ', 'бить на месте'],
     ['ЛКМ по подписи', 'поднять добычу (серебро — само)'],
     ['ПКМ', 'Огненный змей (яри: ' + game.hero.skillCost + ')'],
-    ['1–4', 'выпить отвар из пояса'],
+    ['1–4', 'выпить зелье из пояса'],
     ['Alt (держать) / Z', 'подписи добычи / всегда'],
     ['Tab или M', 'большая карта поверх мира'],
     ['I или B / C', 'котомка / витязь'],
