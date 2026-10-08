@@ -1,18 +1,18 @@
 {
  "ttk_sshibka": {
-  "mean": 2.08,
+  "mean": 2.29,
   "min": 1.27,
-  "max": 5.07
+  "max": 4.42
  },
  "ttk_plain": {
-  "mean": 3.76,
+  "mean": 3.6,
   "min": 2.07,
-  "max": 6.02
+  "max": 6.82
  },
  "ttk_sshibka_noKnockback": {
-  "mean": 2.33,
+  "mean": 2.06,
   "min": 1.27,
-  "max": 4.35
+  "max": 2.87
  },
  "zoneXp": {
   "total": 282,
@@ -20,41 +20,41 @@
   "progress": 0.54
  },
  "ttk_fire": {
-  "mean": 1.46,
+  "mean": 1.49,
   "min": 1.13,
-  "max": 1.97
+  "max": 1.93
  },
  "fight_L1_vs3upyr_m1": {
   "runs": 30,
   "deaths": 0,
-  "time": 7.85,
+  "time": 8.39,
   "hpLeftPct": 86,
-  "yarEnd": 34.28
+  "yarEnd": 33.88
  },
  "fight_L2_vs3upyr_m2": {
   "runs": 30,
   "deaths": 0,
-  "time": 10.03,
-  "hpLeftPct": 71,
-  "yarEnd": 35
+  "time": 10.42,
+  "hpLeftPct": 77,
+  "yarEnd": 34.73
  },
  "fight_L2_vs3anchutka_m2": {
   "runs": 30,
   "deaths": 0,
-  "time": 10.94,
-  "hpLeftPct": 58
+  "time": 11.17,
+  "hpLeftPct": 55
  },
  "fight_L2_vs3upyr1anchutka_m2": {
   "runs": 30,
   "deaths": 0,
-  "time": 14.36,
-  "hpLeftPct": 58
+  "time": 14.85,
+  "hpLeftPct": 60
  },
  "stand_L3": {
   "runs": 30,
-  "mean": 14.72,
+  "mean": 14.35,
   "min": 9.77,
-  "max": 20.77,
+  "max": 22.6,
   "hp": 91,
   "def": 25,
   "block": 0,
@@ -68,8 +68,8 @@
  },
  "stand_L6": {
   "runs": 30,
-  "mean": 10.93,
-  "min": 7.93,
+  "mean": 10.38,
+  "min": 6.1,
   "max": 17.1,
   "hp": 122,
   "def": 41,
@@ -84,9 +84,9 @@
  },
  "stand_L10": {
   "runs": 30,
-  "mean": 8.91,
+  "mean": 9.34,
   "min": 6.1,
-  "max": 13.43,
+  "max": 15.27,
   "hp": 164,
   "def": 62,
   "block": 0,

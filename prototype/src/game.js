@@ -31,6 +31,8 @@ import { t, plural, silverText } from './core/i18n.js';
 import { SKILLS, DASH, rankOf } from './data/skills.js';
 import { Quest } from './systems/quest.js';
 import { ZoneMixin } from './systems/zones.js';
+import { KapishcheMixin } from './systems/kapishche.js';
+import { enemyBark } from './entities/boss.js';
 
 const LS_LABELS = 'byl_nebyl_labels';
 
@@ -171,6 +173,7 @@ export class Game {
     }
     this.audio.play('kill');
     this.loot.dropFrom(e);
+    this.onEliteKilled(e);
     // GDD §5.2: анчутки при гибели сородича рядом с шансом 30% с визгом удирают на 3 с
     for (const o of this.enemies) {
       const f = o.def.fear;
@@ -180,6 +183,23 @@ export class Game {
         this.fx.text(o.x, o.y, 'И-и-и!', PAL.nebyl, o.def.height + 10, { dur: 0.8 });
       }
     }
+  }
+  /** Элиты (GDD §5.3): «Жаркий» взрывается при смерти (r 1,5, телеграф 0,8 с); реплики былинных врагов; гибель вожака
+   *  разгоняет анчуток стаи (§5.2); босс — в капище (systems/kapishche.js). */
+  onEliteKilled(e) {
+    const hot = e.modDefs && e.modDefs.hot;
+    if (hot && hot.deathBlast) {
+      const B = hot.deathBlast, dmg = Math.max(1, Math.round((e.dmgMin + Math.floor(Math.random() * (e.dmgMax - e.dmgMin + 1))) * B.dmgMul));
+      this.combat.addTele({ shape: 'circle', x: e.x, y: e.y, r: B.r, dur: B.tele, keepOnDeath: true, onFire: (T) => {
+        const h = this.hero; this.fx.burst(T.x, T.y, PAL.flame, 18, 10, 70); this.audio.play('explode'); this.counters.hotBlasts = (this.counters.hotBlasts || 0) + 1;
+        if (!h.dead && Math.hypot(h.x - T.x, h.y - T.y) <= T.r + h.r * 0.5 && !this.safeAt(h.x, h.y)) h.takeDamage(dmg, this, 'fire', null);
+      } });
+    }
+    if (e.def.barks && e.def.barks.death) enemyBark(this, e, e.def.barks.death);
+    if (e.leader || e.special === 'mara' && e.kind === 'mara') {
+      for (const o of this.enemies) if (!o.dead && o !== e && o.pack === e.pack && o.def.fear && o.state !== 'idle') { o.scare(o.x - this.hero.x, o.y - this.hero.y, o.def.fear.time); }
+    }
+    if (e.boss) this.onBossKilled(e);
   }
   onLevelUp(h) {
     this.log.add(t('ui.sys.level_up', { n: h.level }) + ' ' + t('ui.sys.level_points') + ' (C, T)', PAL.bronze_hi);
@@ -209,8 +229,10 @@ export class Game {
     // гибель в другой зоне — возвращение к краде Залесья. GDD v1.7 §4.5: убитые не возвращаются (repopulate
     // «onNewSession»); старое правило прототипа «onHeroRespawn» оставлено для зон, где оно указано в данных
     for (const st of Object.values(this.zoneStates)) if (st.id !== 'zalesye' && CFG.zones[st.id] && CFG.zones[st.id].repopulate === 'onHeroRespawn') st.needRepop = true;
-    if (this.zone.id !== 'zalesye') this.enterZone('zalesye', 'krada', { respawn: true });
-    const h = this.hero, k = this.map.krada;
+    // ответ дизайнера 08.10: у крады Залесья, пока не тронут Чуров камень у капища; после — у камня
+    const RP = this.respawnPoint();
+    if (this.zone.id !== RP.zone) this.enterZone(RP.zone, RP.entry, { respawn: true });
+    const h = this.hero, k = this.map[RP.at] || this.map.krada;
     let spot = null;
     for (let ring = 1.6; ring < 5 && !spot; ring += 0.5) {
       for (let a = 0; a < 16; a++) {
@@ -226,6 +248,7 @@ export class Game {
     h.cmd = null; h.action = null; h.path = null; h.moving = false; h.kb = null; h.stun = 0; h.effects = [];
     h.invuln = STATS.death.respawnInvuln;
     h.graceT = STATS.death.respawnInvuln;       // нечисть теряет след только на время «милости» возрождения (QA B-20)
+    h.respawnProt = STATS.death.respawnInvulnBreaksOnAction !== false;   // снимается атакой или кастом (GDD v1.7)
     // QA B-24: гибель снимает баффы («Чур-оберег») и обнуляет перезарядки навыков, рывка и зелий
     h.buffs = {}; h.cds = {}; h.potionCds.hp = 0; h.potionCds.yar = 0; h.recalc();
     h.face(1, 1);
@@ -242,7 +265,8 @@ export class Game {
     this.fx.ring(h.x, h.y, 1.2, PAL.flame, 0.6);
     this.fx.rise(h.x, h.y, PAL.ember, 20, 36);
     this.audio.play('respawn');
-    this.log.add('Ратибор очнулся у крады.', PAL.flame);
+    this.log.add(t(RP.log), PAL.flame);
+    this.applyChad();
     if (back) this.log.add('Нечисть снова собралась в округе: ' + back + ' ' + plural(back, 'враг', 'врага', 'врагов') + '.', PAL.nebyl);
   }
   // стаи добираются до исходного состава; трупы убираются
@@ -389,7 +413,10 @@ export class Game {
       }
       else if (this.hoverLabel || this.hoverGround) { h.pickup(this.hoverLabel || this.hoverGround); this.leftMode = 'pickup'; }
       else if (this.hoverEnemy) { h.attack(this.hoverEnemy, inp.shift, h.lmbSkill(), true); this.lastTarget = this.hoverEnemy; this.leftMode = 'attack'; }
-      else if (this.hoverObj && (this.hoverObj.type === 'exit' || this.hoverObj.type === 'gate')) { h.moveTo(this.map, this.hoverObj.x, this.hoverObj.y); this.leftMode = null; }
+      else if (this.hoverObj && (this.hoverObj.type === 'exit' || this.hoverObj.type === 'gate')) {
+        const o = this.hoverObj, [tx, ty] = o.wall ? o.wall.front : [o.x, o.y];   // закрытый выход — подойти к стене (QA B-28)
+        h.moveTo(this.map, tx, ty); this.leftMode = null;
+      }
       else if (this.hoverObj) { h.interact(this.hoverObj); this.leftMode = 'interact'; }
       else if (inp.shift) { h.stop(); const [wx, wy] = this.toWorld(inp.mx, inp.my); h.face(wx - h.x, wy - h.y); }
       else {
@@ -589,5 +616,5 @@ export class Game {
   /** Объект зоны по id (двери, сундук, тело, выходы). */
   objectById(id) { return this.map.objects.find((o) => o.id === id) || null; }
 }
-Object.assign(Game.prototype, ZoneMixin);
+Object.assign(Game.prototype, ZoneMixin, KapishcheMixin);
 

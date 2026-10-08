@@ -7,12 +7,12 @@ import { CFG } from '../data/config.js';
 import { FX } from '../render/rest_fx.js';
 import { t, RU } from '../core/i18n.js';
 import { generateMap } from '../world/map.js';
-import { circleFree, sightClear, moveWithCollision } from '../world/collision.js';
+import { circleFree, sightClear } from '../world/collision.js';
 import { WorldRenderer } from '../render/world.js';
 import { Minimap } from '../render/minimap.js';
 import { Npc } from '../entities/npc.js';
 
-const SEEDS = { zalesye: MAP_SEED, trail: MAP_SEED + 7919 };
+const SEEDS = { zalesye: MAP_SEED, trail: MAP_SEED + 7919, kapishche: MAP_SEED + 4241 };
 
 export const ZoneMixin = {
   buildZone(id) {
@@ -32,15 +32,21 @@ export const ZoneMixin = {
   /** Перейти в зону id к точке входа entry. opts.respawn — возрождение у крады (без надписи и без пополнения стай). */
   enterZone(id, entry = 'start', opts = {}) {
     const prev = this.zs;
-    if (prev) this.saveZone();
+    if (prev) { this.finishDialog(prev); this.saveZone(); }
     const st = this.zoneStates[id] || (this.zoneStates[id] = this.buildZone(id));
     this.zs = st; this.zone = st.zone; this.map = st.map; this.renderer = st.renderer; this.minimap = st.minimap;
     this.enemies = st.enemies; this.buried = st.buried; this.loot.items = st.items; this.combat.fires = st.fires; this.npcs = st.npcs;
     this.combat.projectiles = [];
+    if (st.malPending) {      // QA B-26: Мал уже «убежал к выходу» за время отсутствия героя — убираем его
+      st.malPending = false;
+      for (const n of this.npcs) if (n.kind === 'mal') n.gone = true;
+      this.npcs = st.npcs = this.npcs.filter((n) => !n.gone);
+    }
     if (st.fresh) {
       st.fresh = false;
       this.map.packs.forEach((_, i) => this.spawnPack(i));
-      st.total = this.enemies.length + this.buried.length;
+      st.total = this.enemies.length + this.buried.length;      // обычные стаи зоны (Мара со свитой — сверх, systems/kapishche.js)
+      this.setupZone(st);
     } else if (st.needRepop && !opts.respawn) { st.needRepop = false; this.repopulate(); }
     if (opts.respawn) st.needRepop = false;
     this.enemyTotal = st.total;
@@ -58,6 +64,9 @@ export const ZoneMixin = {
       this.audio.play('ui');
     }
     this.quest.emit({ event: 'zoneEnter', zone: id });
+    this.boss = st.boss && !st.boss.dead ? st.boss : null;
+    this.applyChad();
+    this.syncExitWalls();
   },
 
   /** Точка входа: {at:'start'|'krada'} или координаты; ищем свободное достижимое место рядом. */
@@ -93,6 +102,12 @@ export const ZoneMixin = {
       const cr = ia.clearRadius ?? 4;
       if (this.enemies.some((e) => !e.dead && Math.hypot(e.x - o.x, e.y - o.y) < cr)) return 'ui.obj.enemies_near';
     }
+    if (o.type === 'hearth') {
+      // огнище (GDD §8.2): сначала перебить пачку у огнища, рядом никого (радиус как у избы)
+      const ia = this.zone.interact || {}, idx = this.map.packs.findIndex((p) => p.role === o.pack), cr = ia.clearRadius ?? 4;
+      if (idx >= 0 && this.enemies.some((e) => !e.dead && e.pack === idx)) return 'ui.obj.enemies_near';
+      if (this.enemies.some((e) => !e.dead && Math.hypot(e.x - o.x, e.y - o.y) < cr)) return 'ui.obj.enemies_near';
+    }
     return null;
   },
   holdingInteract() { return (this.input.left && this.leftMode === 'interact') || !!this.autoHold; },
@@ -123,6 +138,16 @@ export const ZoneMixin = {
       if (text) this.bark(actor, o.bark, text);
       this.log.add((who ? who + ': ' : '') + text, PAL.linen);
       this.quest.emit({ event: 'hutFreed', hut: o.id });
+    } else if (o.type === 'hearth') {
+      this.hearthFreed(o);
+    } else if (o.type === 'stone') {
+      o.done = false; this.touchStone(o);
+    } else if (o.type === 'reward') {
+      // «Громовник» (U2) у подножия погасшего идола: былинные вещи — веха (в), здесь только отметка
+      this.audio.play('pickup');
+      this.log.add(t('item.u2.name') + ' — ' + t('proto.bylina_soon'), PAL.bronze_hi);
+      this.notify(t('item.u2.name') + ': ' + t('proto.bylina_soon'), PAL.bronze_hi, 'relic');
+      this.quest.emit({ event: 'rewardTaken', reward: 'gromovnik' });
     } else if (o.type === 'chest') {
       if (o.prop) { o.prop.open = true; o.prop._spr = null; }
       this.audio.play('pickup');
@@ -153,7 +178,10 @@ export const ZoneMixin = {
   objectLabel(o) {
     if (o.type === 'hut') return t('ui.obj.hut');
     if (o.type === 'chest') return t('ui.obj.chest');
-    if (o.type === 'body') return t('proto.priest_body') + ': ' + t('ui.obj.letter').toLowerCase();
+    if (o.type === 'body') return t(o.labelKey || 'proto.priest_body') + ': ' + t('ui.obj.letter').toLowerCase();
+    if (o.type === 'hearth') return t('ui.obj.hearth');
+    if (o.type === 'stone') return t('ui.obj.chur_stone');
+    if (o.type === 'reward') return t('item.u2.name');
     if (o.type === 'gate') return (RU['zone.m1.kapishche'] || {})['Название'] || 'Капище';
     const z = CFG.zones[o.to];
     return t('proto.exit.to', { zone: z ? z.name : o.to });
@@ -165,7 +193,7 @@ export const ZoneMixin = {
     for (const o of this.map.objects) {
       if (o.done) continue;
       const [sx, sy] = this.toS(o.x, o.y), dx = mx - sx, dy = my - sy;
-      const box = o.type === 'hut' ? [13, -58, 4] : o.type === 'chest' ? [13, -20, 6] : o.type === 'body' ? [17, -12, 7] : [16, -34, 8];
+      const box = o.type === 'hut' ? [13, -58, 4] : o.type === 'chest' || o.type === 'reward' ? [13, -20, 6] : o.type === 'body' ? [17, -12, 7] : o.type === 'hearth' ? [16, -30, 8] : o.type === 'stone' ? [10, -38, 6] : [16, -34, 8];
       if (Math.abs(dx) <= box[0] && dy >= box[1] && dy <= box[2] && Math.abs(dx) + Math.abs(dy) < bd) { bd = Math.abs(dx) + Math.abs(dy); best = o; }
     }
     return best;
@@ -192,16 +220,26 @@ export const ZoneMixin = {
   updateDialog() {
     if (!this.dialogQ.length || this.time < this.dialogNext) return;
     const l = this.dialogQ.shift();
-    const a = this.speakerActor(l.who) || this.hero;
-    this.fx.text(a.x, a.y, l.text, PAL.linen, (a.def ? a.def.height : 46) + 12, { dur: 2.6 });
+    // QA B-26: реплика говорящего, которого нет в зоне, идёт только в журнал (не над Ратибором)
+    const a = this.speakerActor(l.who);
+    if (a) this.fx.text(a.x, a.y, l.text, PAL.linen, (a.def ? a.def.height : 46) + 12, { dur: 2.6 });
     this.log.add(l.who + ': ' + l.text, PAL.linen);
     this.dialogNext = this.time + 2.6;
-    if (!this.dialogQ.length) {
-      // Мал показывает тропу: бежит к выходу за колодцем
-      const mal = this.npcs.find((n) => n.kind === 'mal' && !n.gone);
-      const ex = this.map.objects.find((o) => o.type === 'exit' && o.to === 'trail');
-      if (mal && ex) mal.runTo(ex.x - 0.6, ex.y - 1.2, 1.0);
-    }
+    if (!this.dialogQ.length) this.afterMalDialog();
+  },
+  /** Мал показывает тропу: бежит к выходу за колодцем и тает. */
+  afterMalDialog() {
+    const mal = this.npcs.find((n) => n.kind === 'mal' && !n.gone);
+    const ex = this.map.objects.find((o) => o.type === 'exit' && o.to === 'trail');
+    if (mal && ex) mal.runTo(ex.x - 0.6, ex.y - 1.2, 1.0);
+  },
+  /** Уход из зоны посреди диалога (QA B-26): оставшиеся реплики — в журнал, действие после диалога выполняется сразу:
+   *  Мал «убегает» — при возвращении его у избы уже нет. Мал, уже бегущий к выходу, тоже считается ушедшим. */
+  finishDialog(st) {
+    const hadMal = this.dialogQ.length > 0 && this.npcs.some((n) => n.kind === 'mal' && !n.gone);
+    for (const l of this.dialogQ) this.log.add(l.who + ': ' + l.text, PAL.linen);
+    this.dialogQ.length = 0; this.dialogNext = 0;
+    if (hadMal || this.npcs.some((n) => n.kind === 'mal' && !n.gone && n.target)) st.malPending = true;
   },
 
   // --- триггеры зоны (каждый кадр)
@@ -268,6 +306,33 @@ export const ZoneMixin = {
       R.a = R.a < want ? Math.min(want, R.a + step) : Math.max(want, R.a - step);
     }
   },
+  exitLocked(o) {
+    return !CFG.zones[o.to] || CFG.zones[o.to].implemented === false || !!(o.requires && !this.quest.flag(o.requires));
+  },
+  /** Закрытый выход — стена поперёк прохода до кромки карты: герой упирается, враги не уходят в проход (QA B-28).
+   *  Открылся — стена снимается (прежние клетки восстанавливаются), карта проходимости пересчитывается. */
+  syncExitWalls() {
+    const m = this.map;
+    let changed = false;
+    for (const o of m.objects) {
+      if (o.type !== 'exit' && o.type !== 'gate') continue;
+      const lock = this.exitLocked(o);
+      if (lock && !o.wall) {
+        const r = o.r, W = m.w, H = m.h, e = Math.min(o.x, o.y, W - o.x, H - o.y);
+        const R = e === H - o.y ? [o.x - r - 1, o.y - r, 2 * r + 2, H - (o.y - r)] : e === o.y ? [o.x - r - 1, 0, 2 * r + 2, o.y + r]
+          : e === o.x ? [0, o.y - r - 1, o.x + r, 2 * r + 2] : [o.x - r, o.y - r - 1, W - (o.x - r), 2 * r + 2];
+        const SUB = m.sw / W, cells = [];
+        for (let sy = Math.max(0, Math.floor(R[1] * SUB)); sy < Math.min(m.sh, Math.ceil((R[1] + R[3]) * SUB)); sy++)
+          for (let sx = Math.max(0, Math.floor(R[0] * SUB)); sx < Math.min(m.sw, Math.ceil((R[0] + R[2]) * SUB)); sx++) { const i = sy * m.sw + sx; cells.push([i, m.sub[i]]); m.sub[i] = 1; }
+        const F = r + 0.8, front = e === H - o.y ? [o.x, o.y - F] : e === o.y ? [o.x, o.y + F] : e === o.x ? [o.x + F, o.y] : [o.x - F, o.y];
+        o.wall = { rect: R, cells, front }; changed = true;
+      } else if (!lock && o.wall) {
+        for (const [i, v] of o.wall.cells) m.sub[i] = v;
+        o.wall = null; o.inside = Math.hypot(this.hero.x - o.x, this.hero.y - o.y) <= o.r; changed = true;
+      }
+    }
+    if (changed) { m.passCache.clear(); m.computeReach(); }
+  },
   updateZone(dt) {
     const h = this.hero;
     this.updateRest(dt);
@@ -304,24 +369,33 @@ export const ZoneMixin = {
       const hut = this.map.objects.find((o) => o.type === 'hut' && !o.done && Math.hypot(o.x - h.x, o.y - h.y) < 7);
       if (hut) { this._tutHut = true; this.notify(t('ui.tut.hut'), PAL.bronze_lt, 'tut'); }
     }
-    // выходы и ворота
+    // Чуров камень у капища: коснуться (подойти ближе touch) — возрождение у камня
+    for (const o of this.map.objects) if (o.type === 'stone' && !o.done && Math.hypot(h.x - o.x, h.y - o.y) <= (o.touch ?? 1.5)) this.touchStone(o);
+    if (this.zone.id === 'kapishche') this.updateKapishche();
+    this.applyChad();
+    // выходы и ворота (QA B-28): переход — только по намерению (приказ идти в круг выхода или щелчок по выходу);
+    // закрытый выход — обычная стена (syncExitWalls), без выталкивания; сообщение и звук ошибки — один раз на попытку
+    this.syncExitWalls();
+    const c = h.cmd;
     for (const o of this.map.objects) {
       if (o.type !== 'exit' && o.type !== 'gate') continue;
       const d = Math.hypot(h.x - o.x, h.y - o.y);
-      if (d > o.r) { o.inside = false; continue; }
-      if (o.inside) continue;
-      o.inside = true;
-      if (o.event) this.quest.emit(o.event);
-      const locked = o.type === 'gate' || (o.requires && !this.quest.flag(o.requires));
-      if (locked) {
-        this.notify(t(o.lockedKey), PAL.mist, 'locked');
-        this.audio.play('error');
-        const k = (o.r + 0.4) / (d || 1);
-        h.stop();
-        moveWithCollision(this.map, h, o.x + (h.x - o.x) * k - h.x, o.y + (h.y - o.y) * k - h.y);
-        o.inside = Math.hypot(h.x - o.x, h.y - o.y) <= o.r;
+      const intent = c && ((c.type === 'move' && Math.hypot(c.x - o.x, c.y - o.y) <= o.r + (o.wall ? 1.0 : 0.6)) || (c.type === 'interact' && c.obj === o));
+      if (o.wall) {
+        // одна попытка — одно сообщение: пока намерение длится (зажатая ЛКМ, повторные щелчки чаще 1,2 с) — тишина
+        const fresh = intent && this.time - (o.intentT ?? -9) > 0.5 && this.time - (o.warnT ?? -9) > 1.2;
+        if (intent) o.intentT = this.time;
+        if (fresh) {
+          o.warnT = this.time;
+          this.notify(t(o.lockedKey), PAL.mist, 'locked');
+          this.audio.play('error');
+          this.counters.exitLockedWarn = (this.counters.exitLockedWarn || 0) + 1;
+        }
         continue;
       }
+      if (d > o.r) { o.inside = false; continue; }
+      if (!o.inside) { o.inside = true; if (o.event) this.quest.emit(o.event); }
+      if (!intent) { this.counters.exitNoIntent = (this.counters.exitNoIntent || 0) + (o.noIntentT === this.time ? 0 : 1); o.noIntentT = this.time; continue; }
       this.enterZone(o.to, o.entry);
       return;
     }

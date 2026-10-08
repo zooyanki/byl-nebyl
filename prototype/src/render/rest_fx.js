@@ -12,6 +12,7 @@ const SHEETS = {
   sparks: 'fx_rest_sparks',
   groove_dim: 'fx_safe_ring_grooves_dim', groove_lit: 'fx_safe_ring_grooves_lit',
   rune_dim: 'fx_safe_ring_runes_dim', rune_lit: 'fx_safe_ring_runes_lit',
+  torch: 'fx_torch_flight', burning: 'fx_burning_ground',       // «Поджог» поджигателя (веха M1b)
 };
 export const FX = { sheets: {}, ring: null, ready: false };
 
@@ -58,6 +59,18 @@ export function drawSafeRing(ctx, R, cx, cy, alpha, lit) {
   if (!G || !Ru) return false;
   ctx.save(); ctx.globalAlpha = alpha;
   for (const pc of L.pieces) blit(ctx, pc.piece === 'rune' ? Ru : G, pc.index, cx + pc.dx, cy + pc.dy);
+  ctx.restore();
+  return true;
+}
+
+/** Спрайт-эффект по ключу: кадр frame, опора в (x, y). o.flip — зеркально (полёт факела влево), o.alpha, o.scale. */
+export function drawFxFrame(ctx, key, frame, x, y, o = {}) {
+  const sh = FX.sheets[key];
+  if (!sh) return false;
+  const m = sh.meta, [fw, fh] = m.frame_size, [px, py] = m.pivot, n = m.frame_count || 1, k = o.scale || 1;
+  ctx.save(); if (o.alpha != null && o.alpha < 1) ctx.globalAlpha *= Math.max(0, o.alpha);
+  ctx.translate(Math.round(x), Math.round(y)); ctx.scale(o.flip ? -k : k, k);
+  ctx.drawImage(sh.img, (frame % n) * fw, 0, fw, fh, -px, -py, fw, fh);
   ctx.restore();
   return true;
 }

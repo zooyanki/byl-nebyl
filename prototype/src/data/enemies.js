@@ -10,10 +10,19 @@ export function applyMonsters(json, stats) {
   SCALE = stats.monsterScale;
 }
 
+/** Былинные враги и боссы из bosses.json (GDD §5.3–5.4): HP, урон и опыт заданы прямо, AR / DEF — по шкале mlvl. */
+export function applyBosses(json) {
+  for (const [id, d] of Object.entries(json)) {
+    if (id.startsWith('_') || !d.hp) continue;
+    ENEMIES[id] = { id, hpMul: 1, dmgMul: 1, xpMul: 1, mlvlMin: d.mlvl, mlvlMax: d.mlvl, leash: 25, aggro: 9, attackTime: 1.6, hitAt: 0.6, reach: 1.2, ...d };
+  }
+}
+
 export function enemyStats(kind, mlvl) {
   const d = ENEMIES[kind], s = SCALE;
   const m = Math.max(d.mlvlMin, Math.min(d.mlvlMax, mlvl));
   const f = ([a, b]) => a + b * m;
+  if (d.hp) return { mlvl: m, hp: d.hp, dmgMin: d.dmg[0], dmgMax: d.dmg[1], ar: f(s.ar), dfn: f(s.def), xp: d.xp || Math.round(monsterXp(m, 1) * (d.xpMul || 1)) };
   return {
     mlvl: m,
     hp: Math.max(1, Math.floor(f(s.hp) * d.hpMul)),

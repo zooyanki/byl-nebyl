@@ -8,7 +8,7 @@ import { diamond, rect, ellipse, ellipseStroke, disc } from './shapes.js';
 import { drawProp, propHeight, propCovers } from './props.js';
 import { drawHero, drawEnemy, drawCorpse, drawGroundItem, drawProjectile, drawNpc } from './sprites.js';
 import { drawText, textWidth } from '../core/font.js';
-import { drawSafeRing, drawRestSparks } from './rest_fx.js';
+import { drawSafeRing, drawRestSparks, drawFxFrame } from './rest_fx.js';
 import { CFG } from '../data/config.js';
 
 export class WorldRenderer {
@@ -108,7 +108,8 @@ export class WorldRenderer {
     this.renderLabels(ctx, game, toS);
   }
 
-  /** Факелы поджигателей: полёт, телеграф (красный круг, GDD §5.2 E11), горящая зона. */
+  /** Огонь на земле: факелы поджигателей (полёт по дуге — fx_torch_flight, телеграф — красный круг, GDD §5.2 E11; горящая
+   *  земля — fx_burning_ground), огненный след Кривши и пепельный след Мары (kind 'trail'), телеграфы боссов (combat.teles). */
   renderFires(ctx, game, toS, time) {
     const k2 = (r) => [r * HALF_W * Math.SQRT2, r * HALF_H * Math.SQRT2];
     for (const f of game.combat.fires || []) {
@@ -118,17 +119,20 @@ export class WorldRenderer {
         ellipse(ctx, sx, sy, rx, ry, PAL.red, 0.12 + 0.22 * k);
         ellipseStroke(ctx, sx, sy, rx, ry, PAL.red_lt, 0.9, 1);
         ellipseStroke(ctx, sx, sy, rx * k, ry * k, PAL.red_lt, 0.7, 1);
-        if (f.t < f.flight) {                                        // факел в полёте (дуга)
+        if (f.t < f.flight) {                                        // факел в полёте по дуге (0,6 с при любой дистанции)
           const q = f.t / f.flight, wx = f.fx + (f.x - f.fx) * q, wy = f.fy + (f.y - f.fy) * q;
-          const [tx, ty] = toS(wx, wy), z = 18 + Math.sin(q * Math.PI) * 26;
-          rect(ctx, tx - 1, ty - z, 2, 7, PAL.wood_lt);
-          disc(ctx, tx, ty - z - 2, 3, PAL.ember); disc(ctx, tx, ty - z - 2, 1.6, PAL.flame);
+          const [tx, ty] = toS(wx, wy), [ax] = toS(f.fx, f.fy), z = 22 + Math.sin(q * Math.PI) * 30;
+          ellipse(ctx, tx, ty, 4, 2, PAL.ink, 0.4);                  // тень под дугой (заметка художника)
+          if (!drawFxFrame(ctx, 'torch', Math.floor(f.t * 12), tx, ty - z, { flip: sx < ax })) {
+            rect(ctx, tx - 1, ty - z, 2, 7, PAL.wood_lt); disc(ctx, tx, ty - z - 2, 3, PAL.ember); disc(ctx, tx, ty - z - 2, 1.6, PAL.flame);
+          }
         } else {                                                     // факел лежит в центре круга
           rect(ctx, sx - 4, sy - 1, 8, 2, PAL.wood_lt);
           disc(ctx, sx + 4, sy - 3, 2.5 + Math.sin(time * 20) * 0.6, PAL.ember);
         }
       } else {
-        const fade = Math.min(1, (f.burn - f.litT) / 0.6);
+        const fade = Math.min(1, (f.burn - f.litT) / 0.6, f.kind === 'trail' ? f.litT / 0.25 : 1);
+        if (drawFxFrame(ctx, 'burning', Math.floor((f.litT + (f.id % 6) * 0.1) * 10), sx, sy, { alpha: fade, scale: f.r })) continue;   // спрайт художника — Ø 2 тайла (r 1) в родном размере
         ellipse(ctx, sx, sy, rx, ry, PAL.red_dk, 0.55 * fade);
         ellipse(ctx, sx, sy, rx * 0.8, ry * 0.8, PAL.ember, 0.35 * fade);
         ctx.save(); ctx.globalAlpha = fade;
@@ -140,6 +144,26 @@ export class WorldRenderer {
           rect(ctx, fx, fy - h + 2, 1, h - 2, PAL.flame);
         }
         ctx.restore();
+      }
+    }
+    // телеграфы боссов и элит: конус удара когтями, круг взрыва «Жаркого» (красные, растут к моменту удара)
+    for (const T of game.combat.teles || []) {
+      const k = Math.min(1, T.t / T.dur), [cx, cy] = toS(T.x, T.y);
+      if (T.shape === 'circle') {
+        const [rx, ry] = k2(T.r);
+        ellipse(ctx, cx, cy, rx, ry, PAL.red, 0.15 + 0.2 * k);
+        ellipseStroke(ctx, cx, cy, rx, ry, PAL.red_lt, 0.9, 1);
+        ellipseStroke(ctx, cx, cy, rx * k, ry * k, PAL.red_lt, 0.7, 1);
+      } else if (T.shape === 'cone') {
+        const pts = [[cx, cy]], pts2 = [[cx, cy]], n = 8;
+        for (let i = 0; i <= n; i++) {
+          const a = T.dir - T.half + (2 * T.half * i) / n;
+          pts.push(toS(T.x + Math.cos(a) * T.r, T.y + Math.sin(a) * T.r));
+          pts2.push(toS(T.x + Math.cos(a) * T.r * k, T.y + Math.sin(a) * T.r * k));
+        }
+        ctx.save(); ctx.globalAlpha = 0.18 + 0.2 * k; ctx.fillStyle = PAL.red; ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.fill();
+        ctx.globalAlpha = 0.85; ctx.strokeStyle = PAL.red_lt; ctx.lineWidth = 1; ctx.stroke();
+        ctx.globalAlpha = 0.6; ctx.beginPath(); pts2.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.stroke(); ctx.restore();
       }
     }
   }

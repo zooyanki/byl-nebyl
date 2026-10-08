@@ -197,10 +197,14 @@ export function drawNpc(ctx, x, y, n, time) {
 }
 
 export function drawEnemy(ctx, x, y, e, dir, time, hovered) {
-  const ol = hovered ? PAL.red_lt : e.slowT > 0 ? PAL.blue_lt : PAL.ink;   // под курсором — красная обводка, замедлен холодом — голубая
-  if (e.kind === 'upyr') drawUpyr(ctx, x, y, e, dir, time, ol);
+  // под курсором — красная обводка, замедлен холодом — голубая, вожак и былинный враг — бронзовая (GDD §5.3)
+  const ol = hovered ? PAL.red_lt : e.slowT > 0 ? PAL.blue_lt : e.leader || e.elite === 'bylina' || e.boss ? PAL.bronze_hi : PAL.ink;
+  if (e.kind === 'krivsha') { drawKrivsha(ctx, x, y, e, dir, time, ol); return; }
+  if (e.kind === 'mara') drawMara(ctx, x, y, e, dir, time, ol);
+  else if (e.kind === 'upyr') drawUpyr(ctx, x, y, e, dir, time, ol);
   else if (e.def.torch) drawArsonist(ctx, x, y, e, dir, time, ol);
   else drawAnchutka(ctx, x, y, e, dir, time, ol);
+  if (e.elite === 'champion') { ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = PAL.blue_lt; ctx.fillRect(x - 11, y - e.def.height, 22, e.def.height); ctx.restore(); }   // матёрый: холодный тинт
   if (e.slowT > 0) { ctx.save(); ctx.globalAlpha = 0.25; ctx.fillStyle = PAL.blue_lt; ctx.fillRect(x - 10, y - e.def.height, 20, e.def.height); ctx.restore(); }
   // маленькая полоска жизни над недавно раненым
   if (e.lastHitT < 3 || hovered) {
@@ -219,6 +223,11 @@ export function drawCorpse(ctx, x, y, e) {
   if (e.kind === 'upyr') {
     figure(ctx, [{ x: x - 13, y: y - 6, w: 20, h: 6, c: PAL.slate_dk }, { x: x + 7, y: y - 8, w: 8, h: 7, c: PAL.birch }]);
     rect(ctx, x - 10, y - 4, 10, 2, PAL.nebyl_dk);
+  } else if (e.kind === 'krivsha') {
+    figure(ctx, [{ x: x - 30, y: y - 12, w: 44, h: 12, c: PAL.wood_dk }, { x: x + 14, y: y - 14, w: 16, h: 13, c: PAL.slate_dk }]);
+    for (let i = 0; i < 4; i++) rect(ctx, x - 20 + i * 8, y - 13, 3, 3, PAL.ember);   // догорающие угли
+  } else if (e.kind === 'mara') {
+    ellipse(ctx, x, y - 2, 14, 5, PAL.slate_lt, 0.9); rect(ctx, x - 6, y - 4, 12, 2, PAL.ember);   // кучка пепла
   } else if (e.def.torch) {
     figure(ctx, [{ x: x - 14, y: y - 6, w: 20, h: 6, c: PAL.wood_dk }, { x: x + 6, y: y - 7, w: 7, h: 6, c: PAL.slate_dk }]);
     rect(ctx, x - 10, y - 4, 10, 2, PAL.red_dk);
@@ -289,4 +298,61 @@ export function drawProjectile(ctx, x, y, p, time) {
   disc(ctx, x, y - z, 4.5 + fl, PAL.red_lt);
   disc(ctx, x, y - z, 3.2 + fl, PAL.ember);
   disc(ctx, x, y - z, 1.8, PAL.flame);
+}
+
+// Мара Пепельная (грей-бокс, спрайта нет): дух пожара 52 px — пепельный саван, космы пламени, тлеющие руки.
+export function drawMara(ctx, x, y, e, dir, time, outline = PAL.ink) {
+  const f = dirSide(dir, e.facing), sway = Math.round(Math.sin(time * 3 + e.id) * 1.5);
+  shadow(ctx, x, y, 9, 3.5); dirMarker(ctx, x, y, dir, 9, 3.5, PAL.ember);
+  const T = y - 52;
+  figure(ctx, [
+    { x: x - 9 + sway, y: T + 22, w: 18, h: 30, c: PAL.slate_lt },          // саван до земли
+    { x: x - 7, y: T + 12, w: 14, h: 12, c: PAL.mist },
+    { x: x + f * 8 - 2, y: T + 16, w: 4, h: 14, c: PAL.ember },          // тлеющая рука
+    { x: x - 5 + f, y: T + 3, w: 10, h: 10, c: PAL.birch },
+  ], e.flash > 0, outline);
+  rect(ctx, x - 9 + sway, T + 46, 18, 2, PAL.ember);                     // тлеющий подол
+  if (!BACK.has(dir)) { rect(ctx, x + f * 2 - 3, T + 7, 2, 2, PAL.flame); rect(ctx, x + f * 2 + 1, T + 7, 2, 2, PAL.flame); }
+  for (let i = 0; i < 5; i++) {                                         // космы пламени
+    const h = 6 + Math.round((Math.sin(time * 9 + i * 1.3) + 1) * 3);
+    rect(ctx, x - 6 + i * 3, T + 2 - h, 2, h, i % 2 ? PAL.ember : PAL.red_lt);
+  }
+  if (e.state === 'attack') { disc(ctx, x + f * 10, T + 18, 3.5, PAL.nebyl); disc(ctx, x + f * 10, T + 18, 1.8, PAL.linen); }
+}
+
+// Кривша, Обгорелый страж (грей-бокс, спрайта нет): 96 px, обгоревший тулуп, связка ключей, весь в огне.
+export function drawKrivsha(ctx, x, y, e, dir, time, outline = PAL.ink) {
+  const f = dirSide(dir, e.facing), lift = Math.round(e.lift || 0);
+  const step = e.moving ? Math.sin(e.walkPhase * 1.2) : 0, l = Math.round(step * 3);
+  const rising = e.state === 'rise', k = rising ? Math.min(1, e.t / (e.B ? e.B.rise : 2)) : 1;
+  shadow(ctx, x, y, 18, 7); if (!rising) dirMarker(ctx, x, y, dir, 18, 7, PAL.red_dk);
+  if (e.aura) {                                                          // огненный ореол r 1,5 тайла
+    const rx = 1.5 * 16 * Math.SQRT2, ry = 1.5 * 8 * Math.SQRT2;
+    ellipse(ctx, x, y, rx, ry, PAL.ember, 0.18 + 0.06 * Math.sin(time * 8));
+    ctx.save(); ctx.globalAlpha = 0.8; ctx.strokeStyle = PAL.flame; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+  }
+  ctx.save();
+  if (rising) { ctx.beginPath(); ctx.rect(x - 60, y - 140, 120, 140); ctx.clip(); }
+  const Y = y - lift + Math.round((1 - k) * 96), T = Y - 96;
+  const claw = e.state === 'claw' ? Math.round(Math.sin(Math.min(1, e.t / 0.85) * Math.PI) * 10) : 0;
+  figure(ctx, [
+    { x: x - 12 + l, y: Y - 26, w: 9, h: 27, c: PAL.wood_dk },          // ноги
+    { x: x + 3 - l, y: Y - 26, w: 9, h: 27, c: PAL.wood_dk },
+    { x: x - 22, y: T + 28, w: 44, h: 46, c: PAL.wood },                 // обгоревший тулуп
+    { x: x - 18 + f * 3, y: T + 16, w: 34, h: 16, c: PAL.wood_md },      // плечи, горб
+    { x: x + f * 20 - (f < 0 ? 12 : 0) + f * claw, y: T + 34, w: 12, h: 34, c: PAL.slate },   // рука с когтями
+    { x: x - 9 + f * 10, y: T + 2, w: 19, h: 18, c: PAL.slate_lt },      // голова вперёд
+  ], e.flash > 0, outline);
+  rect(ctx, x - 20, T + 54, 40, 3, PAL.ink);                             // пояс
+  for (let i = 0; i < 4; i++) rect(ctx, x - 10 + i * 4, T + 57, 2, 6, PAL.bronze_lt);   // ключи капища
+  rect(ctx, x + f * 20 - (f < 0 ? 12 : 0) + f * claw, T + 66, 12, 4, PAL.flame);           // горящие когти
+  if (!BACK.has(dir)) { rect(ctx, x + f * 12 - 2, T + 8, 3, 3, PAL.flame); rect(ctx, x + f * 5 - 2, T + 8, 3, 3, PAL.flame); }
+  for (let i = 0; i < 7; i++) {                                          // языки огня по телу
+    const hx = x - 18 + i * 6, h = 8 + Math.round((Math.sin(time * 10 + i * 1.9) + 1) * 5);
+    rect(ctx, hx, T + 26 - h + (i % 3) * 14, 3, h, i % 2 ? PAL.ember : PAL.red_lt);
+    rect(ctx, hx + 1, T + 28 - h + (i % 3) * 14, 1, h - 3, PAL.flame);
+  }
+  ctx.restore();
+  if (e.invuln > 0 && !rising) { ctx.save(); ctx.globalAlpha = 0.35 + 0.2 * Math.sin(time * 20); ctx.fillStyle = PAL.flame; ctx.fillRect(x - 24, T, 48, 96); ctx.restore(); }
+  if (rising) ellipse(ctx, x, y, 22, 8, PAL.flame, 0.5 * (1 - k));
 }

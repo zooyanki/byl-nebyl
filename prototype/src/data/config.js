@@ -1,13 +1,13 @@
 // Загрузка балансных конфигов из data/*.json и data/zones/*.json (GDD v1.2 §15) через fetch() — без сборки.
 // После загрузки модули progression / enemies / skills / items заполняют свои таблицы из CFG.
 import { applyStats } from './progression.js';
-import { applyMonsters } from './enemies.js';
+import { applyMonsters, applyBosses } from './enemies.js';
 import { applySkills } from './skills.js';
 import { applyItems } from './items.js';
 import { applyRu } from '../core/i18n.js';
 
 export const CONFIG_FILES = ['stats', 'skills', 'monsters', 'bosses', 'items_base', 'affixes', 'droptables', 'uniques', 'ru', 'quests'];
-export const ZONE_FILES = ['zalesye', 'trail', 'kapishche'];   // data/zones/*.json — по зоне на файл (GDD §15); kapishche — заготовка (implemented: false)
+export const ZONE_FILES = ['zalesye', 'trail', 'kapishche'];   // data/zones/*.json — по зоне на файл (GDD §15); kapishche — веха M1b
 export const CFG = {};
 
 export async function loadConfig(base = 'data/') {
@@ -27,6 +27,7 @@ export async function loadConfig(base = 'data/') {
   applyRu(CFG.ru);
   applySkills(CFG.skills, CFG.stats);
   applyMonsters(CFG.monsters, CFG.stats);
+  applyBosses(CFG.bosses);
   applyItems(CFG.items_base, CFG.affixes, CFG.droptables);
   return CFG;
 }

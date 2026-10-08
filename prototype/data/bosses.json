@@ -1,9 +1,51 @@
 {
- "_about": "Заготовка боссов (GDD v1.5 §5.3, §15). Конвенция сопротивлений: + — сопротивление, − — уязвимость. Числа HP/урона появятся на этапе контента; в прототипе боссов нет (implemented: false).",
+ "_about": "Былинные враги и боссы (GDD v1.7 §5.3–5.4, act1.md v1.1, act1_texts §6–7). Конвенция сопротивлений: + — сопротивление, − — уязвимость. Веха M1b: Мара Пепельная и Кривша играбельны. Ключи _ph — заглушки разработчика (чисел в GDD нет), см. README / REPORT_m1b.md.",
  "mara": {
   "name": "Мара Пепельная",
+  "kind": "bylina",
   "zone": "zalesye",
   "mlvl": 4,
+  "hp": 258,
+  "dmg": [
+   8,
+   18
+  ],
+  "xpMul": 6,
+  "_gdd": "GDD §5.3: свой спрайт; бой как у волхва-прислужника (E7) без воскрешения; свита 4–6 анчуток mlvl 2; Жаркая; «Пепельный след» — земля под ней горит 3 с (огонь, 8% макс. HP героя в секунду); бродит по Залесью по кругу; необязательная. HP 258 = (15+7·4)×6, урон 8–18 = (5–11)×1,6, опыт = база mlvl 4 × 6.",
+  "family": "Нечисть",
+  "realm": "Небыль",
+  "height": 52,
+  "r": 0.35,
+  "mass": 2.0,
+  "speed": 3.5,
+  "attackTime": 2.0,
+  "hitAt": 0.7,
+  "aggro": 9,
+  "leash": 25,
+  "ranged": {
+   "range": 6,
+   "projSpeed": 8,
+   "element": "fire",
+   "keepMin": 3,
+   "retreatDist": [
+    2,
+    3
+   ],
+   "keepMinCooldown": 3
+  },
+  "heal": {
+   "every": 8,
+   "pct": 15,
+   "radius": 6
+  },
+  "mods": [
+   "hot"
+  ],
+  "res": {
+   "fire": 0.25,
+   "cold": 0,
+   "poison": 0
+  },
   "retinue": {
    "kind": "anchutka",
    "count": [
@@ -12,12 +54,137 @@
    ],
    "mlvl": 2
   },
-  "res": {
-   "fire": 0.25,
-   "cold": 0,
-   "poison": 0
+  "ashTrail": {
+   "burn": 3,
+   "pctMaxHpPerSec": 8,
+   "r": 0.6,
+   "every": 0.4,
+   "tick": 0.5
   },
-  "implemented": false
+  "route": {
+   "center": [
+    38.5,
+    17
+   ],
+   "radius": 6,
+   "points": 8,
+   "speedMul": 0.45
+  },
+  "barks": {
+   "aggro": "elite.mara.aggro",
+   "death": "elite.mara.death"
+  },
+  "drop": "bylina",
+  "_ph": [
+   "height",
+   "r",
+   "mass",
+   "hitAt",
+   "ranged.projSpeed",
+   "ranged.retreatDist",
+   "heal.radius",
+   "ashTrail.r",
+   "ashTrail.every",
+   "ashTrail.tick",
+   "route",
+   "res.fire"
+  ],
+  "_phNote": "ЗАГЛУШКИ: рост 52, r 0,35, масса 2; выпуск огня на 0,7 с цикла 2,0 с; снаряд 8 тайлов/с (как уголь анчутки); отход 2–3 тайла; лечение союзника в радиусе 6; пятна пепельного следа r 0,6 каждые 0,4 с, тики 0,5 с; маршрут — круг r 6 с центром (38,5; 17) в северо-восточной части Залесья, вне тихих кругов, шаг прогулки 45% скорости; сопр. огню +25% как у прислужника (у Мары в GDD не указано)."
+ },
+ "krivsha": {
+  "name": "Кривша, Обгорелый страж",
+  "kind": "boss",
+  "zone": "kapishche",
+  "mlvl": 6,
+  "hp": 1425,
+  "dmg": [
+   14,
+   30
+  ],
+  "xp": 1200,
+  "_gdd": "GDD §5.4 Б1: рост 96, скорость 3,0, иммунитет к порче, сопр. огню 0% (в огненном ореоле +25%). Огненный след: за ним 4 с горит земля (8% макс. HP героя/с). Удар горящими когтями: конус 2 тайла, телеграф 0,6 с, ×1,2. Подъём упырей: 2 каждые 15 с, не больше 4. Прыжок в огнище на 50% HP — в ближайшее неосвящённое, 2 с неуязвим, огненный ореол r 1,5 (6% макс. HP героя/с), +25% скорости атаки, сопр. огню +25% до конца боя; если все три огнища отбиты — фазы нет. Цель 60–75 с на 6 ур. (с огненной фазой 70–80). XP 1200. Дроп: 4 предмета, ≥ 2 заговорённых, первое убийство — 1 дивный; на теле грамота «Приказ Чернояра».",
+  "family": "Нечисть",
+  "realm": "Небыль",
+  "height": 96,
+  "r": 0.6,
+  "mass": 99,
+  "speed": 3.0,
+  "res": {
+   "fire": 0,
+   "cold": 0,
+   "poison": 1
+  },
+  "claw": {
+   "range": 2,
+   "halfAngleDeg": 45,
+   "telegraph": 0.6,
+   "mul": 1.2,
+   "cycle": 1.6
+  },
+  "fireTrail": {
+   "burn": 4,
+   "pctMaxHpPerSec": 8,
+   "r": 0.6,
+   "every": 0.3,
+   "tick": 0.5
+  },
+  "summon": {
+   "every": 15,
+   "count": 2,
+   "max": 4,
+   "kind": "upyr",
+   "mlvl": 5,
+   "first": 6
+  },
+  "hearthPhase": {
+   "atHpPct": 50,
+   "invuln": 2,
+   "aura": {
+    "r": 1.5,
+    "pctMaxHpPerSec": 6,
+    "tick": 0.5
+   },
+   "atkSpeedPct": 25,
+   "res": {
+    "fire": 0.25
+   }
+  },
+  "rise": 2.0,
+  "arena": {
+   "size": 24,
+   "triggerRadius": 7
+  },
+  "barks": {
+   "rise": "boss.krivsha.rise",
+   "summon": "boss.krivsha.summon",
+   "hearth": "boss.krivsha.hearth",
+   "death": "boss.krivsha.death"
+  },
+  "drop": "boss",
+  "letter": "order",
+  "phases": {
+   "fire": {
+    "res": {
+     "fire": 0.25
+    }
+   }
+  },
+  "implemented": true,
+  "_ph": [
+   "r",
+   "mass",
+   "claw.halfAngleDeg",
+   "claw.cycle",
+   "fireTrail.r",
+   "fireTrail.every",
+   "fireTrail.tick",
+   "hearthPhase.aura.tick",
+   "summon.mlvl",
+   "summon.first",
+   "rise",
+   "arena.triggerRadius"
+  ],
+  "_phNote": "ЗАГЛУШКИ: r 0,6, не сдвигается (масса 99); конус когтей 90° (±45°), цикл удара 1,6 с (КД атаки босса в GDD нет); пятна огненного следа r 0,6 каждые 0,3 с, тики следа и ореола 0,5 с; поднятые упыри mlvl 5 (верх капища), первый подъём через 6 с боя; подъём из пламени идола 2 с; «вход в Круг огнищ» — ближе 7 тайлов к идолу (арена 24×24, огнища по её краю, ~12 тайлов от идола)."
  },
  "leshy": {
   "name": "Леший",
@@ -25,24 +192,6 @@
    "fire": -0.25,
    "cold": 0,
    "poison": 0
-  },
-  "implemented": false
- },
- "krivsha": {
-  "name": "Кривша",
-  "zone": "kapishche",
-  "mlvl": 6,
-  "res": {
-   "fire": 0,
-   "cold": 0,
-   "poison": 0
-  },
-  "phases": {
-   "fire": {
-    "res": {
-     "fire": 0.25
-    }
-   }
   },
   "implemented": false
  }
