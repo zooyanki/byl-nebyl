@@ -1,0 +1,554 @@
+{
+ "_about": "Базы предметов (GDD v1.2 §6.1–6.2, без посохов), стартовый комплект §6.2, зелья §4.4, пояс 4×5.",
+ "slots": [
+  "head",
+  "neck",
+  "body",
+  "rhand",
+  "lhand",
+  "gloves",
+  "ring1",
+  "belt",
+  "ring2",
+  "feet"
+ ],
+ "slotNames": {
+  "head": "Голова",
+  "neck": "Шея",
+  "body": "Тело",
+  "rhand": "Десница",
+  "lhand": "Шуйца",
+  "gloves": "Руки",
+  "ring1": "Перстень",
+  "ring2": "Перстень",
+  "belt": "Пояс",
+  "feet": "Ноги"
+ },
+ "typeSlots": {
+  "sword": [
+   "rhand"
+  ],
+  "axe": [
+   "rhand"
+  ],
+  "body": [
+   "body"
+  ],
+  "head": [
+   "head"
+  ],
+  "shield": [
+   "lhand"
+  ],
+  "gloves": [
+   "gloves"
+  ],
+  "feet": [
+   "feet"
+  ],
+  "belt": [
+   "belt"
+  ],
+  "neck": [
+   "neck"
+  ],
+  "ring": [
+   "ring1",
+   "ring2"
+  ]
+ },
+ "rarity": {
+  "normal": {
+   "name": "Простой",
+   "color": "linen",
+   "tint": "slate_dk"
+  },
+  "magic": {
+   "name": "Заговорённый",
+   "color": "blue_lt",
+   "tint": "blue_dk"
+  },
+  "rare": {
+   "name": "Дивный",
+   "color": "flame",
+   "tint": "bronze_dk"
+  },
+  "unique": {
+   "name": "Былинный",
+   "color": "bronze_lt",
+   "tint": "wood"
+  }
+ },
+ "bases": [
+  {
+   "id": "scramasax",
+   "name": "Скрамасакс",
+   "gender": "m",
+   "type": "sword",
+   "w": 1,
+   "h": 3,
+   "req": 1,
+   "icon": "scramasax",
+   "dmg": [
+    2,
+    7
+   ],
+   "speed": 1.4,
+   "crit": 10
+  },
+  {
+   "id": "sword_dr",
+   "name": "Меч дружинника",
+   "gender": "m",
+   "type": "sword",
+   "w": 1,
+   "h": 3,
+   "req": 6,
+   "icon": "sword",
+   "dmg": [
+    4,
+    11
+   ],
+   "speed": 1.4,
+   "crit": 10
+  },
+  {
+   "id": "sword_car",
+   "name": "Меч-каролинг",
+   "gender": "m",
+   "type": "sword",
+   "w": 1,
+   "h": 3,
+   "req": 12,
+   "icon": "sword_eq",
+   "dmg": [
+    7,
+    17
+   ],
+   "speed": 1.4,
+   "crit": 10
+  },
+  {
+   "id": "axe1",
+   "name": "Топорик",
+   "gender": "m",
+   "type": "axe",
+   "w": 1,
+   "h": 3,
+   "req": 1,
+   "icon": "axe",
+   "dmg": [
+    3,
+    8
+   ],
+   "speed": 1.1,
+   "vsNechist": 20
+  },
+  {
+   "id": "axe2",
+   "name": "Секира",
+   "gender": "f",
+   "type": "axe",
+   "w": 1,
+   "h": 3,
+   "req": 6,
+   "icon": "axe",
+   "dmg": [
+    6,
+    14
+   ],
+   "speed": 1.1,
+   "vsNechist": 20
+  },
+  {
+   "id": "axe3",
+   "name": "Бородовидная секира",
+   "gender": "f",
+   "type": "axe",
+   "w": 1,
+   "h": 3,
+   "req": 12,
+   "icon": "axe",
+   "dmg": [
+    9,
+    20
+   ],
+   "speed": 1.1,
+   "vsNechist": 20
+  },
+  {
+   "id": "kolchuga_s",
+   "name": "Короткая кольчуга",
+   "gender": "f",
+   "type": "body",
+   "w": 2,
+   "h": 3,
+   "req": 1,
+   "icon": "steganka",
+   "armor": [
+    8,
+    11
+   ]
+  },
+  {
+   "id": "kolchuga",
+   "name": "Кольчуга",
+   "gender": "f",
+   "type": "body",
+   "w": 2,
+   "h": 3,
+   "req": 5,
+   "icon": "kolchuga_eq",
+   "armor": [
+    18,
+    24
+   ]
+  },
+  {
+   "id": "kolchuga_z",
+   "name": "Кольчуга с зерцалом",
+   "gender": "f",
+   "type": "body",
+   "w": 2,
+   "h": 3,
+   "req": 11,
+   "icon": "kolchuga",
+   "armor": [
+    35,
+    45
+   ]
+  },
+  {
+   "id": "shishak",
+   "name": "Шелом-шишак",
+   "gender": "m",
+   "type": "head",
+   "w": 2,
+   "h": 2,
+   "req": 1,
+   "icon": "shapka",
+   "armor": [
+    3,
+    5
+   ]
+  },
+  {
+   "id": "shelom_n",
+   "name": "Шелом с наносником",
+   "gender": "m",
+   "type": "head",
+   "w": 2,
+   "h": 2,
+   "req": 5,
+   "icon": "shelom",
+   "armor": [
+    8,
+    11
+   ]
+  },
+  {
+   "id": "shelom_l",
+   "name": "Шелом с личиной",
+   "gender": "m",
+   "type": "head",
+   "w": 2,
+   "h": 2,
+   "req": 11,
+   "icon": "shelom",
+   "armor": [
+    15,
+    20
+   ]
+  },
+  {
+   "id": "shield_s",
+   "name": "Малый щит",
+   "gender": "m",
+   "type": "shield",
+   "w": 2,
+   "h": 2,
+   "req": 1,
+   "icon": "shield_small",
+   "armor": [
+    4,
+    6
+   ],
+   "block": 15
+  },
+  {
+   "id": "shield_r",
+   "name": "Круглый щит",
+   "gender": "m",
+   "type": "shield",
+   "w": 2,
+   "h": 2,
+   "req": 5,
+   "icon": "shield_sm",
+   "armor": [
+    9,
+    13
+   ],
+   "block": 20
+  },
+  {
+   "id": "shield_k",
+   "name": "Каплевидный щит",
+   "gender": "m",
+   "type": "shield",
+   "w": 2,
+   "h": 2,
+   "req": 11,
+   "icon": "shield",
+   "armor": [
+    18,
+    24
+   ],
+   "block": 25
+  },
+  {
+   "id": "gloves_l",
+   "name": "Кожаные рукавицы",
+   "gender": "pl",
+   "type": "gloves",
+   "w": 2,
+   "h": 2,
+   "req": 1,
+   "icon": "rukavitsy",
+   "armor": [
+    2,
+    3
+   ]
+  },
+  {
+   "id": "gloves_m",
+   "name": "Кольчужные рукавицы",
+   "gender": "pl",
+   "type": "gloves",
+   "w": 2,
+   "h": 2,
+   "req": 8,
+   "icon": "rukavitsy",
+   "armor": [
+    6,
+    9
+   ]
+  },
+  {
+   "id": "porshni",
+   "name": "Поршни",
+   "gender": "pl",
+   "type": "feet",
+   "w": 2,
+   "h": 2,
+   "req": 1,
+   "icon": "porshni",
+   "armor": [
+    2,
+    3
+   ]
+  },
+  {
+   "id": "sapogi",
+   "name": "Сапоги",
+   "gender": "pl",
+   "type": "feet",
+   "w": 2,
+   "h": 2,
+   "req": 8,
+   "icon": "sapogi",
+   "armor": [
+    6,
+    9
+   ]
+  },
+  {
+   "id": "kushak",
+   "name": "Кушак",
+   "gender": "m",
+   "type": "belt",
+   "w": 2,
+   "h": 1,
+   "req": 1,
+   "icon": "kushak",
+   "armor": [
+    2,
+    2
+   ]
+  },
+  {
+   "id": "poyas",
+   "name": "Наборный пояс",
+   "gender": "m",
+   "type": "belt",
+   "w": 2,
+   "h": 1,
+   "req": 8,
+   "icon": "poyas",
+   "armor": [
+    5,
+    7
+   ]
+  },
+  {
+   "id": "obereg",
+   "name": "Оберег-подвеска",
+   "gender": "m",
+   "type": "neck",
+   "w": 1,
+   "h": 1,
+   "req": 1,
+   "icon": "lunnitsa",
+   "icons": [
+    "lunnitsa",
+    "gromovnik"
+   ],
+   "magicOnly": true
+  },
+  {
+   "id": "grivna",
+   "name": "Гривна",
+   "gender": "f",
+   "type": "neck",
+   "w": 1,
+   "h": 1,
+   "req": 1,
+   "icon": "grivna",
+   "magicOnly": true
+  },
+  {
+   "id": "ring",
+   "name": "Перстень",
+   "gender": "m",
+   "type": "ring",
+   "w": 1,
+   "h": 1,
+   "req": 1,
+   "icon": "ring_ruby",
+   "icons": [
+    "ring_ruby",
+    "ring_amber"
+   ],
+   "magicOnly": true
+  }
+ ],
+ "starterKit": [
+  {
+   "slot": "rhand",
+   "base": "scramasax"
+  },
+  {
+   "slot": "lhand",
+   "base": "shield_s",
+   "armor": 5
+  },
+  {
+   "slot": "head",
+   "base": "shishak",
+   "armor": 4
+  },
+  {
+   "slot": "body",
+   "base": "kolchuga_s",
+   "armor": 9
+  }
+ ],
+ "starterBelt": [
+  {
+   "kind": "life1",
+   "count": 2
+  },
+  {
+   "kind": "life1",
+   "count": 1
+  },
+  {
+   "kind": "yar1",
+   "count": 2
+  },
+  null
+ ],
+ "potions": {
+  "life1": {
+   "name": "Слабое зелье жизни",
+   "res": "hp",
+   "amount": 45,
+   "dur": 3,
+   "icon": "potion_life",
+   "mlvl": [
+    1,
+    7
+   ],
+   "price": 15
+  },
+  "life2": {
+   "name": "Целебное зелье жизни",
+   "res": "hp",
+   "amount": 90,
+   "dur": 3,
+   "icon": "potion_life",
+   "mlvl": [
+    6,
+    99
+   ],
+   "price": 40
+  },
+  "life3": {
+   "name": "Крепкое зелье жизни",
+   "res": "hp",
+   "amount": 160,
+   "dur": 3,
+   "icon": "potion_life",
+   "mlvl": [
+    12,
+    99
+   ],
+   "price": 90
+  },
+  "yar1": {
+   "name": "Слабое зелье Яри",
+   "res": "yar",
+   "amount": 30,
+   "dur": 3,
+   "icon": "potion_mana",
+   "mlvl": [
+    1,
+    7
+   ],
+   "price": 15
+  },
+  "yar2": {
+   "name": "Зелье Яри",
+   "res": "yar",
+   "amount": 60,
+   "dur": 3,
+   "icon": "potion_mana",
+   "mlvl": [
+    6,
+    99
+   ],
+   "price": 40
+  },
+  "yar3": {
+   "name": "Крепкое зелье Яри",
+   "res": "yar",
+   "amount": 110,
+   "dur": 3,
+   "icon": "potion_mana",
+   "mlvl": [
+    12,
+    99
+   ],
+   "price": 90
+  },
+  "zhivaya": {
+   "name": "Живая вода",
+   "res": "both",
+   "pct": 0.35,
+   "dur": 0,
+   "icon": "potion_zhivaya"
+  }
+ },
+ "beltSize": 4,
+ "beltStack": 5,
+ "potionCooldown": 0.5
+}

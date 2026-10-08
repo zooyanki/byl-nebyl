@@ -1,0 +1,49 @@
+{
+ "_about": "Таблицы выпадения (GDD v1.2 §6.6–6.7) для обычного монстра. baseReqOverIlvl / веса баз — допущение прототипа (в GDD правила нет).",
+ "normal": {
+  "rolls": 1,
+  "outcome": {
+   "none": 58,
+   "silver": 20,
+   "potion": 10,
+   "item": 12
+  },
+  "rarity": {
+   "normal": 72,
+   "magic": 24,
+   "rare": 3.6,
+   "unique": 0.4
+  }
+ },
+ "itemType": {
+  "weapon": 25,
+  "body": 12,
+  "head": 10,
+  "shield": 10,
+  "gloves": 9,
+  "feet": 9,
+  "belt": 8,
+  "ring": 10,
+  "neck": 7
+ },
+ "weaponSplit": {
+  "sword": 0.5,
+  "axe": 0.5
+ },
+ "potionType": {
+  "life": 55,
+  "yar": 30,
+  "zhivaya": 10,
+  "beresta": 5
+ },
+ "silver": {
+  "randMin": 0.5,
+  "randMax": 1.5,
+  "base": 5,
+  "perMlvl": 3
+ },
+ "mfToWeights": 0.5,
+ "baseReqOverIlvl": 3,
+ "baseWeightAtOrBelow": 4,
+ "baseWeightAbove": 1
+}

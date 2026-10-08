@@ -1,0 +1,260 @@
+{
+  "count": 32,
+  "colors": [
+    {
+      "index": 0,
+      "name": "ink",
+      "hex": "#0a090c"
+    },
+    {
+      "index": 1,
+      "name": "abyss",
+      "hex": "#18141b"
+    },
+    {
+      "index": 2,
+      "name": "shadow",
+      "hex": "#28222b"
+    },
+    {
+      "index": 3,
+      "name": "stone_dk",
+      "hex": "#3a333b"
+    },
+    {
+      "index": 4,
+      "name": "stone",
+      "hex": "#524a4e"
+    },
+    {
+      "index": 5,
+      "name": "stone_lt",
+      "hex": "#74685f"
+    },
+    {
+      "index": 6,
+      "name": "bone",
+      "hex": "#a8987c"
+    },
+    {
+      "index": 7,
+      "name": "parchment",
+      "hex": "#ece0c2"
+    },
+    {
+      "index": 8,
+      "name": "earth_dk",
+      "hex": "#2b2219"
+    },
+    {
+      "index": 9,
+      "name": "earth",
+      "hex": "#45351f"
+    },
+    {
+      "index": 10,
+      "name": "moss_dk",
+      "hex": "#3d3b20"
+    },
+    {
+      "index": 11,
+      "name": "moss",
+      "hex": "#5b5629"
+    },
+    {
+      "index": 12,
+      "name": "moss_lt",
+      "hex": "#7f7639"
+    },
+    {
+      "index": 13,
+      "name": "iron_dk",
+      "hex": "#262b33"
+    },
+    {
+      "index": 14,
+      "name": "iron",
+      "hex": "#434b56"
+    },
+    {
+      "index": 15,
+      "name": "iron_lt",
+      "hex": "#6f7a84"
+    },
+    {
+      "index": 16,
+      "name": "gold_dk",
+      "hex": "#4e3510"
+    },
+    {
+      "index": 17,
+      "name": "gold",
+      "hex": "#8a5e1c"
+    },
+    {
+      "index": 18,
+      "name": "gold_lt",
+      "hex": "#c8962f"
+    },
+    {
+      "index": 19,
+      "name": "gold_hi",
+      "hex": "#f0d27a"
+    },
+    {
+      "index": 20,
+      "name": "blood",
+      "hex": "#3a0a0e"
+    },
+    {
+      "index": 21,
+      "name": "red_dk",
+      "hex": "#6c1116"
+    },
+    {
+      "index": 22,
+      "name": "red",
+      "hex": "#a5231d"
+    },
+    {
+      "index": 23,
+      "name": "red_lt",
+      "hex": "#df4b32"
+    },
+    {
+      "index": 24,
+      "name": "navy",
+      "hex": "#0d1440"
+    },
+    {
+      "index": 25,
+      "name": "blue_dk",
+      "hex": "#1d3594"
+    },
+    {
+      "index": 26,
+      "name": "blue",
+      "hex": "#3f6cd6"
+    },
+    {
+      "index": 27,
+      "name": "blue_lt",
+      "hex": "#9cc0f4"
+    },
+    {
+      "index": 28,
+      "name": "ember",
+      "hex": "#e8801f"
+    },
+    {
+      "index": 29,
+      "name": "flame",
+      "hex": "#ffd94e"
+    },
+    {
+      "index": 30,
+      "name": "violet_dk",
+      "hex": "#3d1458"
+    },
+    {
+      "index": 31,
+      "name": "violet",
+      "hex": "#9246c0"
+    }
+  ],
+  "ramps": {
+    "ink": [
+      "ink"
+    ],
+    "stone": [
+      "ink",
+      "abyss",
+      "shadow",
+      "stone_dk",
+      "stone",
+      "stone_lt",
+      "bone",
+      "parchment"
+    ],
+    "bone": [
+      "ink",
+      "abyss",
+      "shadow",
+      "stone_dk",
+      "stone_lt",
+      "bone",
+      "parchment"
+    ],
+    "grass": [
+      "ink",
+      "abyss",
+      "earth_dk",
+      "moss_dk",
+      "moss",
+      "moss_lt"
+    ],
+    "earth": [
+      "ink",
+      "abyss",
+      "earth_dk",
+      "earth",
+      "stone_lt",
+      "bone"
+    ],
+    "wood": [
+      "ink",
+      "abyss",
+      "earth_dk",
+      "earth",
+      "gold",
+      "gold_lt"
+    ],
+    "iron": [
+      "ink",
+      "abyss",
+      "iron_dk",
+      "iron",
+      "iron_lt",
+      "parchment"
+    ],
+    "gold": [
+      "ink",
+      "abyss",
+      "gold_dk",
+      "gold",
+      "gold_lt",
+      "gold_hi"
+    ],
+    "red": [
+      "ink",
+      "abyss",
+      "blood",
+      "red_dk",
+      "red",
+      "red_lt"
+    ],
+    "blue": [
+      "ink",
+      "abyss",
+      "navy",
+      "blue_dk",
+      "blue",
+      "blue_lt"
+    ],
+    "violet": [
+      "ink",
+      "abyss",
+      "violet_dk",
+      "violet",
+      "blue_lt"
+    ],
+    "fire": [
+      "red_dk",
+      "red",
+      "red_lt",
+      "ember",
+      "flame",
+      "parchment"
+    ]
+  }
+}

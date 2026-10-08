@@ -1,0 +1,20 @@
+{
+ "_about": "Навыки (GDD v1.2 §3.6). В прототипе только ПКМ «Огненный змей»; ранг растёт сам: 1 + ⌊(ур.−1)/2⌋ (stats.skillRankEveryLevels).",
+ "fire_serpent": {
+  "name": "Огненный змей",
+  "key": "ПКМ",
+  "icon": "fire_serpent",
+  "element": "fire",
+  "speed": 10,
+  "range": 12,
+  "radius": 1.0,
+  "dmgMin": 6,
+  "dmgMax": 10,
+  "perRankMin": 3,
+  "perRankMax": 4,
+  "cost": 5,
+  "costPerRank": 0.5,
+  "maxRank": 10,
+  "knockback": 0.55
+ }
+}
