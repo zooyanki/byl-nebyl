@@ -1,0 +1,36 @@
+{
+ "character": "Мара Пепельная",
+ "animation": "heal",
+ "direction": "ne",
+ "mirror_for": "nw",
+ "mirror_rule": "flip horizontally around the frame centre line x = 32.0; pivot stays (32, 56)",
+ "pivot": [
+  32,
+  56
+ ],
+ "fps": 10,
+ "loop": false,
+ "visible_height_px": [
+  53,
+  52,
+  51,
+  52,
+  52,
+  53
+ ],
+ "height_rule": "pivot row (ground under the feet) to the top visible pixel, outline included",
+ "notes": "Мара Пепельная (былинный враг M1, дух пожара): hovering ash shroud and hood, pale face, flame hair, smouldering hem and forearms. Hovers 2.5±1 px above the ground (pivot = ground point under her; keep the shadow on the ground). Body 48-50 incl. hover, flame hair ≤ 53, raised fire bolt ≤ 55 (scale.md: 48, flames to 54). Frame 64x64, pivot (32,56).",
+ "events": {
+  "apply_frame": 3,
+  "note": "every 8 s (bosses.json heal.every); the nebyl wisps are in her hands, the engine's area burst (radius 6) can stay"
+ },
+ "image": "mara_heal_ne.png",
+ "frame_size": [
+  64,
+  64
+ ],
+ "frame_count": 6,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

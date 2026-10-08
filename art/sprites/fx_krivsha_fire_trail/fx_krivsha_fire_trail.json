@@ -1,0 +1,20 @@
+{
+ "effect": "Огненный след Кривши (bosses.json fireTrail, r 0.6 tile)",
+ "radius_tiles": 0.6,
+ "draw": "ground decal at the trail point, native size (no scale for r 0.6; scale = r / 0.6 otherwise); the engine's alpha fade-in/out stays; random start frame per patch",
+ "pivot": [
+  20,
+  16
+ ],
+ "fps": 8,
+ "loop": true,
+ "image": "fx_krivsha_fire_trail.png",
+ "frame_size": [
+  40,
+  28
+ ],
+ "frame_count": 4,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

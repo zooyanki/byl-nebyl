@@ -6,6 +6,7 @@ import { HALF_W, HALF_H, TILE_W, TILE_H } from '../config.js';
 import { w2s } from '../core/iso.js';
 import { rect, poly, strokePoly, isoBox, disc, ellipse, figure } from './shapes.js';
 import { drawRestSource } from './rest_fx.js';
+import { drawHearthArt, drawPerunArt } from './boss_art.js';
 
 // toS(x,y) -> [sx,sy] экранные координаты мировой точки
 export function drawProp(ctx, p, toS, time) {
@@ -62,6 +63,7 @@ function drawRaw(ctx, p, toS) {
     case 'churstone': return churstone(ctx, p, toS);
     case 'gate': return gate(ctx, p, toS);
     case 'bush': return bush(ctx, p, toS);
+    case 'ash': return ashPile(ctx, p, toS);
     case 'chest': return chest(ctx, p, toS);
     case 'body': return body(ctx, p, toS);
   }
@@ -196,6 +198,7 @@ function palisade(ctx, p, toS) {
 }
 
 function izba(ctx, p, toS) {
+  if (p.burnt) return burntBarn(ctx, p, toS);
   const s = p.size, h = 68, R = 44, o = 0.3;          // стена 68 (17 венцов), подъём кровли 44, свес 0,3
   const [ox, oy] = toS(p.x, p.y);
   const box = isoBox(ctx, ox, oy, s, s, h, PAL.wood_md, PAL.wood_md, PAL.wood);
@@ -355,6 +358,7 @@ function bush(ctx, p, toS) {
 // Огнище капища (грей-бокс, спрайта нет): кольцо камней Ø 1,2 тайла; пламя осквернённое — зелёное (Небыль), освящённое — тёплое.
 function hearth(ctx, p, toS, time) {
   const [x, y] = toS(p.x + 0.5, p.y + 0.5);
+  if (drawHearthArt(ctx, p, x, y, time)) return;                          // спрайт художника M1b (64×120, pivot 32,108)
   const rx = 0.6 * HALF_W * Math.SQRT2, ry = 0.6 * HALF_H * Math.SQRT2;
   ellipse(ctx, x, y, rx + 2, ry + 1, PAL.ink, 0.5);
   for (let i = 0; i < 10; i++) {
@@ -370,6 +374,7 @@ function hearth(ctx, p, toS, time) {
 
 // Идол Перуна 2×2 (грей-бокс): резной столб 110 px с усами-молниями; пока жив Кривша — горит.
 function perun(ctx, p, toS, time) {
+  { const [x, y] = toS(p.x + 1, p.y + 1); if (drawPerunArt(ctx, p, x, y, time)) return; }   // спрайт художника M1b (80×160, pivot 40,148), центр 2×2
   const [ox, oy] = toS(p.x + 0.6, p.y + 0.6);
   isoBox(ctx, ox, oy, 0.8, 0.8, 104, p.burning ? PAL.wood_md : PAL.slate, p.burning ? PAL.wood : PAL.slate_dk, p.burning ? PAL.wood_dk : PAL.ink);
   const [x, y] = toS(p.x + 1, p.y + 1);
@@ -388,9 +393,40 @@ function perun(ctx, p, toS, time) {
 
 // «Громовник» у подножия погасшего идола (заглушка вехи (в)): секира с бронзовым мерцанием.
 function relic(ctx, p, toS, time) {
+  if (p.taken) return;          // «Громовник» поднят (M1c)
   const [x, y] = toS(p.x + 0.5, p.y + 0.5);
   ellipse(ctx, x, y, 12, 4, PAL.bronze_hi, 0.25 + 0.15 * Math.sin(time * 4));
   poly(ctx, [[x - 12, y - 2], [x + 10, y - 7], [x + 11, y - 5], [x - 11, y]], PAL.wood_lt);
   poly(ctx, [[x + 4, y - 14], [x + 13, y - 10], [x + 12, y - 1], [x + 6, y - 4]], PAL.mist);
   rect(ctx, x + 6, y - 12, 2, 2, PAL.linen);
+}
+
+/** Обгоревший сарай у входа в тупик Мары (GDD v1.8.1 B-31): руины избы — вход в тупик читается с основного пути. */
+function burntBarn(ctx, p, toS) {
+  const s = p.size, h = 34;
+  const [ox, oy] = toS(p.x, p.y);
+  const box = isoBox(ctx, ox, oy, s, 2, h, PAL.wood_dk, PAL.wood_dk, PAL.slate_dk);
+  for (let k = 4; k < h; k += 6) {
+    poly(ctx, [[box.L[0], box.L[1] - k], [box.B[0], box.B[1] - k], [box.B[0], box.B[1] - k + 1], [box.L[0], box.L[1] - k + 1]], PAL.ink);
+    poly(ctx, [[box.B[0], box.B[1] - k], [box.R[0], box.R[1] - k], [box.R[0], box.R[1] - k + 1], [box.B[0], box.B[1] - k + 1]], PAL.ink);
+  }
+  const P = (x, y, z) => { const [a, b] = toS(x, y); return [a, b - z]; };
+  // пролом стены и обрушенная кровля (конёк сгорел — остался один скат)
+  const hole0 = P(p.x + 0.6, p.y + 2, 4), hole1 = P(p.x + 2.2, p.y + 2, 4);
+  poly(ctx, [hole0, hole1, [hole1[0], hole1[1] - 22], [hole0[0], hole0[1] - 22]], PAL.ink);
+  const ridge = P(p.x + s * 0.5, p.y + 1, h + 10), front = P(p.x + s, p.y + 2.3, h - 10), back = P(p.x - 0.2, p.y + 2.3, h - 6);
+  poly(ctx, [back, front, ridge], PAL.slate);
+  strokePoly(ctx, [back, front, ridge], PAL.ink, false);
+  // обугленные брёвна перед сараем
+  poly(ctx, [P(p.x + 0.4, p.y + 2.4, 2), P(p.x + 2.4, p.y + 2.9, 2), P(p.x + 2.4, p.y + 2.9, 5), P(p.x + 0.4, p.y + 2.4, 5)], PAL.wood_dk);
+  poly(ctx, [P(p.x + 0.2, p.y + 3.1, 1), P(p.x + 1.8, p.y + 3.4, 1), P(p.x + 1.8, p.y + 3.4, 4), P(p.x + 0.2, p.y + 3.1, 4)], PAL.ink);
+}
+
+/** Кучка пепла на тропке к тупику. */
+function ashPile(ctx, p, toS) {
+  const [x, y] = toS(p.x + 0.5, p.y + 0.5);
+  ellipse(ctx, x, y, 9, 4, PAL.ink, 0.6);
+  disc(ctx, x - 2, y - 1, 4, PAL.slate_dk);
+  disc(ctx, x + 3, y, 3, PAL.slate);
+  disc(ctx, x, y - 2, 2, PAL.slate_lt);
 }

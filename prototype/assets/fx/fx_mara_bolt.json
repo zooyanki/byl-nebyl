@@ -1,0 +1,19 @@
+{
+ "effect": "Огненный сгусток Мары в полёте",
+ "draw": "drawn facing +x (right); flip when moving left; raise it to the release height (38 px above the ground) and keep a 4x2 ink shadow on the ground",
+ "pivot": [
+  12,
+  8
+ ],
+ "fps": 12,
+ "loop": true,
+ "image": "fx_mara_bolt.png",
+ "frame_size": [
+  24,
+  16
+ ],
+ "frame_count": 4,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

@@ -11,7 +11,7 @@ import { baseDamageAvg } from '../data/enemies.js';
 let FIRE_ID = 1;
 
 export class Combat {
-  constructor(game) { this.game = game; this.projectiles = []; this.fires = []; this.teles = []; this.lastBlast = null; }
+  constructor(game) { this.game = game; this.projectiles = []; this.fires = []; this.teles = []; this.lastBlast = null; this.sprFx = []; }
 
   /** Пятно огненного следа (Кривша — 4 с, Мара — 3 с; GDD §5.3–5.4): горит сразу, жжёт pct% макс. HP героя в секунду.
    *  Перекрывающиеся пятна одного источника жгут как одно (тики источника — src.trail.tick). */
@@ -234,6 +234,8 @@ export class Combat {
   }
 
   update(dt) {
+    for (const f of this.sprFx) f.t += dt;                               // одноразовые спрайт-эффекты (попадание сгустка Мары)
+    if (this.sprFx.length) this.sprFx = this.sprFx.filter((f) => f.t < f.dur);
     const g = this.game;
     this.updateFires(dt);
     for (const p of this.projectiles) {
@@ -253,6 +255,7 @@ export class Combat {
             if (g.safeAt(h.x, h.y)) { this.fizzle(p); g.counters.safeFizzle = (g.counters.safeFizzle || 0) + 1; break; }
             p.dead = true;
             g.fx.burst(p.x, p.y, PAL.ember, 8, 20, 50);
+            if (p.src && p.src.kind === 'mara') this.sprFx.push({ key: 'm_hit', x: h.x, y: h.y, t: 0, dur: 5 / 12, fps: 12 });   // fx_mara_bolt_hit
             const dealt = h.takeDamage(rndInt(p.dmg[0], p.dmg[1]), g, p.element, null);
             if (p.src && p.src.onHitHero) p.src.onHitHero(dealt, g);   // модификаторы элит (Жаркий, Студёный, Кровопийца)
           }
@@ -272,6 +275,7 @@ export class Combat {
 
   fizzle(p) {
     p.dead = true;
+    if (p.src && p.src.kind === 'mara') this.sprFx.push({ key: 'm_hit', x: p.x, y: p.y, t: 0, dur: 5 / 12, fps: 12 });
     this.game.fx.burst(p.x, p.y, PAL.ember, 5, 16, 30);
   }
 

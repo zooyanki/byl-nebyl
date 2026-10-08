@@ -1,6 +1,6 @@
 // Веха M1b: элиты зон, Мара Пепельная в Залесье, Чуров камень у капища (точка возрождения), капище Перуна —
 // огнища (перебить пачку и освятить: держи ЛКМ 3 с), «Чад» (GDD §4.4), подъём Кривши (вход в Круг огнищ или
-// третье освящённое огнище), гибель Кривши (добыча, «Приказ Чернояра», погасший идол, «Громовник» — заглушка).
+// третье освящённое огнище), гибель Кривши (добыча, «Приказ Чернояра», погасший идол, «Громовник» у подножия — веха M1c).
 // Подмешивается в Game вместе с ZoneMixin.
 import { CFG } from '../data/config.js';
 import { MAP_SEED } from '../config.js';
@@ -88,7 +88,7 @@ export const KapishcheMixin = {
 
   hearthFreed(o) {
     const m = this.map, n = m.hearths.filter((x) => x.done).length, st = this.zs;
-    if (o.prop) { o.prop.cursed = false; }
+    if (o.prop) { o.prop.cursed = false; o.prop.doneAt = this.time; }   // doneAt — для анимации освящения (спрайт M1b)
     this.fx.burst(o.x, o.y, PAL.flame, 16, 20, 60); this.fx.ring(o.x, o.y, 1.2, PAL.bronze_hi, 0.6);
     this.audio.play('levelup');
     const after = st.bossState === 'dead';
@@ -106,11 +106,11 @@ export const KapishcheMixin = {
     // тело Кривши с грамотой «Приказ Чернояра»
     const p = m.addProp('body', b.x - 0.5, b.y - 0.5, 1, { fp: [b.x, b.y, 0, 0], burnt: true });
     m.objects.push({ id: 'krivsha_body', type: 'body', x: b.x, y: b.y, sx: b.x, sy: b.y + 0.9, reach: 1.2, letter: CFG.bosses.krivsha.letter, labelKey: 'proto.krivsha_body', prop: p, done: false });
-    // идол гаснет; у подножия — «Громовник» (былинная вещь — веха (в), здесь заглушка)
-    if (m.perun) { m.perun.burning = false; m.perun._spr = null; }
+    // идол гаснет; у подножия — «Громовник» (U2, награда М1, GDD §6.5): щелчок — вещь в котомку (systems/zones.js → interact)
+    if (m.perun) { m.perun.burning = false; m.perun._spr = null; m.perun.outAt = this.time; }   // outAt — idol_perun_extinguish
     m.lights = m.lights.filter((l) => !l.perun);
     const rp = m.addProp('relic', m.idol.x, m.idol.y + 1.2, 1, { fp: [m.idol.x + 0.5, m.idol.y + 1.7, 0, 0] });
-    m.objects.push({ id: 'gromovnik', type: 'reward', x: m.idol.x + 0.5, y: m.idol.y + 1.7, sx: m.idol.x + 0.5, sy: m.idol.y + 2.4, reach: 1.2, prop: rp, done: false });
+    m.objects.push({ id: 'gromovnik', type: 'reward', unique: 'U2', x: m.idol.x + 0.5, y: m.idol.y + 1.7, sx: m.idol.x + 0.5, sy: m.idol.y + 2.4, reach: 1.2, prop: rp, done: false });
     this.quest.emit({ event: 'bossKilled', boss: 'krivsha' });
   },
 };

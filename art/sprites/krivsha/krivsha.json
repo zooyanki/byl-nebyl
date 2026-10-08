@@ -1,0 +1,237 @@
+{
+ "character": "Кривша, Обгорелый страж",
+ "folder": "krivsha",
+ "frame_size": [
+  128,
+  128
+ ],
+ "pivot": [
+  64,
+  116
+ ],
+ "directions": {
+  "prototype_dirs": "0..7 (0 = towards the camera, 2 = left, 4 = away, 6 = right); BACK = {3,4,5}",
+  "sheet": "dir in {3,4,5} -> *_ne, otherwise -> *_se",
+  "flip": "draw mirrored (scale x = -1 around the pivot) when dirSide(dir, facing) < 0",
+  "rule": "scale.md §4.1 / GDD §12.1.2: 2 drawn directions (SE, NE) + horizontal mirror (SW, NW); the 8 logical directions of the engine map onto these 4 views"
+ },
+ "mirror_rule": "flip horizontally around the frame centre line x = 64.0; pivot stays (64, 116)",
+ "animations": {
+  "krivsha_idle": {
+   "files": {
+    "se": "krivsha_idle_se.png",
+    "ne": "krivsha_idle_ne.png"
+   },
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "events": {}
+  },
+  "krivsha_walk": {
+   "files": {
+    "se": "krivsha_walk_se.png",
+    "ne": "krivsha_walk_ne.png"
+   },
+   "frames": 8,
+   "fps": 9,
+   "loop": true,
+   "events": {}
+  },
+  "krivsha_claw": {
+   "files": {
+    "se": "krivsha_claw_se.png",
+    "ne": "krivsha_claw_ne.png"
+   },
+   "frames": 8,
+   "fps": 10,
+   "loop": false,
+   "events": {
+    "hit_frame": 6,
+    "telegraph_frames": [
+     0,
+     5
+    ],
+    "arc": "front cone (bosses.json claw.halfAngleDeg)",
+    "sync": "GDD v1.8: telegraph 0.6 s, every 2.4 s, same tempo in both phases. Frames 0-5 span the telegraph (10 fps = 0.6 s), frame 6 is shown from the hit moment; if the engine waits after the telegraph (prototype: +0.25 s), hold frame 5",
+    "overlay": "fire crescent baked into frame 6"
+   }
+  },
+  "krivsha_summon": {
+   "files": {
+    "se": "krivsha_summon_se.png",
+    "ne": "krivsha_summon_ne.png"
+   },
+   "frames": 8,
+   "fps": 10,
+   "loop": false,
+   "events": {
+    "spawn_frame": 5,
+    "spawn_effect": "fx_krivsha_summon (at every упырь spawn point, 8 frames @10 = riseTime 0.8 s); the summoned upyri use the normal упырь sprite and its rise from the ground",
+    "note": "frames 0-3 raise the arms, 4-6 slam the ground (embers baked in 5-6). Spawn the upyri on frame 5 (t = 0.5 s); if the engine keeps spawning instantly, start this anim 0.5 s before the summon timer fires"
+   }
+  },
+  "krivsha_leap": {
+   "files": {
+    "se": "krivsha_leap_se.png",
+    "ne": "krivsha_leap_ne.png"
+   },
+   "frames": 8,
+   "fps": 10,
+   "loop": false,
+   "events": {
+    "arc_frames": [
+     0,
+     5
+    ],
+    "loop_frames": [
+     6,
+     7
+    ],
+    "landing_frame": 6,
+    "note": "frames 0-5 = the 0.6 s arc at 10 fps; the ENGINE moves the sprite along the arc and adds the lift (sin * 40), the art has no baked height. On landing (frame 6) start fx_krivsha_leap_burst on the огнище and loop frames 6-7 while invulnerable (2 s), then play krivsha_fire_emerge"
+   }
+  },
+  "krivsha_emerge": {
+   "files": {
+    "se": "krivsha_emerge_se.png",
+    "ne": "krivsha_emerge_ne.png"
+   },
+   "frames": 6,
+   "fps": 8,
+   "loop": false,
+   "events": {
+    "note": "normal sheet = rising out of the burning idol at the start of the fight (rise 2 s: hold frame 0, play the 6 frames over the last 0.75 s, or the whole sheet at 3 fps); krivsha_fire_emerge = leaving the огнище at the start of the fire phase, together with fx_krivsha_feed («огнище питает», +15% HP on feed frame 6); then aura on"
+   }
+  },
+  "krivsha_hurt": {
+   "files": {
+    "se": "krivsha_hurt_se.png",
+    "ne": "krivsha_hurt_ne.png"
+   },
+   "frames": 2,
+   "fps": 8,
+   "loop": false,
+   "events": {
+    "note": "2 frames, flinch back; play over any anim except leap / emerge"
+   }
+  },
+  "krivsha_death": {
+   "files": {
+    "se": "krivsha_death_se.png",
+    "ne": "krivsha_death_ne.png"
+   },
+   "frames": 12,
+   "fps": 10,
+   "loop": false,
+   "events": {
+    "note": "last frame holds (charred heap with dying embers, frames 8-11); then idol_perun_extinguish"
+   }
+  },
+  "krivsha_fire_idle": {
+   "files": {
+    "se": "krivsha_fire_idle_se.png",
+    "ne": "krivsha_fire_idle_ne.png"
+   },
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "events": {}
+  },
+  "krivsha_fire_walk": {
+   "files": {
+    "se": "krivsha_fire_walk_se.png",
+    "ne": "krivsha_fire_walk_ne.png"
+   },
+   "frames": 8,
+   "fps": 9,
+   "loop": true,
+   "events": {}
+  },
+  "krivsha_fire_claw": {
+   "files": {
+    "se": "krivsha_fire_claw_se.png",
+    "ne": "krivsha_fire_claw_ne.png"
+   },
+   "frames": 8,
+   "fps": 10,
+   "loop": false,
+   "events": {
+    "hit_frame": 6,
+    "telegraph_frames": [
+     0,
+     5
+    ],
+    "arc": "front cone (bosses.json claw.halfAngleDeg)",
+    "sync": "GDD v1.8: telegraph 0.6 s, every 2.4 s, same tempo in both phases. Frames 0-5 span the telegraph (10 fps = 0.6 s), frame 6 is shown from the hit moment; if the engine waits after the telegraph (prototype: +0.25 s), hold frame 5",
+    "overlay": "fire crescent baked into frame 6"
+   }
+  },
+  "krivsha_fire_summon": {
+   "files": {
+    "se": "krivsha_fire_summon_se.png",
+    "ne": "krivsha_fire_summon_ne.png"
+   },
+   "frames": 8,
+   "fps": 10,
+   "loop": false,
+   "events": {
+    "spawn_frame": 5,
+    "spawn_effect": "fx_krivsha_summon (at every упырь spawn point, 8 frames @10 = riseTime 0.8 s); the summoned upyri use the normal упырь sprite and its rise from the ground",
+    "note": "frames 0-3 raise the arms, 4-6 slam the ground (embers baked in 5-6). Spawn the upyri on frame 5 (t = 0.5 s); if the engine keeps spawning instantly, start this anim 0.5 s before the summon timer fires"
+   }
+  },
+  "krivsha_fire_emerge": {
+   "files": {
+    "se": "krivsha_fire_emerge_se.png",
+    "ne": "krivsha_fire_emerge_ne.png"
+   },
+   "frames": 6,
+   "fps": 8,
+   "loop": false,
+   "events": {
+    "note": "normal sheet = rising out of the burning idol at the start of the fight (rise 2 s: hold frame 0, play the 6 frames over the last 0.75 s, or the whole sheet at 3 fps); krivsha_fire_emerge = leaving the огнище at the start of the fire phase, together with fx_krivsha_feed («огнище питает», +15% HP on feed frame 6); then aura on"
+   }
+  },
+  "krivsha_fire_hurt": {
+   "files": {
+    "se": "krivsha_fire_hurt_se.png",
+    "ne": "krivsha_fire_hurt_ne.png"
+   },
+   "frames": 2,
+   "fps": 8,
+   "loop": false,
+   "events": {
+    "note": "2 frames, flinch back; play over any anim except leap / emerge"
+   }
+  },
+  "krivsha_fire_death": {
+   "files": {
+    "se": "krivsha_fire_death_se.png",
+    "ne": "krivsha_fire_death_ne.png"
+   },
+   "frames": 12,
+   "fps": 10,
+   "loop": false,
+   "events": {
+    "note": "last frame holds (charred heap with dying embers, frames 8-11); then idol_perun_extinguish"
+   }
+  }
+ },
+ "phases": {
+  "normal": "krivsha_* sheets. Abilities: claw (cone 2 tiles ±45°, telegraph 0.6 s, every 2.4 s), summon (2 upyri every 20 s, first after 8 s, max 4), fire trail (fx_krivsha_fire_trail).",
+  "fire_phase": "at 50% HP: krivsha_leap (arc to the nearest not consecrated огнище) -> fx_krivsha_leap_burst on the hearth + leap frames 6-7 loop for the 2 s of invulnerability -> krivsha_fire_emerge together with fx_krivsha_feed_back / fx_krivsha_feed (on him) + fx_krivsha_feed_source (on the огнище), +15% HP on feed frame 6 -> all krivsha_fire_* sheets + fx_krivsha_aura under him (r 1.5). GDD v1.8: NO attack speed-up in the fire phase; krivsha_fire_* sheets have exactly the same frames, fps and events as the normal ones (play them at the normal tempo, atkMul = 1). The fire variant is the same drawing with hotter cracks, brighter eyes and taller flames (to ≤112).",
+  "start": "rise from the burning idol: krivsha_emerge (normal).",
+  "end": "krivsha_death (normal or fire variant, whichever phase he is in) -> idol_perun_extinguish -> idol_perun_smoking."
+ },
+ "fx": {
+  "fire_trail": "fx_krivsha_fire_trail",
+  "aura": "fx_krivsha_aura",
+  "summon": "fx_krivsha_summon",
+  "leap": "fx_krivsha_leap_burst",
+  "feed": [
+   "fx_krivsha_feed_back",
+   "fx_krivsha_feed",
+   "fx_krivsha_feed_source"
+  ]
+ }
+}

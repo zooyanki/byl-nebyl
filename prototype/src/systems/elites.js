@@ -89,7 +89,7 @@ export function setupZoneElites(game, st, rng) {
   if (R && R.count) {
     const ok = game.map.packs.map((p, i) => i).filter((i) => {
       const p = game.map.packs[i];
-      return !p.ambush && p.x >= (R.minX ?? 0) && (!R.mlvl || p.mlvl === R.mlvl) && p.kinds.length >= 1 + L.retinue[0] && p.kinds.some((k) => L.kinds.includes(k));
+      return !p.ambush && !p.champions && p.x >= (R.minX ?? 0) && (!R.mlvl || p.mlvl === R.mlvl) && p.kinds.length >= 1 + L.retinue[0] && p.kinds.some((k) => L.kinds.includes(k));
     });
     for (let n = 0; n < R.count && ok.length; n++) { const l = crown(ok.splice(Math.floor(rng() * ok.length), 1)[0]); if (l) leaders.push(l); }
   }

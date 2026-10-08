@@ -1,0 +1,255 @@
+{
+ "time_noPhase": {
+  "runs": 30,
+  "won": 30,
+  "deaths": 0,
+  "mean": 55.4,
+  "min": 45.6,
+  "max": 69.1,
+  "phase": 0,
+  "heal": 0,
+  "summonsAvg": 4,
+  "blockerHits": 0,
+  "clawHitPct": 60,
+  "potions": {
+   "life1": 0,
+   "zhivaya": 0,
+   "yar1": 0
+  }
+ },
+ "time_phase1": {
+  "runs": 30,
+  "won": 30,
+  "deaths": 0,
+  "mean": 66.5,
+  "min": 57.5,
+  "max": 78,
+  "phase": 30,
+  "heal": 214,
+  "summonsAvg": 4.1,
+  "blockerHits": 5,
+  "clawHitPct": 61,
+  "potions": {
+   "life1": 0,
+   "zhivaya": 0,
+   "yar1": 0
+  }
+ },
+ "time_phase3": {
+  "runs": 30,
+  "won": 30,
+  "deaths": 0,
+  "mean": 69.5,
+  "min": 60.6,
+  "max": 80.2,
+  "phase": 30,
+  "heal": 214,
+  "summonsAvg": 4.1,
+  "blockerHits": 8,
+  "clawHitPct": 56,
+  "potions": {
+   "life1": 0,
+   "zhivaya": 0,
+   "yar1": 0
+  }
+ },
+ "time_addsFirst_noPhase": {
+  "runs": 30,
+  "won": 30,
+  "deaths": 0,
+  "mean": 63,
+  "min": 49.5,
+  "max": 81.9,
+  "phase": 0,
+  "heal": 0,
+  "summonsAvg": 6.2,
+  "blockerHits": 1511,
+  "clawHitPct": 57,
+  "potions": {
+   "life1": 0,
+   "zhivaya": 0,
+   "yar1": 0
+  }
+ },
+ "time_addsFirst_phase1": {
+  "runs": 30,
+  "won": 30,
+  "deaths": 0,
+  "mean": 80.6,
+  "min": 66,
+  "max": 94.8,
+  "phase": 30,
+  "heal": 214,
+  "summonsAvg": 8,
+  "blockerHits": 799,
+  "clawHitPct": 60,
+  "potions": {
+   "life1": 0,
+   "zhivaya": 0,
+   "yar1": 0
+  }
+ },
+ "time_addsFirst_phase3": {
+  "runs": 30,
+  "won": 30,
+  "deaths": 0,
+  "mean": 91.1,
+  "min": 77.9,
+  "max": 108.1,
+  "phase": 30,
+  "heal": 214,
+  "summonsAvg": 8.9,
+  "blockerHits": 812,
+  "clawHitPct": 59,
+  "potions": {
+   "life1": 0,
+   "zhivaya": 0,
+   "yar1": 0
+  }
+ },
+ "deaths_noPhase_kit10": {
+  "runs": 30,
+  "won": 25,
+  "deaths": 5,
+  "mean": 55.7,
+  "min": 49.8,
+  "max": 69.1,
+  "phase": 0,
+  "heal": 0,
+  "summonsAvg": 4,
+  "blockerHits": 0,
+  "clawHitPct": 59,
+  "potions": {
+   "life1": 281,
+   "zhivaya": 18,
+   "yar1": 0
+  }
+ },
+ "deaths_phase1_belt15": {
+  "runs": 30,
+  "won": 26,
+  "deaths": 4,
+  "mean": 66.7,
+  "min": 56.4,
+  "max": 82.1,
+  "phase": 30,
+  "heal": 214,
+  "summonsAvg": 4.3,
+  "blockerHits": 19,
+  "clawHitPct": 58,
+  "potions": {
+   "life1": 428,
+   "zhivaya": 17,
+   "yar1": 0
+  }
+ },
+ "deaths_phase3_belt15": {
+  "runs": 30,
+  "won": 26,
+  "deaths": 4,
+  "mean": 67.8,
+  "min": 58.7,
+  "max": 76.1,
+  "phase": 30,
+  "heal": 214,
+  "summonsAvg": 4.2,
+  "blockerHits": 16,
+  "clawHitPct": 57,
+  "potions": {
+   "life1": 416,
+   "zhivaya": 19,
+   "yar1": 0
+  }
+ },
+ "deaths_phase1_kit10": {
+  "runs": 30,
+  "won": 8,
+  "deaths": 22,
+  "mean": 62.9,
+  "min": 58.1,
+  "max": 68.4,
+  "phase": 30,
+  "heal": 214,
+  "summonsAvg": 4.2,
+  "blockerHits": 14,
+  "clawHitPct": 58,
+  "potions": {
+   "life1": 300,
+   "zhivaya": 26,
+   "yar1": 0
+  }
+ },
+ "deaths_noPotions_noPhase": {
+  "runs": 30,
+  "won": 0,
+  "deaths": 30,
+  "mean": null,
+  "min": null,
+  "max": null,
+  "phase": 0,
+  "heal": 0,
+  "summonsAvg": 2.1,
+  "blockerHits": 0,
+  "clawHitPct": 58,
+  "potions": {
+   "life1": 0,
+   "zhivaya": 0,
+   "yar1": 0
+  }
+ },
+ "xp": {
+  "zalesye": 472,
+  "trail": 1316,
+  "kapishche": 3941,
+  "exitZalesye": 472,
+  "exitTrail": 1788,
+  "beforeBoss": 5729,
+  "afterBoss": 6929,
+  "beforeNoMara": 5539,
+  "afterNoMara": 6739,
+  "lvl": {
+   "zalesye": [
+    3,
+    0.05
+   ],
+   "trail": [
+    4,
+    0.59
+   ],
+   "before": [
+    6,
+    0.79
+   ],
+   "after": [
+    7,
+    0.24
+   ],
+   "afterNoMara": [
+    7,
+    0.17
+   ]
+  },
+  "kap": {
+   "n": 90,
+   "m4": 30,
+   "m5": 60,
+   "champ": 16,
+   "champPacks": 5,
+   "leaders": [
+    4,
+    5
+   ]
+  },
+  "trailElite": {
+   "champ": [
+    "upyr@3",
+    "upyr@3",
+    "upyr@3"
+   ],
+   "champPacks": 1,
+   "leaderPack": 14,
+   "champPack": 10,
+   "champPackKinds": "ccuuu"
+  }
+ }
+}

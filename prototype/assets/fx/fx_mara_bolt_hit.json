@@ -1,0 +1,19 @@
+{
+ "effect": "Попадание сгустка",
+ "draw": "at the impact point (pivot on the ground)",
+ "pivot": [
+  16,
+  24
+ ],
+ "fps": 12,
+ "loop": false,
+ "image": "fx_mara_bolt_hit.png",
+ "frame_size": [
+  32,
+  32
+ ],
+ "frame_count": 5,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

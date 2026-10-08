@@ -638,5 +638,41 @@
  "beltSize": 4,
  "beltStack": 5,
  "potionCooldown": 1.0,
- "potionCooldownRule": "GDD v1.6 §4.4: перезарядка 1 с своя у каждого вида (жизнь / Ярь); живая вода (и будущая «Чистая вода») — мгновенно, вне перезарядки"
+ "potionCooldownRule": "GDD v1.6 §4.4: перезарядка 1 с своя у каждого вида (жизнь / Ярь); живая вода (и будущая «Чистая вода») — мгновенно, вне перезарядки",
+ "scrolls": {
+  "beresta": {
+   "_about": "GDD v1.7 §4.4: «Береста возврата» — открывает Чуров проход в Ладогу и обратно на 60 с, каст 1 с, цена 25; §6.9: 1×1, стопка до 20 в котомке; пояс — только зелья (act1_texts ui.error.belt). Ладоги в прототипе нет: конец прохода «в городе» — у крады Залесья (town). Поля с _ph — заглушки прототипа (чисел в GDD нет).",
+   "name": "Береста возврата",
+   "nameKey": "item.beresta",
+   "icon": "beresta",
+   "stack": 20,
+   "price": 25,
+   "castTime": 1,
+   "portalLife": 60,
+   "town": {
+    "zone": "zalesye",
+    "at": "krada",
+    "dist": 3.2,
+    "_ph": "место выхода прохода у крады (тайлы) — заглушка, Ладоги нет"
+   },
+   "portalReach": 0.9,
+   "portalR": 0.45,
+   "closeOnReturn": true,
+   "oneAtATime": true,
+   "_ph": [
+    "portalReach",
+    "portalR",
+    "town.dist",
+    "closeOnReturn",
+    "oneAtATime"
+   ]
+  }
+ },
+ "starterBag": [
+  {
+   "scroll": "beresta",
+   "count": 3
+  }
+ ],
+ "starterBagNote": "GDD §4.4: на старте 3 бересты (в котомке, стопкой)"
 }

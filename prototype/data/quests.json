@@ -51,7 +51,9 @@
      "event": "hearthFreed"
     },
     "required": false,
-    "_note": "Отбить огнище: перебить пачку, затем держать ЛКМ 3 с (урон прерывает). Реплики bark.m1.hearth1–3 / hearth_after — в коде капища (src/systems/kapishche.js)"
+    "_note": "Отбить огнище: перебить пачку, затем держать ЛКМ 3 с (урон прерывает). Реплики bark.m1.hearth1–3 / hearth_after — в коде капища (src/systems/kapishche.js)",
+    "optional": true,
+    "_optionalNote": "GDD v1.8.1 §8.2: необязательная цель — после «Миссия пройдена» строка остаётся в трекере, огнища можно отбить позже"
    },
    {
     "id": "krivsha",

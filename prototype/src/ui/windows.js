@@ -8,6 +8,7 @@ import { itemLines, RARITY, SLOT_NAMES, TYPE_SLOTS } from '../data/items.js';
 import { ATTRS, hitChance } from '../data/progression.js';
 import { itemColor } from '../systems/loot.js';
 import { SkillsWindow } from './skills_window.js';
+import { SKILLS, rankOf } from '../data/skills.js';
 
 const INV = UI_ATLAS.inventory_layout, CHR = UI_ATLAS.character_layout;
 const CELL = INV.cell;
@@ -108,6 +109,7 @@ export class InventoryUI {
 
   quickEquip(entry) {
     const g = this.game, h = g.hero, it = entry.item;
+    if (it.kind === 'scroll') { g.useScroll(it); return; }   // береста возврата: ПКМ — прочитать (каст 1 с, GDD §4.4)
     if (it.kind === 'potion') {   // ПКМ по зелью в котомке — тот же КД и та же проверка, что и с пояса (QA B-15)
       if (!h.canDrink(it.potion, g)) { if (h.potionCd > 0) g.audio.play('error'); return; }
       h.inv.remove(it); h.applyPotion(it.potion, g); return;
@@ -216,10 +218,11 @@ export class InventoryUI {
       const hov = H.entry === e && !this.hand;
       ctx.save();
       ctx.globalAlpha = hov ? 0.45 : 0.4;
-      rect(ctx, x + 1, y + 1, w - 1, hh - 1, hov ? PAL.bronze : e.item.kind === 'potion' ? PAL.wood : PAL[RARITY[e.item.rarity].tint]);
+      rect(ctx, x + 1, y + 1, w - 1, hh - 1, hov ? PAL.bronze : e.item.kind !== 'gear' ? PAL.wood : PAL[RARITY[e.item.rarity].tint]);
       ctx.restore();
       if (hov) frame(ctx, x, y, w + 1, hh + 1, PAL.bronze_lt);
       drawIcon(ctx, e.item.icon, x, y, w + 1, hh + 1);
+      if (e.item.kind === 'scroll' && e.item.count > 1) drawText(ctx, x + w - 2, y + hh - 9, String(e.item.count), PAL.linen, { align: 'r' });   // стопка бересты
       if (e.item.kind === 'gear' && e.item.req > h.level) { ctx.save(); ctx.globalAlpha = 0.25; rect(ctx, x + 1, y + 1, w - 1, hh - 1, PAL.red); ctx.restore(); }
     }
     // куда ляжет предмет с курсора
@@ -335,7 +338,7 @@ function tipBox(ctx, x, y, w, h) {
 /** Подсказка предмета (как на макете: имя цветом редкости, база, урон/броня, требования, свойства, сравнение). */
 export function drawItemTooltip(ctx, it, hero, ax, ay, compare = true, anchor = 'tr') {
   const { lines, seps } = itemLines(it);
-  const L = lines.map(([t, c]) => [t, c === 'req' ? (hero.level < it.req ? PAL.red_lt : PAL.linen) : PAL[c]]);
+  const L = lines.map(([t, c]) => [t, c === 'req' ? (hero.level < it.req ? PAL.red_lt : PAL.linen) : c === 'lore' ? PAL.bronze_lt : PAL[c], c === 'lore']);
   const sepSet = new Set(seps);
   if (it.kind === 'gear') {
     if (hero.level < it.req) { sepSet.add(L.length - 1); L.push([`Снарядить можно с ${it.req}-го уровня`, PAL.mist]); }
@@ -353,8 +356,11 @@ export function drawItemTooltip(ctx, it, hero, ax, ay, compare = true, anchor = 
   y = Math.max(2, Math.min(312 - h, y));
   tipBox(ctx, x, y, w, h);
   let yy = y + pad;
-  L.forEach(([t, c], i) => {
-    drawText(ctx, x + Math.round((w - textWidth(t)) / 2), yy, t, c, { shadow: false });
+  L.forEach(([t, c, italic], i) => {
+    const tx = x + Math.round((w - textWidth(t)) / 2);
+    if (italic) {   // присказка былинной вещи — «курсивом» (act1_texts §14): наклон пиксельного шрифта
+      ctx.save(); ctx.transform(1, 0, -0.2, 1, 0.2 * (yy + 8), 0); drawText(ctx, tx, yy, t, c, { shadow: false }); ctx.restore();
+    } else drawText(ctx, tx, yy, t, c, { shadow: false });
     yy += lh;
     if (sepSet.has(i) && i < L.length - 1) { for (let k = x + 8; k < x + w - 8; k += 2) rect(ctx, k, yy - 2, 1, 1, PAL.bronze_dk); yy += 3; }
   });
@@ -366,7 +372,8 @@ function heroSnap(h) {
   const dps = ((h.dmgMin + h.dmgMax) / 2) * h.attacksPerSec * (1 + h.crit * (h.critMult - 1));
   return { dps, dpsN: dps * (1 + (h.vsNechist || 0)), def: h.def, hp: h.maxHp, yar: h.maxYar, ar: h.ar, block: h.block * 100, rf: h.res.fire, rc: h.res.cold, rp: h.res.poison,
     speed: h.speed, ls: h.lifesteal * 100, mf: h.mf, thorns: h.thorns, fire: h.fireDmg, cold: h.coldDmg, spell: h.spellMul * 100,
-    str: h.str, dex: h.dex, vit: h.vit, ene: h.ene };
+    str: h.str, dex: h.dex, vit: h.vit, ene: h.ene,
+    skl: Object.keys(SKILLS).reduce((n, id) => n + rankOf(h, id), 0), pot: h.potionPct || 0 };   // M1c: +к навыкам, сила зелий (былинные)
 }
 /** Как изменятся характеристики, если надеть предмет в слот (примерка с откатом). */
 export function tryOn(h, it, slot) {
@@ -382,6 +389,7 @@ const CMP_KEYS = [
   ['str', 'Сила', 0], ['dex', 'Ловкость', 0], ['vit', 'Живучесть', 0], ['ene', 'Дух', 0],   // QA B-18: свойства тоже
   ['ar', 'Меткость', 0], ['block', 'Блок, %', 0],
   ['rf', 'Сопр. огню, %', 0], ['rc', 'Сопр. холоду, %', 0], ['rp', 'Сопр. яду, %', 0], ['spell', 'Сила чар, %', 0], ['fire', 'Урон огнём', 0], ['cold', 'Урон холодом', 0],
+  ['skl', 'Ранги навыков', 0], ['pot', 'Сила зелий, %', 0],
   ['ls', 'Кража жизни, %', 0], ['thorns', 'Шипы', 0], ['mf', 'Удача в добыче, %', 0], ['speed', 'Скорость бега', 2],
 ];
 /** Сравнение с надетым (QA B-17/B-18): по итоговым числам героя, с учётом свойств; для перстней — с обоими. */

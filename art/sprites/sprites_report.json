@@ -39,7 +39,77 @@
   "fx_safe_ring/fx_safe_ring_grooves_dim.png",
   "fx_safe_ring/fx_safe_ring_runes_dim.png",
   "fx_safe_ring/fx_safe_ring_grooves_lit.png",
-  "fx_safe_ring/fx_safe_ring_runes_lit.png"
+  "fx_safe_ring/fx_safe_ring_runes_lit.png",
+  "krivsha/krivsha_idle_se.png",
+  "krivsha/krivsha_idle_ne.png",
+  "krivsha/krivsha_walk_se.png",
+  "krivsha/krivsha_walk_ne.png",
+  "krivsha/krivsha_claw_se.png",
+  "krivsha/krivsha_claw_ne.png",
+  "krivsha/krivsha_summon_se.png",
+  "krivsha/krivsha_summon_ne.png",
+  "krivsha/krivsha_leap_se.png",
+  "krivsha/krivsha_leap_ne.png",
+  "krivsha/krivsha_emerge_se.png",
+  "krivsha/krivsha_emerge_ne.png",
+  "krivsha/krivsha_hurt_se.png",
+  "krivsha/krivsha_hurt_ne.png",
+  "krivsha/krivsha_death_se.png",
+  "krivsha/krivsha_death_ne.png",
+  "krivsha/krivsha_fire_idle_se.png",
+  "krivsha/krivsha_fire_idle_ne.png",
+  "krivsha/krivsha_fire_walk_se.png",
+  "krivsha/krivsha_fire_walk_ne.png",
+  "krivsha/krivsha_fire_claw_se.png",
+  "krivsha/krivsha_fire_claw_ne.png",
+  "krivsha/krivsha_fire_summon_se.png",
+  "krivsha/krivsha_fire_summon_ne.png",
+  "krivsha/krivsha_fire_emerge_se.png",
+  "krivsha/krivsha_fire_emerge_ne.png",
+  "krivsha/krivsha_fire_hurt_se.png",
+  "krivsha/krivsha_fire_hurt_ne.png",
+  "krivsha/krivsha_fire_death_se.png",
+  "krivsha/krivsha_fire_death_ne.png",
+  "mara/mara_idle_se.png",
+  "mara/mara_idle_ne.png",
+  "mara/mara_walk_se.png",
+  "mara/mara_walk_ne.png",
+  "mara/mara_cast_se.png",
+  "mara/mara_cast_ne.png",
+  "mara/mara_heal_se.png",
+  "mara/mara_heal_ne.png",
+  "mara/mara_hurt_se.png",
+  "mara/mara_hurt_ne.png",
+  "mara/mara_death_se.png",
+  "mara/mara_death_ne.png",
+  "anchutka/anchutka_idle_se.png",
+  "anchutka/anchutka_idle_ne.png",
+  "anchutka/anchutka_walk_se.png",
+  "anchutka/anchutka_walk_ne.png",
+  "anchutka/anchutka_coal_throw_se.png",
+  "anchutka/anchutka_coal_throw_ne.png",
+  "anchutka/anchutka_hurt_se.png",
+  "anchutka/anchutka_hurt_ne.png",
+  "anchutka/anchutka_death_se.png",
+  "anchutka/anchutka_death_ne.png",
+  "fx_anchutka_coal/fx_anchutka_coal.png",
+  "ognishche/ognishche_desecrated.png",
+  "ognishche/ognishche_consecrate.png",
+  "ognishche/ognishche_consecrated.png",
+  "ognishche/ognishche_progress.png",
+  "idol_perun/idol_perun_burning.png",
+  "idol_perun/idol_perun_extinguish.png",
+  "idol_perun/idol_perun_smoking.png",
+  "fx_krivsha_fire_trail/fx_krivsha_fire_trail.png",
+  "fx_krivsha_aura/fx_krivsha_aura.png",
+  "fx_krivsha_summon/fx_krivsha_summon.png",
+  "fx_krivsha_leap_burst/fx_krivsha_leap_burst.png",
+  "fx_mara_ash_trail/fx_mara_ash_trail.png",
+  "fx_mara_bolt/fx_mara_bolt.png",
+  "fx_mara_bolt_hit/fx_mara_bolt_hit.png",
+  "fx_krivsha_feed/fx_krivsha_feed_back.png",
+  "fx_krivsha_feed/fx_krivsha_feed.png",
+  "fx_krivsha_feed/fx_krivsha_feed_source.png"
  ],
  "checks": {
   "arsonist_idle_se": {
@@ -199,6 +269,286 @@
    "alpha_ok": true
   },
   "fx_safe_ring_runes_lit": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_idle_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_idle_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_walk_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_walk_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_claw_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_claw_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_summon_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_summon_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_leap_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_leap_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_emerge_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_emerge_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_hurt_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_hurt_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_death_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_death_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_fire_idle_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_fire_idle_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_fire_walk_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_fire_walk_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_fire_claw_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_fire_claw_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_fire_summon_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_fire_summon_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_fire_emerge_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_fire_emerge_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_fire_hurt_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_fire_hurt_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_fire_death_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "krivsha_fire_death_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "mara_idle_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "mara_idle_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "mara_walk_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "mara_walk_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "mara_cast_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "mara_cast_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "mara_heal_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "mara_heal_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "mara_hurt_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "mara_hurt_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "mara_death_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "mara_death_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "anchutka_idle_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "anchutka_idle_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "anchutka_walk_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "anchutka_walk_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "anchutka_coal_throw_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "anchutka_coal_throw_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "anchutka_hurt_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "anchutka_hurt_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "anchutka_death_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "anchutka_death_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_anchutka_coal": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "ognishche_desecrated": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "ognishche_consecrate": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "ognishche_consecrated": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "ognishche_progress": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "idol_perun_burning": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "idol_perun_extinguish": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "idol_perun_smoking": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_krivsha_fire_trail": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_krivsha_aura": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_krivsha_summon": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_krivsha_leap_burst": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_mara_ash_trail": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_mara_bolt": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_mara_bolt_hit": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_krivsha_feed_back": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_krivsha_feed": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_krivsha_feed_source": {
    "palette_ok": true,
    "alpha_ok": true
   }
@@ -442,7 +792,7 @@
     58,
     58,
     65,
-    72,
+    73,
     66
    ],
    "flame_rest": [
@@ -454,17 +804,17 @@
     79
    ],
    "total_top_idle": [
-    79,
-    82,
-    84,
-    79,
-    82,
-    84
+    78,
+    81,
+    83,
+    78,
+    81,
+    83
    ],
    "total_top_rest": [
     100,
     103,
-    98,
+    97,
     102,
     105,
     103
@@ -551,6 +901,562 @@
     270
    ],
    "hero_distance_tiles": 4.85
+  },
+  "krivsha": {
+   "idle_se": [
+    95,
+    94,
+    93,
+    93
+   ],
+   "idle_ne": [
+    95,
+    94,
+    93,
+    93
+   ],
+   "walk_se": [
+    94,
+    92,
+    91,
+    92,
+    94,
+    92,
+    91,
+    92
+   ],
+   "walk_ne": [
+    94,
+    92,
+    91,
+    92,
+    94,
+    92,
+    91,
+    92
+   ],
+   "claw_se": [
+    96,
+    98,
+    98,
+    97,
+    97,
+    98,
+    89,
+    92
+   ],
+   "claw_ne": [
+    96,
+    96,
+    97,
+    97,
+    97,
+    98,
+    89,
+    92
+   ],
+   "summon_se": [
+    97,
+    98,
+    98,
+    98,
+    81,
+    74,
+    85,
+    93
+   ],
+   "summon_ne": [
+    97,
+    98,
+    101,
+    98,
+    81,
+    74,
+    85,
+    93
+   ],
+   "leap_se": [
+    81,
+    76,
+    97,
+    92,
+    93,
+    72,
+    81,
+    80
+   ],
+   "leap_ne": [
+    81,
+    76,
+    97,
+    92,
+    93,
+    72,
+    81,
+    80
+   ],
+   "emerge_se": [
+    78,
+    86,
+    97,
+    97,
+    96,
+    95
+   ],
+   "emerge_ne": [
+    78,
+    86,
+    97,
+    97,
+    96,
+    95
+   ],
+   "hurt_se": [
+    99,
+    95
+   ],
+   "hurt_ne": [
+    99,
+    95
+   ],
+   "death_se": [
+    100,
+    97,
+    86,
+    75,
+    67,
+    62,
+    52,
+    39,
+    35,
+    35,
+    35,
+    35
+   ],
+   "death_ne": [
+    100,
+    97,
+    86,
+    75,
+    67,
+    62,
+    52,
+    39,
+    35,
+    35,
+    35,
+    35
+   ],
+   "fire_idle_se": [
+    107,
+    104,
+    101,
+    104
+   ],
+   "fire_idle_ne": [
+    107,
+    104,
+    101,
+    104
+   ],
+   "fire_walk_se": [
+    106,
+    102,
+    99,
+    103,
+    106,
+    102,
+    99,
+    103
+   ],
+   "fire_walk_ne": [
+    106,
+    102,
+    99,
+    103,
+    106,
+    102,
+    99,
+    103
+   ],
+   "fire_claw_se": [
+    108,
+    106,
+    106,
+    105,
+    107,
+    110,
+    99,
+    102
+   ],
+   "fire_claw_ne": [
+    108,
+    106,
+    106,
+    105,
+    107,
+    110,
+    99,
+    102
+   ],
+   "fire_summon_se": [
+    109,
+    107,
+    107,
+    107,
+    91,
+    86,
+    95,
+    103
+   ],
+   "fire_summon_ne": [
+    109,
+    107,
+    107,
+    107,
+    91,
+    86,
+    95,
+    103
+   ],
+   "fire_emerge_se": [
+    78,
+    93,
+    106,
+    107,
+    108,
+    106
+   ],
+   "fire_emerge_ne": [
+    78,
+    93,
+    106,
+    107,
+    108,
+    106
+   ],
+   "fire_hurt_se": [
+    111,
+    104
+   ],
+   "fire_hurt_ne": [
+    111,
+    104
+   ],
+   "fire_death_se": [
+    112,
+    106,
+    86,
+    75,
+    67,
+    62,
+    52,
+    39,
+    35,
+    35,
+    35,
+    35
+   ],
+   "fire_death_ne": [
+    112,
+    106,
+    86,
+    75,
+    67,
+    62,
+    52,
+    39,
+    35,
+    35,
+    35,
+    35
+   ]
+  },
+  "mara": {
+   "idle_se": [
+    53,
+    53,
+    52,
+    52,
+    51,
+    52
+   ],
+   "idle_ne": [
+    53,
+    53,
+    52,
+    52,
+    51,
+    52
+   ],
+   "walk_se": [
+    53,
+    53,
+    53,
+    53,
+    52,
+    53
+   ],
+   "walk_ne": [
+    53,
+    53,
+    53,
+    53,
+    52,
+    53
+   ],
+   "cast_se": [
+    53,
+    52,
+    55,
+    52,
+    53,
+    53
+   ],
+   "cast_ne": [
+    53,
+    52,
+    55,
+    52,
+    53,
+    53
+   ],
+   "heal_se": [
+    53,
+    52,
+    51,
+    52,
+    52,
+    53
+   ],
+   "heal_ne": [
+    53,
+    52,
+    51,
+    52,
+    52,
+    53
+   ],
+   "hurt_se": [
+    51,
+    50
+   ],
+   "hurt_ne": [
+    51,
+    50
+   ],
+   "death_se": [
+    53,
+    51,
+    44,
+    39,
+    33,
+    27,
+    24,
+    25
+   ],
+   "death_ne": [
+    53,
+    51,
+    44,
+    39,
+    33,
+    27,
+    24,
+    25
+   ]
+  },
+  "anchutka": {
+   "idle_se": [
+    27,
+    26,
+    27,
+    27
+   ],
+   "idle_ne": [
+    27,
+    26,
+    27,
+    27
+   ],
+   "walk_se": [
+    27,
+    26,
+    26,
+    27,
+    26,
+    26
+   ],
+   "walk_ne": [
+    27,
+    26,
+    26,
+    27,
+    26,
+    26
+   ],
+   "coal_throw_se": [
+    27,
+    27,
+    27,
+    27,
+    27
+   ],
+   "coal_throw_ne": [
+    27,
+    27,
+    27,
+    27,
+    27
+   ],
+   "hurt_se": [
+    28,
+    27
+   ],
+   "hurt_ne": [
+    28,
+    27
+   ],
+   "death_se": [
+    28,
+    25,
+    22,
+    15,
+    13,
+    15
+   ],
+   "death_ne": [
+    28,
+    25,
+    22,
+    15,
+    13,
+    15
+   ]
+  },
+  "fx_anchutka_coal": {
+   "frame": [
+    12,
+    12
+   ],
+   "pivot": [
+    6,
+    6
+   ]
+  },
+  "ognishche": {
+   "frame": [
+    64,
+    120
+   ],
+   "pivot": [
+    32,
+    108
+   ],
+   "desecrated": [
+    75,
+    77,
+    80,
+    77,
+    82,
+    87
+   ],
+   "consecrated": [
+    75,
+    77,
+    80,
+    75,
+    77,
+    80
+   ],
+   "progress_frame": [
+    72,
+    124
+   ]
+  },
+  "idol_perun": {
+   "frame": [
+    80,
+    160
+   ],
+   "pivot": [
+    40,
+    148
+   ],
+   "body": 104,
+   "flame": [
+    132,
+    136,
+    133,
+    132,
+    124,
+    127
+   ],
+   "burning_total": [
+    146,
+    136,
+    140,
+    144,
+    140,
+    142
+   ]
+  },
+  "fx_krivsha_feed": {
+   "frame": [
+    128,
+    128
+   ],
+   "pivot": [
+    64,
+    116
+   ],
+   "frames": 8,
+   "fps": 10,
+   "heal_frame": 6,
+   "duration_s": 0.8,
+   "top_px": [
+    31,
+    49,
+    85,
+    103,
+    64,
+    66,
+    81,
+    81
+   ]
+  },
+  "fx_m1b": {
+   "trail": [
+    40,
+    28
+   ],
+   "aura": [
+    80,
+    48
+   ],
+   "summon": [
+    48,
+    56
+   ],
+   "leap_burst": [
+    64,
+    120
+   ],
+   "bolt": [
+    24,
+    16
+   ],
+   "bolt_hit": [
+    32,
+    32
+   ]
+  },
+  "m1b_scenes": {
+   "krivsha": "m1b_scenes/krivsha_scene_x3.png",
+   "mara": "m1b_scenes/mara_scene_x3.png",
+   "kapishche": "m1b_scenes/kapishche_scene_x3.png",
+   "feed": "m1b_scenes/krivsha_feed_scene_x3.png",
+   "anchutka": "m1b_scenes/anchutka_scene_x3.png"
   }
  }
 }

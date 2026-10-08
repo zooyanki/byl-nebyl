@@ -6,7 +6,7 @@ import { SUB, circleFree } from './collision.js';
 import { generateTrail } from './trail.js';
 import { generateKapishche } from './kapishche.js';
 
-export const T_GRASS = 0, T_DIRT = 1, T_WATER = 2, T_FOREST = 3;   // T_FOREST — пол чащи (непроходим)
+export const T_GRASS = 0, T_DIRT = 1, T_WATER = 2, T_FOREST = 3, T_ASH = 4;   // T_FOREST — пол чащи (непроходим); T_ASH — пепелище (GDD v1.8.1 B-31)
 // Что закрывает обзор и останавливает снаряды (вода и крада — нет).
 const OPAQUE = new Set(['tree', 'rock', 'wall', 'palisade', 'izba', 'idol', 'gate', 'perun']);
 
@@ -110,9 +110,12 @@ export class GameMap {
 export function generateMap(seed, zone = null) {
   if (zone && zone.path) return generateTrail(seed, zone);
   if (zone && zone.id === 'kapishche') return generateKapishche(seed, zone);
-  const m = new GameMap(MAP_W, MAP_H);
+  // GDD v1.8.1 (B-31): тупик Мары — карта расширена на восток (zone.landmarks.maraDen.mapW); основная часть 48×48 та же
+  const den = zone && zone.landmarks && zone.landmarks.maraDen;
+  const m = new GameMap(den ? den.mapW : MAP_W, MAP_H);
   const rng = makeRng(seed);
-  const W = m.w, H = m.h;
+  const W = m.w, H = m.h, W0 = MAP_W;
+  const inDen = den ? denShape(den) : () => false;
   const S = { x: 24, y: 26 };
   m.start = { x: S.x + 0.5, y: S.y + 0.5 };
   const d = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
@@ -195,16 +198,17 @@ export function generateMap(seed, zone = null) {
     for (let x = 0; x < W; x++) {
       if (m.isBlocked(x, y)) continue;
       if (m.keepClear && m.keepClear.some(([kx, ky]) => kx === x && ky === y)) continue;
-      const e = Math.min(x, y, W - 1 - x, H - 1 - y);
+      if (x >= W0) continue;                                   // восточная пристройка (тупик Мары) — ниже, своим генератором
+      const e = Math.min(x, y, W0 - 1 - x, H - 1 - y);
       const p = e < 2 ? 1 : e === 2 ? 0.55 : e === 3 ? 0.18 : 0;
-      if (p && rng() < p) m.addProp('tree', x, y, 1, { birch: rng() < 0.2 });
+      if (p && rng() < p) { const birch = rng() < 0.2; if (!inDen(x, y)) m.addProp('tree', x, y, 1, { birch }); }   // те же броски — остальная карта не сдвигается
     }
   }
   // --- валуны и отдельные деревья внутри стоят на полутайловой сетке; у дерева непроходим только ствол (½×½ тайла)
   const scatter = (count, size, add) => {
     let placed = 0, tries = 0;
     while (placed < count && tries++ < count * 60) {
-      const x = rng.int(8, W * SUB - 10) / SUB, y = rng.int(8, H * SUB - 10) / SUB;
+      const x = rng.int(8, W0 * SUB - 10) / SUB, y = rng.int(8, H * SUB - 10) / SUB;
       if (d(x, y, S.x, S.y) < 5.5 || nearPack(x, y, 3) || !m.rectFree(x - 1, y - 1, size + 2, size + 2)) continue;
       if (m.objects.some((o) => d(x, y, o.sx, o.sy) < 2.2)) continue;
       if (m.groundAt(Math.floor(x), Math.floor(y)) === T_DIRT && rng() < 0.7) continue;
@@ -215,6 +219,8 @@ export function generateMap(seed, zone = null) {
   scatter(5, 2, (x, y) => m.addProp('rock', x, y, 2));
   // ствол — сабтайл (x, y); рисуем дерево с центром в центре этого сабтайла
   scatter(16, 0.5, (x, y) => m.addProp('tree', x - 0.25, y - 0.25, 1, { birch: rng() < 0.6, fp: [x, y, 0.5, 0.5] }));
+
+  if (den) carveMaraDen(m, den, inDen, makeRng(seed + 7331));   // тупик Мары (GDD v1.8.1 B-31) — после чащи кромки и россыпи
 
   m.computeReach();
   return m;
@@ -244,4 +250,42 @@ export function resolveObjects(m, zone, pos) {
     if (e.at) m.entries[id] = { at: e.at };
     else { const [x, y] = pos(e); m.entries[id] = { x, y }; }
   }
+}
+
+
+/** Тупик Мары Пепельной (GDD v1.8.1 B-31): поляна-пепелище за избой 2 на северо-востоке, вход — горловина от восточной
+ *  кромки Залесья; у входа обгоревший сарай и пепел (вход читается с пути «ворота частокола → изба 3»). */
+function denShape(den) {
+  const [cx, cy] = den.center, C = den.corridor;
+  return (x, y) => Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= den.clearR || (x >= C.x0 && x <= C.x1 && y >= C.y0 && y <= C.y1);
+}
+function carveMaraDen(m, den, inDen, rng) {
+  const W = m.w, H = m.h, W0 = MAP_W;
+  m.maraDen = { center: [...den.center], clearR: den.clearR };
+  // пол: пепелище в тупике и горловине
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (inDen(x, y)) m.ground[y * W + x] = T_ASH;
+  // чаща восточной пристройки: всё вне тупика непроходимо и закрывает обзор, деревья гуще у кромки поляны
+  const dist = new Uint8Array(W * H).fill(255), q = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (inDen(x, y)) { dist[y * W + x] = 0; q.push(y * W + x); }
+  for (let k = 0; k < q.length; k++) {
+    const i = q[k], x = i % W, y = (i / W) | 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy, j = ny * W + nx;
+      if (nx < 0 || ny < 0 || nx >= W || ny >= H || dist[j] <= dist[i] + 1) continue;
+      dist[j] = dist[i] + 1; if (dist[j] < 8) q.push(j);
+    }
+  }
+  for (let y = 0; y < H; y++) for (let x = W0 - 2; x < W; x++) {
+    if (inDen(x, y) || m.isBlocked(x, y)) continue;
+    m.ground[y * W + x] = T_FOREST;
+    m.markRect(x, y, 1, 1, true);
+    const dd = dist[y * W + x], p = dd <= 1 ? 0.8 : dd === 2 ? 0.5 : dd === 3 ? 0.3 : 0.08;
+    if (rng() < p) m.addProp('tree', x, y, 1, { birch: rng() < 0.2, shared: true });
+  }
+  m.forestFrom = W0 - 2;                                   // мини-карта: непроходимые тайлы без пропса за этой x — лес
+  // обгоревший сарай у входа (южнее горловины) и пепел на подходе
+  const B = den.barn, b = m.addProp('izba', B[0], B[1], B[2], { burnt: true, fp: [B[0], B[1], B[2], 2] });
+  b.depth = B[0] + B[2] / 2 + B[1] + 1;
+  for (const [x, y] of den.ash || []) m.addProp('ash', x, y, 1, { fp: [x + 0.5, y + 0.5, 0, 0] });
+  for (const [x, y] of den.ash || []) if (m.groundAt(Math.floor(x), Math.floor(y)) !== T_WATER) m.ground[Math.floor(y) * W + Math.floor(x)] = T_ASH;
 }

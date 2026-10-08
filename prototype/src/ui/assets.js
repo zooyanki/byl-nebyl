@@ -1,12 +1,13 @@
 // PNG-ассеты окон и иконок, выгруженные из исходников художника скриптом tools/export_ui.py.
 import { UI_ATLAS } from '../data/ui_atlas.js';
 import { loadRestFx } from '../render/rest_fx.js';
+import { loadBossArt } from '../render/boss_art.js';
 
 export const IMG = {};
 const FILES = { items: 'assets/items.png', winInv: 'assets/win_inventory.png', winChar: 'assets/win_character.png', buttons: 'assets/hud_buttons.png', winSkills: 'assets/win_skills.png', quest: 'assets/hud_quest.png' };
 
 export function loadAssets() {
-  return Promise.all([loadRestFx(), ...Object.entries(FILES).map(([k, src]) => new Promise((res) => {
+  return Promise.all([loadRestFx(), loadBossArt(), ...Object.entries(FILES).map(([k, src]) => new Promise((res) => {
     const im = new Image();
     im.onload = () => res();
     im.onerror = () => { console.warn('Не загрузился ассет', src); res(); };

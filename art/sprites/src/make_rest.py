@@ -192,7 +192,7 @@ def run(MEAS):
                            "frame_size": [R.GR_W, R.GR_H], "pivot": list(R.GR_PIV), "count": 8},
                 "rune": {"dim": "fx_safe_ring_runes_dim.png", "lit": "fx_safe_ring_runes_lit.png",
                          "frame_size": [R.RU_W, R.RU_H], "pivot": list(R.RU_PIV), "count": 4}},
-        states={"dim": "always on: barely visible dark grooves", "lit": "optional: bronze while the hero rests inside"},
+        states={"dim": "dark grooves, shown at 50% when the hero is within 3 tiles of the border", "lit": "bronze, while the hero rests inside"},
         placement=dict(
             centre="zone centre = pivot of the крада / Чуров камень / костёр (ground point, screen px)",
             ellipse="ground circle of radius R tiles -> screen ellipse rx = R*16*sqrt(2) = R*22.627, ry = R*8*sqrt(2) = R*11.314 (scale.md §1: 22.6 / 11.3 px per tile)",
@@ -203,8 +203,10 @@ def run(MEAS):
                        "draw each piece with its pivot at (centre.x + round(x), centre.y + round(y))"],
             reference_impl="sprites/src/effects_rest.py: ring_layout(radius_tiles), assemble_ring()",
             spacing_px=R.SPACING_PX, rune_every=R.RUNE_EVERY),
-        render_hint=dict(opacity_dim=0.5, reveal="fade in to 1.0 when the hero is within 2 tiles of the border, "
-                         "so the ring is noticed where it matters (GDD §12.1.5: «видно у границы»)",
+        render_hint=dict(opacity=0.5,
+                         visible_when="the hero is within 3 tiles of the border (inside or outside) OR is resting in the zone; "
+                                      "otherwise hidden (GDD v1.7.1 §12.1.5 engine rule)",
+                         state_rule="dim while visible; lit while the hero rests inside",
                          sort="ground decal layer, under characters and objects"),
         layouts={"R10": dict(radius_tiles=10, used_by="крада / точка возрождения", perimeter_px=round(per10, 1),
                               count=len(lay10), pieces=lay10),
@@ -232,7 +234,10 @@ def run(MEAS):
     # ---- 6. composite review: крада (rest) + hero + sparks + ring ----------------------------
     CW, CH = 480, 270
     kc = (240, 112)
-    hero = pk.sprite_to_index(__import__("sprites_rus").hero())
+    import sys as _sys
+    _sys.path.insert(0, "/workspace/game/art/teaser/src")
+    import teaser_sprites as _TS                      # hero idle pose (sword lowered), read-only import
+    hero = pk.sprite_to_index(_TS.hero_pose("idle"))[:, ::-1].copy()   # mirrored: faces the крада (left)
     hero_at = (300, 158)
     frames = []
     ring = R.assemble_ring(10, "lit", (CW, CH), kc, lay10)

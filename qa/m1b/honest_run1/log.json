@@ -1,0 +1,2782 @@
+{
+ "log": [
+  {
+   "wall": "21:58:02",
+   "t": 0,
+   "kind": "start",
+   "sig": "Доберись до капища | Спаси выживших 0/3 | Отбей огнища у упырей 0/3 [серым]",
+   "shot": "01_start"
+  },
+  {
+   "wall": "21:58:02",
+   "t": 0.6,
+   "zone": "zalesye",
+   "kind": "zone_zalesye",
+   "sig": "Доберись до капища | Спаси выживших 0/3 | Отбей огнища у упырей 0/3 [серым]",
+   "lvl": 1,
+   "xp": 0,
+   "hp": "70/70",
+   "phase": "zal_clear",
+   "shot": "02_zone_zalesye"
+  },
+  {
+   "wall": "21:58:04",
+   "t": 302.7,
+   "zone": "zalesye",
+   "kind": "tracker",
+   "sig": "Доберись до капища | Спаси выживших 1/3 | Отбей огнища у упырей 0/3 [серым]",
+   "lvl": 2,
+   "xp": 322,
+   "hp": "72/78",
+   "phase": "zal_huts",
+   "shot": "03_tracker"
+  },
+  {
+   "wall": "21:58:05",
+   "t": 321.6,
+   "zone": "zalesye",
+   "kind": "tracker",
+   "sig": "Доберись до капища | Спаси выживших 2/3 | Отбей огнища у упырей 0/3 [серым]",
+   "lvl": 2,
+   "xp": 322,
+   "hp": "78/78",
+   "phase": "zal_huts",
+   "shot": "04_tracker"
+  },
+  {
+   "wall": "21:58:05",
+   "t": 330.7,
+   "zone": "zalesye",
+   "kind": "tracker",
+   "sig": "Спаси выживших 3/3 [✓] | Доберись до капища | Отбей огнища у упырей 0/3 [серым]",
+   "lvl": 2,
+   "xp": 322,
+   "hp": "78/78",
+   "phase": "zal_huts",
+   "shot": "05_tracker"
+  },
+  {
+   "wall": "21:58:05",
+   "t": 334.7,
+   "zone": "zalesye",
+   "kind": "tracker",
+   "sig": "Доберись до капища | Отбей огнища у упырей 0/3 [серым] | Одолей Крившу [серым]",
+   "lvl": 2,
+   "xp": 322,
+   "hp": "78/78",
+   "phase": "zal_huts",
+   "shot": "06_tracker"
+  },
+  {
+   "wall": "21:58:06",
+   "t": 341.8,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Доберись до капища | Отбей огнища у упырей 0/3 [серым] | Одолей Крившу [серым]",
+   "lvl": 2,
+   "xp": 322,
+   "hp": "78/78",
+   "phase": "zal_exit",
+   "shot": "07_zone_trail"
+  },
+  {
+   "wall": "21:58:07",
+   "t": 380.5,
+   "zone": "zalesye",
+   "kind": "zone_zalesye",
+   "sig": "Доберись до капища | Отбей огнища у упырей 0/3 [серым] | Одолей Крившу [серым]",
+   "lvl": 2,
+   "xp": 414,
+   "hp": "78/78",
+   "phase": "trail_march",
+   "shot": "08_zone_zalesye"
+  },
+  {
+   "wall": "21:58:07",
+   "t": 387.5,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Доберись до капища | Отбей огнища у упырей 0/3 [серым] | Одолей Крившу [серым]",
+   "lvl": 2,
+   "xp": 414,
+   "hp": "78/78",
+   "phase": "trail_march",
+   "shot": "09_zone_trail"
+  },
+  {
+   "wall": "21:58:08",
+   "t": 443.4,
+   "zone": "trail",
+   "kind": "tracker",
+   "sig": "Доберись до капища | Найди поджигателя | Отбей огнища у упырей 0/3 [серым]",
+   "lvl": 3,
+   "xp": 634,
+   "hp": "7/86",
+   "phase": "trail_march",
+   "shot": "10_tracker"
+  },
+  {
+   "wall": "21:58:08",
+   "t": 454.5,
+   "zone": "zalesye",
+   "kind": "zone_zalesye",
+   "sig": "Доберись до капища | Найди поджигателя | Отбей огнища у упырей 0/3 [серым]",
+   "lvl": 3,
+   "xp": 655,
+   "hp": "86/86",
+   "phase": "trail_march",
+   "shot": "11_zone_zalesye"
+  },
+  {
+   "wall": "21:58:08",
+   "t": 461.5,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Доберись до капища | Найди поджигателя | Отбей огнища у упырей 0/3 [серым]",
+   "lvl": 3,
+   "xp": 655,
+   "hp": "86/86",
+   "phase": "trail_march",
+   "shot": "12_zone_trail"
+  },
+  {
+   "wall": "21:58:09",
+   "t": 500.4,
+   "zone": "zalesye",
+   "kind": "zone_zalesye",
+   "sig": "Доберись до капища | Найди поджигателя | Отбей огнища у упырей 0/3 [серым]",
+   "lvl": 3,
+   "xp": 743,
+   "hp": "86/86",
+   "phase": "trail_march",
+   "shot": "13_zone_zalesye"
+  },
+  {
+   "wall": "21:58:09",
+   "t": 507.3,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Доберись до капища | Найди поджигателя | Отбей огнища у упырей 0/3 [серым]",
+   "lvl": 3,
+   "xp": 743,
+   "hp": "86/86",
+   "phase": "trail_march",
+   "shot": "14_zone_trail"
+  },
+  {
+   "wall": "21:58:10",
+   "t": 532.1,
+   "zone": "zalesye",
+   "kind": "zone_zalesye",
+   "sig": "Доберись до капища | Найди поджигателя | Отбей огнища у упырей 0/3 [серым]",
+   "lvl": 3,
+   "xp": 743,
+   "hp": "86/86",
+   "phase": "trail_march",
+   "shot": "15_zone_zalesye"
+  },
+  {
+   "wall": "21:58:10",
+   "t": 539.1,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Доберись до капища | Найди поджигателя | Отбей огнища у упырей 0/3 [серым]",
+   "lvl": 3,
+   "xp": 743,
+   "hp": "86/86",
+   "phase": "trail_march",
+   "shot": "16_zone_trail"
+  },
+  {
+   "wall": "21:58:11",
+   "t": 629.7,
+   "zone": "zalesye",
+   "kind": "zone_zalesye",
+   "sig": "Доберись до капища | Найди поджигателя | Отбей огнища у упырей 0/3 [серым]",
+   "lvl": 3,
+   "xp": 1060,
+   "hp": "86/86",
+   "phase": "trail_march",
+   "shot": "17_zone_zalesye"
+  },
+  {
+   "wall": "21:58:11",
+   "t": 636.6,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Доберись до капища | Найди поджигателя | Отбей огнища у упырей 0/3 [серым]",
+   "lvl": 3,
+   "xp": 1060,
+   "hp": "86/86",
+   "phase": "trail_march",
+   "shot": "18_zone_trail"
+  },
+  {
+   "wall": "21:58:12",
+   "t": 668.6,
+   "zone": "zalesye",
+   "kind": "zone_zalesye",
+   "sig": "Доберись до капища | Найди поджигателя | Отбей огнища у упырей 0/3 [серым]",
+   "lvl": 3,
+   "xp": 1060,
+   "hp": "86/86",
+   "phase": "trail_march",
+   "shot": "19_zone_zalesye"
+  },
+  {
+   "wall": "21:58:12",
+   "t": 675.5,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Доберись до капища | Найди поджигателя | Отбей огнища у упырей 0/3 [серым]",
+   "lvl": 3,
+   "xp": 1060,
+   "hp": "86/86",
+   "phase": "trail_march",
+   "shot": "20_zone_trail"
+  },
+  {
+   "wall": "21:58:14",
+   "t": 1193.7,
+   "zone": "kapishche",
+   "kind": "tracker",
+   "sig": "Доберись до капища [✓] | Отбей огнища у упырей 0/3 | Одолей Крившу",
+   "lvl": 4,
+   "xp": 1512,
+   "hp": "94/94",
+   "phase": "trail_gate",
+   "shot": "21_tracker"
+  },
+  {
+   "wall": "21:58:15",
+   "t": 1194,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Доберись до капища [✓] | Отбей огнища у упырей 0/3 | Одолей Крившу",
+   "lvl": 4,
+   "xp": 1512,
+   "hp": "94/94",
+   "phase": "kap_yard",
+   "shot": "22_zone_kapishche"
+  },
+  {
+   "wall": "21:58:15",
+   "t": 1197.7,
+   "zone": "kapishche",
+   "kind": "tracker",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 4,
+   "xp": 1512,
+   "hp": "89/94",
+   "phase": "kap_yard",
+   "shot": "23_tracker"
+  },
+  {
+   "wall": "21:58:17",
+   "t": 1244.9,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 4,
+   "xp": 1855,
+   "hp": "94/94",
+   "phase": "kap_yard",
+   "shot": "24_zone_trail"
+  },
+  {
+   "wall": "21:58:17",
+   "t": 1246.4,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 4,
+   "xp": 1855,
+   "hp": "94/94",
+   "phase": "kap_yard",
+   "shot": "25_zone_kapishche"
+  },
+  {
+   "wall": "21:58:18",
+   "t": 1264.1,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 4,
+   "xp": 1855,
+   "hp": "94/94",
+   "phase": "kap_yard",
+   "shot": "26_zone_trail"
+  },
+  {
+   "wall": "21:58:18",
+   "t": 1265.5,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 4,
+   "xp": 1855,
+   "hp": "94/94",
+   "phase": "kap_yard",
+   "shot": "27_zone_kapishche"
+  },
+  {
+   "wall": "21:58:19",
+   "t": 1287.1,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 4,
+   "xp": 1855,
+   "hp": "94/94",
+   "phase": "kap_yard",
+   "shot": "28_zone_trail"
+  },
+  {
+   "wall": "21:58:19",
+   "t": 1288.6,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 4,
+   "xp": 1855,
+   "hp": "94/94",
+   "phase": "kap_yard",
+   "shot": "29_zone_kapishche"
+  },
+  {
+   "wall": "21:58:20",
+   "t": 1324.7,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 4,
+   "xp": 1999,
+   "hp": "94/94",
+   "phase": "kap_yard",
+   "shot": "30_zone_trail"
+  },
+  {
+   "wall": "21:58:21",
+   "t": 1326.2,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 4,
+   "xp": 1999,
+   "hp": "94/94",
+   "phase": "kap_yard",
+   "shot": "31_zone_kapishche"
+  },
+  {
+   "wall": "21:58:21",
+   "t": 1347.6,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 4,
+   "xp": 2041,
+   "hp": "94/94",
+   "phase": "kap_yard",
+   "shot": "32_zone_trail"
+  },
+  {
+   "wall": "21:58:22",
+   "t": 1349.1,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 4,
+   "xp": 2041,
+   "hp": "94/94",
+   "phase": "kap_yard",
+   "shot": "33_zone_kapishche"
+  },
+  {
+   "wall": "21:58:24",
+   "t": 1419.5,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 2358,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "34_zone_trail"
+  },
+  {
+   "wall": "21:58:24",
+   "t": 1421,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 2358,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "35_zone_kapishche"
+  },
+  {
+   "wall": "21:58:25",
+   "t": 1469.4,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 2586,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "36_zone_trail"
+  },
+  {
+   "wall": "21:58:25",
+   "t": 1470.9,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 2586,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "37_zone_kapishche"
+  },
+  {
+   "wall": "21:58:26",
+   "t": 1498.1,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 2631,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "38_zone_trail"
+  },
+  {
+   "wall": "21:58:27",
+   "t": 1499.5,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 2631,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "39_zone_kapishche"
+  },
+  {
+   "wall": "21:58:28",
+   "t": 1542.7,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 2914,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "40_zone_trail"
+  },
+  {
+   "wall": "21:58:28",
+   "t": 1544.2,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 2914,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "41_zone_kapishche"
+  },
+  {
+   "wall": "21:58:29",
+   "t": 1567.4,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 2933,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "42_zone_trail"
+  },
+  {
+   "wall": "21:58:29",
+   "t": 1568.9,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 2933,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "43_zone_kapishche"
+  },
+  {
+   "wall": "21:58:30",
+   "t": 1595.5,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 2952,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "44_zone_trail"
+  },
+  {
+   "wall": "21:58:30",
+   "t": 1597,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 2952,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "45_zone_kapishche"
+  },
+  {
+   "wall": "21:58:31",
+   "t": 1624.9,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 2971,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "46_zone_trail"
+  },
+  {
+   "wall": "21:58:31",
+   "t": 1626.4,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 2971,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "47_zone_kapishche"
+  },
+  {
+   "wall": "21:58:31",
+   "t": 1642.6,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3001,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "48_zone_trail"
+  },
+  {
+   "wall": "21:58:32",
+   "t": 1644.1,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3001,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "49_zone_kapishche"
+  },
+  {
+   "wall": "21:58:32",
+   "t": 1662,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3031,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "50_zone_trail"
+  },
+  {
+   "wall": "21:58:32",
+   "t": 1663.5,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3031,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "51_zone_kapishche"
+  },
+  {
+   "wall": "21:58:33",
+   "t": 1684,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3061,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "52_zone_trail"
+  },
+  {
+   "wall": "21:58:33",
+   "t": 1685.5,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3061,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "53_zone_kapishche"
+  },
+  {
+   "wall": "21:58:34",
+   "t": 1720.8,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3134,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "54_zone_trail"
+  },
+  {
+   "wall": "21:58:34",
+   "t": 1722.3,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3134,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "55_zone_kapishche"
+  },
+  {
+   "wall": "21:58:35",
+   "t": 1751.1,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3232,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "56_zone_trail"
+  },
+  {
+   "wall": "21:58:35",
+   "t": 1752.6,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3232,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "57_zone_kapishche"
+  },
+  {
+   "wall": "21:58:36",
+   "t": 1783.5,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3378,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "58_zone_trail"
+  },
+  {
+   "wall": "21:58:36",
+   "t": 1784.9,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3378,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "59_zone_kapishche"
+  },
+  {
+   "wall": "21:58:37",
+   "t": 1817.2,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3413,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "60_zone_trail"
+  },
+  {
+   "wall": "21:58:37",
+   "t": 1818.6,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3413,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "61_zone_kapishche"
+  },
+  {
+   "wall": "21:58:37",
+   "t": 1843.5,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3448,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "62_zone_trail"
+  },
+  {
+   "wall": "21:58:38",
+   "t": 1845,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3448,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "63_zone_kapishche"
+  },
+  {
+   "wall": "21:58:38",
+   "t": 1870.2,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3448,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "64_zone_trail"
+  },
+  {
+   "wall": "21:58:38",
+   "t": 1871.7,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3448,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "65_zone_kapishche"
+  },
+  {
+   "wall": "21:58:39",
+   "t": 1892.4,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3448,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "66_zone_trail"
+  },
+  {
+   "wall": "21:58:39",
+   "t": 1893.9,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3448,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "67_zone_kapishche"
+  },
+  {
+   "wall": "21:58:40",
+   "t": 1921.8,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3448,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "68_zone_trail"
+  },
+  {
+   "wall": "21:58:40",
+   "t": 1923.3,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3448,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "69_zone_kapishche"
+  },
+  {
+   "wall": "21:58:40",
+   "t": 1946.3,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3448,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "70_zone_trail"
+  },
+  {
+   "wall": "21:58:41",
+   "t": 1947.7,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3448,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "71_zone_kapishche"
+  },
+  {
+   "wall": "21:58:41",
+   "t": 1988.5,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3594,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "72_zone_trail"
+  },
+  {
+   "wall": "21:58:41",
+   "t": 1989.9,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3594,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "73_zone_kapishche"
+  },
+  {
+   "wall": "21:58:42",
+   "t": 2035.5,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3737,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "74_zone_trail"
+  },
+  {
+   "wall": "21:58:42",
+   "t": 2036.9,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3737,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "75_zone_kapishche"
+  },
+  {
+   "wall": "21:58:43",
+   "t": 2070.6,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3880,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "76_zone_trail"
+  },
+  {
+   "wall": "21:58:43",
+   "t": 2072,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 5,
+   "xp": 3880,
+   "hp": "102/102",
+   "phase": "kap_yard",
+   "shot": "77_zone_kapishche"
+  },
+  {
+   "wall": "21:58:43",
+   "t": 2107.2,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4004,
+   "hp": "110/110",
+   "phase": "kap_yard",
+   "shot": "78_zone_trail"
+  },
+  {
+   "wall": "21:58:44",
+   "t": 2108.6,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4004,
+   "hp": "110/110",
+   "phase": "kap_yard",
+   "shot": "79_zone_kapishche"
+  },
+  {
+   "wall": "21:58:44",
+   "t": 2144.7,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4115,
+   "hp": "110/110",
+   "phase": "kap_yard",
+   "shot": "80_zone_trail"
+  },
+  {
+   "wall": "21:58:44",
+   "t": 2146.1,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4115,
+   "hp": "110/110",
+   "phase": "kap_yard",
+   "shot": "81_zone_kapishche"
+  },
+  {
+   "wall": "21:58:45",
+   "t": 2176.2,
+   "zone": "kapishche",
+   "kind": "boss_rise",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4226,
+   "hp": "57/110",
+   "phase": "kap_h1",
+   "shot": "82_boss_rise"
+  },
+  {
+   "wall": "21:58:45",
+   "t": 2195.6,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4226,
+   "hp": "110/110",
+   "phase": "kap_h1",
+   "shot": "83_zone_trail"
+  },
+  {
+   "wall": "21:58:45",
+   "t": 2197.1,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4226,
+   "hp": "110/110",
+   "phase": "kap_h1",
+   "shot": "84_zone_kapishche"
+  },
+  {
+   "wall": "21:58:46",
+   "t": 2206.4,
+   "zone": "kapishche",
+   "kind": "tracker",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4226,
+   "hp": "110/110",
+   "phase": "kap_h1",
+   "shot": "85_tracker"
+  },
+  {
+   "wall": "21:58:46",
+   "t": 2229.4,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4226,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "86_zone_trail"
+  },
+  {
+   "wall": "21:58:46",
+   "t": 2230.9,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4226,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "87_zone_kapishche"
+  },
+  {
+   "wall": "21:58:47",
+   "t": 2250.3,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4226,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "88_zone_trail"
+  },
+  {
+   "wall": "21:58:47",
+   "t": 2251.7,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4226,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "89_zone_kapishche"
+  },
+  {
+   "wall": "21:58:47",
+   "t": 2281.4,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4331,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "90_zone_trail"
+  },
+  {
+   "wall": "21:58:48",
+   "t": 2282.9,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4331,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "91_zone_kapishche"
+  },
+  {
+   "wall": "21:58:48",
+   "t": 2308.1,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4331,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "92_zone_trail"
+  },
+  {
+   "wall": "21:58:48",
+   "t": 2309.6,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4331,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "93_zone_kapishche"
+  },
+  {
+   "wall": "21:58:49",
+   "t": 2416.7,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4576,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "94_zone_trail"
+  },
+  {
+   "wall": "21:58:49",
+   "t": 2418.1,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4576,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "95_zone_kapishche"
+  },
+  {
+   "wall": "21:58:50",
+   "t": 2543.9,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4961,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "96_zone_trail"
+  },
+  {
+   "wall": "21:58:50",
+   "t": 2545.4,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 4961,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "97_zone_kapishche"
+  },
+  {
+   "wall": "21:58:51",
+   "t": 2635.6,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 5136,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "98_zone_trail"
+  },
+  {
+   "wall": "21:58:51",
+   "t": 2637,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 5136,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "99_zone_kapishche"
+  },
+  {
+   "wall": "21:58:52",
+   "t": 2726,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 5381,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "100_zone_trail"
+  },
+  {
+   "wall": "21:58:52",
+   "t": 2727.5,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 5381,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "101_zone_kapishche"
+  },
+  {
+   "wall": "21:58:53",
+   "t": 2834,
+   "zone": "trail",
+   "kind": "zone_trail",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 5591,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "102_zone_trail"
+  },
+  {
+   "wall": "21:58:53",
+   "t": 2835.5,
+   "zone": "kapishche",
+   "kind": "zone_kapishche",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 5591,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "103_zone_kapishche"
+  },
+  {
+   "wall": "21:58:54",
+   "t": 3020.1,
+   "zone": "kapishche",
+   "kind": "boss_phase2",
+   "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+   "lvl": 6,
+   "xp": 6116,
+   "hp": "110/110",
+   "phase": "kap_h2",
+   "shot": "104_boss_phase2"
+  },
+  {
+   "wall": "21:58:55",
+   "t": 3166.8,
+   "zone": "kapishche",
+   "kind": "tracker",
+   "sig": "Одолей Крившу [✓] | Отбей огнища у упырей 1/3 | Найди поджигателя",
+   "lvl": 7,
+   "xp": 7666,
+   "hp": "118/118",
+   "phase": "kap_h2",
+   "shot": "105_tracker"
+  },
+  {
+   "wall": "21:58:55",
+   "t": 3170.8,
+   "zone": "kapishche",
+   "kind": "tracker",
+   "sig": "Отбей огнища у упырей 1/3 | Найди поджигателя",
+   "lvl": 7,
+   "xp": 7701,
+   "hp": "106/118",
+   "phase": "kap_h2",
+   "shot": "106_tracker"
+  },
+  {
+   "wall": "21:58:56",
+   "t": 3195.7,
+   "zone": "kapishche",
+   "kind": "tracker",
+   "sig": "Отбей огнища у упырей 2/3 | Найди поджигателя",
+   "lvl": 7,
+   "xp": 7806,
+   "hp": "72/127",
+   "phase": "kap_h2",
+   "shot": "107_tracker"
+  },
+  {
+   "wall": "21:58:56",
+   "t": 3196,
+   "zone": "kapishche",
+   "kind": "boss_dead",
+   "sig": "Отбей огнища у упырей 2/3 | Найди поджигателя",
+   "lvl": 7,
+   "xp": 7806,
+   "hp": "72/127",
+   "phase": "kap_boss",
+   "shot": "108_boss_dead"
+  },
+  {
+   "wall": "21:58:56",
+   "t": 3200.8,
+   "zone": "kapishche",
+   "kind": "tracker",
+   "sig": "Найди поджигателя [✓] | Отбей огнища у упырей 2/3",
+   "lvl": 7,
+   "xp": 7806,
+   "hp": "72/127",
+   "phase": "kap_letter",
+   "shot": "109_tracker"
+  },
+  {
+   "wall": "21:58:56",
+   "t": 3201,
+   "zone": "kapishche",
+   "kind": "mission",
+   "sig": "Найди поджигателя [✓] | Отбей огнища у упырей 2/3",
+   "lvl": 7,
+   "xp": 7806,
+   "hp": "72/127",
+   "phase": "kap_h3",
+   "shot": "110_mission"
+  },
+  {
+   "wall": "21:58:57",
+   "t": 3204.8,
+   "zone": "kapishche",
+   "kind": "tracker",
+   "sig": "Отбей огнища у упырей 2/3",
+   "lvl": 7,
+   "xp": 7806,
+   "hp": "72/127",
+   "phase": "kap_h3",
+   "shot": "111_tracker"
+  },
+  {
+   "wall": "21:58:57",
+   "t": 3208.6,
+   "zone": "kapishche",
+   "kind": "tracker",
+   "sig": "Отбей огнища у упырей 3/3 [✓]",
+   "lvl": 7,
+   "xp": 7806,
+   "hp": "72/127",
+   "phase": "kap_h3",
+   "shot": "112_tracker"
+  }
+ ],
+ "fin": {
+  "R": {
+   "deaths": [
+    {
+     "t": 68.2,
+     "zone": "zalesye",
+     "phase": "zal_clear",
+     "x": 32.1,
+     "y": 19.2,
+     "lvl": 2,
+     "boss": false,
+     "info": "{\"lost\":2,\"x\":32.119235759669536,\"y\":19.164454051431836,\"line\":\"death.line1\"}",
+     "near": "upyr@1,upyr@1,upyr@1,mara@4:bylina,anchutka@2,anchutka@2,anchutka@2,anchutka@2,anchutka@2"
+    },
+    {
+     "t": 146.6,
+     "zone": "zalesye",
+     "phase": "zal_clear",
+     "x": 33.1,
+     "y": 19.3,
+     "lvl": 2,
+     "boss": false,
+     "info": "{\"lost\":6,\"x\":33.074332173945585,\"y\":19.29279506277488,\"line\":\"death.line1\"}",
+     "near": "upyr@1,upyr@1,mara@4:bylina,anchutka@2,anchutka@2,anchutka@2,anchutka@2,anchutka@2"
+    },
+    {
+     "t": 267.2,
+     "zone": "zalesye",
+     "phase": "zal_clear",
+     "x": 36,
+     "y": 10.2,
+     "lvl": 2,
+     "boss": false,
+     "info": "{\"lost\":7,\"x\":36.0413535716418,\"y\":10.187721639084018,\"line\":\"death.line5\"}",
+     "near": "upyr@1,upyr@1,upyr@1,upyr@1,mara@4:bylina"
+    },
+    {
+     "t": 377.9,
+     "zone": "trail",
+     "phase": "trail_march",
+     "x": 22.6,
+     "y": 31.5,
+     "lvl": 2,
+     "boss": false,
+     "info": "{\"lost\":9,\"x\":22.584056597148674,\"y\":31.536296994252268,\"line\":\"death.line5\"}",
+     "near": "anchutka@2"
+    },
+    {
+     "t": 451.9,
+     "zone": "trail",
+     "phase": "trail_march",
+     "x": 49.6,
+     "y": 23,
+     "lvl": 3,
+     "boss": false,
+     "info": "{\"lost\":15,\"x\":49.555335267897895,\"y\":23.019565447538085,\"line\":\"death.line3\"}",
+     "near": "upyr@3,upyr@3,chernoyarets_arsonist@3,chernoyarets_arsonist@3"
+    },
+    {
+     "t": 497.7,
+     "zone": "trail",
+     "phase": "trail_march",
+     "x": 58.4,
+     "y": 18.1,
+     "lvl": 3,
+     "boss": false,
+     "info": "{\"lost\":16,\"x\":58.431312212871354,\"y\":18.070291009765075,\"line\":\"death.line1\"}",
+     "near": "anchutka@3,anchutka@3,anchutka@3,anchutka@3,anchutka@3"
+    },
+    {
+     "t": 529.5,
+     "zone": "trail",
+     "phase": "trail_march",
+     "x": 62.9,
+     "y": 17.1,
+     "lvl": 3,
+     "boss": false,
+     "info": "{\"lost\":15,\"x\":62.945860461889254,\"y\":17.095554065973438,\"line\":\"death.line5\"}",
+     "near": "anchutka@3,anchutka@3,anchutka@3,anchutka@3,anchutka@3,upyr@3,upyr@3,upyr@3,upyr@3"
+    },
+    {
+     "t": 627,
+     "zone": "trail",
+     "phase": "trail_march",
+     "x": 105.3,
+     "y": 27.8,
+     "lvl": 3,
+     "boss": false,
+     "info": "{\"lost\":14,\"x\":105.33522028694395,\"y\":27.802962169824287,\"line\":\"death.line5\"}",
+     "near": "upyr@3,upyr@3,chernoyarets_arsonist@3,chernoyarets_arsonist@3,anchutka@3:leader,anchutka@3,anchutka@3,anchutka@3,upyr@3,upyr@3,upyr@3,chernoyarets_arsonist@3,chernoyarets_arsonist@3"
+    },
+    {
+     "t": 665.9,
+     "zone": "trail",
+     "phase": "trail_march",
+     "x": 95.3,
+     "y": 19.9,
+     "lvl": 3,
+     "boss": false,
+     "info": "{\"lost\":13,\"x\":95.33013906723659,\"y\":19.86398384423609,\"line\":\"death.line5\"}",
+     "near": "anchutka@3,anchutka@3,anchutka@3,upyr@3,upyr@3,upyr@3,chernoyarets_arsonist@3,chernoyarets_arsonist@3,anchutka@3:leader,anchutka@3,anchutka@3,anchutka@3,upyr@3,upyr@3"
+    },
+    {
+     "t": 1242.2,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 24.2,
+     "y": 23.6,
+     "lvl": 4,
+     "boss": false,
+     "info": "{\"lost\":21,\"x\":24.198939021813146,\"y\":23.55994266885734,\"line\":\"death.line2\"}",
+     "near": "upyr@4:leader,upyr@4,upyr@4,chernoyarets_arsonist@4"
+    },
+    {
+     "t": 1261.4,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 23.6,
+     "y": 25.6,
+     "lvl": 4,
+     "boss": false,
+     "info": "{\"lost\":19,\"x\":23.630369043126553,\"y\":25.551443501238918,\"line\":\"death.line5\"}",
+     "near": "upyr@4:leader,upyr@4,upyr@4,chernoyarets_arsonist@4"
+    },
+    {
+     "t": 1284.5,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 25.5,
+     "y": 24.7,
+     "lvl": 4,
+     "boss": false,
+     "info": "{\"lost\":17,\"x\":25.453569068444178,\"y\":24.67451108265626,\"line\":\"death.line2\"}",
+     "near": "upyr@4:leader,upyr@4,upyr@4,chernoyarets_arsonist@4"
+    },
+    {
+     "t": 1322,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 32.5,
+     "y": 11.5,
+     "lvl": 4,
+     "boss": false,
+     "info": "{\"lost\":17,\"x\":32.47733219095699,\"y\":11.524159253131636,\"line\":\"death.line3\"}",
+     "near": "anchutka@4,anchutka@4,anchutka@4,anchutka@4"
+    },
+    {
+     "t": 1345,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 24.9,
+     "y": 25.7,
+     "lvl": 4,
+     "boss": false,
+     "info": "{\"lost\":15,\"x\":24.852107738124523,\"y\":25.662017543081657,\"line\":\"death.line1\"}",
+     "near": "upyr@4:leader,upyr@4,chernoyarets_arsonist@4"
+    },
+    {
+     "t": 1416.9,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 39.4,
+     "y": 6.9,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":17,\"x\":39.35214620152163,\"y\":6.8590485026057655,\"line\":\"death.line1\"}",
+     "near": "upyr@4,chernoyarets_arsonist@4,chernoyarets_arsonist@4"
+    },
+    {
+     "t": 1466.8,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 53.4,
+     "y": 22.7,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":18,\"x\":53.35445743157209,\"y\":22.668197802087356,\"line\":\"death.line3\"}",
+     "near": "upyr@4:leader,upyr@4,upyr@4,upyr@4,chernoyarets_arsonist@4,chernoyarets_arsonist@4,anchutka@5,anchutka@5,anchutka@5,anchutka@5,anchutka@5"
+    },
+    {
+     "t": 1495.4,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 50.6,
+     "y": 19.3,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":16,\"x\":50.57045949462044,\"y\":19.30992943123622,\"line\":\"death.line5\"}",
+     "near": "upyr@4:leader,upyr@4,upyr@4,upyr@4,chernoyarets_arsonist@4"
+    },
+    {
+     "t": 1540.1,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 55,
+     "y": 28,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":15,\"x\":54.99021959820042,\"y\":27.985255661185203,\"line\":\"death.line3\"}",
+     "near": "anchutka@5,anchutka@5,anchutka@5,anchutka@5,anchutka@5"
+    },
+    {
+     "t": 1564.8,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 56.3,
+     "y": 29.6,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":13,\"x\":56.32092514872154,\"y\":29.604073690665775,\"line\":\"death.line3\"}",
+     "near": "anchutka@5,anchutka@5,anchutka@5"
+    },
+    {
+     "t": 1592.9,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 56.3,
+     "y": 32.8,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":12,\"x\":56.31270353661475,\"y\":32.78020092714022,\"line\":\"death.line1\"}",
+     "near": "anchutka@5,anchutka@5,anchutka@5,chernoyarets_arsonist@5"
+    },
+    {
+     "t": 1622.3,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 58.6,
+     "y": 33.1,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":11,\"x\":58.583502061165454,\"y\":33.0599009711732,\"line\":\"death.line1\"}",
+     "near": "anchutka@5,anchutka@5,upyr@5,upyr@5,upyr@5,chernoyarets_arsonist@5,chernoyarets_arsonist@5"
+    },
+    {
+     "t": 1640,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 19.8,
+     "y": 35.8,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":10,\"x\":19.798405252510804,\"y\":35.79104201721863,\"line\":\"death.line2\"}",
+     "near": "anchutka@4,anchutka@4"
+    },
+    {
+     "t": 1659.4,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 12.8,
+     "y": 44.8,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":9,\"x\":12.818603580614132,\"y\":44.785007905441326,\"line\":\"death.line1\"}",
+     "near": "anchutka@4,anchutka@4,anchutka@4,anchutka@4,anchutka@4"
+    },
+    {
+     "t": 1681.3,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 25.8,
+     "y": 47.5,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":8,\"x\":25.756062424293813,\"y\":47.45237753111752,\"line\":\"death.line2\"}",
+     "near": "anchutka@4,anchutka@4,anchutka@4,upyr@5,upyr@5,upyr@5,chernoyarets_arsonist@5,chernoyarets_arsonist@5,chernoyarets_arsonist@5"
+    },
+    {
+     "t": 1718.1,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 59.6,
+     "y": 35.5,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":7,\"x\":59.57496150196143,\"y\":35.47498517660061,\"line\":\"death.line5\"}",
+     "near": "upyr@5,upyr@5,chernoyarets_arsonist@5,chernoyarets_arsonist@5"
+    },
+    {
+     "t": 1748.4,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 24.2,
+     "y": 52.6,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":6,\"x\":24.187667234289993,\"y\":52.57806903578614,\"line\":\"death.line1\"}",
+     "near": "upyr@5,upyr@5,upyr@5,chernoyarets_arsonist@5,chernoyarets_arsonist@5"
+    },
+    {
+     "t": 1780.9,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 30.7,
+     "y": 48.8,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":6,\"x\":30.707178178436973,\"y\":48.836757869928846,\"line\":\"death.line2\"}",
+     "near": "upyr@5"
+    },
+    {
+     "t": 1814.6,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 33.5,
+     "y": 51.4,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":10,\"x\":33.509575534411816,\"y\":51.42118651943541,\"line\":\"death.line2\"}",
+     "near": "upyr@5:champion,upyr@5:champion,upyr@5:champion,chernoyarets_arsonist@5,chernoyarets_arsonist@5,upyr@5,upyr@5,upyr@5,chernoyarets_arsonist@5,chernoyarets_arsonist@5"
+    },
+    {
+     "t": 1840.9,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 36.1,
+     "y": 50.5,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":9,\"x\":36.13745616419715,\"y\":50.49046035219707,\"line\":\"death.line2\"}",
+     "near": "upyr@5:champion,upyr@5:champion,upyr@5:champion,chernoyarets_arsonist@5,chernoyarets_arsonist@5,upyr@5,upyr@5,chernoyarets_arsonist@5,chernoyarets_arsonist@5"
+    },
+    {
+     "t": 1867.5,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 35.8,
+     "y": 50.2,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":11,\"x\":35.75349316391433,\"y\":50.246945830195045,\"line\":\"death.line2\"}",
+     "near": "upyr@5:champion,upyr@5:champion,upyr@5:champion,chernoyarets_arsonist@5,chernoyarets_arsonist@5,upyr@5,upyr@5,chernoyarets_arsonist@5,chernoyarets_arsonist@5"
+    },
+    {
+     "t": 1889.7,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 36.5,
+     "y": 48.7,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":10,\"x\":36.529695087321095,\"y\":48.690222172122965,\"line\":\"death.line1\"}",
+     "near": "upyr@5:champion,upyr@5:champion,upyr@5:champion,chernoyarets_arsonist@5,chernoyarets_arsonist@5,upyr@5,upyr@5,chernoyarets_arsonist@5,chernoyarets_arsonist@5"
+    },
+    {
+     "t": 1919.2,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 35.3,
+     "y": 52.7,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":9,\"x\":35.263926672972985,\"y\":52.747048814030656,\"line\":\"death.line2\"}",
+     "near": "upyr@5:champion,upyr@5:champion,upyr@5:champion,chernoyarets_arsonist@5,chernoyarets_arsonist@5,upyr@5,upyr@5,chernoyarets_arsonist@5,chernoyarets_arsonist@5"
+    },
+    {
+     "t": 1943.6,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 35.3,
+     "y": 48.2,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":8,\"x\":35.283963090554174,\"y\":48.208320050459804,\"line\":\"death.line5\"}",
+     "near": "upyr@5:champion,upyr@5:champion,upyr@5:champion,chernoyarets_arsonist@5,chernoyarets_arsonist@5,upyr@5,upyr@5,chernoyarets_arsonist@5,chernoyarets_arsonist@5"
+    },
+    {
+     "t": 1985.8,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 38.6,
+     "y": 47.7,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":7,\"x\":38.584700101418186,\"y\":47.651125283963346,\"line\":\"death.line2\"}",
+     "near": "upyr@5:champion,upyr@5:champion,upyr@5:champion,chernoyarets_arsonist@5,chernoyarets_arsonist@5"
+    },
+    {
+     "t": 2032.8,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 36.9,
+     "y": 41.4,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":6,\"x\":36.94990481745543,\"y\":41.37308328937326,\"line\":\"death.line3\"}",
+     "near": "upyr@5:champion,upyr@5:champion,chernoyarets_arsonist@5"
+    },
+    {
+     "t": 2068,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 37.4,
+     "y": 43.1,
+     "lvl": 5,
+     "boss": false,
+     "info": "{\"lost\":6,\"x\":37.35315998462574,\"y\":43.087610715415714,\"line\":\"death.line3\"}",
+     "near": "upyr@5:champion"
+    },
+    {
+     "t": 2104.5,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 48.8,
+     "y": 49.4,
+     "lvl": 6,
+     "boss": false,
+     "info": "{\"lost\":8,\"x\":48.80598160271676,\"y\":49.41361846195716,\"line\":\"death.line5\"}",
+     "near": "upyr@5,upyr@5,chernoyarets_arsonist@5,chernoyarets_arsonist@5,anchutka@5,anchutka@5,anchutka@5,anchutka@5"
+    },
+    {
+     "t": 2142.1,
+     "zone": "kapishche",
+     "phase": "kap_yard",
+     "x": 55.1,
+     "y": 48.2,
+     "lvl": 6,
+     "boss": false,
+     "info": "{\"lost\":8,\"x\":55.069215496756584,\"y\":48.21440849289129,\"line\":\"death.line4\"}",
+     "near": "upyr@5,chernoyarets_arsonist@5,chernoyarets_arsonist@5"
+    },
+    {
+     "t": 2192.9,
+     "zone": "kapishche",
+     "phase": "kap_h1",
+     "x": 41.4,
+     "y": 30.8,
+     "lvl": 6,
+     "boss": true,
+     "info": "{\"lost\":9,\"x\":41.40867631230529,\"y\":30.79928666470094,\"line\":\"death.line2\"}",
+     "near": "krivsha@6:boss,upyr@5,upyr@5"
+    },
+    {
+     "t": 2226.8,
+     "zone": "kapishche",
+     "phase": "kap_h2",
+     "x": 38.3,
+     "y": 30,
+     "lvl": 6,
+     "boss": true,
+     "info": "{\"lost\":8,\"x\":38.32667925544631,\"y\":30.04428048178331,\"line\":\"death.line2\"}",
+     "near": "krivsha@6:boss,upyr@5,upyr@5,upyr@5,upyr@5"
+    },
+    {
+     "t": 2247.6,
+     "zone": "kapishche",
+     "phase": "kap_h2",
+     "x": 34.6,
+     "y": 25,
+     "lvl": 6,
+     "boss": true,
+     "info": "{\"lost\":7,\"x\":34.55541817791853,\"y\":24.95499512844436,\"line\":\"death.line1\"}",
+     "near": "krivsha@6:boss,upyr@5,upyr@5,upyr@5,upyr@5"
+    },
+    {
+     "t": 2278.7,
+     "zone": "kapishche",
+     "phase": "kap_h2",
+     "x": 29.9,
+     "y": 27,
+     "lvl": 6,
+     "boss": true,
+     "info": "{\"lost\":6,\"x\":29.889752126380017,\"y\":26.986560285162554,\"line\":\"death.line1\"}",
+     "near": "krivsha@6:boss,upyr@5,upyr@5"
+    },
+    {
+     "t": 2305.5,
+     "zone": "kapishche",
+     "phase": "kap_h2",
+     "x": 36.7,
+     "y": 29.1,
+     "lvl": 6,
+     "boss": true,
+     "info": "{\"lost\":6,\"x\":36.728179905772954,\"y\":29.11400911235527,\"line\":\"death.line3\"}",
+     "near": "krivsha@6:boss,upyr@5,upyr@5,upyr@5,upyr@5"
+    },
+    {
+     "t": 2414,
+     "zone": "kapishche",
+     "phase": "kap_h2",
+     "x": 29.2,
+     "y": 32.3,
+     "lvl": 6,
+     "boss": true,
+     "info": "{\"lost\":5,\"x\":29.189181218770624,\"y\":32.26630177096794,\"line\":\"death.line2\"}",
+     "near": "krivsha@6:boss,upyr@5,upyr@5,upyr@5"
+    },
+    {
+     "t": 2541.3,
+     "zone": "kapishche",
+     "phase": "kap_h2",
+     "x": 26.3,
+     "y": 28.2,
+     "lvl": 6,
+     "boss": true,
+     "info": "{\"lost\":11,\"x\":26.33594196546683,\"y\":28.24589853350129,\"line\":\"death.line1\"}",
+     "near": "krivsha@6:boss,upyr@5,upyr@5,upyr@5,upyr@5"
+    },
+    {
+     "t": 2632.9,
+     "zone": "kapishche",
+     "phase": "kap_h2",
+     "x": 20.6,
+     "y": 28.3,
+     "lvl": 6,
+     "boss": true,
+     "info": "{\"lost\":12,\"x\":20.57924511879204,\"y\":28.29485033020795,\"line\":\"death.line3\"}",
+     "near": "krivsha@6:boss,upyr@5,upyr@5,upyr@5,upyr@5"
+    },
+    {
+     "t": 2723.4,
+     "zone": "kapishche",
+     "phase": "kap_h2",
+     "x": 16.9,
+     "y": 25.8,
+     "lvl": 6,
+     "boss": true,
+     "info": "{\"lost\":11,\"x\":16.88041172445126,\"y\":25.775023765244693,\"line\":\"death.line1\"}",
+     "near": "krivsha@6:boss,upyr@5,upyr@5"
+    },
+    {
+     "t": 2831.4,
+     "zone": "kapishche",
+     "phase": "kap_h2",
+     "x": 29,
+     "y": 31.5,
+     "lvl": 6,
+     "boss": true,
+     "info": "{\"lost\":12,\"x\":29.039832978084377,\"y\":31.468998044265618,\"line\":\"death.line2\"}",
+     "near": "krivsha@6:boss,upyr@5,upyr@5,upyr@5,upyr@5"
+    }
+   ],
+   "rests": 37,
+   "restT": 117,
+   "potions": 51,
+   "potOn": true,
+   "notes": [
+    "застревание 11s zalesye (24.6,37.8) фаза zal_clear cmd=attack act=attack tg=upyr@23.9,38.6 attack dead=false reach=true go=undefined",
+    "застревание 82s zalesye (11.0,18.9) фаза zal_clear cmd=attack act=attack tg=upyr@9.9,19.0 attack dead=false reach=true go=[21.5,23.5]",
+    "застревание 297s zalesye (37.6,9.0) фаза zal_clear cmd=attack act=attack tg=upyr@38.5,8.3 attack dead=false reach=true go=[21.5,23.5]",
+    "застревание 351s trail (8.8,28.8) фаза zal_exit cmd=attack act=attack tg=upyr@9.9,28.9 attack dead=false reach=true go=[44.5,45.2]",
+    "застревание 404s trail (28.3,29.4) фаза trail_march cmd=attack act=attack tg=upyr@29.4,29.5 attack dead=false reach=true go=[29.5,31.426391970630725]",
+    "застревание 412s trail (28.3,29.4) фаза trail_march cmd=attack act=attack tg=upyr@29.3,28.8 attack dead=false reach=true go=[29.5,31.426391970630725]",
+    "застревание 437s trail (45.2,30.0) фаза trail_march cmd=attack act=attack tg=upyr@45.5,28.9 attack dead=false reach=true go=[29.5,31.426391970630725]",
+    "застревание 482s trail (49.7,25.8) фаза trail_march cmd=attack act=attack tg=chernoyarets_arsonist@50.0,24.7 attack dead=false reach=true go=[48.5,28.515331934211265]",
+    "зелья включены в 529 с, фаза trail_march",
+    "застревание 561s trail (57.6,19.4) фаза trail_march cmd=attack act=attack tg=upyr@58.7,18.9 attack dead=false reach=true go=[55.5,20.789596723560404]",
+    "застревание 606s trail (67.8,14.2) фаза trail_march cmd=attack act=attack tg=upyr@68.9,14.5 attack dead=false reach=true go=[61.5,15.927533933684494]",
+    "застревание 614s trail (67.8,14.2) фаза trail_march cmd=attack act=attack tg=upyr@67.9,15.4 attack dead=false reach=true go=[61.5,15.927533933684494]",
+    "застревание 705s trail (81.6,17.6) фаза trail_march cmd=attack act=attack tg=upyr@82.6,18.1 attack dead=false reach=true go=[73.5,17.230176650745825]",
+    "застревание 725s trail (110.7,29.8) фаза trail_march cmd=attack act=attack tg=chernoyarets_arsonist@110.3,28.7 attack dead=false reach=true go=[118,37]",
+    "застревание 877s trail (100.2,22.5) фаза trail_march cmd=attack act=attack tg=upyr@99.1,22.1 attack dead=false reach=true go=[118,37]",
+    "застревание 1204s kapishche (10.1,29.2) фаза kap_yard cmd=attack act=attack tg=upyr@10.0,28.1 attack dead=false reach=true go=[21.00418440143659,31.601264817986785]",
+    "застревание 1221s kapishche (18.8,27.8) фаза kap_yard cmd=attack act=attack tg=chernoyarets_arsonist@19.9,28.1 attack dead=false reach=true go=[25.629931522837808,20.348771225245407]",
+    "застревание 1229s kapishche (18.8,27.8) фаза kap_yard cmd=attack act=attack tg=upyr@19.0,28.9 attack dead=false reach=true go=[25.629931522837808,20.348771225245407]",
+    "застревание 1261s kapishche (23.6,25.6) фаза kap_yard cmd=attack act=attack tg=chernoyarets_arsonist@24.7,25.2 attack dead=false reach=true go=[25.837922180275513,20.096825976737648]",
+    "застревание 1280s kapishche (25.5,24.7) фаза kap_yard cmd=attack act=attack tg=upyr@26.1,25.6 attack dead=false reach=true go=[25.8998569205452,20.023524510988096]",
+    "застревание 1302s kapishche (15.8,19.6) фаза kap_yard cmd=attack act=attack tg=upyr@16.5,18.7 attack dead=false reach=true go=[25.568940661882827,20.42439952400995]",
+    "застревание 1342s kapishche (24.9,25.7) фаза kap_yard cmd=attack act=attack tg=chernoyarets_arsonist@25.8,26.2 attack dead=false reach=true go=[28.36413209100217,17.617490552606807]",
+    "застревание 1364s kapishche (26.2,24.2) фаза kap_yard cmd=attack act=attack tg=upyr@26.3,25.3 attack dead=false reach=true go=[29.259027435633783,16.327364345090768]",
+    "застревание 1372s kapishche (26.2,24.2) фаза kap_yard cmd=attack act=attack tg=upyr@26.3,25.3 attack dead=false reach=true go=[29.259027435633783,16.327364345090768]",
+    "застревание 1380s kapishche (26.2,24.2) фаза kap_yard cmd=attack act=attack tg=chernoyarets_arsonist@27.0,25.0 chase dead=false reach=true go=[29.259027435633783,16.327364345090768]",
+    "застревание 1440s kapishche (41.2,10.3) фаза kap_yard cmd=attack act=attack tg=chernoyarets_arsonist@42.4,10.4 attack dead=false reach=true go=[43.56733090219696,13.337895342855067]",
+    "застревание 1453s kapishche (53.0,14.9) фаза kap_yard cmd=attack act=attack tg=upyr@53.3,16.0 attack dead=false reach=true go=[53.94310732314937,19.09303450941553]",
+    "застревание 1461s kapishche (53.0,14.9) фаза kap_yard cmd=attack act=attack tg=upyr@53.0,16.0 attack dead=false reach=true go=[53.94310732314937,19.09303450941553]",
+    "застревание 1519s kapishche (48.1,19.3) фаза kap_yard cmd=attack act=attack tg=upyr@48.0,20.4 attack dead=false reach=true go=[53.65810700510035,18.791816436874118]",
+    "застревание 1527s kapishche (48.1,19.3) фаза kap_yard cmd=attack act=attack tg=chernoyarets_arsonist@47.5,20.3 attack dead=false reach=true go=[53.65810700510035,18.791816436874118]",
+    "застревание 1717s kapishche (59.6,35.5) фаза kap_yard cmd=attack act=attack tg=upyr@58.6,36.1 attack dead=false reach=true go=[58.68301304440561,28.54384265656642]",
+    "застревание 1769s kapishche (29.7,49.3) фаза kap_yard cmd=attack act=attack tg=chernoyarets_arsonist@29.8,50.5 attack dead=false reach=true go=[33.314627281874586,49.784987816125835]",
+    "застревание 1780s kapishche (30.7,48.8) фаза kap_yard cmd=attack act=attack tg=upyr@29.6,49.0 chase dead=false reach=true go=[33.314627281874586,49.784987816125835]",
+    "застревание 1811s kapishche (36.4,51.8) фаза kap_yard cmd=attack act=attack tg=upyr@37.0,50.9 attack dead=false reach=true go=[41.68483384462536,50.925150855832165]",
+    "застревание 1838s kapishche (36.2,50.3) фаза kap_yard cmd=move act=attack tg=upyr@36.3,51.5 attack dead=false reach=true go=[42.07721648686506,50.8861105489377]",
+    "застревание 1912s kapishche (37.4,50.2) фаза kap_yard cmd=move act=attack tg=upyr@38.1,49.4 attack dead=false reach=true go=[41.281578857776,50.95672850550172]",
+    "застревание 1942s kapishche (36.8,49.6) фаза kap_yard cmd=attack act=attack tg=upyr@37.8,49.0 attack dead=false reach=true go=[40.56748961738684,50.99152325470914]",
+    "застревание 1984s kapishche (38.6,47.7) фаза kap_yard cmd=attack act=attack tg=upyr@39.7,47.5 attack dead=false reach=true go=[50.03253187811218,48.13531233396685]",
+    "застревание 2008s kapishche (36.6,43.1) фаза kap_yard cmd=attack act=attack tg=upyr@37.8,43.2 attack dead=false reach=true go=[44.143892632149914,50.54260375063906]",
+    "застревание 2016s kapishche (36.6,43.1) фаза kap_yard cmd=attack act=attack tg=upyr@37.8,43.2 attack dead=false reach=true go=[44.143892632149914,50.54260375063906]",
+    "застревание 2024s kapishche (36.6,43.1) фаза kap_yard cmd=attack act=attack tg=chernoyarets_arsonist@37.6,43.5 attack dead=false reach=true go=[44.143892632149914,50.54260375063906]",
+    "застревание 2055s kapishche (37.4,43.1) фаза kap_yard cmd=attack act=attack tg=upyr@38.5,43.4 attack dead=false reach=true go=[36.922137713900895,50.749047009056454]",
+    "застревание 2063s kapishche (37.4,43.1) фаза kap_yard cmd=attack act=attack tg=chernoyarets_arsonist@38.4,42.8 attack dead=false reach=true go=[36.922137713900895,50.749047009056454]",
+    "застревание 2090s kapishche (40.3,42.0) фаза kap_yard cmd=attack act=attack tg=upyr@41.4,41.6 attack dead=false reach=true go=[36.922137713900895,50.749047009056454]",
+    "застревание 2168s kapishche (51.8,43.3) фаза kap_yard cmd=attack act=attack tg=chernoyarets_arsonist@52.9,43.7 attack dead=false reach=true go=[56.266308489712436,41.81871723380958]",
+    "застревание 2266s kapishche (31.7,28.5) фаза kap_h2 cmd=attack act=attack tg=upyr@32.7,29.0 attack dead=false reach=true go=[124,32.7538346658951]",
+    "ПРИНУДИТЕЛЬНО: выдано 8 зелий life3 в 2308 с (гибелей у Кривши: 5)",
+    "ПРИНУДИТЕЛЬНО: выдано 8 зелий life3 в 2417 с (гибелей у Кривши: 6)",
+    "застревание 2433s kapishche (23.3,27.0) фаза kap_h2 cmd=attack act=attack tg=upyr@24.3,26.7 attack dead=false reach=true go=[124,32.7538346658951]",
+    "ПРИНУДИТЕЛЬНО: выдано 8 зелий life3 в 2544 с (гибелей у Кривши: 7)",
+    "застревание 2557s kapishche (19.4,28.1) фаза kap_h2 cmd=attack act=attack tg=upyr@20.4,27.5 attack dead=false reach=true go=[124,32.7538346658951]",
+    "застревание 2616s kapishche (20.6,28.3) фаза kap_h2 cmd=attack act=attack tg=krivsha@21.6,27.2 fight dead=false reach=true go=[124,32.7538346658951]",
+    "застревание 2624s kapishche (20.6,28.3) фаза kap_h2 cmd=move act=attack tg=krivsha@21.6,27.2 claw dead=false reach=true go=[124,32.7538346658951]",
+    "застревание 2632s kapishche (20.6,28.3) фаза kap_h2 cmd=move act=attack tg=krivsha@21.6,27.2 claw dead=false reach=true go=[124,32.7538346658951]",
+    "ПРИНУДИТЕЛЬНО: выдано 8 зелий life3 в 2636 с (гибелей у Кривши: 8)",
+    "застревание 2648s kapishche (16.4,28.2) фаза kap_h2 cmd=attack act=attack tg=upyr@17.5,28.4 attack dead=false reach=true go=[124,32.7538346658951]",
+    "ПРИНУДИТЕЛЬНО: выдано 8 зелий life3 в 2726 с (гибелей у Кривши: 9)",
+    "застревание 2766s kapishche (25.0,27.4) фаза kap_h2 cmd=attack act=attack tg=upyr@25.2,28.5 attack dead=false reach=true go=[124,32.7538346658951]",
+    "ПРИНУДИТЕЛЬНО: выдано 8 зелий life3 в 2834 с (гибелей у Кривши: 10)",
+    "ПРИНУДИТЕЛЬНО: с 2839 с HP героя восполняется, пока Кривша в бою (гибелей у Кривши: 10)",
+    "застревание 2891s kapishche (26.3,25.8) фаза kap_h2 cmd=attack act=attack tg=upyr@25.2,25.4 attack dead=false reach=true go=[124,32.7538346658951]",
+    "застревание 2967s kapishche (24.5,29.5) фаза kap_h2 cmd=attack act=null tg=krivsha@26.1,29.9 claw dead=false reach=true go=[124,32.7538346658951]",
+    "застревание 3076s kapishche (32.2,31.1) фаза kap_h2 cmd=attack act=attack tg=upyr@31.9,30.0 attack dead=false reach=true go=[124,32.7538346658951]",
+    "застревание 3175s kapishche (30.0,28.2) фаза kap_h2 cmd=attack act=attack tg=upyr@29.5,27.3 attack dead=false reach=true go=[124,32.7538346658951]"
+   ],
+   "xpMarks": {
+    "enter_zalesye_0": {
+     "t": 0.6,
+     "lvl": 1,
+     "xp": 0
+    },
+    "enter_trail_1": {
+     "t": 341.8,
+     "lvl": 2,
+     "xp": 322
+    },
+    "enter_zalesye_2": {
+     "t": 380.5,
+     "lvl": 2,
+     "xp": 414
+    },
+    "enter_trail_3": {
+     "t": 387.5,
+     "lvl": 2,
+     "xp": 414
+    },
+    "enter_zalesye_4": {
+     "t": 454.5,
+     "lvl": 3,
+     "xp": 655
+    },
+    "enter_trail_5": {
+     "t": 461.4,
+     "lvl": 3,
+     "xp": 655
+    },
+    "enter_zalesye_6": {
+     "t": 500.4,
+     "lvl": 3,
+     "xp": 743
+    },
+    "enter_trail_7": {
+     "t": 507.3,
+     "lvl": 3,
+     "xp": 743
+    },
+    "enter_zalesye_8": {
+     "t": 532.1,
+     "lvl": 3,
+     "xp": 743
+    },
+    "enter_trail_9": {
+     "t": 539.1,
+     "lvl": 3,
+     "xp": 743
+    },
+    "enter_zalesye_10": {
+     "t": 629.7,
+     "lvl": 3,
+     "xp": 1060
+    },
+    "enter_trail_11": {
+     "t": 636.6,
+     "lvl": 3,
+     "xp": 1060
+    },
+    "enter_zalesye_12": {
+     "t": 668.6,
+     "lvl": 3,
+     "xp": 1060
+    },
+    "enter_trail_13": {
+     "t": 675.5,
+     "lvl": 3,
+     "xp": 1060
+    },
+    "enter_kapishche_14": {
+     "t": 1194,
+     "lvl": 4,
+     "xp": 1512
+    },
+    "enter_trail_15": {
+     "t": 1244.9,
+     "lvl": 4,
+     "xp": 1855
+    },
+    "enter_kapishche_16": {
+     "t": 1246.4,
+     "lvl": 4,
+     "xp": 1855
+    },
+    "enter_trail_17": {
+     "t": 1264,
+     "lvl": 4,
+     "xp": 1855
+    },
+    "enter_kapishche_18": {
+     "t": 1265.5,
+     "lvl": 4,
+     "xp": 1855
+    },
+    "enter_trail_19": {
+     "t": 1287.1,
+     "lvl": 4,
+     "xp": 1855
+    },
+    "enter_kapishche_20": {
+     "t": 1288.6,
+     "lvl": 4,
+     "xp": 1855
+    },
+    "enter_trail_21": {
+     "t": 1324.7,
+     "lvl": 4,
+     "xp": 1999
+    },
+    "enter_kapishche_22": {
+     "t": 1326.2,
+     "lvl": 4,
+     "xp": 1999
+    },
+    "enter_trail_23": {
+     "t": 1347.6,
+     "lvl": 4,
+     "xp": 2041
+    },
+    "enter_kapishche_24": {
+     "t": 1349.1,
+     "lvl": 4,
+     "xp": 2041
+    },
+    "enter_trail_25": {
+     "t": 1419.5,
+     "lvl": 5,
+     "xp": 2358
+    },
+    "enter_kapishche_26": {
+     "t": 1421,
+     "lvl": 5,
+     "xp": 2358
+    },
+    "enter_trail_27": {
+     "t": 1469.4,
+     "lvl": 5,
+     "xp": 2586
+    },
+    "enter_kapishche_28": {
+     "t": 1470.9,
+     "lvl": 5,
+     "xp": 2586
+    },
+    "enter_trail_29": {
+     "t": 1498,
+     "lvl": 5,
+     "xp": 2631
+    },
+    "enter_kapishche_30": {
+     "t": 1499.5,
+     "lvl": 5,
+     "xp": 2631
+    },
+    "enter_trail_31": {
+     "t": 1542.7,
+     "lvl": 5,
+     "xp": 2914
+    },
+    "enter_kapishche_32": {
+     "t": 1544.2,
+     "lvl": 5,
+     "xp": 2914
+    },
+    "enter_trail_33": {
+     "t": 1567.4,
+     "lvl": 5,
+     "xp": 2933
+    },
+    "enter_kapishche_34": {
+     "t": 1568.9,
+     "lvl": 5,
+     "xp": 2933
+    },
+    "enter_trail_35": {
+     "t": 1595.5,
+     "lvl": 5,
+     "xp": 2952
+    },
+    "enter_kapishche_36": {
+     "t": 1597,
+     "lvl": 5,
+     "xp": 2952
+    },
+    "enter_trail_37": {
+     "t": 1624.9,
+     "lvl": 5,
+     "xp": 2971
+    },
+    "enter_kapishche_38": {
+     "t": 1626.4,
+     "lvl": 5,
+     "xp": 2971
+    },
+    "enter_trail_39": {
+     "t": 1642.6,
+     "lvl": 5,
+     "xp": 3001
+    },
+    "enter_kapishche_40": {
+     "t": 1644.1,
+     "lvl": 5,
+     "xp": 3001
+    },
+    "enter_trail_41": {
+     "t": 1662,
+     "lvl": 5,
+     "xp": 3031
+    },
+    "enter_kapishche_42": {
+     "t": 1663.5,
+     "lvl": 5,
+     "xp": 3031
+    },
+    "enter_trail_43": {
+     "t": 1684,
+     "lvl": 5,
+     "xp": 3061
+    },
+    "enter_kapishche_44": {
+     "t": 1685.5,
+     "lvl": 5,
+     "xp": 3061
+    },
+    "enter_trail_45": {
+     "t": 1720.8,
+     "lvl": 5,
+     "xp": 3134
+    },
+    "enter_kapishche_46": {
+     "t": 1722.3,
+     "lvl": 5,
+     "xp": 3134
+    },
+    "enter_trail_47": {
+     "t": 1751.1,
+     "lvl": 5,
+     "xp": 3232
+    },
+    "enter_kapishche_48": {
+     "t": 1752.5,
+     "lvl": 5,
+     "xp": 3232
+    },
+    "enter_trail_49": {
+     "t": 1783.5,
+     "lvl": 5,
+     "xp": 3378
+    },
+    "enter_kapishche_50": {
+     "t": 1784.9,
+     "lvl": 5,
+     "xp": 3378
+    },
+    "enter_trail_51": {
+     "t": 1817.2,
+     "lvl": 5,
+     "xp": 3413
+    },
+    "enter_kapishche_52": {
+     "t": 1818.6,
+     "lvl": 5,
+     "xp": 3413
+    },
+    "enter_trail_53": {
+     "t": 1843.5,
+     "lvl": 5,
+     "xp": 3448
+    },
+    "enter_kapishche_54": {
+     "t": 1845,
+     "lvl": 5,
+     "xp": 3448
+    },
+    "enter_trail_55": {
+     "t": 1870.1,
+     "lvl": 5,
+     "xp": 3448
+    },
+    "enter_kapishche_56": {
+     "t": 1871.7,
+     "lvl": 5,
+     "xp": 3448
+    },
+    "enter_trail_57": {
+     "t": 1892.4,
+     "lvl": 5,
+     "xp": 3448
+    },
+    "enter_kapishche_58": {
+     "t": 1893.8,
+     "lvl": 5,
+     "xp": 3448
+    },
+    "enter_trail_59": {
+     "t": 1921.8,
+     "lvl": 5,
+     "xp": 3448
+    },
+    "enter_kapishche_60": {
+     "t": 1923.3,
+     "lvl": 5,
+     "xp": 3448
+    },
+    "enter_trail_61": {
+     "t": 1946.3,
+     "lvl": 5,
+     "xp": 3448
+    },
+    "enter_kapishche_62": {
+     "t": 1947.7,
+     "lvl": 5,
+     "xp": 3448
+    },
+    "enter_trail_63": {
+     "t": 1988.4,
+     "lvl": 5,
+     "xp": 3594
+    },
+    "enter_kapishche_64": {
+     "t": 1989.9,
+     "lvl": 5,
+     "xp": 3594
+    },
+    "enter_trail_65": {
+     "t": 2035.4,
+     "lvl": 5,
+     "xp": 3737
+    },
+    "enter_kapishche_66": {
+     "t": 2036.9,
+     "lvl": 5,
+     "xp": 3737
+    },
+    "enter_trail_67": {
+     "t": 2070.6,
+     "lvl": 5,
+     "xp": 3880
+    },
+    "enter_kapishche_68": {
+     "t": 2072,
+     "lvl": 5,
+     "xp": 3880
+    },
+    "enter_trail_69": {
+     "t": 2107.1,
+     "lvl": 6,
+     "xp": 4004
+    },
+    "enter_kapishche_70": {
+     "t": 2108.6,
+     "lvl": 6,
+     "xp": 4004
+    },
+    "enter_trail_71": {
+     "t": 2144.7,
+     "lvl": 6,
+     "xp": 4115
+    },
+    "enter_kapishche_72": {
+     "t": 2146.1,
+     "lvl": 6,
+     "xp": 4115
+    },
+    "bossRise": {
+     "t": 2176.2,
+     "lvl": 6,
+     "xp": 4226,
+     "hearths": 0
+    },
+    "enter_trail_74": {
+     "t": 2195.6,
+     "lvl": 6,
+     "xp": 4226
+    },
+    "enter_kapishche_75": {
+     "t": 2197.1,
+     "lvl": 6,
+     "xp": 4226
+    },
+    "enter_trail_76": {
+     "t": 2229.4,
+     "lvl": 6,
+     "xp": 4226
+    },
+    "enter_kapishche_77": {
+     "t": 2230.9,
+     "lvl": 6,
+     "xp": 4226
+    },
+    "enter_trail_78": {
+     "t": 2250.3,
+     "lvl": 6,
+     "xp": 4226
+    },
+    "enter_kapishche_79": {
+     "t": 2251.7,
+     "lvl": 6,
+     "xp": 4226
+    },
+    "enter_trail_80": {
+     "t": 2281.4,
+     "lvl": 6,
+     "xp": 4331
+    },
+    "enter_kapishche_81": {
+     "t": 2282.9,
+     "lvl": 6,
+     "xp": 4331
+    },
+    "enter_trail_82": {
+     "t": 2308.1,
+     "lvl": 6,
+     "xp": 4331
+    },
+    "enter_kapishche_83": {
+     "t": 2309.6,
+     "lvl": 6,
+     "xp": 4331
+    },
+    "enter_trail_84": {
+     "t": 2416.7,
+     "lvl": 6,
+     "xp": 4576
+    },
+    "enter_kapishche_85": {
+     "t": 2418.1,
+     "lvl": 6,
+     "xp": 4576
+    },
+    "enter_trail_86": {
+     "t": 2543.9,
+     "lvl": 6,
+     "xp": 4961
+    },
+    "enter_kapishche_87": {
+     "t": 2545.4,
+     "lvl": 6,
+     "xp": 4961
+    },
+    "enter_trail_88": {
+     "t": 2635.6,
+     "lvl": 6,
+     "xp": 5136
+    },
+    "enter_kapishche_89": {
+     "t": 2637,
+     "lvl": 6,
+     "xp": 5136
+    },
+    "enter_trail_90": {
+     "t": 2726,
+     "lvl": 6,
+     "xp": 5381
+    },
+    "enter_kapishche_91": {
+     "t": 2727.5,
+     "lvl": 6,
+     "xp": 5381
+    },
+    "enter_trail_92": {
+     "t": 2834,
+     "lvl": 6,
+     "xp": 5591
+    },
+    "enter_kapishche_93": {
+     "t": 2835.5,
+     "lvl": 6,
+     "xp": 5591
+    },
+    "bossKill": {
+     "t": 3196,
+     "lvl": 7,
+     "xp": 7806,
+     "fight": 310.34990000004626
+    },
+    "mission": {
+     "t": 3201,
+     "lvl": 7,
+     "xp": 7806
+    }
+   },
+   "equips": [
+    "47s lhand: Малый щит медведя (magic)",
+    "156s feet: Поршни медведя (magic)",
+    "156s ring1: Ведовской перстень Сварога (magic)",
+    "183s rhand: Скрамасакс упыря (magic)",
+    "617s gloves: Меткие кожаные рукавицы (magic)",
+    "1166s belt: Крепкий кожаный пояс медведя (magic)",
+    "1535s ring2: Ведовской перстень (magic)",
+    "3186s neck: Ведовской оберег живота (magic)"
+   ],
+   "picks": 106,
+   "dodges": 718,
+   "forced": 48,
+   "forcedGod": 2838.7985666750483,
+   "bossDeaths": 10,
+   "holdTries": 18,
+   "trk": [
+    {
+     "t": 0.3,
+     "zone": "zalesye",
+     "sig": "Доберись до капища | Спаси выживших 0/3 | Отбей огнища у упырей 0/3 [серым]",
+     "phase": "zal_clear"
+    },
+    {
+     "t": 302.7,
+     "zone": "zalesye",
+     "sig": "Доберись до капища | Спаси выживших 1/3 | Отбей огнища у упырей 0/3 [серым]",
+     "phase": "zal_huts",
+     "lvl": 2,
+     "xp": 322
+    },
+    {
+     "t": 321.6,
+     "zone": "zalesye",
+     "sig": "Доберись до капища | Спаси выживших 2/3 | Отбей огнища у упырей 0/3 [серым]",
+     "phase": "zal_huts",
+     "lvl": 2,
+     "xp": 322
+    },
+    {
+     "t": 330.7,
+     "zone": "zalesye",
+     "sig": "Спаси выживших 3/3 [✓] | Доберись до капища | Отбей огнища у упырей 0/3 [серым]",
+     "phase": "zal_huts",
+     "lvl": 2,
+     "xp": 322
+    },
+    {
+     "t": 334.7,
+     "zone": "zalesye",
+     "sig": "Доберись до капища | Отбей огнища у упырей 0/3 [серым] | Одолей Крившу [серым]",
+     "phase": "zal_huts",
+     "lvl": 2,
+     "xp": 322
+    },
+    {
+     "t": 443.3,
+     "zone": "trail",
+     "sig": "Доберись до капища | Найди поджигателя | Отбей огнища у упырей 0/3 [серым]",
+     "phase": "trail_march",
+     "lvl": 3,
+     "xp": 634
+    },
+    {
+     "t": 1193.6,
+     "zone": "kapishche",
+     "sig": "Доберись до капища [✓] | Отбей огнища у упырей 0/3 | Одолей Крившу",
+     "phase": "trail_gate",
+     "lvl": 4,
+     "xp": 1512
+    },
+    {
+     "t": 1197.6,
+     "zone": "kapishche",
+     "sig": "Отбей огнища у упырей 0/3 | Одолей Крившу | Найди поджигателя",
+     "phase": "kap_yard",
+     "lvl": 4,
+     "xp": 1512
+    },
+    {
+     "t": 2206.4,
+     "zone": "kapishche",
+     "sig": "Отбей огнища у упырей 1/3 | Одолей Крившу | Найди поджигателя",
+     "phase": "kap_h1",
+     "lvl": 6,
+     "xp": 4226
+    },
+    {
+     "t": 3166.8,
+     "zone": "kapishche",
+     "sig": "Одолей Крившу [✓] | Отбей огнища у упырей 1/3 | Найди поджигателя",
+     "phase": "kap_h2",
+     "lvl": 7,
+     "xp": 7666
+    },
+    {
+     "t": 3170.8,
+     "zone": "kapishche",
+     "sig": "Отбей огнища у упырей 1/3 | Найди поджигателя",
+     "phase": "kap_h2",
+     "lvl": 7,
+     "xp": 7701
+    },
+    {
+     "t": 3195.6,
+     "zone": "kapishche",
+     "sig": "Отбей огнища у упырей 2/3 | Найди поджигателя",
+     "phase": "kap_h2",
+     "lvl": 7,
+     "xp": 7806
+    },
+    {
+     "t": 3200.8,
+     "zone": "kapishche",
+     "sig": "Найди поджигателя [✓] | Отбей огнища у упырей 2/3",
+     "phase": "kap_letter",
+     "lvl": 7,
+     "xp": 7806
+    },
+    {
+     "t": 3204.8,
+     "zone": "kapishche",
+     "sig": "Отбей огнища у упырей 2/3",
+     "phase": "kap_h3",
+     "lvl": 7,
+     "xp": 7806
+    },
+    {
+     "t": 3208.6,
+     "zone": "kapishche",
+     "sig": "Отбей огнища у упырей 3/3 [✓]",
+     "phase": "kap_h3",
+     "lvl": 7,
+     "xp": 7806
+    }
+   ]
+  },
+  "quest": [
+   {
+    "id": "reach",
+    "state": "done",
+    "n": 0
+   },
+   {
+    "id": "huts",
+    "state": "done",
+    "n": 3
+   },
+   {
+    "id": "hearths",
+    "state": "done",
+    "n": 3
+   },
+   {
+    "id": "krivsha",
+    "state": "done",
+    "n": 0
+   },
+   {
+    "id": "arsonist",
+    "state": "done",
+    "n": 0
+   }
+  ],
+  "counters": {
+   "hitStop": 1755,
+   "shake": 538,
+   "backoff": 302,
+   "casts": {
+    "sshibka": 2168
+   },
+   "cdBlocked": 0,
+   "barks": 15,
+   "barksSuppressed": 1,
+   "zoneChanges": 92,
+   "restT": 133.08333333333138,
+   "safeBreaks": 154,
+   "maraHeals": 10,
+   "trailTicks": 19,
+   "interacts": 10,
+   "waves": 4,
+   "torches": 127,
+   "fireAvoid": 14126,
+   "fireTicks": 67,
+   "potionCdBlocked": 906,
+   "eliteDrops": 20,
+   "bossRise": "circle",
+   "krivshaClaws": 446,
+   "krivshaClawHits": 236,
+   "krivshaSummons": 68,
+   "krivshaResets": 10,
+   "lmbFallback": 27,
+   "krivshaJump": "hearth3",
+   "krivshaPhase2": 1
+  },
+  "kills": 252,
+  "t": 3211.115033346423,
+  "lvl": 7,
+  "xp": 7806,
+  "events": [
+   "zoneEnterzalesye@0",
+   "hutFreedhut2@303",
+   "hutFreedhut1@322",
+   "hutFreedhut3@331",
+   "zoneEntertrail@342",
+   "zoneEnterzalesye@380",
+   "zoneEntertrail@387",
+   "arsonistSeen@443",
+   "zoneEnterzalesye@454",
+   "zoneEntertrail@461",
+   "zoneEnterzalesye@500",
+   "zoneEntertrail@507",
+   "zoneEnterzalesye@532",
+   "zoneEntertrail@539",
+   "zoneEnterzalesye@630",
+   "zoneEntertrail@637",
+   "zoneEnterzalesye@669",
+   "zoneEntertrail@675",
+   "chestOpened@1175",
+   "relicTaken@1190",
+   "letterReadpriest@1190",
+   "churTouched@1192",
+   "reachkapishche_gate@1194",
+   "zoneEnterkapishche@1194",
+   "zoneEntertrail@1245",
+   "reachkapishche_gate@1246",
+   "zoneEnterkapishche@1246",
+   "zoneEntertrail@1264",
+   "reachkapishche_gate@1266",
+   "zoneEnterkapishche@1266",
+   "zoneEntertrail@1287",
+   "reachkapishche_gate@1289",
+   "zoneEnterkapishche@1289",
+   "zoneEntertrail@1325",
+   "reachkapishche_gate@1326",
+   "zoneEnterkapishche@1326",
+   "zoneEntertrail@1348",
+   "reachkapishche_gate@1349",
+   "zoneEnterkapishche@1349",
+   "zoneEntertrail@1420",
+   "reachkapishche_gate@1421",
+   "zoneEnterkapishche@1421",
+   "zoneEntertrail@1469",
+   "reachkapishche_gate@1471",
+   "zoneEnterkapishche@1471",
+   "zoneEntertrail@1498",
+   "reachkapishche_gate@1500",
+   "zoneEnterkapishche@1500",
+   "zoneEntertrail@1543",
+   "reachkapishche_gate@1544",
+   "zoneEnterkapishche@1544",
+   "zoneEntertrail@1567",
+   "reachkapishche_gate@1569",
+   "zoneEnterkapishche@1569",
+   "zoneEntertrail@1595",
+   "reachkapishche_gate@1597",
+   "zoneEnterkapishche@1597",
+   "zoneEntertrail@1625",
+   "reachkapishche_gate@1626",
+   "zoneEnterkapishche@1626",
+   "zoneEntertrail@1643",
+   "reachkapishche_gate@1644",
+   "zoneEnterkapishche@1644",
+   "zoneEntertrail@1662",
+   "reachkapishche_gate@1664",
+   "zoneEnterkapishche@1664",
+   "zoneEntertrail@1684",
+   "reachkapishche_gate@1685",
+   "zoneEnterkapishche@1685",
+   "zoneEntertrail@1721",
+   "reachkapishche_gate@1722",
+   "zoneEnterkapishche@1722",
+   "zoneEntertrail@1751",
+   "reachkapishche_gate@1753",
+   "zoneEnterkapishche@1753",
+   "zoneEntertrail@1783",
+   "reachkapishche_gate@1785",
+   "zoneEnterkapishche@1785",
+   "zoneEntertrail@1817",
+   "reachkapishche_gate@1819",
+   "zoneEnterkapishche@1819",
+   "zoneEntertrail@1844",
+   "reachkapishche_gate@1845",
+   "zoneEnterkapishche@1845",
+   "zoneEntertrail@1870",
+   "reachkapishche_gate@1872",
+   "zoneEnterkapishche@1872",
+   "zoneEntertrail@1892",
+   "reachkapishche_gate@1894",
+   "zoneEnterkapishche@1894",
+   "zoneEntertrail@1922",
+   "reachkapishche_gate@1923",
+   "zoneEnterkapishche@1923",
+   "zoneEntertrail@1946",
+   "reachkapishche_gate@1948",
+   "zoneEnterkapishche@1948",
+   "zoneEntertrail@1988",
+   "reachkapishche_gate@1990",
+   "zoneEnterkapishche@1990",
+   "zoneEntertrail@2035",
+   "reachkapishche_gate@2037",
+   "zoneEnterkapishche@2037",
+   "zoneEntertrail@2071",
+   "reachkapishche_gate@2072",
+   "zoneEnterkapishche@2072",
+   "zoneEntertrail@2107",
+   "reachkapishche_gate@2109",
+   "zoneEnterkapishche@2109",
+   "zoneEntertrail@2145",
+   "reachkapishche_gate@2146",
+   "zoneEnterkapishche@2146",
+   "bossRisekrivsha@2176",
+   "zoneEntertrail@2196",
+   "reachkapishche_gate@2197",
+   "zoneEnterkapishche@2197",
+   "hearthFreed@2206",
+   "zoneEntertrail@2229",
+   "reachkapishche_gate@2231",
+   "zoneEnterkapishche@2231",
+   "zoneEntertrail@2250",
+   "reachkapishche_gate@2252",
+   "zoneEnterkapishche@2252",
+   "zoneEntertrail@2281",
+   "reachkapishche_gate@2283",
+   "zoneEnterkapishche@2283",
+   "zoneEntertrail@2308",
+   "reachkapishche_gate@2310",
+   "zoneEnterkapishche@2310",
+   "zoneEntertrail@2417",
+   "reachkapishche_gate@2418",
+   "zoneEnterkapishche@2418",
+   "zoneEntertrail@2544",
+   "reachkapishche_gate@2545",
+   "zoneEnterkapishche@2545",
+   "zoneEntertrail@2636",
+   "reachkapishche_gate@2637",
+   "zoneEnterkapishche@2637",
+   "zoneEntertrail@2726",
+   "reachkapishche_gate@2727",
+   "zoneEnterkapishche@2727",
+   "zoneEntertrail@2834",
+   "reachkapishche_gate@2835",
+   "zoneEnterkapishche@2835",
+   "bossKilledkrivsha@3167",
+   "hearthFreed@3196",
+   "letterReadorder@3201",
+   "missionDone@3201",
+   "hearthFreed@3209",
+   "rewardTaken@3211"
+  ]
+ },
+ "errors": [],
+ "wallSec": 55.746
+}

@@ -1,6 +1,9 @@
 // Грей-бокс «спрайты» персонажей и предметов: простые фигуры в палитре. (sx,sy) — точка ног.
 import { PAL } from '../palette.js';
 import { rect, ellipse, ellipseStroke, figure, pline, disc } from './shapes.js';
+import { ART, poseKrivsha, poseMara, poseAnchutka, drawCharArt, drawCharOutline, feedFrame, viewOf } from './boss_art.js';
+import { HALF_W, HALF_H } from '../config.js';
+import { drawFxFrame } from './rest_fx.js';
 
 export function shadow(ctx, x, y, rx = 9, ry = 3.5) { ellipse(ctx, x, y, rx, ry, PAL.ink, 0.45); }
 
@@ -203,7 +206,12 @@ export function drawEnemy(ctx, x, y, e, dir, time, hovered) {
   if (e.kind === 'mara') drawMara(ctx, x, y, e, dir, time, ol);
   else if (e.kind === 'upyr') drawUpyr(ctx, x, y, e, dir, time, ol);
   else if (e.def.torch) drawArsonist(ctx, x, y, e, dir, time, ol);
-  else drawAnchutka(ctx, x, y, e, dir, time, ol);
+  else if (ART.sheets.anchutka_idle_se) {                               // спрайт художника 6а (32×40, pivot 16,34) — сажа, не красный
+    const pose = poseAnchutka(e, time);
+    shadow(ctx, x, y, 6, 2.5);
+    if (ol !== PAL.ink) drawCharOutline(ctx, pose, x, y, dir, e.facing, ol);
+    drawCharArt(ctx, pose, x, y, dir, e.facing, { flash: e.flash > 0 });
+  } else drawAnchutka(ctx, x, y, e, dir, time, ol);
   if (e.elite === 'champion') { ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = PAL.blue_lt; ctx.fillRect(x - 11, y - e.def.height, 22, e.def.height); ctx.restore(); }   // матёрый: холодный тинт
   if (e.slowT > 0) { ctx.save(); ctx.globalAlpha = 0.25; ctx.fillStyle = PAL.blue_lt; ctx.fillRect(x - 10, y - e.def.height, 20, e.def.height); ctx.restore(); }
   // маленькая полоска жизни над недавно раненым
@@ -223,6 +231,8 @@ export function drawCorpse(ctx, x, y, e) {
   if (e.kind === 'upyr') {
     figure(ctx, [{ x: x - 13, y: y - 6, w: 20, h: 6, c: PAL.slate_dk }, { x: x + 7, y: y - 8, w: 8, h: 7, c: PAL.birch }]);
     rect(ctx, x - 10, y - 4, 10, 2, PAL.nebyl_dk);
+  } else if ((e.kind === 'krivsha' || e.kind === 'mara' || e.kind === 'anchutka') && drawCharArt(ctx, e.kind === 'krivsha' ? poseKrivsha(e, 0) : e.kind === 'mara' ? poseMara(e, 0) : poseAnchutka(e, 0), x, y, e.dir, e.facing)) {
+    // гибель — лист художника, последний кадр держится (обугленная куча / пепел)
   } else if (e.kind === 'krivsha') {
     figure(ctx, [{ x: x - 30, y: y - 12, w: 44, h: 12, c: PAL.wood_dk }, { x: x + 14, y: y - 14, w: 16, h: 13, c: PAL.slate_dk }]);
     for (let i = 0; i < 4; i++) rect(ctx, x - 20 + i * 8, y - 13, 3, 3, PAL.ember);   // догорающие угли
@@ -249,8 +259,14 @@ export function drawGroundItem(ctx, x, y, it) {
     const [c, cl] = it.potion.startsWith('life') ? [PAL.red, PAL.red_lt] : it.potion.startsWith('yar') ? [PAL.blue, PAL.blue_lt] : [PAL.bronze, PAL.bronze_hi];
     figure(ctx, [{ cx: x, cy: y - 5, r: 4, c }, { x: x - 1, y: y - 12, w: 3, h: 4, c: PAL.birch }]);
     rect(ctx, x - 2, y - 7, 2, 2, cl);
+  } else if (it.kind === 'scroll') {       // береста возврата: свёрнутый берестяной свиток (грей-бокс, спрайта нет)
+    ellipse(ctx, x, y - 1, 7, 3, PAL.ink, 0.5);
+    figure(ctx, [{ x: x - 6, y: y - 6, w: 12, h: 5, c: PAL.birch }]);
+    rect(ctx, x - 6, y - 6, 2, 5, PAL.wood_lt); rect(ctx, x + 4, y - 6, 2, 5, PAL.wood_lt);
+    rect(ctx, x - 3, y - 4, 6, 1, PAL.wood_md);
   } else {
     const c = it.color, t = it.item.type;
+    if (it.item.rarity === 'unique') ellipse(ctx, x, y - 2, 11, 5, PAL.bronze_lt, 0.25 + 0.1 * Math.sin(performance.now() / 300));   // былинная — бронзовый отсвет
     ellipse(ctx, x, y - 1, 8, 3, PAL.ink, 0.45);
     if (t === 'sword' || t === 'axe') {
       pline(ctx, x - 11, y + 1, x + 11, y - 9, PAL.ink);
@@ -278,9 +294,14 @@ export function drawGroundItem(ctx, x, y, it) {
 }
 
 export function drawProjectile(ctx, x, y, p, time) {
+  if (p.coal && p.src && p.src.kind === 'mara' && drawFxFrame(ctx, 'm_bolt', Math.floor(p.t * 12), x, y - 38, { flip: p.vx - p.vy < 0 })) {   // сгусток Мары: высота 38, тень 4×2
+    ellipse(ctx, x, y, 2, 1, PAL.ink, 0.5);
+    return;
+  }
   if (p.coal) {
     ellipse(ctx, x, y, 2, 1, PAL.ink, 0.35);
     const z = 14 + Math.sin(Math.min(1, p.travelled / p.range) * Math.PI) * 8;
+    if (drawFxFrame(ctx, 'a_coal', Math.floor(p.t * 12), x, y - z, { flip: p.vx - p.vy < 0 })) return;   // fx_anchutka_coal (6а): летит вправо, влево — зеркало
     disc(ctx, x, y - z, 2.2, PAL.red);
     disc(ctx, x, y - z, 1.4, PAL.ember);
     rect(ctx, x, y - z - 1, 1, 1, PAL.flame);
@@ -302,9 +323,16 @@ export function drawProjectile(ctx, x, y, p, time) {
 
 // Мара Пепельная (грей-бокс, спрайта нет): дух пожара 52 px — пепельный саван, космы пламени, тлеющие руки.
 export function drawMara(ctx, x, y, e, dir, time, outline = PAL.ink) {
+  const pose = poseMara(e, time);
+  if (ART.sheets[pose.anim + '_se']) {                                   // спрайт художника M1b (64×64, pivot 32,56; парит над землёй)
+    shadow(ctx, x, y, 9, 3.5);
+    if (outline !== PAL.ink) drawCharOutline(ctx, pose, x, y, dir, e.facing, outline);
+    drawCharArt(ctx, pose, x, y, dir, e.facing, { flash: e.flash > 0 });
+    return;
+  }
   const f = dirSide(dir, e.facing), sway = Math.round(Math.sin(time * 3 + e.id) * 1.5);
   shadow(ctx, x, y, 9, 3.5); dirMarker(ctx, x, y, dir, 9, 3.5, PAL.ember);
-  const T = y - 52;
+  const T = y - 48;
   figure(ctx, [
     { x: x - 9 + sway, y: T + 22, w: 18, h: 30, c: PAL.slate_lt },          // саван до земли
     { x: x - 7, y: T + 12, w: 14, h: 12, c: PAL.mist },
@@ -322,6 +350,26 @@ export function drawMara(ctx, x, y, e, dir, time, outline = PAL.ink) {
 
 // Кривша, Обгорелый страж (грей-бокс, спрайта нет): 96 px, обгоревший тулуп, связка ключей, весь в огне.
 export function drawKrivsha(ctx, x, y, e, dir, time, outline = PAL.ink) {
+  const pose = poseKrivsha(e, time);
+  if (ART.sheets[pose.anim + '_se']) {                                   // спрайт художника M1b (128×128, pivot 64,116)
+    const lift = Math.round(e.lift || 0);
+    shadow(ctx, x, y, 18, 7);
+    if (e.aura) drawFxFrame(ctx, 'k_aura', Math.floor(time * 10), x, y);   // огненный ореол r 1,5 — под ним
+    const ff = feedFrame(e), fl = viewOf(dir, e.facing).flip;            // «огнище питает» (v1.8): back под ним, front над ним, source на огнище
+    if (ff >= 0) {
+      const H = e.jump && e.jump.hearth;
+      if (H) { const dx = H.x - e.x, dy = H.y - e.y; drawFxFrame(ctx, 'k_feed_src', ff, x + (dx - dy) * HALF_W, y + (dx + dy) * HALF_H); }
+      drawFxFrame(ctx, 'k_feed_back', ff, x, y - lift, { flip: fl });
+    }
+    if (outline !== PAL.ink) drawCharOutline(ctx, pose, x, y - lift, dir, e.facing, outline);
+    drawCharArt(ctx, pose, x, y - lift, dir, e.facing, { flash: e.flash > 0 });
+    if (ff >= 0) drawFxFrame(ctx, 'k_feed', ff, x, y - lift, { flip: fl });
+    if (e.state === 'jump' && e.t >= 0.6) {                              // удар в огнище: кадры 0–3 один раз, петля 4–7 до выхода (выключается со стартом «огнище питает»)
+      const inv = (e.B && e.B.hearthPhase && e.B.hearthPhase.invuln) || 2, tE = inv - 0.75, u = e.t - 0.6;
+      if (e.t < tE) drawFxFrame(ctx, 'k_burst', u < 0.4 ? Math.floor(u * 10) : 4 + (Math.floor((u - 0.4) * 10) % 4), x, y);
+    }
+    return;
+  }
   const f = dirSide(dir, e.facing), lift = Math.round(e.lift || 0);
   const step = e.moving ? Math.sin(e.walkPhase * 1.2) : 0, l = Math.round(step * 3);
   const rising = e.state === 'rise', k = rising ? Math.min(1, e.t / (e.B ? e.B.rise : 2)) : 1;

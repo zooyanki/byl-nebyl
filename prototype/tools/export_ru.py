@@ -46,6 +46,11 @@ PROTO = {
     "proto.reward_ladoga": "Награду выдаст Вышата в Ладоге (в прототипе Ладоги нет).",
     "proto.idol_perun": "Идол Перуна",
     "proto.hearth": "Огнище",
+    # веха M1c (береста возврата, былинные вещи): заглушки прототипа, у сценариста строк нет
+    "proto.beresta.use": "ПКМ — прочитать",
+    "proto.beresta.reading": "Читаешь бересту…",
+    "proto.portal.closed": "Чуров проход закрылся",
+    "proto.bylina.got": "Былинная вещь: {item}",
 }
 
 def act1_strings():
@@ -113,6 +118,14 @@ out["namegen.leader"] = {"a": [[r[1], "f" if r[2] == "ж." else "m"] for r in ro
                          "swapPct": int(rule.group(1)) if rule else 25}
 for uid, name in re.findall(r"^\|\s*(U\d)\s*\|\s*«([^»]+)»", txt, re.M):
     out.setdefault("item." + uid.lower() + ".name", name)
+# веха M1c: §14 — имена всех девяти былинных вещей и присказки (item.uN.name / item.uN.lore)
+g14 = txt.split("## 14. Былинные предметы: присказки", 1)[1].split("\n## ", 1)[0]
+rows14 = re.findall(r"^\|\s*(U\d)\s*\|([^|]+)\|([^|]+)\|([^|]+)\|", g14, re.M)
+assert len(rows14) == 9, len(rows14)
+for uid, name, base, lore in rows14:
+    nm = re.sub(r"\s*\(было.*?\)", "", clean(name)).strip().strip("«»")
+    out.setdefault("item." + uid.lower() + ".name", nm)
+    out["item." + uid.lower() + ".lore"] = clean(lore)
 out.update(OVERRIDE)
 out.update(act1_strings())
 out.update(PROTO)

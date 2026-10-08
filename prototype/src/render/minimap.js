@@ -21,7 +21,7 @@ export class Minimap {
           if (sx >= 0 && sy >= 0 && sx < map.sw && sy < map.sh) t[sy * map.sw + sx] = v;
     }
     // чаща тропы: непроходимый тайл без пропса — тоже лес
-    if (map.forest) for (let i = 0; i < t.length; i++) if (t[i] === TYPE.free && map.sub[i]) t[i] = TYPE.tree;
+    for (let i = 0; i < t.length; i++) if (t[i] === TYPE.free && map.sub[i] && (map.forest || (map.forestFrom != null && (i % map.sw) >= map.forestFrom * SUB))) t[i] = TYPE.tree;
     this.types = t;
     this.seen = new Uint8Array(map.w * map.h);
     this.layers = {};

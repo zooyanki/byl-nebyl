@@ -118,6 +118,20 @@ export class Enemy extends Actor {
     this.homeX = this.x; this.homeY = this.y;
   }
 
+  /** Обрыв погони по привязке: домой — ближайшая точка круга (у свиты — со своим смещением), там HP полное. */
+  leashHome(game) {
+    const lead = this.route ? this : this.follow && !this.follow.dead ? this.follow : null, R = lead && lead.route;
+    let hx = this.anchor.x, hy = this.anchor.y;
+    if (R && R.pts.length) {
+      let best = R.pts[0], bd = 1e9;
+      for (const p of R.pts) { const d = Math.hypot(p[0] - this.x, p[1] - this.y); if (d < bd) { bd = d; best = p; } }
+      hx = best[0]; hy = best[1];
+      if (this !== lead && this.followOff) { const tx = hx + this.followOff[0], ty = hy + this.followOff[1]; if (!game.map.blockedAt(tx, ty)) { hx = tx; hy = ty; } }
+    }
+    this.homeX = hx; this.homeY = hy; this.state = 'return'; this.path = null; this.retreating = false;
+    game.counters.anchorLeash = (game.counters.anchorLeash || 0) + 1;
+  }
+
   scare(dx, dy, time) {
     this.state = 'flee'; this.t = 0; this.fleeTime = time; this.path = null;
     const a = Math.atan2(dy, dx) + rnd(-0.6, 0.6);
@@ -167,6 +181,8 @@ export class Enemy extends Actor {
       case 'chase': {
         if (!heroPresent || heroSafe) { this.state = 'return'; this.path = null; if (heroSafe) game.counters.safeBreaks = (game.counters.safeBreaks || 0) + 1; break; }
         if (Math.hypot(this.x - this.homeX, this.y - this.homeY) > def.leash && dHero > 3) { this.state = 'return'; this.path = null; break; }
+        // привязка к месту (Мара и свита, GDD v1.8.1 B-31): дальше anchor.r от центра круга — бросают погоню, к кругу, HP полное
+        if (this.anchor && Math.hypot(this.x - this.anchor.x, this.y - this.anchor.y) > this.anchor.r) { this.leashHome(game); break; }
         const tc = def.torch;
         // «Поджог» (GDD §5.2 E11): герой в 2–6 тайлах, КД готов, своей зоны огня нет
         if (tc && this.torchCd <= 0 && dHero >= tc.rangeMin && dHero <= tc.rangeMax && game.combat.zonesOf(this) < tc.maxZones && sightClear(map, this.x, this.y, hero.x, hero.y)) {
@@ -261,7 +277,7 @@ export class Enemy extends Actor {
           if (Math.hypot(this.x - this.homeX, this.y - this.homeY) < 2) { this.state = 'idle'; this.hp = this.maxHp; this.wanderT = rnd(1, 3); }
           this.path = null;
         }
-        if (heroPresent && !heroSafe && dHero < def.aggro * 0.6 && this.los) this.aggro(game);
+        if (heroPresent && !heroSafe && dHero < def.aggro * 0.6 && this.los && (!this.anchor || Math.hypot(hero.x - this.anchor.x, hero.y - this.anchor.y) <= this.anchor.r)) this.aggro(game);
         break;
       }
     }

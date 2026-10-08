@@ -1,0 +1,38 @@
+{
+ "effect": "«Огнище питает Крившу»: fire-phase start, +15% HP while he leaves the огнище (GDD v1.8 §5.4)",
+ "events": {
+  "heal_frame": 6,
+  "stream_frames": [
+   0,
+   5
+  ],
+  "flash_frames": [
+   6,
+   7
+  ],
+  "trigger": "start together with krivsha_fire_emerge frame 0 (prototype: jump state, t = invuln - 0.75 s); apply +15% HP (hearthPhase.healPct) on frame 6 = 0.6 s after the start (≈0.15 s before the invulnerability ends; healing exactly at the end of invuln is also fine)"
+ },
+ "frame_size_note": "Кривша's own cell 128x128, pivot (64,116) = his pivot",
+ "mirror": "flip together with Кривша (dirSide < 0); the same sheet serves SE and NE",
+ "chest_anchor": [
+  70.0,
+  56.0
+ ],
+ "colours": "огнище green (nebyl_dk/nebyl/linen, like the desecrated огнище) turning into his fire (ember/flame/linen); no red / red_lt (hero accent)",
+ "pivot": [
+  64,
+  116
+ ],
+ "fps": 10,
+ "loop": false,
+ "layer": "draw BEFORE (under) the Кривша sprite: flame pillar behind him and the back halves of the strands",
+ "image": "fx_krivsha_feed_back.png",
+ "frame_size": [
+  128,
+  128
+ ],
+ "frame_count": 8,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

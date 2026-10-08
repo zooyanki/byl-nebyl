@@ -1,0 +1,36 @@
+{
+ "character": "Кривша, Обгорелый страж",
+ "animation": "emerge",
+ "variant": "normal",
+ "direction": "ne",
+ "mirror_for": "nw",
+ "mirror_rule": "flip horizontally around the frame centre line x = 64.0; pivot stays (64, 116)",
+ "pivot": [
+  64,
+  116
+ ],
+ "fps": 8,
+ "loop": false,
+ "visible_height_px": [
+  78,
+  86,
+  97,
+  97,
+  96,
+  95
+ ],
+ "height_rule": "pivot row (ground under the feet) to the top visible pixel, outline included",
+ "notes": "Кривша, Обгорелый страж (boss M1; «Обгорелый страж» is his title, one character). Hunched keeper of the капище in a burnt sheepskin coat with a ring of bronze keys, ghoul-grey skin, long claws with burning tips, fire in the coat's cracks. Body 96 (scale.md: boss 96, fire halo to 112), frame 128x128, pivot (64,116).",
+ "events": {
+  "note": "normal sheet = rising out of the burning idol at the start of the fight (rise 2 s: hold frame 0, play the 6 frames over the last 0.75 s, or the whole sheet at 3 fps); krivsha_fire_emerge = leaving the огнище at the start of the fire phase, together with fx_krivsha_feed («огнище питает», +15% HP on feed frame 6); then aura on"
+ },
+ "image": "krivsha_emerge_ne.png",
+ "frame_size": [
+  128,
+  128
+ ],
+ "frame_count": 6,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}
