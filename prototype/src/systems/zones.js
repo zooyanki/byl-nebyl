@@ -10,10 +10,10 @@ import { generateMap } from '../world/map.js';
 import { circleFree, sightClear } from '../world/collision.js';
 import { WorldRenderer } from '../render/world.js';
 import { Minimap } from '../render/minimap.js';
-import { Npc } from '../entities/npc.js';
-import { makeUnique } from '../data/items.js';
+import { Npc, Dummy } from '../entities/npc.js';
+import { makeUnique, makePotion, POTIONS } from '../data/items.js';
 
-const SEEDS = { zalesye: MAP_SEED, trail: MAP_SEED + 7919, kapishche: MAP_SEED + 4241 };
+const SEEDS = { zalesye: MAP_SEED, trail: MAP_SEED + 7919, kapishche: MAP_SEED + 4241, ladoga: MAP_SEED + 9001 };
 
 export const ZoneMixin = {
   buildZone(id) {
@@ -33,6 +33,9 @@ export const ZoneMixin = {
   /** Перейти в зону id к точке входа entry. opts.respawn — возрождение у крады (без надписи и без пополнения стай). */
   enterZone(id, entry = 'start', opts = {}) {
     const prev = this.zs;
+    // GDD v1.9 (журнал п.4): выход из зоны живого вступившего в бой босса — поводок (полное HP, фаза заново, призванные рассыпаются)
+    if (prev && prev.zone.id !== id && prev.boss && !prev.boss.dead && prev.boss.state !== 'idle' && prev.boss.leash) prev.boss.leash(this, 'zone', true);
+    if (prev && prev.id === 'ladoga' && id !== 'ladoga' && this.town) this.town.onLeave();
     if (prev) { this.finishDialog(prev); this.saveZone(); }
     const st = this.zoneStates[id] || (this.zoneStates[id] = this.buildZone(id));
     this.zs = st; this.zone = st.zone; this.map = st.map; this.renderer = st.renderer; this.minimap = st.minimap;
@@ -68,6 +71,7 @@ export const ZoneMixin = {
     this.boss = st.boss && !st.boss.dead ? st.boss : null;
     this.applyChad();
     this.syncExitWalls();
+    if (id === 'ladoga' && this.town) this.town.onEnter();
   },
 
   /** Точка входа: {at:'start'|'krada'} или координаты; ищем свободное достижимое место рядом. */
@@ -139,17 +143,23 @@ export const ZoneMixin = {
       if (text) this.bark(actor, o.bark, text);
       this.log.add((who ? who + ': ' : '') + text, PAL.linen);
       this.quest.emit({ event: 'hutFreed', hut: o.id });
+      if (o.npc === 'mal') this.malGift();   // GDD v1.9: награда Мала — после его реплик (в очереди диалога), вещи — сразу
     } else if (o.type === 'hearth') {
       this.hearthFreed(o);
     } else if (o.type === 'stone') {
       o.done = false; this.touchStone(o);
     } else if (o.type === 'portal') {
       o.done = false; this.usePortal(o);
+    } else if (o.type === 'npc') {
+      o.done = false; if (this.town) this.town.openNpc(o.npc);
+    } else if (o.type === 'stash') {
+      o.done = false; if (this.town) this.town.openStash();
     } else if (o.type === 'reward') {
       // «Громовник» (U2, GDD §6.5) у подножия погасшего идола: награда М1, выдаётся один раз — в котомку (нет места — на землю)
       const it = makeUnique(o.unique || 'U2');
       this.rewardsGiven = this.rewardsGiven || {};
       this.rewardsGiven[o.id] = true;
+      if (o.id === 'gromovnik') { this.quest.flags['m1.gromovnik'] = true; try { sessionStorage.setItem('byl_m1_gromovnik', 'taken'); } catch (e) { /* */ } }
       if (o.prop) { o.prop.taken = true; o.prop._spr = null; }
       this.audio.play('pickup');
       if (h.inv.autoAdd(it)) this.log.add(t('ui.sys.item_got', { item: it.name }) + ' — ' + it.lore, PAL.bronze_lt);
@@ -192,6 +202,8 @@ export const ZoneMixin = {
     if (o.type === 'stone') return t('ui.obj.chur_stone');
     if (o.type === 'reward') return t('item.u2.name');
     if (o.type === 'portal') return this.portalLabel(o);
+    if (o.type === 'npc') return o.npc ? o.npc.name : '';
+    if (o.type === 'stash') return t('obj.stash');
     if (o.type === 'gate') return (RU['zone.m1.kapishche'] || {})['Название'] || 'Капище';
     const z = CFG.zones[o.to];
     return t('proto.exit.to', { zone: z ? z.name : o.to });
@@ -202,11 +214,29 @@ export const ZoneMixin = {
     let best = null, bd = 1e9;
     for (const o of this.map.objects) {
       if (o.done) continue;
+      if (o.type === 'portal' && this.portal && this.portal.closing) continue;   // closing: неюзабелен, без hover
       const [sx, sy] = this.toS(o.x, o.y), dx = mx - sx, dy = my - sy;
-      const box = o.type === 'hut' ? [13, -58, 4] : o.type === 'chest' || o.type === 'reward' ? [13, -20, 6] : o.type === 'body' ? [17, -12, 7] : o.type === 'hearth' ? [16, -30, 8] : o.type === 'stone' ? [10, -38, 6] : o.type === 'portal' ? [14, -46, 6] : [16, -34, 8];
+      const box = o.type === 'hut' ? [13, -58, 4] : o.type === 'chest' || o.type === 'reward' ? [13, -20, 6] : o.type === 'body' ? [17, -12, 7] : o.type === 'hearth' ? [16, -30, 8] : o.type === 'stone' ? [10, -38, 6] : o.type === 'portal' ? [14, -55, 8] : o.type === 'npc' ? [16, -52, 8] : o.type === 'stash' ? [18, -28, 10] : [16, -34, 8];
       if (Math.abs(dx) <= box[0] && dy >= box[1] && dy <= box[2] && Math.abs(dx) + Math.abs(dy) < bd) { bd = Math.abs(dx) + Math.abs(dy); best = o; }
     }
     return best;
+  },
+
+  /** GDD v1.9 (журнал п.7): награда Мала при выходе из избы — один раз за М1, без опыта (quests.m1.malGift).
+   *  Зелья — в пояс, иначе в котомку, иначе на землю у героя; серебро — в котомку. Реплика bark.m1.mal_gift над Малом. */
+  malGift() {
+    const G = (CFG.quests.m1 || {}).malGift, h = this.hero;
+    if (!G || (G.once && this.quest.flags.malGift)) return false;
+    this.quest.flags.malGift = true;
+    for (const [kind, n] of Object.entries(G.potions || {})) for (let i = 0; i < n; i++) if (!h.addPotion(kind)) this.loot.spawnItem(h.x + 0.6, h.y + 0.4, makePotion(kind));
+    if (G.silver) { h.silver += G.silver; this.audio.play('silver'); }
+    this.counters.malGift = (this.counters.malGift || 0) + 1;
+    const b = RU[G.barkKey], text = b && typeof b === 'object' ? b['Текст'] : t(G.barkKey);
+    // реплика — в очередь диалога сразу после первой реплики Мала («Они с капища шли!…»), чтобы не накладываться на неё
+    const who = (b && b['Кто']) || t('npc.mal'), i = this.dialogQ.findIndex((l) => l.who === who);
+    if (i >= 0) this.dialogQ.splice(i + 1, 0, { who, text }); else this.dialog([[who, text]]);
+    this.log.add('Получено: ' + POTIONS.life1.name + ' ×' + ((G.potions || {}).life1 || 0) + ', ' + G.silver + ' сер.', PAL.birch);
+    return true;
   },
 
   // --- реплики и диалоги
@@ -263,10 +293,12 @@ export const ZoneMixin = {
   },
   /** Отдых (GDD v1.7 §4.5): в тихом круге Жизнь и Ярь +pctPerSec% от максимума в секунду, если noDamageSec с без урона. */
   updateRest(dt) {
-    const h = this.hero, z = h.dead ? null : this.safeZoneAt(h.x, h.y), r = z && z.rest;
+    const h = this.hero, z = h.dead ? null : this.safeZoneAt(h.x, h.y);
+    const all = !h.dead && this.zone.rest && this.zone.rest.area === 'all';
+    const r = all ? this.zone.rest : (z && z.rest);
     const need = h.hp < h.maxHp || h.yar < h.maxYar;
     this.resting = !!(r && need && (h.sinceHurt ?? 99) >= r.noDamageSec);
-    this.restZone = this.resting ? z : null;
+    this.restZone = this.resting && z ? z : null;
     if (this.resting) {
       const k = (r.pctPerSec / 100) * dt;
       h.hp = Math.min(h.maxHp, h.hp + h.maxHp * k);
@@ -317,6 +349,7 @@ export const ZoneMixin = {
     }
   },
   exitLocked(o) {
+    if (o.opens) return !this.quest.flag(o.opens);
     return !CFG.zones[o.to] || CFG.zones[o.to].implemented === false || !!(o.requires && !this.quest.flag(o.requires));
   },
   /** Закрытый выход — стена поперёк прохода до кромки карты: герой упирается, враги не уходят в проход (QA B-28).
@@ -383,6 +416,7 @@ export const ZoneMixin = {
     for (const o of this.map.objects) if (o.type === 'stone' && !o.done && Math.hypot(h.x - o.x, h.y - o.y) <= (o.touch ?? 1.5)) this.touchStone(o);
     if (this.zone.id === 'kapishche') this.updateKapishche();
     this.applyChad();
+    if (this.zone.id === 'ladoga') this.updateLadoga();
     // выходы и ворота (QA B-28): переход — только по намерению (приказ идти в круг выхода или щелчок по выходу);
     // закрытый выход — обычная стена (syncExitWalls), без выталкивания; сообщение и звук ошибки — один раз на попытку
     this.syncExitWalls();
@@ -393,7 +427,8 @@ export const ZoneMixin = {
       const intent = c && ((c.type === 'move' && Math.hypot(c.x - o.x, c.y - o.y) <= o.r + (o.wall ? 1.0 : 0.6)) || (c.type === 'interact' && c.obj === o));
       if (o.wall) {
         // одна попытка — одно сообщение: пока намерение длится (зажатая ЛКМ, повторные щелчки чаще 1,2 с) — тишина
-        const fresh = intent && this.time - (o.intentT ?? -9) > 0.5 && this.time - (o.warnT ?? -9) > 1.2;
+        const near = !!(o.approach && d <= o.approach);
+        const fresh = (intent || near) && this.time - (o.intentT ?? -9) > 0.5 && this.time - (o.warnT ?? -9) > 1.2;
         if (intent) o.intentT = this.time;
         if (fresh) {
           o.warnT = this.time;
@@ -406,8 +441,40 @@ export const ZoneMixin = {
       if (d > o.r) { o.inside = false; continue; }
       if (!o.inside) { o.inside = true; if (o.event) this.quest.emit(o.event); }
       if (!intent) { this.counters.exitNoIntent = (this.counters.exitNoIntent || 0) + (o.noIntentT === this.time ? 0 : 1); o.noIntentT = this.time; continue; }
+      if (!CFG.zones[o.to]) continue;   // ворота открыты, а зоны миссии ещё нет (М2/М3 не начаты)
       this.enterZone(o.to, o.entry);
       return;
+    }
+  },
+
+  spawnLadoga() {
+    for (const d of this.zone.npcs || []) {
+      const at = d.pier || [d.x, d.y];
+      const n = new Npc('town', at[0], at[1], { name: t(d.nameKey), female: !!d.female, grey: true, role: d.role, height: 40 });
+      n.role = d.role;
+      this.npcs.push(n);
+      this.map.objects.push({ id: d.id, type: 'npc', role: d.role, npc: n, x: at[0], y: at[1], sx: at[0], sy: at[1] + 0.7, reach: 1.35, done: false });
+    }
+    const D = this.zone.dummy;
+    if (D) {
+      const d = new Dummy(D[0], D[1]);
+      d.name = t('obj.dummy'); d.def.name = d.name;
+      this.enemies.push(d);
+    }
+  },
+  updateLadoga() {
+    const q = this.quest, h = this.hero;
+    if (!q.flag('vyshataIntro') && this.time > 1 && !h.dead) {
+      q.flags.vyshataIntro = true; q.flags.vyshataSpoke = true;
+      const lines = RU['npc.vyshata.s0'];
+      if (Array.isArray(lines)) this.dialog(lines);
+    }
+    if (!this._tutAtk) {
+      const d = this.enemies.find((e) => e.dummy);
+      if (d && Math.hypot(d.x - h.x, d.y - h.y) < 6) { this._tutAtk = true; this.notify(t('ui.tut.attack'), PAL.bronze_lt, 'tut'); }
+    }
+    for (const n of this.npcs) if (n.role === 'vyshata') {
+      n.mark = !q.flag('vyshataIntro') ? '!' : (q.missionDone && !q.flag('m1.turnedIn')) ? '?' : '';
     }
   },
 };

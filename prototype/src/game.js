@@ -1,5 +1,5 @@
 // Игра: состояние, обновление, ввод -> команды герою, спавн нечисти, смерть и возвращение у крады, отрисовка.
-import { ART, poseKrivsha, poseMara, poseAnchutka, feedFrame } from './render/boss_art.js';
+import { ART, poseKrivsha, poseMara, poseAnchutka, poseUpyr, feedFrame } from './render/boss_art.js';
 import { makeRng } from './core/rng.js';
 import { VIEW_W, VIEW_H, PLAYFIELD_CY, MAP_SEED, DEBUG } from './config.js';
 import { PAL } from './palette.js';
@@ -20,6 +20,10 @@ import { Minimap } from './render/minimap.js';
 import { drawHud, drawHudTooltip, drawCursor, isOverHud, beltSlotAt, buttonAt, hudSlotAt, BTN } from './render/hud.js';
 import { drawDeath, drawPause, overDeathButton, pauseButtonAt } from './render/screens.js';
 import { InventoryUI, compareLines } from './ui/windows.js';
+import { TownUI } from './ui/town.js';
+import { Inventory } from './systems/inventory.js';
+import { gearPrice, sellPrice } from './systems/trade.js';
+import { lightTint } from './render/world.js';
 import { xpPenalty, xpToNext, hitChance, S as STATS } from './data/progression.js';
 import { enemyStats } from './data/enemies.js';
 import { CFG } from './data/config.js';
@@ -62,7 +66,7 @@ export class Game {
     this.t = t;
     this._barks = {};
     // для автотестов и отладки из консоли
-    this.dbg = { circleFree, sightClear, lineWalkable, enemyStats, xpToNext, CFG, UI_ATLAS, SKILLS, t, plural, silverText, pickBase, dirOf, rankOf, ART, poseKrivsha, poseMara, poseAnchutka, feedFrame, cmp: (it) => compareLines(it, this.hero), itemLines, hitChance, short: skillShort, rankBlock };
+    this.dbg = { circleFree, sightClear, lineWalkable, enemyStats, xpToNext, CFG, UI_ATLAS, SKILLS, t, plural, silverText, pickBase, dirOf, rankOf, ART, poseKrivsha, poseMara, poseAnchutka, poseUpyr, feedFrame, cmp: (it) => compareLines(it, this.hero), itemLines, hitChance, short: skillShort, rankBlock, gearPrice, sellPrice, lightTint };
     // GDD §4.1, QA B-01: потеря фокуса или скрытая вкладка — пауза
     window.addEventListener('blur', () => { if (this.state === 'play') this.paused = true; });
     document.addEventListener('visibilitychange', () => { if (document.hidden && this.state === 'play') this.paused = true; });
@@ -84,6 +88,12 @@ export class Game {
     this.combat = new Combat(this);
     this.loot = new Loot(this);
     this.ui = new InventoryUI(this);
+    this.stash = new Inventory(10, 8);
+    this.stashSilver = 0;
+    this.buyback = [];
+    this.shops = null;
+    this.shopGen = 0;
+    this.town = new TownUI(this);
     this.quest = new Quest(this, 'm1');
     this.enemies = []; this.buried = []; this.npcs = [];
     this.dialogQ = []; this.dialogNext = 0; this.letter = null;
@@ -100,8 +110,8 @@ export class Game {
     this.notice = null; this._noticeKeys = {};
     // зоны М1: у каждой своё состояние (systems/zones.js); начинаем в Залесье
     this.zoneStates = {}; this.zs = null; this.hoverObj = null; this.portal = null;
-    this.enterZone('zalesye', 'start');
-    this.log.add('Ратибор пришёл в Залесье. ' + t('quest.act') + ': «' + this.quest.title + '».', PAL.bronze_hi);
+    this.enterZone('ladoga', 'start');
+    this.log.add(this.zone.name + '. ' + t('quest.act') + ': «' + this.quest.title + '».', PAL.bronze_hi);
     // вводная миссии (act1): переносим по ширине журнала
     let line = '';
     for (const w of t('quest.m1.brief').split(' ')) {
@@ -146,8 +156,8 @@ export class Game {
     const [ix, iy] = w2s(this.hero.x, this.hero.y);
     this.cam.x = Math.round(ix); this.cam.y = Math.round(iy);
     // открыта одна панель — герой смещается в свободную половину экрана (как в D2)
-    const ui = this.ui;
-    this.camCX = ui.rightOpen && !ui.charOpen ? 161 : ui.charOpen && !ui.rightOpen ? 479 : VIEW_W / 2;
+    const ui = this.ui, left = ui.charOpen || (this.town && this.town.open), right = ui.rightOpen;
+    this.camCX = right && !left ? 161 : left && !right ? 479 : VIEW_W / 2;
   }
   get topRightVisible() { return !this.ui.rightOpen && !this.mapOverlay; }
   get labelsShown() { return this.labelsAlways || this.input.altHeld; }
@@ -414,7 +424,10 @@ export class Game {
         else if (hs && hs.kind === 'lmb') { h.lmb = h.lmb ? null : (rankOf(h, 'sshibka') ? 'sshibka' : null); this.audio.play('ui'); this.notify('ЛКМ: ' + (h.lmb ? SKILLS[h.lmb].name : 'обычный удар'), PAL.bronze_lt, 'lmb'); }
       }
       else if (this.hoverLabel || this.hoverGround) { h.pickup(this.hoverLabel || this.hoverGround); this.leftMode = 'pickup'; }
-      else if (this.hoverEnemy) { h.attack(this.hoverEnemy, inp.shift, h.lmbSkill(), true); this.lastTarget = this.hoverEnemy; this.leftMode = 'attack'; }
+      else if (this.hoverEnemy) {
+        if (this.zone.noAttack && !this.hoverEnemy.dummy) { this.notify(t('ui.error.town_attack'), PAL.red_lt, 'townatk'); this.audio.play('error'); }
+        else { h.attack(this.hoverEnemy, inp.shift, h.lmbSkill(), true); this.lastTarget = this.hoverEnemy; this.leftMode = 'attack'; }
+      }
       else if (this.hoverObj && (this.hoverObj.type === 'exit' || this.hoverObj.type === 'gate')) {
         const o = this.hoverObj, [tx, ty] = o.wall ? o.wall.front : [o.x, o.y];   // закрытый выход — подойти к стене (QA B-28)
         h.moveTo(this.map, tx, ty); this.leftMode = null;
@@ -440,6 +453,8 @@ export class Game {
     } else this.leftMode = null;
     if (h.cmd && h.cmd.type === 'attack') h.cmd.repeat = inp.left && this.leftMode === 'attack';
 
+    // M1d (GDD v1.9 §4.4): ПКМ по ячейке пояса — выпить зелье / прочитать бересту, как клавиша ячейки
+    if (inp.rightPressed && this.hoverBelt >= 0 && !ui.hand) h.drink(this.hoverBelt, this);
     // ПКМ — навык панели; нажатие во время замаха запоминается до конца замаха + 0,3 с (QA B-02)
     if ((inp.rightPressed || inp.right) && !this.overUi && !ui.hand) {
       const tg = this.hoverEnemy, id = h.rmb;
@@ -448,6 +463,7 @@ export class Game {
         const r = h.useSkill(this, id, wx, wy, tg);
         if (r === 'ok') { this.rmbBuf = null; if (tg) this.lastTarget = tg; }
         else if (r === 'busy' && inp.rightPressed) { this.rmbBuf = { t: 0.3, id, wx, wy, tg }; this.dashBuf = null; this.dropQueuedLmb(); this.counters.buffered = (this.counters.buffered || 0) + 1; }
+        else if (r === 'town' && inp.rightPressed) { this.notify(t('ui.error.town_attack'), PAL.red_lt, 'townatk'); this.audio.play('error'); }
         else if (r === 'cd' && inp.rightPressed) { this.counters.cdBlocked++; this.audio.play('error'); }
       }
     } else if (this.rmbBuf) {
@@ -583,13 +599,14 @@ export class Game {
   frame(dt) {
     this.fps = this.fps * 0.95 + (1 / Math.max(dt, 1e-3)) * 0.05;
     this.frames = (this.frames || 0) + 1; this.clock = (this.clock || 0) + dt;   // для автотестов: кадры и «прожитое» время
-    this.update(dt);
+    if (!this.simHold) this.update(dt);   // B-35: замеры (g.simulate) держат живой цикл, чтобы кадры между await не двигали бой
     this.render();
     this.input.endFrame();
   }
 
   /** Точка в «тихом» круге (крада, Чуров камень): нечисть туда не бродит, не замечает героя, погоня обрывается. */
   safeAt(x, y, pad = 0) {
+    if (this.zone && this.zone.safeAll) return true;
     const zs = this.zone.safeZones;
     if (!zs) return false;
     for (const z of zs) {

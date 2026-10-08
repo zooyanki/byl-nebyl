@@ -285,6 +285,10 @@
   "from_trail": {
    "x": 43.5,
    "y": 43.2
+  },
+  "from_ladoga": {
+   "x": 16.0,
+   "y": 31.0
   }
  },
  "objects": [
@@ -335,6 +339,15 @@
    "entry": "from_zalesye",
    "requires": "trailOpen",
    "lockedKey": "proto.trail_locked"
+  },
+  {
+   "id": "to_ladoga",
+   "type": "exit",
+   "x": 16.0,
+   "y": 31.0,
+   "r": 1.3,
+   "to": "ladoga",
+   "entry": "from_zalesye"
   }
  ],
  "interact": {

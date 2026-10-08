@@ -147,7 +147,11 @@
   "arena": {
    "size": 24,
    "triggerRadius": 7,
-   "orThirdHearth": true
+   "orThirdHearth": true,
+   "berestaLockRadius": 12,
+   "leashWalk": 25,
+   "_aboutM1d": "GDD v1.9 п.4: береста серая в Круге огнищ (12 от идола), пока Кривша жив (и до подъёма); поводок пешком — дальше 25 тайлов от идола или выход из зоны: полное HP, фаза заново, призванные рассыпаются.",
+   "lockAt": "idol"
   },
   "barks": {
    "rise": "boss.krivsha.rise",

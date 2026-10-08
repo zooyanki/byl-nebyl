@@ -8,7 +8,8 @@ import { itemLines, RARITY, SLOT_NAMES, TYPE_SLOTS } from '../data/items.js';
 import { ATTRS, hitChance } from '../data/progression.js';
 import { itemColor } from '../systems/loot.js';
 import { SkillsWindow } from './skills_window.js';
-import { SKILLS, rankOf } from '../data/skills.js';
+import { SKILLS, rankOf, boughtRank } from '../data/skills.js';
+import { t } from '../core/i18n.js';
 
 const INV = UI_ATLAS.inventory_layout, CHR = UI_ATLAS.character_layout;
 const CELL = INV.cell;
@@ -27,16 +28,16 @@ export class InventoryUI {
     this.skills = new SkillsWindow(game);   // окно «Навыки» (T) — справа, как «Котомка» (открытие одного закрывает другое)
   }
 
-  get anyOpen() { return this.invOpen || this.charOpen || this.skillsOpen; }
+  get anyOpen() { return this.invOpen || this.charOpen || this.skillsOpen || !!(this.game.town && this.game.town.open); }
   get rightOpen() { return this.invOpen || this.skillsOpen; }
   overInv(mx, my) { const [x, y, w, h] = INV.win; return this.invOpen && inR(mx, my, x - 2, y - 4, w + 4, h + 6); }
   overChar(mx, my) { const [x, y, w, h] = CHR.win; return this.charOpen && inR(mx, my, x - 2, y - 4, w + 4, h + 6); }
-  over(mx, my) { return this.overInv(mx, my) || this.overChar(mx, my) || (this.skillsOpen && this.skills.over(mx, my)); }
+  over(mx, my) { return this.overInv(mx, my) || this.overChar(mx, my) || (this.skillsOpen && this.skills.over(mx, my)) || (this.game.town && this.game.town.over(mx, my)); }
 
   toggleInv(v = !this.invOpen) { this.invOpen = v; if (v) this.skillsOpen = false; if (!v) this.returnHand(); this.game.audio.play('ui'); }
   toggleSkills(v = !this.skillsOpen) { this.skillsOpen = v; if (v) { this.invOpen = false; this.returnHand(); } this.game.audio.play('ui'); }
   toggleChar(v = !this.charOpen) { this.charOpen = v; this.game.audio.play('ui'); }
-  closeAll() { const any = this.anyOpen; this.invOpen = false; this.charOpen = false; this.skillsOpen = false; this.returnHand(); return any; }
+  closeAll() { const any = this.anyOpen; this.invOpen = false; this.charOpen = false; this.skillsOpen = false; if (this.game.town) this.game.town.close(); this.returnHand(); return any; }
 
   // предмет с курсора — обратно в котомку, а если некуда — на землю
   returnHand() {
@@ -95,6 +96,14 @@ export class InventoryUI {
     return true;
   }
 
+  /** M1d (GDD v1.9 §6.9): предмет с курсора — в ячейку пояса. В пояс — только зелья и береста (ui.error.belt). */
+  toBelt(slot) {
+    const g = this.game, r = g.hero.putInBelt(this.hand, slot);
+    if (r === 'type') { g.notify(t('ui.error.belt'), PAL.mist, 'belt'); g.audio.play('error'); g.counters.beltRefused = (g.counters.beltRefused || 0) + 1; return false; }
+    if (r === 'full') { g.audio.play('error'); return false; }
+    this.hand = r; g.audio.play('ui');
+    return true;
+  }
   tryEquip(item, slot) {
     const g = this.game, h = g.hero;
     const err = h.canEquip(item, slot);
@@ -139,12 +148,14 @@ export class InventoryUI {
     const g = this.game, h = g.hero, mx = input.mx, my = input.my;
     const H = this.computeHover(mx, my);
     const over = this.over(mx, my);
+    if (this.game.town && this.game.town.open && this.game.town.over(mx, my) && !this.hand) return this.game.town.handle(input);
     if (this.skillsOpen && this.skills.over(mx, my) && !this.hand) return this.skills.handle(input);
     if (input.leftPressed) {
       if (H.closeInv) { this.toggleInv(false); return true; }
       if (H.closeChar) { this.toggleChar(false); return true; }
       if (H.plus) { if (h.spendPoint(H.plus)) g.audio.play('ui'); else g.audio.play('error'); return true; }
       if (this.hand) {
+        if (g.hoverBelt >= 0) { this.toBelt(g.hoverBelt); this.drag = null; return true; }
         if (H.slot) this.tryEquip(this.hand, H.slot);
         else if (H.cell) this.tryPlace(mx, my);
         else if (!over && !g.overHud) this.dropHand();
@@ -152,6 +163,7 @@ export class InventoryUI {
         return true;
       }
       if (H.slot && h.equip[H.slot]) { this.hand = h.takeOff(H.slot); this.drag = { x: mx, y: my }; g.audio.play('ui'); return true; }
+      if (H.entry && input.shift && g.town && g.town.mode === 'stash') { g.town.toStash(H.entry); return true; }
       if (H.entry) { h.inv.remove(H.entry.item); this.hand = H.entry.item; this.drag = { x: mx, y: my }; g.audio.play('ui'); return true; }
       return over;
     }
@@ -159,13 +171,15 @@ export class InventoryUI {
       const moved = Math.hypot(mx - this.drag.x, my - this.drag.y) > 6;
       this.drag = null;
       if (moved) {
-        if (H.slot) this.tryEquip(this.hand, H.slot);
+        if (g.hoverBelt >= 0) this.toBelt(g.hoverBelt);
+        else if (H.slot) this.tryEquip(this.hand, H.slot);
         else if (H.cell) this.tryPlace(mx, my);
         else if (!over && !g.overHud) this.dropHand();
       }
       return true;
     }
     if (input.rightPressed) {
+      if (H.entry && g.town && g.town.mode === 'trade') { g.town.sellEntry(H.entry); return true; }
       if (H.entry) { this.quickEquip(H.entry); return true; }
       if (H.slot && h.equip[H.slot]) { this.unequipToBag(H.slot); return true; }
       return over;
@@ -176,6 +190,7 @@ export class InventoryUI {
   // --- отрисовка
   draw(ctx) {
     const g = this.game, h = g.hero, m = g.input;
+    if (this.game.town) this.game.town.draw(ctx);
     if (this.charOpen) this.drawChar(ctx, h);
     if (this.invOpen) this.drawInv(ctx, h);
     if (this.skillsOpen) this.skills.draw(ctx);
@@ -222,6 +237,7 @@ export class InventoryUI {
       ctx.restore();
       if (hov) frame(ctx, x, y, w + 1, hh + 1, PAL.bronze_lt);
       drawIcon(ctx, e.item.icon, x, y, w + 1, hh + 1);
+      if (e.item.kind === 'scroll' && this.game.berestaGrey()) { ctx.save(); ctx.globalAlpha = 0.6; rect(ctx, x + 1, y + 1, w - 1, hh - 1, PAL.slate_dk); ctx.restore(); }   // арена живого босса (GDD v1.9)
       if (e.item.kind === 'scroll' && e.item.count > 1) drawText(ctx, x + w - 2, y + hh - 9, String(e.item.count), PAL.linen, { align: 'r' });   // стопка бересты
       if (e.item.kind === 'gear' && e.item.req > h.level) { ctx.save(); ctx.globalAlpha = 0.25; rect(ctx, x + 1, y + 1, w - 1, hh - 1, PAL.red); ctx.restore(); }
     }
@@ -276,7 +292,7 @@ export class InventoryUI {
       ['Защита', String(h.def), null],
       ['Удачный удар', Math.round(h.crit * 100) + '%', null],
       ['Жизнь', Math.ceil(h.hp) + ' / ' + h.maxHp, PAL.red_lt],
-      ['Ярь', Math.floor(h.yar) + ' / ' + h.maxYar, PAL.blue_lt],
+      [h.yarTier ? 'Ярь I' : 'Ярь', Math.floor(h.yar) + ' / ' + h.maxYar, PAL.blue_lt],
     ];
     derived.forEach(([l, v, c], k) => field(ctx, rx0, ry + k * 15, colw, l, v, null, c));
     // сопротивления
@@ -373,7 +389,7 @@ function heroSnap(h) {
   return { dps, dpsN: dps * (1 + (h.vsNechist || 0)), def: h.def, hp: h.maxHp, yar: h.maxYar, ar: h.ar, block: h.block * 100, rf: h.res.fire, rc: h.res.cold, rp: h.res.poison,
     speed: h.speed, ls: h.lifesteal * 100, mf: h.mf, thorns: h.thorns, fire: h.fireDmg, cold: h.coldDmg, spell: h.spellMul * 100,
     str: h.str, dex: h.dex, vit: h.vit, ene: h.ene,
-    skl: Object.keys(SKILLS).reduce((n, id) => n + rankOf(h, id), 0), pot: h.potionPct || 0 };   // M1c: +к навыкам, сила зелий (былинные)
+    skl: Object.fromEntries(Object.keys(SKILLS).filter((id) => boughtRank(h, id) > 0).map((id) => [id, rankOf(h, id)])), pot: h.potionPct || 0 };   // M1c: +к навыкам, сила зелий (былинные)
 }
 /** Как изменятся характеристики, если надеть предмет в слот (примерка с откатом). */
 export function tryOn(h, it, slot) {
@@ -392,6 +408,16 @@ const CMP_KEYS = [
   ['skl', 'Ранги навыков', 0], ['pot', 'Сила зелий, %', 0],
   ['ls', 'Кража жизни, %', 0], ['thorns', 'Шипы', 0], ['mf', 'Удача в добыче, %', 0], ['speed', 'Скорость бега', 2],
 ];
+/** B-34 (M1d): ранги навыков в сравнении — не сумма по всем навыкам, а прибавка к каждому выученному навыку
+ *  (+к навыкам действует только на выученные, невыученные остаются 0; упор в макс. ранг тоже учтён).
+ *  Одинаковая прибавка у всех выученных — одна строка «Каждый выученный навык: +1»; разная — по навыку «Сшибка: +1». */
+export function skillRankDiffs(a, b) {
+  const ids = Object.keys(b).filter((id) => id in a), d = ids.map((id) => [id, b[id] - a[id]]).filter(([, x]) => x !== 0);
+  if (!d.length) return [];
+  const col = (x) => (x > 0 ? PAL.nebyl : PAL.red_lt), sg = (x) => (x > 0 ? '+' : '−') + Math.abs(x);
+  if (d.length === ids.length && d.every(([, x]) => x === d[0][1])) return [['Каждый выученный навык: ' + sg(d[0][1]), col(d[0][1])]];
+  return d.map(([id, x]) => [SKILLS[id].name + ': ' + sg(x), col(x)]);
+}
 /** Сравнение с надетым (QA B-17/B-18): по итоговым числам героя, с учётом свойств; для перстней — с обоими. */
 export function compareLines(it, hero) {
   const fmt = (v, dp) => (dp ? v.toFixed(dp) : String(Math.round(v))).replace('.', ',');
@@ -405,6 +431,7 @@ export function compareLines(it, hero) {
     const [a, b] = tryOn(hero, it, slot);
     const diffs = [];
     for (const [k, name, dp] of CMP_KEYS) {
+      if (k === 'skl') { diffs.push(...skillRankDiffs(a.skl, b.skl)); continue; }
       const d = b[k] - a[k];
       if (Math.abs(d) < (dp ? Math.pow(10, -dp) / 2 : 0.5)) continue;
       if (k === 'dpsN' && Math.abs(d - (b.dps - a.dps)) < 0.05) continue;   // «по нечисти» — только если отличается от общего

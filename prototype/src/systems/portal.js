@@ -1,5 +1,4 @@
-// Веха M1c: «Береста возврата» и Чуров проход (GDD v1.7 §4.4: «Открывает Чуров проход в Ладогу и обратно на 60 с», каст 1 с).
-// Ладоги в прототипе нет — городской конец прохода ставится у крады Залесья (items_base.scrolls.beresta.town).
+// Веха M1c: «Береста возврата» и Чуров проход (GDD §4.4). Городской конец — крада Ладоги (items_base.scrolls.beresta.town).
 // Один проход за раз; проход живёт portalLife секунд игрового времени (в любой зоне); возвращение через него
 // закрывает его (closeOnReturn — заглушка по образцу D2). Гибель проход не закрывает. Подмешивается в Game.
 import { PAL } from '../palette.js';
@@ -11,18 +10,37 @@ import { circleFree } from '../world/collision.js';
 const SC = () => SCROLLS.beresta;
 
 export const PortalMixin = {
-  /** Город-заглушка: внутри безопасного круга крады Залесья (там, где в игре будет Ладога). */
+  /** Тихий круг крады Ладоги (r 10): здесь береста не читается. Вне круга город не «тихий» (GDD v1.10 §7.2). */
   inTown() {
     const T = SC().town, k = this.map.krada;
     if (!this.zone || this.zone.id !== T.zone || !k) return false;
     const z = (this.zone.safeZones || []).find((q) => q.at === T.at);
     return Math.hypot(this.hero.x - k.x, this.hero.y - k.y) < (z ? z.radius : 10);
   },
-  /** Почему бересту сейчас не прочитать (ключ ru.json) или null. Запрета на аренах боссов в GDD нет. */
+  /** Почему бересту сейчас не прочитать (ключ ru.json) или null. */
   portalBlocked() {
+    // Пока открыт проход из поля, в Ладоге береста не читается нигде: новый закрыл бы дорогу назад.
+    if (this.zone && this.zone.id === 'ladoga' && this.portal && this.portal.zone !== 'ladoga') return 'ui.error.beresta_town';
     if (this.inTown()) return 'ui.error.beresta_town';
+    if (this.arenaLocked()) return 'ui.error.beresta_arena';
     return null;
   },
+  /** GDD v1.9 §4.4 (журнал п.4): на арене живого босса (и до подъёма) береста серая. Арена — круг berestaLockRadius
+   *  от точки arena.lockAt карты зоны босса (Кривша: Круг огнищ, 12 от идола). После смерти босса — можно.
+   *  Погребальной палаты (М2) и Разлома (М3) в прототипе нет: их боссам достаточно задать arena.berestaLockRadius. */
+  arenaLocked() {
+    const z = this.zone, h = this.hero, st = this.zs;
+    if (!z || !st || st.bossState === 'dead' || (st.boss && st.boss.dead)) return false;
+    for (const B of Object.values(CFG.bosses || {})) {
+      const A = B && B.arena;
+      if (!A || B.zone !== z.id || !(A.berestaLockRadius > 0)) continue;
+      const c = this.map[A.lockAt || 'idol'];
+      if (c && Math.hypot(h.x - c.x, h.y - c.y) <= A.berestaLockRadius) return true;
+    }
+    return false;
+  },
+  /** Значок бересты серый (пояс и котомка). */
+  berestaGrey() { return this.state === 'play' && this.arenaLocked(); },
   /** ПКМ по бересте в котомке. */
   useScroll(item) {
     const err = this.hero.readScroll(item, this);
@@ -33,11 +51,7 @@ export const PortalMixin = {
   },
   /** Конец каста: тратится одна береста, открывается проход (прежний закрывается). */
   finishScroll(item) {
-    const h = this.hero;
-    let stack = h.inv.items.includes(item) && item.count > 0 ? item : h.inv.items.find((it) => it.kind === 'scroll' && it.scroll === 'beresta' && it.count > 0);
-    if (!stack || this.portalBlocked()) return false;
-    stack.count--;
-    if (stack.count <= 0) h.inv.remove(stack);
+    if (this.portalBlocked() || !this.hero.consumeScroll(item)) return false;   // M1d: из ячейки пояса или котомки
     this.openPortal();
     return true;
   },
@@ -75,7 +89,8 @@ export const PortalMixin = {
     this.quest.emit({ event: 'portalOpened', zone });
     return this.portal;
   },
-  closePortal(why = 'expired') {
+  /** Немедленное снятие объектов прохода (для замены / после closing). */
+  _finalizePortal(why) {
     const P = this.portal;
     if (!P) return;
     for (const st of Object.values(this.zoneStates)) st.map.objects = st.map.objects.filter((o) => o !== P.field && o !== P.town);
@@ -85,6 +100,14 @@ export const PortalMixin = {
     this.portal = null;
     this.counters.portalClosed = why;
     if (why === 'expired') this.log.add(t('proto.portal.closed'), PAL.mist);
+  },
+  /** Закрытие: 'replaced' — сразу; иначе 0,6 с анимация close (проход неюзабелен). */
+  closePortal(why = 'expired') {
+    const P = this.portal;
+    if (!P) return;
+    if (why === 'replaced' || (P.closing && why === 'replaced')) { this._finalizePortal(why); return; }
+    if (P.closing) return;                                 // уже закрывается
+    P.closing = { t: 0, why };
   },
   /** Куда ведёт конец прохода (имя зоны назначения). */
   portalDest(o) {
@@ -98,7 +121,7 @@ export const PortalMixin = {
   /** Шагнуть в проход: из поля — к краде (город), из города — туда, где проход открыт. */
   usePortal(o) {
     const P = this.portal;
-    if (!P || (o !== P.field && o !== P.town)) return false;
+    if (!P || P.closing || (o !== P.field && o !== P.town)) return false;
     const S = SC(), dst = o === P.field ? P.town : P.field, to = o === P.field ? P.tzone : P.zone;
     this.counters.portalUses = (this.counters.portalUses || 0) + 1;
     this.audio.play('respawn');
@@ -112,6 +135,11 @@ export const PortalMixin = {
   updatePortal(dt) {
     const P = this.portal;
     if (!P) return;
+    if (P.closing) {
+      P.closing.t += dt;
+      if (P.closing.t >= 0.6) this._finalizePortal(P.closing.why);
+      return;
+    }
     P.t += dt;
     if (P.t >= P.ttl) this.closePortal('expired');
   },

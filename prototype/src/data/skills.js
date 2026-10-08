@@ -77,8 +77,8 @@ export function rankBlock(hero, id) {
   if (have >= (sk.maxRank || RULES.maxRank)) return 'max';
   if (hero.level < sk.req + have) return 'level';
   if (sk.needs && boughtRank(hero, sk.needs) < 1) return 'prev';
-  if (pointsSpent(hero) >= pointsTotal(hero.level)) return 'points';
+  if (pointsSpent(hero) >= pointsTotal(hero.level) + (hero.bonusSkillPoints || 0)) return 'points';
   return null;
 }
 export function pointsSpent(hero) { return ALL.reduce((s, sk) => s + boughtRank(hero, sk.id), 0) - Object.values(RULES.starter).reduce((a, b) => a + b, 0); }
-export function pointsFree(hero) { return pointsTotal(hero.level) - pointsSpent(hero); }
+export function pointsFree(hero) { return pointsTotal(hero.level) + (hero.bonusSkillPoints || 0) - pointsSpent(hero); }

@@ -8,6 +8,7 @@ const SETS = {
   krivsha: ['idle', 'walk', 'claw', 'summon', 'leap', 'emerge', 'hurt', 'death', 'fire_idle', 'fire_walk', 'fire_claw', 'fire_summon', 'fire_emerge', 'fire_hurt', 'fire_death'],
   mara: ['idle', 'walk', 'cast', 'heal', 'hurt', 'death'],
   anchutka: ['idle', 'walk', 'coal_throw', 'hurt', 'death'],          // 6а (08.10, 22:42): стаи, свита Мары
+  upyr: ['idle', 'walk', 'attack', 'hurt', 'death', 'rise'],           // m1c: стаи, засады, призыв Кривши
 };
 const PROPS = { ognishche: ['desecrated', 'consecrate', 'consecrated', 'progress'], idol_perun: ['burning', 'extinguish', 'smoking'] };
 export const ART = { sheets: {}, ready: false, failed: [], hold: null };
@@ -96,6 +97,27 @@ export function poseAnchutka(e, time) {
   return { anim: 'anchutka_idle', frame: loopF(time + e.id * 0.11, 6, 4) };
 }
 
+/** Поза упыря (m1c): удар — кадр 3 ровно на hitAt 0,6 (6 кадров @5); подъём — riseTime 0,8 / 6 кадров; труп — последний кадр death. */
+export function poseUpyr(e, time) {
+  if (e.dead) return { anim: 'upyr_death', frame: once(e.corpseT || 0, 10, 8) };
+  if (e.state === 'rise') {
+    const T = e.riseTime || 0.8;
+    if (e.summoned) {                                   // призыв Кривши: 0–0,3 с — только fx_krivsha_summon; дальше rise на 0,5 с
+      const u = Math.max(0, e.t - 0.3);
+      return { anim: 'upyr_rise', frame: Math.min(5, Math.floor(u / 0.5 * 6 + 1e-6)) };
+    }
+    return { anim: 'upyr_rise', frame: Math.min(5, Math.floor((e.t / T) * 6 + 1e-6)) };
+  }
+  if (e.state === 'attack' && !e.moving) {
+    const hitAt = e.hitAt != null ? e.hitAt : 0.6;
+    if (e.t < hitAt - 1e-9) return { anim: 'upyr_attack', frame: Math.min(2, Math.floor((e.t / hitAt) * 3 + 1e-6)) };
+    return { anim: 'upyr_attack', frame: Math.min(5, 3 + Math.floor((e.t - hitAt) * 5 + 1e-6)) };
+  }
+  if (e.lastHitT < 0.25 && !e.moving) return { anim: 'upyr_hurt', frame: once(e.lastHitT, 8, 2) };
+  if (e.moving) return { anim: 'upyr_walk', frame: loopF(time + e.id * 0.09, e.modDefs && e.modDefs.swift ? 13 : 10, 8) };
+  return { anim: 'upyr_idle', frame: loopF(time + e.id * 0.09, 5, 4) };
+}
+
 /** Лист вида и зеркало по направлению. */
 export function viewOf(dir, facing) {
   return { view: BACK.has(dir) ? 'ne' : 'se', flip: side(dir, facing) < 0 };
@@ -120,6 +142,31 @@ export function drawCharArt(ctx, pose, x, y, dir, facing, o = {}) {
     ctx.save(); ctx.globalAlpha *= 0.5; ctx.globalCompositeOperation = 'lighter'; blitF(ctx, sh, pose.frame, x, y, flip); ctx.restore();
   }
   return true;
+}
+
+/** Жёлтые угольки глаз упыря (flame #ffd65c) поверх тинта матёрого/замедления — PM: глаза остаются жёлтыми. */
+export function restoreUpyrEyes(ctx, pose, x, y, dir, facing) {
+  const { view, flip } = viewOf(dir, facing);
+  const sh = ART.sheets[pose.anim + '_' + view] || ART.sheets[pose.anim + '_se'];
+  if (!sh) return;
+  const m = sh.meta, [fw, fh] = m.frame_size, [px, py] = m.pivot, fr = Math.max(0, pose.frame) % (m.frame_count || 1);
+  const key = pose.anim + '_' + view + '_' + fr + '_eyes';
+  ART.eyes = ART.eyes || {};
+  let cv = ART.eyes[key];
+  if (!cv) {
+    cv = document.createElement('canvas'); cv.width = fw; cv.height = fh;
+    const g = cv.getContext('2d', { willReadFrequently: true });
+    g.drawImage(sh.img, fr * fw, 0, fw, fh, 0, 0, fw, fh);
+    const id = g.getImageData(0, 0, fw, fh), d = id.data;
+    for (let i = 0; i < d.length; i += 4) {                  // оставить только жёлтые угольки (flame / ember-искры глаз)
+      const r = d[i], gch = d[i + 1], b = d[i + 2], a = d[i + 3];
+      if (a < 200 || r < 220 || gch < 160 || b > 130) { d[i + 3] = 0; }
+    }
+    g.putImageData(id, 0, 0);
+    ART.eyes[key] = cv;
+  }
+  ctx.save(); ctx.translate(Math.round(x), Math.round(y)); if (flip) ctx.scale(-1, 1);
+  ctx.drawImage(cv, -px, -py); ctx.restore();
 }
 
 /** Обводка «под курсором / элита» — 1 px контур силуэта цветом c (рисуется до спрайта). */

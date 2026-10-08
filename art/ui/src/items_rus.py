@@ -175,6 +175,18 @@ def beresta():
     return _mk(m)
 
 
+def beresta_v2():
+    """Береста возврата v2 (08.10, M1c): diagonal birch roll, bronze wire, burning Чур sign, no red cord.
+    Drawn in art/sprites/src/beresta.py (same drawing as art/sprites/item_beresta/item_beresta_icon.png)."""
+    import os
+    import sys
+    src = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "sprites", "src")
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    import beresta as _B
+    return _B.icon_sprite()
+
+
 def shelom(w=26, h=28):
     """Конический шелом с наносником и бармицей."""
     m = MatCanvas(w, h)
@@ -395,7 +407,7 @@ def build():
         "gem_ruby": gem("ruby"), "gem_sapphire": gem("sapphire"), "gem_amber": gem("amber"),
         "gem_nebyl": gem("nebyl"), "sword_eq": sword(70), "kolchuga_eq": kolchuga(44, 60),
         "shield_small": round_shield(34), "scramasax": scramasax(), "steganka": steganka(),
-        "shapka": shapka(), "porshni": porshni(), "kushak": kushak(), "beresta": beresta(),
+        "shapka": shapka(), "porshni": porshni(), "kushak": kushak(), "beresta": beresta_v2(),   # v1: beresta() (red cord, read like the грамота)
         # v1.4 names (GDD §6.2, A13)
         "shelom_klep": shelom_klep(), "rukavitsy_kozh": rukavitsy_kozh(), "rukavitsy_boevye": rukavitsy_boevye(),
         "poyas_kozh": poyas_kozh(), "doshchataya": doshchataya(),

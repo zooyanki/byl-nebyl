@@ -109,7 +109,25 @@
   "fx_mara_bolt_hit/fx_mara_bolt_hit.png",
   "fx_krivsha_feed/fx_krivsha_feed_back.png",
   "fx_krivsha_feed/fx_krivsha_feed.png",
-  "fx_krivsha_feed/fx_krivsha_feed_source.png"
+  "fx_krivsha_feed/fx_krivsha_feed_source.png",
+  "upyr/upyr_idle_se.png",
+  "upyr/upyr_idle_ne.png",
+  "upyr/upyr_walk_se.png",
+  "upyr/upyr_walk_ne.png",
+  "upyr/upyr_attack_se.png",
+  "upyr/upyr_attack_ne.png",
+  "upyr/upyr_hurt_se.png",
+  "upyr/upyr_hurt_ne.png",
+  "upyr/upyr_death_se.png",
+  "upyr/upyr_death_ne.png",
+  "upyr/upyr_rise_se.png",
+  "upyr/upyr_rise_ne.png",
+  "item_beresta/item_beresta_icon.png",
+  "item_beresta/item_beresta_ground.png",
+  "fx_chur_portal/fx_chur_portal_open.png",
+  "fx_chur_portal/fx_chur_portal_loop.png",
+  "fx_chur_portal/fx_chur_portal_fading.png",
+  "fx_chur_portal/fx_chur_portal_close.png"
  ],
  "checks": {
   "arsonist_idle_se": {
@@ -549,6 +567,78 @@
    "alpha_ok": true
   },
   "fx_krivsha_feed_source": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "upyr_idle_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "upyr_idle_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "upyr_walk_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "upyr_walk_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "upyr_attack_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "upyr_attack_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "upyr_hurt_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "upyr_hurt_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "upyr_death_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "upyr_death_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "upyr_rise_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "upyr_rise_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "item_beresta_icon": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "item_beresta_ground": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_chur_portal_open": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_chur_portal_loop": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_chur_portal_fading": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_chur_portal_close": {
    "palette_ok": true,
    "alpha_ok": true
   }
@@ -1457,6 +1547,157 @@
    "kapishche": "m1b_scenes/kapishche_scene_x3.png",
    "feed": "m1b_scenes/krivsha_feed_scene_x3.png",
    "anchutka": "m1b_scenes/anchutka_scene_x3.png"
+  },
+  "upyr": {
+   "idle_se": [
+    39,
+    38,
+    37,
+    38
+   ],
+   "idle_ne": [
+    39,
+    38,
+    37,
+    38
+   ],
+   "walk_se": [
+    39,
+    38,
+    37,
+    38,
+    39,
+    38,
+    37,
+    38
+   ],
+   "walk_ne": [
+    39,
+    37,
+    37,
+    37,
+    39,
+    37,
+    37,
+    37
+   ],
+   "attack_se": [
+    40,
+    45,
+    49,
+    31,
+    30,
+    37
+   ],
+   "attack_ne": [
+    40,
+    45,
+    49,
+    31,
+    30,
+    37
+   ],
+   "hurt_se": [
+    42,
+    40
+   ],
+   "hurt_ne": [
+    42,
+    40
+   ],
+   "death_se": [
+    43,
+    36,
+    24,
+    15,
+    12,
+    19,
+    28,
+    12
+   ],
+   "death_ne": [
+    43,
+    36,
+    24,
+    15,
+    12,
+    19,
+    28,
+    12
+   ],
+   "rise_se": [
+    12,
+    22,
+    22,
+    27,
+    32,
+    40
+   ],
+   "rise_ne": [
+    12,
+    22,
+    21,
+    27,
+    32,
+    40
+   ],
+   "body": {
+    "se": [
+     37,
+     39
+    ],
+    "ne": [
+     37,
+     39
+    ]
+   }
+  },
+  "item_beresta": {
+   "icon": [
+    20,
+    20
+   ],
+   "ground": [
+    18,
+    12
+   ],
+   "ground_pivot": [
+    9,
+    10
+   ],
+   "ground_visible": [
+    16,
+    10
+   ]
+  },
+  "fx_chur_portal": {
+   "frame": [
+    64,
+    84
+   ],
+   "pivot": [
+    32,
+    74
+   ],
+   "oval_top": 55,
+   "open_loop_top": [
+    60,
+    62,
+    63,
+    60,
+    62,
+    63,
+    59,
+    60
+   ],
+   "ring": [
+    36.2,
+    18.1
+   ]
+  },
+  "m1c_scenes": {
+   "upyr": "m1c_scenes/upyr_scene_x3.png",
+   "portal": "m1c_scenes/beresta_portal_scene_x3.png"
   }
  }
 }

@@ -1,0 +1,40 @@
+{
+ "character": "Упырь",
+ "animation": "attack",
+ "direction": "ne",
+ "mirror_for": "nw",
+ "mirror_rule": "flip horizontally around the frame centre line x = 32.0; pivot stays (32, 56)",
+ "pivot": [
+  32,
+  56
+ ],
+ "fps": 5,
+ "loop": false,
+ "visible_height_px": [
+  40,
+  45,
+  49,
+  31,
+  30,
+  37
+ ],
+ "height_rule": "pivot row (ground under the feet) to the top visible pixel, outline included",
+ "notes": "Упырь (GDD §5.2 E2; act1: мертвец, вставший из могилы, медленный, бьёт больно, ходит толпой). One sprite for the Залесье packs, the ambush waves (rise from the ground) and Кривша's summons. Hunched grave-ghoul (concept: art/ui/src/sprites_rus.upyr): head pushed forward under the hump, grey-blue dead skin, ribs, sunken sockets with yellow embers, hanging jaw with fangs, long arms with bone claws, rotten brown shroud over the back + loin rag, rot (nebyl_dk), blood only red_dk. Body 37-39 hunched (scale.md 40, def.height 40), frame 64x64, pivot (32,56).",
+ "events": {
+  "hit_frame": 3,
+  "telegraph_frames": [
+   0,
+   2
+  ],
+  "sync": "attackTime 1.8 s, hitAt 0.6 s (monsters.json): 6 frames at 5 fps, frame 3 (the smash) starts at exactly 0.6 s; the anim ends at 1.2 s, hold idle for the rest of attackTime. Heavy two-handed overhead blow (GDD: «редкий тяжёлый удар»), dirt kicked up at the claws on frames 3-4"
+ },
+ "image": "upyr_attack_ne.png",
+ "frame_size": [
+  64,
+  64
+ ],
+ "frame_count": 6,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

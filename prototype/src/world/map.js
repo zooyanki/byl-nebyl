@@ -5,10 +5,11 @@ import { makeRng, hash2 } from '../core/rng.js';
 import { SUB, circleFree } from './collision.js';
 import { generateTrail } from './trail.js';
 import { generateKapishche } from './kapishche.js';
+import { generateLadoga } from './ladoga.js';
 
 export const T_GRASS = 0, T_DIRT = 1, T_WATER = 2, T_FOREST = 3, T_ASH = 4;   // T_FOREST — пол чащи (непроходим); T_ASH — пепелище (GDD v1.8.1 B-31)
 // Что закрывает обзор и останавливает снаряды (вода и крада — нет).
-const OPAQUE = new Set(['tree', 'rock', 'wall', 'palisade', 'izba', 'idol', 'gate', 'perun']);
+const OPAQUE = new Set(['tree', 'rock', 'wall', 'palisade', 'izba', 'idol', 'gate', 'perun', 'cart', 'anvil']);
 
 export class GameMap {
   constructor(w, h) {
@@ -110,6 +111,7 @@ export class GameMap {
 export function generateMap(seed, zone = null) {
   if (zone && zone.path) return generateTrail(seed, zone);
   if (zone && zone.id === 'kapishche') return generateKapishche(seed, zone);
+  if (zone && zone.id === 'ladoga') return generateLadoga(zone);
   // GDD v1.8.1 (B-31): тупик Мары — карта расширена на восток (zone.landmarks.maraDen.mapW); основная часть 48×48 та же
   const den = zone && zone.landmarks && zone.landmarks.maraDen;
   const m = new GameMap(den ? den.mapW : MAP_W, MAP_H);
@@ -221,6 +223,8 @@ export function generateMap(seed, zone = null) {
   scatter(16, 0.5, (x, y) => m.addProp('tree', x - 0.25, y - 0.25, 1, { birch: rng() < 0.6, fp: [x, y, 0.5, 0.5] }));
 
   if (den) carveMaraDen(m, den, inDen, makeRng(seed + 7331));   // тупик Мары (GDD v1.8.1 B-31) — после чащи кромки и россыпи
+  const lad = (zone.objects || []).find((o) => o.id === 'to_ladoga');
+  if (lad) clearProps(m, lad.x, lad.y, 1.6);
 
   m.computeReach();
   return m;
@@ -255,6 +259,22 @@ export function resolveObjects(m, zone, pos) {
 
 /** Тупик Мары Пепельной (GDD v1.8.1 B-31): поляна-пепелище за избой 2 на северо-востоке, вход — горловина от восточной
  *  кромки Залесья; у входа обгоревший сарай и пепел (вход читается с пути «ворота частокола → изба 3»). */
+function clearProps(m, x, y, rad) {
+  const drop = m.props.filter((p) => (p.type === 'tree' || p.type === 'rock') && Math.hypot(p.x + 0.5 - x, p.y + 0.5 - y) <= rad);
+  if (!drop.length) return;
+  const kill = new Set(drop);
+  m.props = m.props.filter((p) => !kill.has(p));
+  for (const p of drop) {
+    const [fx, fy, fw, fh] = p.fp;
+    for (let sy = Math.floor(fy * SUB); sy < Math.ceil((fy + fh) * SUB - 1e-6); sy++)
+      for (let sx = Math.floor(fx * SUB); sx < Math.ceil((fx + fw) * SUB - 1e-6); sx++)
+        if (sx >= 0 && sy >= 0 && sx < m.sw && sy < m.sh) { m.sub[sy * m.sw + sx] = 0; m.opaque[sy * m.sw + sx] = 0; }
+  }
+  for (let ty = Math.floor(y - rad); ty <= Math.ceil(y + rad); ty++)
+    for (let tx = Math.floor(x - rad); tx <= Math.ceil(x + rad); tx++)
+      if (m.inside(tx, ty) && m.ground[ty * m.w + tx] !== T_WATER) m.ground[ty * m.w + tx] = T_DIRT;
+}
+
 function denShape(den) {
   const [cx, cy] = den.center, C = den.corridor;
   return (x, y) => Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= den.clearR || (x >= C.x0 && x <= C.x1 && y >= C.y0 && y <= C.y1);

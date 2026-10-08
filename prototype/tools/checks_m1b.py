@@ -25,6 +25,7 @@ async def run_m1b(pg, G, check, wait, client_of, client_scr, a):
     await pg.mouse.click(960, 300)
     await wait(200)
     print('--- веха M1b', flush=True)
+    await G("(() => { if (__game.zone.id !== 'zalesye') __game.enterZone('zalesye', 'start'); })()")
 
     # --- QA B-28 (первым): закрытый выход — стена, переход только по намерению; замер смешанной стаи у выхода
     s = await G('''(() => { const g = __game, h = g.hero, o = g.objectById('to_trail'), m = g.map; for (const e of g.enemies) e.stagger = 1e9;

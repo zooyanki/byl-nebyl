@@ -1,0 +1,20 @@
+{
+ "object": "Чуров проход",
+ "key": "obj.chur_portal",
+ "frame_size": [
+  64,
+  84
+ ],
+ "pivot": [
+  32,
+  74
+ ],
+ "files": {
+  "fx_chur_portal_open": "fx_chur_portal_open.png",
+  "fx_chur_portal_loop": "fx_chur_portal_loop.png",
+  "fx_chur_portal_fading": "fx_chur_portal_fading.png",
+  "fx_chur_portal_close": "fx_chur_portal_close.png"
+ },
+ "states": "closed = no object (nothing drawn) -> open (6 @10 once) -> loop (8 @10) [-> fading (8 @10 loop) for the last 10 s] -> close (6 @10 once) -> removed",
+ "hitbox_hint": "objectAt box for 'portal': [14, -55, 8] (half-width, top, bottom) instead of [14, -46, 6]"
+}

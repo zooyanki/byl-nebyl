@@ -1,0 +1,22 @@
+{
+ "item": "Береста возврата (item.beresta)",
+ "kind": "bag icon (inventory 1x1, stack ×N drawn by the engine)",
+ "pivot": [
+  10,
+  10
+ ],
+ "fps": 0,
+ "loop": false,
+ "size_note": "20x20 incl. ink outline; centred in the 24-px cell like every 1x1 icon (old beresta 20x18)",
+ "atlas": "art/ui/src/items_rus.build() key 'beresta' now returns this drawing (beresta_v2 -> sprites/src/beresta.py); re-run prototype/tools/export_ui.py to refresh assets/items.png + src/data/ui_atlas.js",
+ "notes": "diagonal birch-bark roll, bronze wire, burning Чур rhomb (ember/flame); no red (old icon had a red cord)",
+ "image": "item_beresta_icon.png",
+ "frame_size": [
+  20,
+  20
+ ],
+ "frame_count": 1,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

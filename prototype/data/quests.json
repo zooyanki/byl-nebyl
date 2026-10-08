@@ -144,6 +144,25 @@
     "_note": "Вход в капище: ложится «Чад» (act1_texts §4)"
    }
   ],
-  "completeOn": "required"
+  "completeOn": "required",
+  "malGift": {
+   "_about": "GDD v1.9 §8.2/§15 (журнал п.7): Мал при выходе из избы даёт 2 слабых зелья жизни и 30 серебра, без опыта, один раз за М1; реплика bark.m1.mal_gift. Награда миссии (300 сер., «Ярь I» от Вышаты) — заглушка до хаба Ладоги.",
+   "potions": {
+    "life1": 2
+   },
+   "silver": 30,
+   "xp": 0,
+   "once": true,
+   "barkKey": "bark.m1.mal_gift"
+  },
+  "reward": {
+   "silver": 300,
+   "yarTier": 1,
+   "yarMax": 15,
+   "yarRegenPct": 10,
+   "skillPoints": 1,
+   "giver": "vyshata",
+   "bark": "bark.vyshata.reward"
+  }
  }
 }

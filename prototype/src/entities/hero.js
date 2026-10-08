@@ -80,6 +80,7 @@ export class Hero extends Actor {
     const F = STATS, C = F.caps;
     this.maxHp = Math.floor(F.hp.base + F.hp.perVit * this.vit + F.hp.perLevel * (L - 1) + g('hp'));
     this.maxYar = Math.floor(F.yar.base + F.yar.perEne * this.ene + F.yar.perLevel * (L - 1) + g('mana'));
+    if (this.yarTier) this.maxYar += this.yarBonusMax || 0;   // «Ярь I»: +15 к запасу до расчёта регена
     this.yarRegen = (F.yarRegenPctPerSec / 100) * this.maxYar * (1 + g('regenPct') / 100);
     this.hpRegen = F.hpRegenPerSec;
     this.ar = F.ar.perDex * this.dex + F.ar.perLevel * L + g('ar');
@@ -94,6 +95,7 @@ export class Hero extends Actor {
     const chur = this.buffs && this.buffs.chur ? this.buffs.chur : null;            // «Чур-оберег»
     if (stat) this.maxHp = Math.floor(this.maxHp * (1 + stat.hpPct / 100));
     if (vesh) this.yarRegen *= 1 + vesh.regenPct / 100;
+    if (this.yarTier && this.yarRegenBonus) this.yarRegen *= 1 + this.yarRegenBonus / 100;   // «Ярь I»: +10% после «Вещего слова», до «Чада»
     if (chur) this.def = Math.floor(this.def * (1 + chur.defPct / 100));
     this.elemPct = vesh ? vesh.elemPct : 0;
     this.spellMul = 1 + this.ene / 100 + g('spellPct') / 100 + this.elemPct / 100;
@@ -243,8 +245,20 @@ export class Hero extends Actor {
   cdLeft(id) { return this.cds[id] || 0; }
 
   /** Применить навык. Возвращает 'ok' | 'busy' | 'yar' | 'cd' | 'none' | 'stun' | 'dead'. */
+  respec() {
+    let back = 0;
+    for (const k of Object.keys(HERO_START)) { back += (this.base[k] - HERO_START[k]); this.base[k] = HERO_START[k]; }
+    this.points += back;
+    this.skills = { ...RULES.starter };
+    this.bar = RULES.starterBar.map(() => null);
+    this.lmb = 'sshibka'; this.rmb = 'zmey';
+    this.buffs = {};
+    this.recalc();
+  }
+
   useSkill(game, id, tx, ty, target = null) {
     if (this.dead) return 'dead';
+    if (game.zone && game.zone.noAttack && !(target && target.dummy && SKILLS[id] && SKILLS[id].type === 'melee')) return 'town';
     if (this.stun > 0 || this.dashing) return 'busy';
     const sk = SKILLS[id];
     if (!sk || !rankOf(this, id) || sk.type === 'passive') return 'none';
@@ -318,6 +332,7 @@ export class Hero extends Actor {
   }
 
   startAttack(target, skill = null, game = null) {
+    if (game && game.zone && game.zone.noAttack && !(target && target.dummy)) { this.cmd = null; return; }
     if (skill) {            // «Сшибка» платит Ярь в начале замаха
       const cost = skillCost(this, skill);
       if (this.yar < cost && this.cmd && this.cmd.lmb) {
@@ -339,6 +354,8 @@ export class Hero extends Actor {
     if (this.dead) return;
     const s = this.belt[slot];
     if (!s) { game.notify('Ячейка ' + (slot + 1) + ' пуста', PAL.mist, 'empty'); return; }
+    // GDD v1.9 §4.4/§6.9: береста в ячейке пояса читается клавишей ячейки (1–4), ЛКМ/ПКМ по ячейке; тратится в конце каста
+    if (s.scroll) { game.useScroll({ kind: 'scroll', scroll: s.scroll, beltSlot: slot }); return; }
     if (!this.canDrink(s.kind, game)) return;
     this.applyPotion(s.kind, game);
     s.count--;
@@ -386,6 +403,12 @@ export class Hero extends Actor {
   }
   // пустую ячейку пояса пополняем зельями того же вида из котомки
   refillBelt(slot, kind) {
+    // M1d: опустевшая ячейка бересты добирается берестой из котомки (стопка пояса 5), иначе — зельями, как раньше
+    if (kind && SCROLLS[kind]) {
+      const n = this.takeScrollsFromBag(kind, SCROLLS[kind].beltStack || BELT_STACK);
+      if (n > 0) { this.belt[slot] = { kind, scroll: kind, count: n }; return; }
+      kind = null;
+    }
     // сначала зелья того же вида, иначе — любого (QA B-05)
     let fromBag = this.inv.items.filter((it) => it.kind === 'potion' && it.potion === kind);
     if (!fromBag.length) { const any = this.inv.items.find((it) => it.kind === 'potion'); if (any) fromBag = this.inv.items.filter((it) => it.kind === 'potion' && it.potion === any.potion); }
@@ -397,7 +420,7 @@ export class Hero extends Actor {
   }
   /** Подобрать зелье: сначала в пояс, потом в котомку. Возвращает 'belt' | 'bag' | null. */
   addPotion(kind) {
-    for (let i = 0; i < BELT_SIZE; i++) { const s = this.belt[i]; if (s && s.kind === kind && s.count < BELT_STACK) { s.count++; return 'belt'; } }
+    for (let i = 0; i < BELT_SIZE; i++) { const s = this.belt[i]; if (s && !s.scroll && s.kind === kind && s.count < BELT_STACK) { s.count++; return 'belt'; } }
     for (let i = 0; i < BELT_SIZE; i++) if (!this.belt[i]) { this.belt[i] = { kind, count: 1 }; return 'belt'; }
     return this.inv.autoAdd(makePotion(kind)) ? 'bag' : null;
   }
@@ -405,7 +428,9 @@ export class Hero extends Actor {
   // --- береста возврата (GDD §4.4; веха M1c)
   /** Положить n берест в котомку стопками до SCROLLS[kind].stack (§6.9: 20). Возвращает, сколько не влезло. */
   addScroll(kind, n = 1) {
-    const max = SCROLLS[kind].stack || 20;
+    const max = SCROLLS[kind].stack || 20, bmax = SCROLLS[kind].beltStack || BELT_STACK;
+    // M1d (GDD v1.9 §6.9): подобранная береста сперва доливает ячейку пояса, где уже лежит береста (до 5); пустые ячейки не занимает
+    for (const b of this.belt) { if (n <= 0) break; if (b && b.scroll === kind && b.count < bmax) { const k = Math.min(n, bmax - b.count); b.count += k; n -= k; } }
     for (const it of this.inv.items) {
       if (n <= 0) break;
       if (it.kind === 'scroll' && it.scroll === kind && it.count < max) { const k = Math.min(n, max - it.count); it.count += k; n -= k; }
@@ -417,7 +442,45 @@ export class Hero extends Actor {
     }
     return n;
   }
-  scrollCount(kind = 'beresta') { return this.inv.items.reduce((s, it) => s + (it.kind === 'scroll' && it.scroll === kind ? it.count : 0), 0); }
+  scrollCount(kind = 'beresta') { return this.bagScrolls(kind) + this.belt.reduce((s, b) => s + (b && b.scroll === kind ? b.count : 0), 0); }
+  bagScrolls(kind = 'beresta') { return this.inv.items.reduce((s, it) => s + (it.kind === 'scroll' && it.scroll === kind ? it.count : 0), 0); }
+  /** Забрать до n берест из стопок котомки (для пояса). Возвращает, сколько взято. */
+  takeScrollsFromBag(kind, n) {
+    let got = 0;
+    for (const it of this.inv.items.filter((i) => i.kind === 'scroll' && i.scroll === kind).sort((a, b) => a.count - b.count)) {
+      if (got >= n) break;
+      const k = Math.min(n - got, it.count); it.count -= k; got += k;
+      if (it.count <= 0) this.inv.remove(it);
+    }
+    return got;
+  }
+  /** Потратить одну бересту в конце каста: из той ячейки пояса / стопки котомки, с которой читали, иначе — любую (сначала котомка). */
+  consumeScroll(item) {
+    const kind = (item && item.scroll) || 'beresta';
+    const fromBelt = (i) => { const b = this.belt[i]; if (!b || b.scroll !== kind || b.count <= 0) return false; b.count--; if (b.count <= 0) { this.belt[i] = null; this.refillBelt(i, kind); } return true; };
+    if (item && item.beltSlot != null && fromBelt(item.beltSlot)) return true;
+    let stack = item && this.inv.items.includes(item) && item.count > 0 ? item : this.inv.items.find((it) => it.kind === 'scroll' && it.scroll === kind && it.count > 0);
+    if (stack) { stack.count--; if (stack.count <= 0) this.inv.remove(stack); return true; }
+    for (let i = 0; i < BELT_SIZE; i++) if (fromBelt(i)) return true;
+    return false;
+  }
+  /** Положить предмет с курсора в ячейку пояса (GDD v1.9 §6.9). Возвращает остаток в руке (null — всё легло) или
+   *  строку ошибки: 'type' — не зелье и не береста (ui.error.belt), 'full' — ячейка занята другим или полна. */
+  putInBelt(item, slot) {
+    if (!item || (item.kind !== 'potion' && item.kind !== 'scroll')) return 'type';
+    const b = this.belt[slot];
+    if (item.kind === 'potion') {
+      if (!b) { this.belt[slot] = { kind: item.potion, count: 1 }; return null; }
+      if (!b.scroll && b.kind === item.potion && b.count < BELT_STACK) { b.count++; return null; }
+      return 'full';
+    }
+    const max = SCROLLS[item.scroll].beltStack || BELT_STACK;
+    if (b && (b.scroll !== item.scroll || b.count >= max)) return 'full';
+    const have = b ? b.count : 0, k = Math.min(item.count, max - have);
+    this.belt[slot] = { kind: item.scroll, scroll: item.scroll, count: have + k };
+    item.count -= k;
+    return item.count > 0 ? item : null;
+  }
   /** Начать чтение бересты (каст castTime, GDD: 1 с). Возвращает ключ ошибки ru.json или null. Береста тратится по окончании каста. */
   readScroll(item, game) {
     if (this.dead) return 'dead';

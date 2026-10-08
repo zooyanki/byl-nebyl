@@ -43,7 +43,7 @@ PROTO = {
     "proto.chur_respawn_hint": "Теперь, если падёшь, очнёшься здесь.",
     "proto.krivsha_body": "Тело Кривши",
     "proto.bylina_soon": "Былинные вещи — в следующей вехе.",
-    "proto.reward_ladoga": "Награду выдаст Вышата в Ладоге (в прототипе Ладоги нет).",
+    "proto.reward_ladoga": "Награду выдаст Вышата в Ладоге.",
     "proto.idol_perun": "Идол Перуна",
     "proto.hearth": "Огнище",
     # веха M1c (береста возврата, былинные вещи): заглушки прототипа, у сценариста строк нет
@@ -127,7 +127,41 @@ for uid, name, base, lore in rows14:
     out.setdefault("item." + uid.lower() + ".name", nm)
     out["item." + uid.lower() + ".lore"] = clean(lore)
 out.update(OVERRIDE)
+
+def npc_dialogs():
+    """Диалоги §5 act1_texts и реплики Вышаты из act1.md — дословно, без переписывания."""
+    a = open(ACT1, encoding="utf-8").read()
+    src = open(SRC, encoding="utf-8").read()
+    out = {"npc.vyshata": "Вышата", "npc.vedana": "Ведана", "npc.tverdyata": "Твердята"}
+    sec = a.split("### Вышата, посадник Ладоги", 1)[1].split("###", 1)[0]
+    out["npc.vyshata.greet"] = re.search(r"Приветствие: «(.+?)»", sec).group(1)
+    def quotes(block):
+        return [[clean(w), clean(x)] for w, x in re.findall(r"> \*\*(.+?):\*\* (.+)", block)]
+    out["npc.vyshata.s0"] = quotes(sec.split("Перед миссией 1:", 1)[1].split("- После", 1)[0])
+    out["npc.vyshata.s1"] = quotes(sec.split("После миссии 1:", 1)[1].split("- После", 1)[0])
+    s5 = src.split("## 5. Диалоги", 1)[1].split("\n## ", 1)[0]
+    parts = re.split(r"\n### ", s5)
+    for part, role in ((parts[1], "tverdyata"), (parts[2], "vedana")):
+        g = re.search(r"«(.+?)»", part)
+        out["npc." + role + ".greet"] = g.group(1)
+        reps = re.search(r"Повторяющиеся \*\*\[ACT1\]\*\*: (.+)", part)
+        if reps:
+            out["npc." + role + ".rep"] = re.findall(r"«(.+?)»", reps.group(1))
+        for key, block in re.findall(r"\*\*С\d · `([^`]+)`\*\*\n((?:>.*\n)+)", part):
+            out[key] = quotes(block)
+        for key, text in re.findall(r"`(npc\.[a-z0-9_.]+)` «(.+?)»", part):
+            out[key] = text
+    # Мал: приветствие и слухи С1 (в Ладоге со сдачи М1)
+    mal = parts[3] if len(parts) > 3 else ""
+    mg = re.search(r"«(.+?)»", mal)
+    if mg: out["npc.mal.greet"] = mg.group(1)
+    mb = re.search(r"`npc\.mal\.s1`\*\*\n((?:>.*\n)+)", mal)
+    if mb: out["npc.mal.s1"] = quotes(mb.group(1))
+    assert out["npc.vyshata.s0"] and out["npc.vyshata.s1"] and out.get("npc.tverdyata.s0") and out.get("npc.vedana.s0"), list(out)
+    return out
+
 out.update(act1_strings())
+out.update(npc_dialogs())
 out.update(PROTO)
 for k in SKIP:
     out.pop(k, None)

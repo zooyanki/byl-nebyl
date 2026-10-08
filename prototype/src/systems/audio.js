@@ -1,3 +1,4 @@
+import { crand } from '../core/rng.js';   // B-35: звук не тратит игровое зерно
 // Звуки-заглушки: всё синтезируется WebAudio на лету, без файлов.
 // play(name): hit, crit, throw, miss, hurt, block, skill, explode, kill, pickup, silver, potion, equip, levelup, death, respawn, ui, error.
 const STORE_KEY = 'byl_nebyl_mute';
@@ -24,7 +25,7 @@ export class Audio {
     const n = this.ctx.sampleRate * 0.6;
     this.noiseBuf = this.ctx.createBuffer(1, n, this.ctx.sampleRate);
     const d = this.noiseBuf.getChannelData(0);
-    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    for (let i = 0; i < n; i++) d[i] = crand() * 2 - 1;
   }
 
   setMuted(m) {
@@ -56,7 +57,7 @@ export class Audio {
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     s.connect(f); f.connect(g); g.connect(this.master);
-    s.start(t, Math.random() * 0.2); s.stop(t + dur + 0.02);
+    s.start(t, crand() * 0.2); s.stop(t + dur + 0.02);
   }
 
   play(name) {
