@@ -361,10 +361,24 @@
   },
   "treeRules": {
     "pathClear": 1.5,
-    "frontClear": 3,
+    "frontClear": 5,
     "frontMaxH": {
-      "fir": 96,
-      "birch": 112
+      "fir": 80,
+      "birch": 96
+    },
+    "edgeFront": {
+      "band": 8,
+      "maxH": {
+        "fir": 120,
+        "birch": 112
+      }
+    },
+    "packFront": {
+      "r": 6,
+      "maxH": {
+        "fir": 80,
+        "birch": 96
+      }
     },
     "rings": [
       "hutDoor",

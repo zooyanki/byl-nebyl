@@ -45,6 +45,8 @@ export function generateLadoga(zone) {
   for (const [type, x, y, size, fp, ex] of zone.props) {
     // m1k (§7.1.1, §15): [kind, x, y, size, fp, {id, variant, door}]; сортировка — центр футпринта (addProp)
     const p = m.addProp(type, x, y, size, { ...(ex || {}), fp: [...fp], len: type === 'ladya' ? 12 : 0, beam: type === 'ladya' ? 3 : 0 });
+    // v1.13.3 (ответ 5): дым только у жилых построек с печью — по виду постройки из ladoga.json smokeKinds, а не по точке в листе
+    p.smoke = (zone.smokeKinds || []).includes(type);
     if (type === 'churstone') m.churStone = { x: x + 0.5, y: y + 0.5 };
   }
   resolveObjects(m, zone, (o) => [o.x, o.y]);

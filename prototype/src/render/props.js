@@ -93,7 +93,8 @@ function drawBld(ctx, p, toS, time) {
   ctx.drawImage(spr.c, sx - spr.ox, sy - spr.oy);
   const sm = B.sh.meta.anchors_px && B.sh.meta.anchors_px.smoke;
   const pt = sm && (Array.isArray(sm) ? sm : sm[B.fr] || sm['0']);
-  if (pt) drawFxFrame(ctx, 'smoke', Math.floor(time * ((FXfps) || 5) + p.seed * 4), sx - spr.ox + pt[0], sy - spr.oy + pt[1]);
+  p._smoked = !!(pt && p.smoke);   // v1.13.3: дым — только у видов из smokeKinds (изба, с сенями, на подклете, баня)
+  if (pt && p.smoke) drawFxFrame(ctx, 'smoke', Math.floor(time * ((FXfps) || 5) + p.seed * 4), sx - spr.ox + pt[0], sy - spr.oy + pt[1]);
   return true;
 }
 const FXfps = 5;   // fx_smoke_wisp: 4 кадра, 5 к/с (JSON художника)

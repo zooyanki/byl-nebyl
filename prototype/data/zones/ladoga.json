@@ -736,6 +736,12 @@
    "cd": 10
   }
  },
+ "smokeKinds": [
+  "izba",
+  "izba_seni",
+  "izba_podklet",
+  "banya"
+ ],
  "sign": {
   "x": 26,
   "y": 18,

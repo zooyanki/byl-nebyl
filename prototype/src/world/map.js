@@ -271,8 +271,8 @@ export function generateMap(seed, zone = null) {
     const pts = [[m.krada.x, m.krada.y], ...['hut1', 'hut2', 'hut3'].map(hut).filter(Boolean).map((o) => [o.sx, o.sy])];
     const ex = m.objects.find((o) => o.id === 'to_trail'); if (ex) pts.push([ex.x, ex.y]);
     const TR = zone.treeRules, rings = [];
-    if ((TR.rings || []).includes('hutDoor')) for (const o of m.objects) if (o.type === 'hut') rings.push([o.x, o.y]);
-    if ((TR.rings || []).includes('pack')) for (const p of m.packs) rings.push([p.x, p.y]);
+    if ((TR.rings || []).includes('hutDoor')) for (const o of m.objects) if (o.type === 'hut') rings.push([o.x, o.y, 'hut']);
+    if ((TR.rings || []).includes('pack') || TR.packFront) for (const p of m.packs) rings.push([p.x, p.y, 'pack', (TR.rings || []).includes('pack')]);
     const G = m.glade && m.glade.box, pad = 3;
     applyTreeRules(m, TR, pts, rings, G ? (x, y) => x > G[0] - pad && x < G[2] + pad && y > G[1] - pad && y < G[3] + pad : null);
   }
@@ -284,7 +284,8 @@ export function generateMap(seed, zone = null) {
  *  (двери изб, логова пачек). В полосе pathClear от пути / колец — ни одного ствола: дерево заменяется пнём (половинный
  *  ствол — пень с тем же футпринтом) или кустом (≤ 28 px); клетка остаётся непроходимой, взгляд больше не загораживает.
  *  В полосе frontClear «перед» путём (x + y больше, чем у ближайшей точки пути) — только низкие: ель ≤ frontMaxH.fir,
- *  берёза ≤ frontMaxH.birch (p.hMax). exempt(cx, cy) — не трогать (поляна Мала). → m.treeStats. */
+ *  берёза ≤ frontMaxH.birch (p.hMax). v1.13.3: edgeFront — кромка в band тайлах перед путём ≤ edgeFront.maxH; packFront —
+ *  перед логовом стаи в радиусе r ≤ packFront.maxH; берётся меньший предел; стволы остаются. rings: [x, y, kind, ring]. exempt(cx, cy) — не трогать (поляна Мала). → m.treeStats. */
 export function applyTreeRules(m, R, pts, rings, exempt = null) {
   if (!R) return null;
   const segD = (x, y) => {
@@ -297,16 +298,20 @@ export function applyTreeRules(m, R, pts, rings, exempt = null) {
     return [best, q];
   };
   const trees = m.props.filter((p) => p.type === 'tree'), total = trees.length;
-  const st = { total, removed: 0, shortened: 0, pct: 0, exempt: 0, pathPts: pts.length, rings: rings.length };
+  const EF = R.edgeFront || null, PF = R.packFront || null;
+  const st = { total, removed: 0, shortened: 0, by: { front: 0, edge: 0, pack: 0 }, pct: 0, pctTouched: 0, exempt: 0, pathPts: pts.length, rings: rings.length };
   const drop = new Set(), add = [];
   for (const p of trees) {
     const cx = p.fp[0] + p.fp[2] / 2, cy = p.fp[1] + p.fp[3] / 2;
     if (exempt && exempt(cx, cy)) { st.exempt++; continue; }
-    let [d, q] = segD(cx, cy), front = d < R.frontClear && cx + cy > q[0] + q[1];
-    for (const [rx, ry] of rings) {
-      const dr = Math.hypot(cx - rx, cy - ry);
-      if (dr < d) d = dr;
-      if (dr < R.frontClear && cx + cy > rx + ry) front = true;
+    let [d, q] = segD(cx, cy);
+    const ahead = cx + cy > q[0] + q[1];   // «перед» — сторона пути к камере (+x/+y)
+    let front = d < R.frontClear && ahead, edge = !!(EF && ahead && d < EF.band), pack = false;
+    for (const [rx, ry, kind, ring = true] of rings) {
+      const dr = Math.hypot(cx - rx, cy - ry), before = cx + cy > rx + ry;
+      if (ring && dr < d) d = dr;
+      if (ring && dr < R.frontClear && before) front = true;
+      if (kind === 'pack' && PF && dr < PF.r && before) pack = true;   // v1.13.3 packFront: перед логовом стаи
     }
     if (d < R.pathClear) {
       drop.add(p); st.removed++;
@@ -316,17 +321,22 @@ export function applyTreeRules(m, R, pts, rings, exempt = null) {
       for (let sy = Math.floor(p.fp[1] * SUB); sy < Math.ceil((p.fp[1] + p.fp[3]) * SUB - 1e-6); sy++)
         for (let sx = Math.floor(p.fp[0] * SUB); sx < Math.ceil((p.fp[0] + p.fp[2]) * SUB - 1e-6); sx++)
           if (sx >= 0 && sy >= 0 && sx < m.sw && sy < m.sh) m.opaque[sy * m.sw + sx] = 0;   // клетка непроходима, но не слепит
-    } else if (front) {
-      const H = p.birch ? (R.frontMaxH && R.frontMaxH.birch) || 112 : (R.frontMaxH && R.frontMaxH.fir) || 96;
+    } else if (front || edge || pack) {
+      const cap = (M, fir, birch) => (p.birch ? (M && M.birch) || birch : (M && M.fir) || fir);
+      let H = Infinity, why = null;
+      if (front) { H = cap(R.frontMaxH, 96, 112); why = 'front'; }
+      if (pack && cap(PF.maxH, 80, 96) < H) { H = cap(PF.maxH, 80, 96); why = 'pack'; }
+      if (edge && cap(EF.maxH, 120, 112) < H) { H = cap(EF.maxH, 120, 112); why = 'edge'; }
       const h0 = p.birch ? 96 + p.seed * 32 : 128 + p.seed * 32;
-      if (h0 > H) { p.hMax = H; st.shortened++; }
+      if (h0 > H) { p.hMax = H; st.shortened++; st.by[why]++; }
     }
   }
   if (drop.size) m.props = m.props.filter((p) => !drop.has(p));
   for (const [type, x, y, ex] of add) m.addProp(type, x, y, 1, ex);
   st.pct = total ? +(100 * st.removed / total).toFixed(1) : 0;
+  st.pctTouched = total ? +(100 * (st.removed + st.shortened) / total).toFixed(1) : 0;   // v1.13.3: укорочено + заменено, ориентир 10–20%
   st.overLimit = st.pct > (R.maxRemovedPct ?? 25);
-  m.treeStats = st;
+  m.treeStats = st; m.treePath = pts;   // путь — для снимков до/после (tools/d9_m1k.py)
   return st;
 }
 

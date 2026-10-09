@@ -102,7 +102,11 @@ async def run_m1k(pg, G, check, wait, client_of, client_scr, a):
         const sheet = m.props.filter(p => p.type !== 'gateseg' && p.type !== 'sign' && V.sheetOf(p));
         const badFrame = sheet.filter(p => { const B = P.bldSheet(p); return !B || B.fr !== V.frameOf(B.sh.meta, p.door); }).map(p => p.id);
         const code = ['kuznya', 'terem', 'well'].filter(id => m.props.some(p => p.id === id || p.type === id));
-        const smoke = sheet.filter(p => { const B = P.bldSheet(p); return B && B.sh.meta.anchors_px && B.sh.meta.anchors_px.smoke; }).length;
+        // v1.13.3 (ответ 5): дым только у видов smokeKinds (изба, с сенями, на подклете, баня); клеть, амбар, хлев, мастерская, церковь — без дыма
+        const K = g.zone.smokeKinds || [], anch = sheet.filter(p => { const B = P.bldSheet(p); return B && B.sh.meta.anchors_px && B.sh.meta.anchors_px.smoke; });
+        g.render(); const drawn = sheet.filter(p => p._smoked !== undefined);
+        const smoke = { kinds: K, n: anch.filter(p => p.smoke).length, flagBad: sheet.filter(p => !!p.smoke !== K.includes(p.type)).map(p => p.id || p.type),
+          drawnBad: drawn.filter(p => p._smoked && !K.includes(p.type)).map(p => p.id || p.type), noSmoke: [...new Set(anch.filter(p => !p.smoke).map(p => p.type))].sort() };
         // порядок «частокол / постройка» в игре: клетка частокола целиком перед футпринтом → рисуется позже, целиком за ним → раньше
         const toS = (x, y) => g.toS(x, y); const conf = [];
         const blds = m.props.filter(p => V.sheetOf(p) || ['izba', 'kuznya', 'terem', 'church'].includes(p.type));
@@ -121,9 +125,13 @@ async def run_m1k(pg, G, check, wait, client_of, client_scr, a):
     T = await G('''(() => { const RU = __game.dbg.RU, t = (k) => { const v = RU[k]; return v && typeof v === 'object' ? (v.desc || v['Текст'] || v.name) : v; };
         return { zal: t('ui.gate.open.zalesye'), pier: t('ui.gate.open.pier'), closed: t('ui.gate.closed') }; })()''')
     gl = {x['id']: x for x in s['gates']}
-    check('m1k D7 Ладога: 17 построек листами художника (кадр по двери), кузня/терем/колодец кодом — 20; дым по anchors_px.smoke; расстановка — скрипт дизайнера «OK: пересечений нет»',
-          s['sheet'] == 17 and not s['badFrame'] and len(s['code']) == 3 and s['smoke'] >= 1 and s['fxSmoke'] and 'OK: пересечений нет' in lay and 'совпадает' in lay,
+    check('m1k D7 Ладога: 17 построек листами художника (кадр по двери), кузня/терем/колодец кодом — 20; дым — fx_smoke_wisp; расстановка — скрипт дизайнера «OK: пересечений нет»',
+          s['sheet'] == 17 and not s['badFrame'] and len(s['code']) == 3 and s['fxSmoke'] and 'OK: пересечений нет' in lay and 'совпадает' in lay,
           {k: s[k] for k in ('sheet', 'badFrame', 'code', 'smoke', 'fxSmoke')} | {'layout': lay.strip().splitlines()[-2:]})
+    sm = s['smoke']
+    check('m1k v1.13.3 дым только у жилых с печью: smokeKinds [izba, izba_seni, izba_podklet, banya] в ladoga.json; у клети, амбара, хлева, мастерской, церкви дыма нет',
+          sm['kinds'] == ['izba', 'izba_seni', 'izba_podklet', 'banya'] and sm['n'] >= 1 and not sm['flagBad'] and not sm['drawnBad']
+          and not set(sm['noSmoke']) & set(sm['kinds']), sm)
     check('m1k D7 частокол и постройки в игре: 0 нарушений порядка «перед / за»', not s['conf'], s['conf'][:6])
     check('m1k D7 ворота: проёмы 4 тайла; восточные/южные открыты, северные (до сдачи М1) и западные на запоре; подписи при наведении ui.gate.open.* / ui.gate.closed; подписи мест и доски указателя из ru.json',
           s['gaps'] and all((gp[2], gp[3]) in ((1, 4), (4, 1)) for gp in s['gaps']) and not gl['gate_east']['closed'] and not gl['gate_south']['closed']
@@ -267,13 +275,20 @@ async def run_m1k(pg, G, check, wait, client_of, client_scr, a):
             const inG = (p) => { const cx = p.fp[0] + p.fp[2] / 2, cy = p.fp[1] + p.fp[3] / 2; return cx > box[0] - 3 && cx < box[2] + 3 && cy > box[1] - 3 && cy < box[3] + 3; };
             st.gladeSame = JSON.stringify(m.props.filter(inG).map(key).sort()) === JSON.stringify(m0.props.filter(inG).map(key).sort());
           }
-          out[zid + '_' + seed] = { ...st, bad };
+          // v1.13.3: проходимость и обзор — те же, что при старых treeRules v1.13.2 (стволы остаются, ужимаются кроны)
+          const OLD = { pathClear: 1.5, frontClear: 3, frontMaxH: { fir: 96, birch: 112 }, rings: ['hutDoor', 'pack'], maxRemovedPct: 25 }, mo = M.generateMap(seed, { ...Z, treeRules: OLD });
+          const same = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+          const hBad = m.props.filter(p => p.type === 'tree' && p.hMax && !(p.birch ? [96, 112] : [80, 120]).includes(p.hMax)).length;
+          out[zid + '_' + seed] = { ...st, bad, walkSame: same(m.sub, mo.sub), opaqueSame: same(m.opaque, mo.opaque), hBad };
         }
         return { out, rules: [CFG.zones.zalesye.treeRules, CFG.zones.trail.treeRules] }; })()''')
     o = s['out']
     tot = sum(v['total'] for v in o.values()); rem = sum(v['removed'] for v in o.values())
-    print('ДЕРЕВЬЯ m1k D9:', json.dumps({k: {x: v[x] for x in ('total', 'removed', 'pct', 'shortened', 'bad') if x in v} for k, v in o.items()}, ensure_ascii=False), flush=True)
-    check('m1k D9 treeRules {pathClear 1,5, frontClear 3, frontMaxH {ель 96, берёза 112}, кольца у дверей изб и логов, ≤ 25%} в zalesye.json и trail.json; стволов ближе 1,5 к пути нет; убрано ≤ 25%; поляна Мала прежняя',
-          s['rules'][0] == s['rules'][1] == {'pathClear': 1.5, 'frontClear': 3, 'frontMaxH': {'fir': 96, 'birch': 112}, 'rings': ['hutDoor', 'pack'], 'maxRemovedPct': 25}
-          and all(v['bad'] == 0 and not v['overLimit'] for v in o.values()) and all(v.get('gladeSame', True) for v in o.values()),
-          {'removed': rem, 'total': tot, 'pct': round(100 * rem / max(1, tot), 1)})
+    print('ДЕРЕВЬЯ m1k D9:', json.dumps({k: {x: v[x] for x in ('total', 'removed', 'shortened', 'pctTouched', 'bad') if x in v} for k, v in o.items()}, ensure_ascii=False), flush=True)
+    NEW = {'pathClear': 1.5, 'frontClear': 5, 'frontMaxH': {'fir': 80, 'birch': 96}, 'edgeFront': {'band': 8, 'maxH': {'fir': 120, 'birch': 112}},
+           'packFront': {'r': 6, 'maxH': {'fir': 80, 'birch': 96}}, 'rings': ['hutDoor', 'pack'], 'maxRemovedPct': 25}
+    check('m1k D9 treeRules v1.13.3 {pathClear 1,5, frontClear 5, frontMaxH 80/96, edgeFront 8 → 120/112, packFront 6 → 80/96, кольца, ≤ 25%} в zalesye.json и trail.json; стволов ближе 1,5 к пути нет; убрано ≤ 25%; поляна Мала прежняя; высоты только из правил',
+          s['rules'][0] == s['rules'][1] == NEW and all(v['bad'] == 0 and not v['overLimit'] and v['hBad'] == 0 for v in o.values()) and all(v.get('gladeSame', True) for v in o.values()),
+          {'removed': rem, 'total': tot, 'pct': round(100 * rem / max(1, tot), 1), 'touched': {k: v['pctTouched'] for k, v in o.items()}})
+    check('m1k D9 v1.13.3 проходимость (m.sub) и обзор (m.opaque) как при старых treeRules — сиды 7/11/3, Залесье и тропа',
+          all(v['walkSame'] and v['opaqueSame'] for v in o.values()), {k: [v['walkSame'], v['opaqueSame']] for k, v in o.items()})

@@ -125,7 +125,7 @@ export function generateTrail(seed, zone) {
   if (zone.treeRules) {
     const TR = zone.treeRules, pts = [];
     for (let x = Math.floor(e.x); x <= gateX; x++) pts.push([x + 0.5, yc(x + 0.5)]);
-    const rings = (TR.rings || []).includes('pack') ? m.packs.map((p) => [p.x, p.y]) : [];
+    const rings = (TR.rings || []).includes('pack') || TR.packFront ? m.packs.map((p) => [p.x, p.y, 'pack', (TR.rings || []).includes('pack')]) : [];
     applyTreeRules(m, TR, pts, rings);
   }
   m.computeReach();
