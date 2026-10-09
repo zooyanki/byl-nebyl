@@ -15,7 +15,7 @@
   27
  ],
  "height_rule": "pivot row (ground under the feet) to the top visible pixel, outline included",
- "notes": "Анчутка (GDD §5.2 E1: мелкий бес-поджигатель, кидает угли и убегает; codex: водится у печей и пожарищ). One sprite for the Залесье packs and Мара's retinue (GDD has no separate retinue variant). Hunched bald soot imp: big head, swept-back pointed ears, bone horn nubs, ember eyes, long arms with ash-dusted forearms, short legs, low tail with a smouldering tuft. Soot/ash greys + ember accents, no red (hero accent). Body 26-27 incl. ears (scale.md 24-28; def.height 26), frame 32x40, pivot (16,34).",
+ "notes": "Анчутка (GDD §5.2 E1: мелкий бес-поджигатель, кидает угли и убегает; codex: водится у печей и пожарищ). One sprite for the Залесье packs and Огнея's retinue (GDD has no separate retinue variant). Hunched bald soot imp: big head, swept-back pointed ears, bone horn nubs, ember eyes, long arms with ash-dusted forearms, short legs, low tail with a smouldering tuft. Soot/ash greys + ember accents, no red (hero accent). Body 26-27 incl. ears (scale.md 24-28; def.height 26), frame 32x40, pivot (16,34).",
  "events": {
   "note": "2 frames; the squeal mouth (ember gullet) is in frame 0"
  },

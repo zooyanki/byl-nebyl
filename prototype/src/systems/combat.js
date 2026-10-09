@@ -7,6 +7,7 @@ import { hitChance, MELEE_RANGE, HIT_STOP } from '../data/progression.js';
 import { SKILLS, skillNumbers, spellDamage, rankOf } from '../data/skills.js';
 import { PAL } from '../palette.js';
 import { baseDamageAvg } from '../data/enemies.js';
+import { t } from '../core/i18n.js';
 
 let FIRE_ID = 1;
 
@@ -65,7 +66,7 @@ export class Combat {
     if (hero.distTo(target) > MELEE_RANGE + target.r + 0.4) return;           // увернулся / убежал
     const ar = sk ? hero.ar * (1 + sk.arPct / 100) : hero.ar;
     if (Math.random() >= hitChance(ar, target.dfn, hero.level, target.mlvl)) {
-      g.fx.text(target.x, target.y, 'Мимо', PAL.mist, target.def.height + 6, { dur: 0.7 });
+      g.fx.text(target.x, target.y, t('ui.combat.miss'), PAL.mist, target.def.height + 6, { dur: 0.7 });
       g.audio.play('miss');
       return;
     }
@@ -104,7 +105,7 @@ export class Combat {
       g.audio.play('buff');
       g.fx.ring(hero.x, hero.y, 1.1, PAL.bronze_hi, 0.6);
       g.fx.burst(hero.x, hero.y, PAL.bronze_lt, 14, 22, 50);
-      g.log.add(sk.name + ': +' + n.defPct + '% к защите на ' + sk.duration + ' с', PAL.bronze_lt);
+      g.log.add(t('proto.log.def_buff', { skill: sk.name, pct: String(n.defPct), dur: String(sk.duration) }), PAL.bronze_lt);
       return;
     }
     if (sk.type === 'teleport') return this.perunSkok(hero, id, tx, ty);

@@ -132,6 +132,8 @@ function blitF(ctx, sh, frame, x, y, flip, alpha) {
   ctx.restore();
 }
 
+export const FLASH_A = 0.28;   // m1f P1.9: вспышка попадания (критик: 0,25–0,3)
+
 /** Нарисовать персонажа по позе; false — листа нет (рисуется грей-бокс). */
 export function drawCharArt(ctx, pose, x, y, dir, facing, o = {}) {
   const { view, flip } = viewOf(dir, facing);
@@ -139,7 +141,7 @@ export function drawCharArt(ctx, pose, x, y, dir, facing, o = {}) {
   if (!sh) return false;
   blitF(ctx, sh, pose.frame, x, y, flip, o.alpha);
   if (o.flash) {                                             // вспышка попадания: силуэт светлым поверх
-    ctx.save(); ctx.globalAlpha *= 0.5; ctx.globalCompositeOperation = 'lighter'; blitF(ctx, sh, pose.frame, x, y, flip); ctx.restore();
+    ctx.save(); ctx.globalAlpha *= FLASH_A; ctx.globalCompositeOperation = 'lighter'; blitF(ctx, sh, pose.frame, x, y, flip); ctx.restore();   // m1f P1.9: 0,5 → 0,28 (не в белое)
   }
   return true;
 }

@@ -1,6 +1,6 @@
 {
- "object": "Огнище (M1, 3 around the Идол Перуна), full object sprite: 8 standing stones with резы, log crib, flame",
- "footprint": "2x2 tiles, like the крада (stone ring r 21x10.5); pivot = centre of the footprint",
+ "object": "Огнище (M1, 3 around the Идол Перуна), full object sprite: 8 standing stones with насечки, log crib, flame",
+ "footprint": "2x2 tiles, like the костёр (stone ring r 21x10.5); pivot = centre of the footprint",
  "sizes_px": {
   "log_crib": 24,
   "flame_from_ground": 72,

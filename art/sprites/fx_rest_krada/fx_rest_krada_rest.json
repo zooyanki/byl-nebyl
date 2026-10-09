@@ -1,6 +1,6 @@
 {
- "effect": "Крада (обрядовый костёр), безопасная зона r = 10 тайлов: покой и отдых героя",
- "object": "full object sprite (stone ring + log crib + flame); replaces the static крада in the tileset",
+ "effect": "Костёр (обережный огонь Залесья, бывш. «крада»), безопасная зона r = 10 тайлов: покой и отдых героя",
+ "object": "full object sprite (stone ring + log crib + flame); replaces the static костёр in the tileset",
  "footprint": "2x2 tiles (64x32 diamond), centre = pivot; stone ring r 20x10 px (scale.md §3.3, §5 п.7)",
  "sizes_px": {
   "log_crib": 24,
@@ -22,7 +22,7 @@
   "idle": "fx_rest_krada_idle.png",
   "rest": "fx_rest_krada_rest.png"
  },
- "state_switch": "rest while the hero stands in the zone and Жизнь/Ярь regenerate (2 s without damage, GDD §4.5); both loops are phase-aligned, so switch at the same frame index without a pop; back to idle when regen stops",
+ "state_switch": "rest while the hero stands in the zone and Жизнь/Удаль regenerate (2 s without damage, GDD §4.5); both loops are phase-aligned, so switch at the same frame index without a pop; back to idle when regen stops",
  "anchors": {
   "flame_root": [
    32,

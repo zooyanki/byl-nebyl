@@ -34,8 +34,8 @@ def P(u, v):
 # Scale standard: /workspace/game/design/scale.md (hero 44 px, door 56, wall 68 ...).
 # Camera: hero soles at (320, 178) -> body centre at the centre of the 640x314 field.
 PLAYER = (320, 178)
-FIRE = (252, 230)          # крада centre (2x2 tiles)
-IDOL = (212, 214)          # чур (sprite unchanged, 60 px)
+FIRE = (252, 230)          # костёр (ex-крада) centre (2x2 tiles)
+IDOL = (212, 214)          # идол у ворот (sprite unchanged, 60 px)
 RIFT = (492, 208)          # разлом Небыли
 UPYR = (404, 168)
 VOLK = (532, 246)
@@ -489,7 +489,7 @@ def flame(lit, cx, by, w, h, seed=0, clip=False):
 
 
 def krada(lit):
-    """Крада (scale.md §3.3): stone ring Ø2.5 tiles on a 2x2 footprint
+    """Костёр, ex-крада (scale.md §3.3): stone ring Ø2.5 tiles on a 2x2 footprint
     (stones 6x4), log crib 24 px, flame 48 above the wood (72 from the ground)."""
     cx, cy = FIRE
     # stone ring: back half first, front half after the crib
@@ -951,7 +951,7 @@ def draw_orb(cv, S, left=True, fill=0.7, value="312/446"):
         xx = tx + (dx if left else -dx)
         cv.px(xx, cy - 22 + dy, C["bronze_lt"] if k % 2 else C["bronze"])
         cv.px(xx + (1 if left else -1), cy - 22 + dy, C["ink"])
-    T.text_ru(cv, cx + 1, cy + 1, "Жизнь" if left else "Ярь", C["birch"], align="c")
+    T.text_ru(cv, cx + 1, cy + 1, "Жизнь" if left else "Удаль", C["birch"], align="c")
     T.text_ru(cv, cx + 1, cy + 10, value, C["linen"], align="c")
 
 
@@ -1174,10 +1174,10 @@ def draw_minimap(cv, lit, L, x, y, w, h):
         ex, ey = M(eu, ev)
         cv.px(ex, ey, C["red_lt"])
     cv.a[~region] = saved[~region]
-    # quest marker: the крада on the капище (rosette)
+    # quest marker: the костёр on the капище (rosette)
     qx, qy = M(*inv_proj(*FIRE))
     cv.disc(qx, qy, 3.5, C["ink"]); cv.disc(qx, qy, 2.6, C["bronze_lt"]); cv.px(qx, qy, C["ink"])
-    # Чуров камень (waystone) far up the path
+    # путевой камень (waystone) far up the path
     wx, wy = M(14.5, -1.0)
     if y + 3 < wy < y + h - 3:
         cv.rect(wx - 1, wy - 2, 3, 4, C["blue_lt"]); cv.px(wx, wy - 3, C["linen"])
@@ -1256,7 +1256,7 @@ def draw_target(cv, cx, y, name="Упырь", ratio=0.58, sub="Нечисть ·
 
 QUEST = dict(title="ОГОНЬ НА КАПИЩЕ", act="Задание · Акт I",
              goals=(("— Спаси выживших", "3/3", "slate_lt", True),       # GDD v1.3 A2, act1 v1.1 §8.2: done, fades
-                    ("— Отбей огнища у упырей", "2/3", "linen"),          # the burning крада counts as one огнище
+                    ("— Отбей огнища у упырей", "2/3", "linen"),          # the burning костёр counts as one огнище
                     ("— Одолей Крившу", "", "slate_lt")))                  # grey: not active yet (designer 08.10)
 
 

@@ -20,7 +20,7 @@
   },
   {
    "id": "U2",
-   "name": "Громовник",
+   "name": "Громовой знак",
    "base": "neck_1",
    "reqLevel": 5,
    "pool": "reward",

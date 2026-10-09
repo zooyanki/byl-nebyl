@@ -8,10 +8,12 @@ import { FX } from '../render/rest_fx.js';
 import { t, RU } from '../core/i18n.js';
 import { generateMap } from '../world/map.js';
 import { circleFree, sightClear } from '../world/collision.js';
+import { findPath } from '../world/pathfind.js';
 import { WorldRenderer } from '../render/world.js';
 import { Minimap } from '../render/minimap.js';
 import { Npc, Dummy } from '../entities/npc.js';
 import { makeUnique, makePotion, POTIONS } from '../data/items.js';
+import { applyZoneDone } from './save.js';
 
 const SEEDS = { zalesye: MAP_SEED, trail: MAP_SEED + 7919, kapishche: MAP_SEED + 4241, ladoga: MAP_SEED + 9001 };
 
@@ -51,6 +53,7 @@ export const ZoneMixin = {
       this.map.packs.forEach((_, i) => this.spawnPack(i));
       st.total = this.enemies.length + this.buried.length;      // обычные стаи зоны (Мара со свитой — сверх, systems/kapishche.js)
       this.setupZone(st);
+      applyZoneDone(this, st);   // m1i: сделанное в зоне по слоту сохранения
     } else if (st.needRepop && !opts.respawn) { st.needRepop = false; this.repopulate(); }
     if (opts.respawn) st.needRepop = false;
     this.enemyTotal = st.total;
@@ -64,14 +67,15 @@ export const ZoneMixin = {
     this.counters.zoneChanges = (this.counters.zoneChanges || 0) + (prev ? 1 : 0);
     if (prev && !opts.respawn) {
       this.notify(this.zone.name, PAL.bronze_hi, 'zone');
-      this.log.add(this.zone.name + ' · ' + (this.zone.mlvl ? 'ур. нечисти ' + this.zone.mlvl.join('–') : ''), PAL.bronze_lt);
+      this.log.add(this.zone.mlvl && this.zone.mlvl.length ? t('proto.zone.title', { zone: this.zone.name, mlvl: this.zone.mlvl.join('–') }) : this.zone.name, PAL.bronze_lt);
       this.audio.play('ui');
     }
+    st.maraWarn = null;      // GDD v1.11: предупреждение у пепла — раз за посещение зоны (новый вход — новое посещение)
     this.quest.emit({ event: 'zoneEnter', zone: id });
     this.boss = st.boss && !st.boss.dead ? st.boss : null;
     this.applyChad();
     this.syncExitWalls();
-    if (id === 'ladoga' && this.town) this.town.onEnter();
+    if (id === 'ladoga' && this.town) { this.town.onEnter(); this.autosave('ladoga'); }   // m1i (П.15): автосейв при входе в Ладогу
   },
 
   /** Точка входа: {at:'start'|'krada'} или координаты; ищем свободное достижимое место рядом. */
@@ -126,7 +130,7 @@ export const ZoneMixin = {
       this.audio.play('crit'); this.shake(1.5, 0.15);
       this.fx.burst(o.x, o.y, PAL.wood_lt, 14, 20, 60);
       const bark = RU[o.bark] || {}, who = bark['Кто'], text = bark['Текст'] || '';
-      const out = [o.x, o.y + 0.6];
+      const out = o.out || [o.x, o.y + 0.6];   // m1f: у избы с дверью +X выходят на восток
       const run = this.map.krada ? [this.map.krada.x + 1, this.map.krada.y + 2] : this.map.start;
       for (let i = 0; i < (o.villagers || 0); i++) {
         const female = i === 0 ? who === 'Селянка' : i % 2 === 1, old = i === 0 && who === 'Старик';
@@ -204,7 +208,7 @@ export const ZoneMixin = {
     if (o.type === 'portal') return this.portalLabel(o);
     if (o.type === 'npc') return o.npc ? o.npc.name : '';
     if (o.type === 'stash') return t('obj.stash');
-    if (o.type === 'gate') return (RU['zone.m1.kapishche'] || {})['Название'] || 'Капище';
+    if (o.type === 'gate') return (RU['zone.m1.kapishche'] || {})['Название'] || t('proto.zone.kapishche');
     const z = CFG.zones[o.to];
     return t('proto.exit.to', { zone: z ? z.name : o.to });
   },
@@ -235,11 +239,26 @@ export const ZoneMixin = {
     // реплика — в очередь диалога сразу после первой реплики Мала («Они с капища шли!…»), чтобы не накладываться на неё
     const who = (b && b['Кто']) || t('npc.mal'), i = this.dialogQ.findIndex((l) => l.who === who);
     if (i >= 0) this.dialogQ.splice(i + 1, 0, { who, text }); else this.dialog([[who, text]]);
-    this.log.add('Получено: ' + POTIONS.life1.name + ' ×' + ((G.potions || {}).life1 || 0) + ', ' + G.silver + ' сер.', PAL.birch);
+    this.log.add(t('proto.log.got_kit', { item: POTIONS.life1.name, n: String((G.potions || {}).life1 || 0), silver: String(G.silver) }), PAL.birch);
     return true;
   },
 
   // --- реплики и диалоги
+  /** Путь трекера от героя к метке активной цели (quests.json objectives[].markers[зона]; опорные точки прежние:
+   *  крада → изба 1 → изба 2 → изба 3 (Мал) → выход). GDD v1.11 §8.2: клетки ближе zone.landmarks.trackerAvoid.r
+   *  к его центру не берутся — из тупика Мары путь выводит назад на запад, а не через поляну. */
+  trackerPath() {
+    const h = this.hero, zid = this.zone && this.zone.id;
+    for (const q of this.quest ? this.quest.obj : []) {
+      const id = q.state === 'active' && q.def.markers && q.def.markers[zid];
+      const o = id && (this.map.objects || []).find((x) => x.id === id);
+      if (!o || o.done) continue;
+      const A = this.zone.landmarks && this.zone.landmarks.trackerAvoid;
+      const pts = findPath(this.map, h.x, h.y, o.x, o.y, h.r || 0.3, { maxIter: 60000, forbid: A ? { x: A.x, y: A.y, r: A.r } : null });
+      return { goal: q.id, target: o.id, pts: pts || [] };
+    }
+    return null;
+  },
   speakerActor(name) {
     if (!name || name === t('npc.ratibor')) return this.hero;
     return this.npcs.find((n) => !n.gone && n.name === name) || null;
@@ -258,13 +277,14 @@ export const ZoneMixin = {
     this.dialogNext = Math.max(this.dialogNext || 0, this.time + 2.2);
   },
   updateDialog() {
-    if (!this.dialogQ.length || this.time < this.dialogNext) return;
+    if (!this.dialogQ.length || this.time < this.dialogNext || this.time < (this.speechUntil || 0)) return;
     const l = this.dialogQ.shift();
     // QA B-26: реплика говорящего, которого нет в зоне, идёт только в журнал (не над Ратибором)
-    const a = this.speakerActor(l.who);
-    if (a) this.fx.text(a.x, a.y, l.text, PAL.linen, (a.def ? a.def.height : 46) + 12, { dur: 2.6 });
-    this.log.add(l.who + ': ' + l.text, PAL.linen);
-    this.dialogNext = this.time + 2.6;
+    // m1f P1.6: в очереди и реплики-барки (l.actor) — они уже записаны в журнал
+    const a = l.actor ? (l.actor.gone || l.actor.dead || !(l.actor === this.hero || this.npcs.includes(l.actor) || this.enemies.includes(l.actor)) ? null : l.actor) : this.speakerActor(l.who);
+    if (a) this.fx.text(a.x, a.y, l.text, PAL.linen, (a.def ? a.def.height : 46) + 12, { dur: 2.6, speech: true });
+    if (!l.logged) this.log.add(l.who + ': ' + l.text, PAL.linen);
+    this.dialogNext = this.time + 2.6; this.speechUntil = this.time + 2.6;
     if (!this.dialogQ.length) this.afterMalDialog();
   },
   /** Мал показывает тропу: бежит к выходу за колодцем и тает. */
@@ -277,8 +297,8 @@ export const ZoneMixin = {
    *  Мал «убегает» — при возвращении его у избы уже нет. Мал, уже бегущий к выходу, тоже считается ушедшим. */
   finishDialog(st) {
     const hadMal = this.dialogQ.length > 0 && this.npcs.some((n) => n.kind === 'mal' && !n.gone);
-    for (const l of this.dialogQ) this.log.add(l.who + ': ' + l.text, PAL.linen);
-    this.dialogQ.length = 0; this.dialogNext = 0;
+    for (const l of this.dialogQ) if (!l.logged) this.log.add(l.who + ': ' + l.text, PAL.linen);
+    this.dialogQ.length = 0; this.dialogNext = 0; this.speechUntil = 0;
     if (hadMal || this.npcs.some((n) => n.kind === 'mal' && !n.gone && n.target)) st.malPending = true;
   },
 
@@ -415,6 +435,7 @@ export const ZoneMixin = {
     // Чуров камень у капища: коснуться (подойти ближе touch) — возрождение у камня
     for (const o of this.map.objects) if (o.type === 'stone' && !o.done && Math.hypot(h.x - o.x, h.y - o.y) <= (o.touch ?? 1.5)) this.touchStone(o);
     if (this.zone.id === 'kapishche') this.updateKapishche();
+    if (this.zone.landmarks && this.zone.landmarks.maraDen && this.zone.landmarks.maraDen.warn) this.updateMaraWarn();
     this.applyChad();
     if (this.zone.id === 'ladoga') this.updateLadoga();
     // выходы и ворота (QA B-28): переход — только по намерению (приказ идти в круг выхода или щелчок по выходу);

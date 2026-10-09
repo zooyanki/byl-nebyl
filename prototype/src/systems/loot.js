@@ -3,7 +3,7 @@
 import { rnd } from '../core/math.js';
 import { circleFree } from '../world/collision.js';
 import { POTIONS, SCROLLS, DROP_NORMAL, POTION_WEIGHTS, RARITY, pickWeighted, rollItem, silverAmount, potionFor, dropTable, makeScroll } from '../data/items.js';
-import { silverText } from '../core/i18n.js';
+import { silverText, t } from '../core/i18n.js';
 import { PAL } from '../palette.js';
 
 export function itemColor(item) {
@@ -113,18 +113,18 @@ export class Loot {
       g.audio.play('silver');
     } else if (it.kind === 'potion') {
       const where = h.addPotion(it.potion);
-      if (!where) { g.notify('Некуда положить', PAL.red_lt, 'full'); g.audio.play('error'); return false; }
-      g.log.add('Подобрано: ' + it.label + (where === 'belt' ? ' (пояс)' : ' (котомка)'), PAL.birch);
+      if (!where) { g.notify(t('ui.inventory.full'), PAL.red_lt, 'full'); g.audio.play('error'); return false; }
+      g.log.add(t('proto.log.picked', { item: it.label }) + ' ' + t(where === 'belt' ? 'proto.log.to_belt' : 'proto.log.to_bag'), PAL.birch);
       g.audio.play('pickup');
     } else if (it.kind === 'scroll') {        // береста — в котомку стопкой до 20 (GDD §6.9; в пояс — только зелья)
       const left = h.addScroll(it.scroll, it.count || 1);
-      if (left >= (it.count || 1)) { g.notify('Некуда положить', PAL.red_lt, 'full'); g.audio.play('error'); return false; }
-      if (left > 0) { it.count = left; it.label = SCROLLS[it.scroll].name + (left > 1 ? ' ×' + left : ''); g.log.add('Подобрано: ' + SCROLLS[it.scroll].name, PAL.birch); g.audio.play('pickup'); return false; }
-      g.log.add('Подобрано: ' + it.label + ' (котомка)', PAL.birch);
+      if (left >= (it.count || 1)) { g.notify(t('ui.inventory.full'), PAL.red_lt, 'full'); g.audio.play('error'); return false; }
+      if (left > 0) { it.count = left; it.label = SCROLLS[it.scroll].name + (left > 1 ? ' ×' + left : ''); g.log.add(t('proto.log.picked', { item: SCROLLS[it.scroll].name }), PAL.birch); g.audio.play('pickup'); return false; }
+      g.log.add(t('proto.log.picked', { item: it.label }) + ' ' + t('proto.log.to_bag'), PAL.birch);
       g.audio.play('pickup');
     } else {
-      if (!h.inv.autoAdd(it.item)) { g.notify('Некуда положить', PAL.red_lt, 'full'); g.audio.play('error'); return false; }
-      g.log.add('Подобрано: ' + it.label, it.color);
+      if (!h.inv.autoAdd(it.item)) { g.notify(t('ui.inventory.full'), PAL.red_lt, 'full'); g.audio.play('error'); return false; }
+      g.log.add(t('proto.log.picked', { item: it.label }), it.color);
       g.audio.play('pickup');
       if (it.item.rarity === 'unique') { g.counters.bylinaPicked = (g.counters.bylinaPicked || 0) + 1; g.notify(g.t('proto.bylina.got', { item: it.item.name }), PAL.bronze_lt, 'relic'); }
     }

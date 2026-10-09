@@ -7,7 +7,7 @@
  "fps": 0,
  "loop": false,
  "indexing": "by progress, not by time: frame = min(11, floor(holdT / 3.0 * 12))",
- "notes": "bronze ring on the ground fills clockwise from the front; the 8 резы light up in order; a warm core grows inside the green flame; motes rise. Frame 72x124 (wider/taller than the hearth so the ring fits), align by pivot. On release before 3 s: hide (or run frames backwards).",
+ "notes": "bronze ring on the ground fills clockwise from the front; the 8 насечки light up in order; a warm core grows inside the green flame; motes rise. Frame 72x124 (wider/taller than the hearth so the ring fits), align by pivot. On release before 3 s: hide (or run frames backwards).",
  "visible_height_px": [
   43,
   44,

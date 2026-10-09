@@ -16,8 +16,11 @@ export const KapishcheMixin = {
   setupZone(st) {
     const rng = makeRng(MAP_SEED + 101 + st.id.length * 7919);
     st.leaders = setupZoneElites(this, st, rng);
-    if (st.id === 'zalesye' && CFG.bosses.mara) st.mara = spawnMara(this, rng);
-    if (st.id === 'kapishche') {
+    // GDD v1.12.2 §11: павший босс (bossesDead из слота) не появляется — ни он, ни свита, ни призванные; добыча не выпадает снова
+    const dead = this.bossesDeadLoaded || new Set();
+    if (st.id === 'zalesye' && CFG.bosses.mara && !dead.has('mara')) st.mara = spawnMara(this, rng);
+    if (st.id === 'kapishche' && dead.has('krivsha')) this.krivshaFallen(st);
+    else if (st.id === 'kapishche') {
       st.bossState = 'dormant';
       try { if (sessionStorage.getItem('byl_m1_gromovnik') === 'pending') this.placeGromovnik(st.map); } catch (e) { /* */ }
     }
@@ -74,6 +77,19 @@ export const KapishcheMixin = {
     }
   },
 
+  /** GDD v1.11 §8.2: вход героя в круг r вокруг пепла у горловины (landmarks.maraDen.warn) — реплика героя
+   *  bark.m1.mara_warn, один раз за посещение зоны; в бою (враг гонится за героем или бьёт) — отложить до конца боя. */
+  updateMaraWarn() {
+    const W = this.zone.landmarks.maraDen.warn, h = this.hero, st = this.zs;
+    if (h.dead || st.maraWarn === 'done') return;
+    if (!st.maraWarn && Math.hypot(h.x - W.x, h.y - W.y) <= W.r) st.maraWarn = 'pending';
+    if (st.maraWarn !== 'pending') return;
+    if (this.enemies.some((e) => !e.dead && (e.state === 'chase' || e.state === 'attack'))) return;
+    st.maraWarn = 'done';
+    this.counters.maraWarn = (this.counters.maraWarn || 0) + 1;
+    this.say(h, W.bark);
+  },
+
   riseBoss(reason) {
     const st = this.zs, m = this.map;
     if (st.bossState !== 'dormant') return null;
@@ -115,6 +131,19 @@ export const KapishcheMixin = {
     m.lights = m.lights.filter((l) => !l.perun);
     this.placeGromovnik(m);
     this.quest.emit({ event: 'bossKilled', boss: 'krivsha' });
+  },
+
+  /** Кривша повержен в прошлой сессии: капище как после боя — идол погас, тело с «Приказом Чернояра» (пометка «сделано»
+   *  — по слоту, applyZoneDone), «Громовой знак» — по флагу m1.gromovnik (placeGromovnik). Босс не встаёт. */
+  krivshaFallen(st) {
+    const m = st.map, B = CFG.bosses.krivsha;
+    st.bossState = 'dead';
+    const x = m.idol.x, y = m.idol.y + 1.6;
+    const p = m.addProp('body', x - 0.5, y - 0.5, 1, { fp: [x, y, 0, 0], burnt: true });
+    m.objects.push({ id: 'krivsha_body', type: 'body', x, y, sx: x, sy: y + 0.9, reach: 1.2, letter: B.letter, labelKey: 'proto.krivsha_body', prop: p, done: false });
+    if (m.perun) { m.perun.burning = false; m.perun._spr = null; m.perun.outAt = -1e9; }
+    m.lights = m.lights.filter((l) => !l.perun);
+    this.placeGromovnik(m);
   },
 
   /** «Громовник» у идола. Подобран — флаг m1.gromovnik, больше не кладётся. Не подобран до конца сессии — снова здесь при загрузке. */

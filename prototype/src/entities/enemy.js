@@ -8,6 +8,7 @@ import { hitChance, S as STATS } from '../data/progression.js';
 import { lineWalkable, sightClear } from '../world/collision.js';
 import { rnd } from '../core/math.js';
 import { PAL } from '../palette.js';
+import { t } from '../core/i18n.js';
 
 let NEXT_ID = 1;
 
@@ -63,7 +64,7 @@ export class Enemy extends Actor {
   /** type: 'melee' | 'fire' | 'cold' | 'thorns'. opts: {crit, kbDir:[dx,dy], kb}. */
   takeDamage(amount, game, type = 'melee', src = null, opts = {}) {
     if (this.dead) return 0;
-    if (this.invuln > 0) { game.fx.text(this.x, this.y, 'Неуязвим', PAL.mist, this.def.height + 6, { dur: 0.5 }); return 0; }
+    if (this.invuln > 0) { game.fx.text(this.x, this.y, t('proto.fx.invuln'), PAL.mist, this.def.height + 6, { dur: 0.5 }); return 0; }
     let dmg = amount;
     const res = this.res[type] || 0;
     if (res) dmg = dmg * (1 - res);
@@ -223,7 +224,7 @@ export class Enemy extends Actor {
           if (heroTargetable && !heroSafe && this.distTo(hero) <= def.reach + hero.r + 0.35) {
             if (Math.random() < hitChance(this.ar, hero.def, this.mlvl, hero.level)) {
               this.onHitHero(hero.takeDamage(this.dmgMin + Math.floor(Math.random() * (this.dmgMax - this.dmgMin + 1)), game, 'melee', this), game);
-            } else game.fx.text(hero.x, hero.y, 'Мимо', PAL.mist, 50, { dur: 0.6 });
+            } else game.fx.text(hero.x, hero.y, t('ui.combat.miss'), PAL.mist, 50, { dur: 0.6 });
           }
         }
         if (this.t >= this.attackTime) {

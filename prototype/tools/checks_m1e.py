@@ -205,7 +205,7 @@ async def run_m1e(pg, G, check, wait, client_of, client_scr, a):
         const o2 = g.map.objects.find(x => x.id == 'gromovnik');
         sessionStorage.removeItem('byl_keep_gromovnik');
         return { back: !!o, taken: !!o2 }; })()''')
-    check('M1e «Громовник» лежит у идола снова, если его не подобрали, и не появляется дважды', gr['back'] and not gr['taken'], gr)
+    check('M1e «Громовой знак» лежит у идола снова, если его не подобрали, и не появляется дважды', gr['back'] and not gr['taken'], gr)
 
     await G('''(() => { const g = __game; g.enterZone('ladoga', 'from_zalesye'); const v = g.npcs.find(n => n.role == 'vedana');
         g.ui.closeAll(); g.town.openNpc(v); g.town.mode = 'trade'; g.town.tab = 'buy'; g.updateCamera(); })()''')

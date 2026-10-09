@@ -1,5 +1,5 @@
 {
- "character": "Мара Пепельная",
+ "character": "Огнея Пепельная",
  "animation": "walk",
  "direction": "ne",
  "mirror_for": "nw",
@@ -19,7 +19,7 @@
   53
  ],
  "height_rule": "pivot row (ground under the feet) to the top visible pixel, outline included",
- "notes": "Мара Пепельная (былинный враг M1, дух пожара): hovering ash shroud and hood, pale face, flame hair, smouldering hem and forearms. Hovers 2.5±1 px above the ground (pivot = ground point under her; keep the shadow on the ground). Body 48-50 incl. hover, flame hair ≤ 53, raised fire bolt ≤ 55 (scale.md: 48, flames to 54). Frame 64x64, pivot (32,56).",
+ "notes": "Огнея Пепельная (былинный враг M1, дух пожара): hovering ash shroud and hood, pale face, flame hair, smouldering hem and forearms. Hovers 2.5±1 px above the ground (pivot = ground point under her; keep the shadow on the ground). Body 48-50 incl. hover, flame hair ≤ 53, raised fire bolt ≤ 55 (scale.md: 48, flames to 54). Frame 64x64, pivot (32,56).",
  "image": "mara_walk_ne.png",
  "frame_size": [
   64,

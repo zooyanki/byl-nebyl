@@ -16,9 +16,10 @@ async def main(a):
         r = await pg.evaluate(open(os.path.join(HERE, 'bot_zalesye_clear.js')).read())
         await br.close()
     det = r.pop('det'); print(json.dumps(r, ensure_ascii=False)); print('errors', errs[:3])
-    d = json.load(open(OUT)) if os.path.exists(OUT) else {}
+    OUTF = a.out or OUT
+    d = json.load(open(OUTF)) if os.path.exists(OUTF) else {}
     d[str(a.seed) + ('_throttle%g' % a.throttle if a.throttle > 1 else '')] = {**r, 'det': det}
-    json.dump(d, open(OUT, 'w'), ensure_ascii=False, indent=1)
+    json.dump(d, open(OUTF, 'w'), ensure_ascii=False, indent=1)
 ap = argparse.ArgumentParser(); ap.add_argument('--url', default='http://127.0.0.1:8031/index.html?seed=7')
-ap.add_argument('--seed', type=int, default=7); ap.add_argument('--runs', type=int, default=30); ap.add_argument('--cap', type=int, default=400); ap.add_argument('--throttle', type=float, default=1)
+ap.add_argument('--seed', type=int, default=7); ap.add_argument('--runs', type=int, default=30); ap.add_argument('--cap', type=int, default=400); ap.add_argument('--throttle', type=float, default=1); ap.add_argument('--out', default='')
 asyncio.run(main(ap.parse_args()))

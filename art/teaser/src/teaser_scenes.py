@@ -94,7 +94,7 @@ def forest_behind(lit, rng):
 
 def fence_ring(lit, rng, front):
     """Ограда вокруг идола: posts 20 px on a ring Ø8 tiles, ditch -8 outside;
-    open toward the hero and the крада. front=True draws the near arc."""
+    open toward the hero and the костёр. front=True draws the near arc."""
     cx, cy = S1["idol"]
     R = 4.0
     rx, ry = R * 16 * math.sqrt(2), R * 8 * math.sqrt(2)
@@ -116,7 +116,7 @@ def fence_ring(lit, rng, front):
             continue
         if x > cx + 18 and y > cy - 16:             # opening toward the hero / upyrs
             continue
-        if front and x > cx - 40 and y > cy + 30:   # opening toward the крада
+        if front and x > cx - 40 and y > cy + 30:   # opening toward the костёр
             continue
         posts.append((int(x), int(y)))
     posts.sort(key=lambda p: p[1])
@@ -260,7 +260,7 @@ def scene1():
     # foreground spruce at the right edge (220-240), cut by the frame as specified
     G.spruce(lit, 634, 352, 232, seed=77, wk=0.2, trunk=6)
     MEAS["spruce_fg"] = 232
-    # lights: крада + burning idol; night ambient
+    # lights: костёр + burning idol; night ambient
     ix, iy = S1["idol"]; kx, ky = S1["krada"]
     src = [(kx, ky - 36, 200, 0.95), (ix, iy - 60, 210, 0.9), (ix, iy - 20, 130, 0.5), (HERO[0], HERO[1] - 22, 90, 0.25),
            (440, 116, 50, 0.18), (470, 150, 230, 0.34), (330, 250, 200, 0.18),
@@ -325,7 +325,7 @@ def forest_frame(lit, rng, variant=2):
 
 def chur_black(lit, feet):
     spr = recolor(SR.idol(), ("wood", "bronze", "fire"), ("fur", "fur", "nebyl"))
-    # carved runes glowing Небыль green
+    # чёрный идол (ex-«чур-идол»): random Небыль-green glints in the carving (no glyphs)
     ys, xs = np.where(spr["mask"] & (spr["ramp"] == rid("fur")))
     rng = np.random.default_rng(5)
     for i in rng.choice(len(ys), 7, replace=False):

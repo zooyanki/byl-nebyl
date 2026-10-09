@@ -4,6 +4,7 @@ import { makeRng } from './core/rng.js';
 import { Game } from './game.js';
 import { loadAssets } from './ui/assets.js';
 import { loadConfig } from './data/config.js';
+import { t, RU } from './core/i18n.js';
 
 // ?seed=N — детерминированная случайность (бой, добыча) для отладки и автотестов.
 const seedParam = new URLSearchParams(location.search).get('seed');
@@ -20,9 +21,10 @@ function fit() {
   canvas.style.height = VIEW_H * k + 'px';
   // окно меньше 640×360: дробный масштаб портит растровый текст — предупреждаем (QA B-13)
   let w = document.getElementById('small-warn');
-  if (s < 1 && !w) {
+  // текст — из ru.json (proto.small_window): до загрузки конфига не показываем, после loadConfig fit() зовётся ещё раз
+  if (s < 1 && !w && RU['proto.small_window']) {
     w = document.createElement('div'); w.id = 'small-warn';
-    w.textContent = 'Окно меньше 640×360 — текст будет нечётким. Увеличьте окно.';
+    w.textContent = t('proto.small_window');
     document.body.appendChild(w);
   } else if (s >= 1 && w) w.remove();
 }
@@ -30,6 +32,7 @@ window.addEventListener('resize', fit);
 fit();
 
 await loadConfig();
+fit();
 await loadAssets();
 const game = new Game(canvas);
 window.__ready = true;

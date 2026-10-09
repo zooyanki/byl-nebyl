@@ -135,6 +135,19 @@ export class Minimap {
       for (let r = 0; r <= 2; r++) { rect(ctx, q[0] - 2 + r, q[1] - r, 5 - r * 2, 1, r === 0 ? PAL.ink : c); rect(ctx, q[0] - 2 + r, q[1] + r, 5 - r * 2, 1, r === 0 ? PAL.ink : c); }
       rect(ctx, q[0] - 3, q[1], 1, 1, PAL.ink); rect(ctx, q[0] + 3, q[1], 1, 1, PAL.ink); rect(ctx, q[0] - 2, q[1], 5, 1, c);
     }
+    // m1f (P0.2): метка активной цели (quests.json objectives[].markers[зона] → id объекта) — видна и в тумане; если цель
+    // за краем мини-карты, метка прижата к краю
+    game.goalMarks = [];
+    for (const g of game.quest ? game.quest.obj : []) {
+      const id = g.state === 'active' && g.def.markers && g.def.markers[game.zone && game.zone.id];
+      const o = id && (game.map.objects || []).find((x) => x.id === id);
+      if (!o || o.done) continue;
+      let [qx, qy] = P(o.x, o.y);
+      qx = Math.max(clip.x + 4, Math.min(clip.x + clip.w - 5, qx)); qy = Math.max(clip.y + 4, Math.min(clip.y + clip.h - 5, qy));
+      const r = 3.5 + Math.sin((game.time || 0) * 5) * 1.2;
+      disc(ctx, qx, qy, r + 1.5, PAL.ink); disc(ctx, qx, qy, r, PAL.bronze_hi); disc(ctx, qx, qy, Math.max(1, r - 2), PAL.red_lt);
+      game.goalMarks.push({ id: o.id, x: qx, y: qy });
+    }
     const h = game.hero, hp = P(h.x, h.y);
     rect(ctx, hp[0] - 2, hp[1], 5, 1, PAL.linen); rect(ctx, hp[0], hp[1] - 2, 1, 5, PAL.linen); rect(ctx, hp[0], hp[1], 1, 1, PAL.red_lt);
   }

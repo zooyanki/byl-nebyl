@@ -1,11 +1,11 @@
-"""Чуров проход (GDD §4.4: «Береста возврата открывает Чуров проход в Ладогу и обратно на 60 с»; §12.1.5:
-«Чуров проход — 8 кадров», P0; act1_texts obj.chur_portal «Проход от бересты возврата»). Prototype: object type
+"""Путевой проход (GDD §4.4: «Береста возврата открывает Путевой проход в Ладогу и обратно на 60 с»; §12.1.5:
+«Путевой проход — 8 кадров», P0; act1_texts obj.chur_portal «Проход от бересты возврата»). Prototype: object type
 'portal' (src/systems/portal.js, src/render/portal.js grey box «стоячий овал из бронзового огня с тёплым ядром и
-искрами»): two ends (field + town at the крада), 60 s of game time, both ends look the same.
+искрами»): two ends (field + town at the костёр), 60 s of game time, both ends look the same.
 
-Look: a standing oval doorway ~1.2 hero heights tall (top 54 px, hero 44) framed in bronze Чур-fire (the same
-bronze as the резы of the Чуров камень and the safe ring), deep sea/navy inside with a slow spiral and a warm
-far-away core (the way home). On the ground a bronze ring (r 0.8 tile) with 4 Чур signs. Bronze / linen / sea /
+Look: a standing oval doorway ~1.2 hero heights tall (top 54 px, hero 44) framed in bronze bronze fire (the same
+bronze as the насечки of the Путевой камень and the safe ring), deep sea/navy inside with a slow spiral and a warm
+far-away core (the way home). On the ground a bronze ring (r 0.8 tile) with 4 notch marks. Bronze / linen / sea /
 ember sparks; no red, no nebyl (it is Быль's road, not Небыль's).
 
 States (no "closed" sprite: when closed the passage does not exist — GDD §4.4, prototype closePortal removes it):
@@ -43,11 +43,11 @@ def _put(out, x, y, c):
         out[y, x] = c
 
 
-GLYPHS = {   # Чур signs (3x3 / 3x4), like the резы of the Чуров камень
-    "arrow": ["010", "111", "010", "010"],
-    "rhomb": ["010", "101", "010"],
-    "fork": ["101", "010", "010"],
-    "cross": ["010", "111", "010"],
+GLYPHS = {   # rename_map §5 (09.10): plain notches like the путевой камень (were arrow / rhomb / fork / cross)
+    "cut2": ["111", "000", "111"],
+    "tally": ["101", "101"],
+    "cut1": ["111"],
+    "tick3": ["111", "000", "101"],
 }
 
 
@@ -79,7 +79,7 @@ def _ground(out, ph, lvl):
 def _ground_signs(out, ph, lvl, front):
     if lvl <= 0.4:
         return
-    for k, (a, name) in enumerate(((0.5 * math.pi, "arrow"), (math.pi, "rhomb"), (0.0, "fork"), (1.5 * math.pi, "cross"))):
+    for k, (a, name) in enumerate(((0.5 * math.pi, "cut2"), (math.pi, "tally"), (0.0, "cut1"), (1.5 * math.pi, "tick3"))):
         x, y = math.cos(a) * (RING_RX - 4.5), math.sin(a) * (RING_RY - 2.5) + 1
         if front != (y > -1.5):
             continue

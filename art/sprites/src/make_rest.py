@@ -42,7 +42,7 @@ def two_state(folder, slug, title, idle, rest, pivot, fps, meta_common, extra_an
         meta = dict(meta_common)
         meta.update(state=st, pivot=list(pivot), fps=fps, loop=True,
                     states={"idle": slug + "_idle.png", "rest": slug + "_rest.png"},
-                    state_switch="rest while the hero stands in the zone and Жизнь/Ярь regenerate "
+                    state_switch="rest while the hero stands in the zone and Жизнь/Удаль regenerate "
                                  "(2 s without damage, GDD §4.5); both loops are phase-aligned, so switch at the "
                                  "same frame index without a pop; back to idle when regen stops")
         if extra_anchor:
@@ -110,14 +110,14 @@ def label(cv_arr, x, y, s):
 
 
 def run(MEAS):
-    # ---- 1. крада ------------------------------------------------------------------
+    # ---- 1. костёр ------------------------------------------------------------------
     ki, kr = R.krada("idle"), R.krada("rest")
     kp = R.KR_PIV
     fl_i = _flame_heights(ki[0].shape, kp[0] - 0.5, kp[1] - 22, 11.5, R.KR_FLAME["idle"], kp[1], 0.0)
     fl_r = _flame_heights(ki[0].shape, kp[0] - 0.5, kp[1] - 22, 13.5, R.KR_FLAME["rest"], kp[1], 0.8)
-    two_state("fx_rest_krada", "fx_rest_krada", "Крада · покой / отдых · 6+6", ki, kr, kp, 10, dict(
-        effect="Крада (обрядовый костёр), безопасная зона r = 10 тайлов: покой и отдых героя",
-        object="full object sprite (stone ring + log crib + flame); replaces the static крада in the tileset",
+    two_state("fx_rest_krada", "fx_rest_krada", "Костёр · покой / отдых · 6+6", ki, kr, kp, 10, dict(
+        effect="Костёр (обережный огонь Залесья, бывш. «крада»), безопасная зона r = 10 тайлов: покой и отдых героя",
+        object="full object sprite (stone ring + log crib + flame); replaces the static костёр in the tileset",
         footprint="2x2 tiles (64x32 diamond), centre = pivot; stone ring r 20x10 px (scale.md §3.3, §5 п.7)",
         sizes_px=dict(log_crib=24, flame_idle_from_ground=max(fl_i), flame_rest_from_ground=max(fl_r),
                       sparks_rest_top_from_ground=max(_top(kr, kp[1]))),
@@ -128,16 +128,16 @@ def run(MEAS):
         extra_anchor={"flame_root": [kp[0], kp[1] - 24], "sparks_origin": [kp[0], kp[1] - 50]})
     MEAS["fx_rest_krada"] = dict(frame=[R.KR_W, R.KR_H], pivot=list(kp), flame_idle=fl_i, flame_rest=fl_r,
                                  total_top_idle=_top(ki, kp[1]), total_top_rest=_top(kr, kp[1]))
-    # ---- 2. Чуров камень ----------------------------------------------------------------
+    # ---- 2. Путевой камень ----------------------------------------------------------------
     ci, cr = R.churov("idle"), R.churov("rest")
     cp = R.CH_PIV
     stone_h = _top([np.where(np.isin(ci[0], [C["bronze"], C["bronze_dk"], C["bronze_lt"]]) | (ci[0] >= 0), ci[0], -1)], cp[1])[0]
-    two_state("fx_rest_churov", "fx_rest_churov", "Чуров камень · покой / отдых · 6+6", ci, cr, cp, 8, dict(
-        effect="Чуров камень, безопасная зона r = 6 тайлов: резы тлеют (покой) и светятся (отдых)",
-        object="full object sprite (stone + резы); the same stone is the waystone (GDD §8.1)",
+    two_state("fx_rest_churov", "fx_rest_churov", "Путевой камень · покой / отдых · 6+6", ci, cr, cp, 8, dict(
+        effect="Путевой камень, безопасная зона r = 6 тайлов: насечки тлеют (покой) и светятся (отдых)",
+        object="full object sprite (stone + насечки); the same stone is the waystone (GDD §8.1)",
         footprint="1x1 tile (32x16 diamond), centre = pivot; stone 24x40 (scale.md §3.4)",
         sizes_px=dict(stone_height=stone_h, stone_width=24),
-        runes="3 резы on the face: «стрела», «ромб с крестом», «древо»; idle bronze_dk/bronze/bronze_lt wave, "
+        runes="plain notches on the face (two long cuts, four short notches, one long cut; rename_map §5: no runes, no idol face); idle bronze_dk/bronze/bronze_lt wave, "
               "rest bronze_hi + linen flicker + bronze halo on the stone + rising bronze motes",
         light_hint="optional engine light: bronze_lt, radius 1.5 tiles, only in rest"),
         extra_anchor={"runes_centre": [cp[0], cp[1] - 22], "motes_origin": [cp[0], cp[1] - 34]})
@@ -149,10 +149,10 @@ def run(MEAS):
     cf_i = _flame_heights(fi[0].shape, fp[0] - 0.5, fp[1] - 6, 5.5, R.CF_FLAME["idle"], fp[1], 0.0, 1.0)
     cf_r = _flame_heights(fi[0].shape, fp[0] - 0.5, fp[1] - 6, 6.5, R.CF_FLAME["rest"], fp[1], 0.8, 1.0)
     two_state("fx_rest_campfire", "fx_rest_campfire", "Костёр М3 · покой / отдых · 6+6", fi, fr, fp, 10, dict(
-        effect="Костёр у поваленного чур-идола (М3), безопасная зона r = 6 тайлов",
-        interpretation="GDD §8.4: the campfire «работает как Чуров камень», and §12.1.5 groups it with the stone "
-                       "(«резы тлеют bronze»). So it is a small сторожевой костёр (scale.md §3.3: firewood 8, flame 20-24) "
-                       "inside a ring of 8 stones with резы; the резы behave like the Чуров камень and the fire "
+        effect="Костёр у поваленного чёрного идола (М3), безопасная зона r = 6 тайлов",
+        interpretation="GDD §8.4: the campfire «работает как путевой камень», and §12.1.5 groups it with the stone "
+                       "(«насечки тлеют bronze»). So it is a small сторожевой костёр (scale.md §3.3: firewood 8, flame 20-24) "
+                       "inside a ring of 8 stones with насечки; the насечки behave like the путевой камень and the fire "
                        "grows a little in rest (≈23 -> ≈30 px) with sparks",
         footprint="1x1 tile; stone ring r 18x9 px (stones 5x5), centre = pivot",
         sizes_px=dict(firewood=8, flame_idle_from_ground=max(cf_i), flame_rest_from_ground=max(cf_r)),
@@ -167,7 +167,7 @@ def run(MEAS):
         pivot=list(R.HS_PIV), fps=8, loop=True,
         anchors={"attach": "hero pivot (the frame is the hero's own 64x64 cell, pivot (32,56))"},
         colours="bronze, bronze_lt, bronze_hi, flame, linen only; no red/red_lt/red_dk/ember (red is the hero's accent, scale.md §4.4)",
-        layer="drawn over the hero sprite; play only while Жизнь or Ярь is rising, stop (let the loop finish) when full",
+        layer="drawn over the hero sprite; play only while Жизнь or Удаль is rising, stop (let the loop finish) when full",
         sparks_band_px=[14, 56]))
     X.preview([hs], ["цикл"], os.path.join(out, "preview"), "fx_rest_sparks", 8, True, R.HS_PIV, shadow_w=18,
               title="Искры отдыха над героем · 4")
@@ -182,19 +182,19 @@ def run(MEAS):
             frames_are="tangent directions: frame b = screen angle b*22.5 deg (counter-clockwise from +x, y down); 0 = horizontal",
             fps=0, loop=False, layer="ground decal under characters"))
         X.save_sheet(R.rune_pieces(st), out, "fx_safe_ring_runes_" + st, dict(
-            effect="Граница безопасной зоны: реза на земле (2:1)", state=st, pivot=list(R.RU_PIV),
-            frames_are="4 rune variants, not rotated", fps=0, loop=False, layer="ground decal under characters"))
+            effect="Граница безопасной зоны: насечка на земле (2:1)", state=st, pivot=list(R.RU_PIV),
+            frames_are="4 notch-group variants (3, 2, 4, 2 wide), not rotated", fps=0, loop=False, layer="ground decal under characters"))
     lay10, per10 = R.ring_layout(10)
     lay6, per6 = R.ring_layout(6)
     master = dict(
-        effect="Кольцо рез на границе безопасной зоны (GDD §4.5, §12.1.5)",
+        effect="Кольцо насечек на границе безопасной зоны (GDD §4.5, §12.1.5)",
         pieces={"groove": {"dim": "fx_safe_ring_grooves_dim.png", "lit": "fx_safe_ring_grooves_lit.png",
                            "frame_size": [R.GR_W, R.GR_H], "pivot": list(R.GR_PIV), "count": 8},
                 "rune": {"dim": "fx_safe_ring_runes_dim.png", "lit": "fx_safe_ring_runes_lit.png",
                          "frame_size": [R.RU_W, R.RU_H], "pivot": list(R.RU_PIV), "count": 4}},
         states={"dim": "dark grooves, shown at 50% when the hero is within 3 tiles of the border", "lit": "bronze, while the hero rests inside"},
         placement=dict(
-            centre="zone centre = pivot of the крада / Чуров камень / костёр (ground point, screen px)",
+            centre="zone centre = pivot of the костёр Залесья / путевой камень / костёр М3 (ground point, screen px)",
             ellipse="ground circle of radius R tiles -> screen ellipse rx = R*16*sqrt(2) = R*22.627, ry = R*8*sqrt(2) = R*11.314 (scale.md §1: 22.6 / 11.3 px per tile)",
             algorithm=["sample the ellipse x = rx*cos(t), y = ry*sin(t); accumulate arc length; perimeter P",
                        "n = round(P / %g) pieces; piece k sits at arc length k*P/n" % R.SPACING_PX,
@@ -208,9 +208,9 @@ def run(MEAS):
                                       "otherwise hidden (GDD v1.7.1 §12.1.5 engine rule)",
                          state_rule="dim while visible; lit while the hero rests inside",
                          sort="ground decal layer, under characters and objects"),
-        layouts={"R10": dict(radius_tiles=10, used_by="крада / точка возрождения", perimeter_px=round(per10, 1),
+        layouts={"R10": dict(radius_tiles=10, used_by="костёр / точка возрождения", perimeter_px=round(per10, 1),
                               count=len(lay10), pieces=lay10),
-                 "R6": dict(radius_tiles=6, used_by="Чуров камень, костёр М3", perimeter_px=round(per6, 1),
+                 "R6": dict(radius_tiles=6, used_by="Путевой камень, костёр М3", perimeter_px=round(per6, 1),
                              count=len(lay6), pieces=lay6)},
         palette="palette_v2", alpha="0/255 only")
     with open(os.path.join(out, "fx_safe_ring.json"), "w") as f:
@@ -218,7 +218,7 @@ def run(MEAS):
     X.preview([R.groove_pieces("dim"), R.groove_pieces("lit")], ["тускло", "отдых"], os.path.join(out, "preview"),
               "fx_safe_ring_grooves", 2, True, R.GR_PIV, title="Бороздки · 8 направлений")
     X.preview([R.rune_pieces("dim"), R.rune_pieces("lit")], ["тускло", "отдых"], os.path.join(out, "preview"),
-              "fx_safe_ring_runes", 2, True, R.RU_PIV, title="Резы · 4")
+              "fx_safe_ring_runes", 2, True, R.RU_PIV, title="Насечки · 4")
     # assembled ring R=6 on ground: dim | lit, and GIF toggling
     W6, H6 = int(2 * 6 * R.PX_PER_TILE_X) + 40, int(2 * 6 * R.PX_PER_TILE_Y) + 40
     asm = []
@@ -231,13 +231,13 @@ def run(MEAS):
     _save_idx(both, os.path.join(out, "preview", "fx_safe_ring_R6_x3.png"))
     _save_gif(asm, os.path.join(out, "preview", "fx_safe_ring_R6.gif"), 1)
     MEAS["fx_safe_ring"] = dict(R10_count=len(lay10), R6_count=len(lay6), R10_rx_ry=[226.3, 113.1], R6_rx_ry=[135.8, 67.9])
-    # ---- 6. composite review: крада (rest) + hero + sparks + ring ----------------------------
+    # ---- 6. composite review: костёр (rest) + hero + sparks + ring ----------------------------
     CW, CH = 480, 270
     kc = (240, 112)
     import sys as _sys
     _sys.path.insert(0, "/workspace/game/art/teaser/src")
     import teaser_sprites as _TS                      # hero idle pose (sword lowered), read-only import
-    hero = pk.sprite_to_index(_TS.hero_pose("idle"))[:, ::-1].copy()   # mirrored: faces the крада (left)
+    hero = pk.sprite_to_index(_TS.hero_pose("idle"))[:, ::-1].copy()   # mirrored: faces the костёр (left)
     hero_at = (300, 158)
     frames = []
     ring = R.assemble_ring(10, "lit", (CW, CH), kc, lay10)
@@ -252,7 +252,7 @@ def run(MEAS):
         _paste(g, hs[i % 4], hero_at[0] - R.HS_PIV[0], hero_at[1] - R.HS_PIV[1])
         frames.append(g)
     comp = frames[0].copy()
-    label(comp, 4, 3, "Отдых у крады: крада «отдых», герой 44 px, искры, кольцо r = 10 (резы «отдых»)")
+    label(comp, 4, 3, "Отдых у костра: костёр «отдых», герой 44 px, искры, кольцо r = 10 (насечки «отдых»)")
     cdir = os.path.join(ROOT, "fx_rest_krada", "preview")
     p = _save_idx(comp, os.path.join(cdir, "rest_composite_x3.png"))
     _save_gif(frames, os.path.join(cdir, "rest_composite.gif"), 10)

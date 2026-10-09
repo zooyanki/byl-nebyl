@@ -134,7 +134,7 @@ async def run_m1b(pg, G, check, wait, client_of, client_scr, a):
         g.enemies = g.enemies.filter(x => x !== e); h.hp = h.maxHp; return out; })()''')
     check('M1b п.6: после возрождения неуязвимость 2 с, атака снимает её досрочно', s['inv0'] == 2 and s['rp'] and s['inv1'] == 0 and s['broken'] == 1 and s['zone'] == 'zalesye', s)
 
-    # Мара Пепельная: былинный враг mlvl 4 в Залесье, свита анчуток, бродит по кругу, пепельный след, лечит свиту
+    # Огнея Пепельная: былинный враг mlvl 4 в Залесье, свита анчуток, бродит по кругу, пепельный след, лечит свиту
     s = await G('''(() => { const g = __game, h = g.hero, M = g.enemies.find(e => e.kind === 'mara'); if (!M) return { fail: 'no mara' };
         const B = g.dbg.CFG.bosses.mara, ret = g.enemies.filter(e => e.special && e !== M);
         const out = { elite: M.elite, mlvl: M.mlvl, hp: M.maxHp, dmg: [M.dmgMin, M.dmgMax], xp: M.xp, mods: M.mods, res: M.res.fire, ret: ret.length, retK: [...new Set(ret.map(e => e.kind + '@' + e.mlvl))], title: g.dbg ? null : null };
@@ -145,15 +145,15 @@ async def run_m1b(pg, G, check, wait, client_of, client_scr, a):
         out.patches = g.combat.fires.filter(f => f.kind === 'trail' && f.src === M).length; out.follow = ret.filter(e => e.follow === M).length;
         // лечение свиты
         ret[0].hp = 1; M.healT = 0; g.simulate(B.heal.every + 0.2); out.healed = ret[0].hp > 1;
-        // бой: герой рядом — реплика при агро, урон пепельного следа 8% HP/с
+        // бой: герой рядом — реплика при агро, урон пепельного следа 6% HP/с (GDD v1.12.1)
         h.x = M.x - 3; h.y = M.y; h.invuln = 0; h.graceT = 0; M.aggro(g, false); g.simulate(1.0, () => { h.hp = h.maxHp; return false; }); out.aggroBark = g._barks['elite.mara.aggro'] != null;
         const items0 = g.loot.items.length; for (const e of ret) e.takeDamage(99999, g, 'melee', null); M.takeDamage(99999, g, 'melee', null); g.simulate(0.3);
         const drops = g.loot.items.slice(items0).filter(i => i.item); out.drops = drops.map(i => i.item.rarity); out.deathBark = g._barks['elite.mara.death'] != null;
         h.invuln = 0; h.hp = h.maxHp; return out; })()''')
-    ok = (not s.get('fail') and s['elite'] == 'bylina' and s['mlvl'] == 4 and s['hp'] == 258 and s['dmg'] == [8, 18] and s['mods'] == ['hot'] and 4 <= s['ret'] <= 6
-          and s['retK'] == ['anchutka@2'] and s['route']['moved'] > 8 and s['route']['max'] <= 8.5 and s['patches'] > 0 and s['follow'] == s['ret']
+    ok = (not s.get('fail') and s['elite'] == 'bylina' and s['mlvl'] == 4 and s['hp'] == 258 and s['dmg'] == [8, 18] and s['mods'] == [] and 3 <= s['ret'] <= 4
+          and s['retK'] == ['anchutka@1'] and s['route']['moved'] > 8 and s['route']['max'] <= 8.5 and s['patches'] > 0 and s['follow'] == s['ret']
           and s['healed'] and s['aggroBark'] and s['deathBark'] and len(s['drops']) >= 1 and any(r != 'normal' for r in s['drops']))
-    check('Мара Пепельная: былинная (mlvl 4, 258 HP, 8–18, «Жаркая»), свита 4–6 анчуток mlvl 2, кружит по Залесью, пепельный след, лечит свиту, реплики, добыча ≥ 1 заговорённой', ok, s)
+    check('Огнея Пепельная: былинная (mlvl 4, 258 HP, 8–18; v1.11 — без «Жаркой»), свита 3–4 анчутки mlvl 1, кружит по Залесью, пепельный след, лечит свиту, реплики, добыча ≥ 1 заговорённой', ok, s)
 
     # вожаки: в Залесье нет; на тропе 1 во второй половине (mlvl 3, упырь или анчутка); имя из генератора act1 §9
     s = await G('''(() => { const g = __game, C = g.dbg.CFG, z0 = g.enemies.filter(e => e.leader).length; g.enterZone('trail', 'from_zalesye');
@@ -254,7 +254,7 @@ async def run_m1b(pg, G, check, wait, client_of, client_scr, a):
     check('Кривша: на 50% прыгает в неосвящённое огнище (2 с неуязвим), выходит с ореолом, +25% скорости атаки, сопр. огню +25%',
           s['jump']['state'] == 'jump' and s['jump']['inv'] and s['jump']['target'] in ('hearth2', 'hearth3') and s['jump']['hdone'] is False
           and ph['p'] == 2 and ph['aura'] and ph['fire'] == 0.25 and ph['dmgInv'] == 0 and ph['bark'], {'jump': s['jump'], 'phase': ph})
-    check('Кривша пал: 1200 опыта, добыча 4 предмета (≥ 2 заговорённых), идол гаснет, «Одолей Крившу» выполнена; грамота «Приказ Чернояра» закрывает «Найди поджигателя»; миссия сдана; «Громовник» у подножия идола (вещь — проверки M1c)',
+    check('Кривша пал: 1200 опыта, добыча 4 предмета (≥ 2 заговорённых), идол гаснет, «Одолей Крившу» выполнена; грамота «Приказ Чернояра» закрывает «Найди поджигателя»; миссия сдана; «Громовой знак» у подножия идола (вещь — проверки M1c)',
           d['dead'] and d['xp'] == 1200 and len(d['drops']) == 4 and sum(r != 'normal' for r in d['drops']) >= 2 and d['body'] and d['perun'] is False and d['q'] == 'done' and d['bark']
           and s['letter']['name'] == 'Приказ Чернояра' and s['letter']['ars'] == 'done' and s['letter']['mission'] and s['reward'] and s.get('rewardDone'), {'dead': d, 'letter': s['letter']})
 

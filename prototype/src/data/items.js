@@ -2,6 +2,8 @@
 // таблицы выпадения §6.7, зелья §4.4, серебро §6.6. Все числа — из data/items_base.json, affixes.json,
 // droptables.json (applyItems при старте); здесь только логика.
 
+import { t } from '../core/i18n.js';
+
 export const SLOTS = [];
 export const SLOT_NAMES = {};
 export const TYPE_SLOTS = {};
@@ -190,6 +192,9 @@ export function uniqueModText(stat, v) {
   return a ? a.fmt(v) : stat + ' ' + v;
 }
 
+/** m1i: после загрузки сохранения новые вещи получают uid больше сохранённых. */
+export function bumpUid(n) { if (Number.isFinite(n) && n >= UID) UID = n + 1; }
+
 export function makePotion(kind) {
   const p = POTIONS[kind];
   return { uid: UID++, kind: 'potion', potion: kind, w: 1, h: 1, name: p.name, icon: p.icon, rarity: 'potion' };
@@ -233,29 +238,29 @@ export function itemLines(it) {
   if (it.kind === 'potion') {
     const p = POTIONS[it.potion];
     L.push([it.name, 'birch']);
-    if (p.res === 'both') L.push([`Мгновенно восполняет ${Math.round(p.pct * 100)}% жизни и Яри`, 'linen']);
-    else L.push([`+${p.amount} ${p.res === 'hp' ? 'к жизни' : 'к Яри'} за ${p.dur} с`, 'linen']);
-    L.push(['ПКМ — выпить', 'mist']);
+    if (p.res === 'both') L.push([t('proto.potion.both', { pct: Math.round(p.pct * 100) }), 'linen']);
+    else L.push([t('proto.potion.over_time', { amount: p.amount, res: t(p.res === 'hp' ? 'proto.potion.res.hp' : 'proto.potion.res.yar'), dur: p.dur }), 'linen']);
+    L.push([t('proto.tip.drink'), 'mist']);
     return { lines: L, seps: [0] };
   }
   if (it.kind === 'scroll') {     // «Береста возврата ×3» (GDD §10.1), описание — act1_texts ui.tut.beresta
     const T = (k, d) => (RU_REF && typeof RU_REF[k] === 'string' ? RU_REF[k] : d);
     L.push([it.name + (it.count > 1 ? ' ' + T('ui.tip.stack', '×{n}').replace('{n}', it.count) : ''), 'birch']);
     L.push([T('ui.tut.beresta', ''), 'linen']);
-    L.push([T('proto.beresta.use', 'ПКМ — прочитать'), 'mist']);
+    L.push([T('proto.beresta.use', t('proto.beresta.use')), 'mist']);
     return { lines: L, seps: [0] };
   }
   if (it.rarity === 'unique') {   // былинная: имя бронзой, «Былинная вещь», база, числа, свойства синим, присказка бронзой (act1_texts §13–14)
     const rl = RU_REF && RU_REF['rarity.unique'];
     L.push([it.name, RARITY.unique.color]);
-    L.push([(rl && rl['Строка в тултипе']) || 'Былинная вещь', RARITY.unique.color]);
+    L.push([(rl && rl['Строка в тултипе']) || t('proto.tip.unique'), RARITY.unique.color]);
     L.push([it.baseName, 'birch']);
     const seps = [L.length - 1];
-    if (it.dmg) L.push([`Урон: ${it.dmg[0]}–${it.dmg[1]}`, 'linen']);
-    if (it.speed) L.push([`Атак в секунду: ${String(it.speed).replace('.', ',')}`, 'mist']);
-    if (it.armor != null) L.push([`Броня: ${it.armor}`, it.mods.pctArmor ? 'blue_lt' : 'linen']);
-    if (it.block) L.push([`Блок щитом: ${it.block}%`, 'linen']);
-    L.push([`Требуется уровень: ${it.req}`, 'req']);
+    if (it.dmg) L.push([t('ui.tip.damage', { min: String(it.dmg[0]), max: String(it.dmg[1]) }), 'linen']);
+    if (it.speed) L.push([t('proto.tip.aps', { n: String(it.speed).replace('.', ',') }), 'mist']);
+    if (it.armor != null) L.push([t('proto.tip.armor', { n: String(it.armor) }), it.mods.pctArmor ? 'blue_lt' : 'linen']);
+    if (it.block) L.push([t('proto.tip.shield_block', { n: String(it.block) }), 'linen']);
+    L.push([t('ui.tip.req_level', { n: String(it.req) }), 'req']);
     seps.push(L.length - 1);
     for (const f of it.fixed) L.push([uniqueModText(f.stat, f.value), 'blue_lt']);
     if (it.lore) { seps.push(L.length - 1); L.push([it.lore, 'lore']); }
@@ -266,15 +271,15 @@ export function itemLines(it) {
   const seps = [];
   if (it.rarity !== 'normal') L.push([it.baseName, 'birch']);
   seps.push(L.length - 1);
-  if (it.dmg) L.push([`Урон: ${it.dmg[0]}–${it.dmg[1]}`, 'linen']);
-  if (it.speed) L.push([`Атак в секунду: ${String(it.speed).replace('.', ',')}`, 'mist']);
-  if (it.armor != null) L.push([`Броня: ${it.armor}`, it.mods.flatArmor || it.mods.pctArmor ? 'blue_lt' : 'linen']);
-  if (it.block) L.push([`Блок щитом: ${it.block}%`, 'linen']);
-  L.push([`Требуется уровень: ${it.req}`, 'req']);
+  if (it.dmg) L.push([t('ui.tip.damage', { min: String(it.dmg[0]), max: String(it.dmg[1]) }), 'linen']);
+  if (it.speed) L.push([t('proto.tip.aps', { n: String(it.speed).replace('.', ',') }), 'mist']);
+  if (it.armor != null) L.push([t('proto.tip.armor', { n: String(it.armor) }), it.mods.flatArmor || it.mods.pctArmor ? 'blue_lt' : 'linen']);
+  if (it.block) L.push([t('proto.tip.shield_block', { n: String(it.block) }), 'linen']);
+  L.push([t('ui.tip.req_level', { n: String(it.req) }), 'req']);
   const base = BASE[it.base];
   const special = [];
-  if (base.crit) special.push([`+${base.crit}% к шансу удачного удара`, 'linen']);
-  if (base.vsNechist) special.push([`+${base.vsNechist}% к урону по Нечисти`, 'linen']);
+  if (base.crit) special.push([t('proto.tip.base_crit', { n: String(base.crit) }), 'linen']);
+  if (base.vsNechist) special.push([t('proto.tip.base_nechist', { n: String(base.vsNechist) }), 'linen']);
   const aff = it.affixes.map((a) => [fmtAffix(a), 'blue_lt']);
   if (special.length || aff.length) { seps.push(L.length - 1); L.push(...special, ...aff); }
   return { lines: L, seps };

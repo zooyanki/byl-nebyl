@@ -12,6 +12,14 @@ import { drawSafeRing, drawRestSparks, drawFxFrame } from './rest_fx.js';
 import { CFG } from '../data/config.js';
 import { drawPortal } from './portal.js';
 import { ART } from './boss_art.js';
+import { t, RU } from '../core/i18n.js';
+
+const WARM_CAP = 0.36;   // m1f P1.9: потолок суммы тёплой альфы
+const CAPTION_A = 0.55, CAPTION_NEAR = 8, CAPTION_FAR = 11;   // m1i П.10b: альфа подписи части города, видна в радиусе (тайлы)
+const STAGGER = 6, LABEL_GAP = 2;   // m1i П.16: подписи добычи лесенкой
+const XRAY_A = 0.6, XRAY_DOOR = 0.3, XRAY_T = 0.25;   // m1f: альфа растворённой кроны (над дверью избы — прозрачнее), время перехода, с
+/** Враг «в агро»: гонится, бьёт, стреляет, отступает для выстрела, встаёт из земли (не стоит у логова и не уходит к нему). */
+const isAggro = (e) => e.state !== 'idle' && e.state !== 'return' && e.state !== 'wander' && !e.buried;
 
 export class WorldRenderer {
   constructor(map) {
@@ -46,7 +54,7 @@ export class WorldRenderer {
     this.renderFires(ctx, game, toS, time);
 
     // список для сортировки по глубине
-    const list = [];
+    const list = [], npcLabels = [];
     const vis = (sx, sy, h = 40) => sx > -60 && sx < VIEW_W + 60 && sy > -10 && sy - h < VIEW_H + 10;
     for (const p of map.props) {
       const [sx, sy] = toS(p.x + p.size / 2, p.y + p.size / 2);
@@ -61,14 +69,30 @@ export class WorldRenderer {
     list.sort((a, b) => a.d - b.d);
 
     // «рентген» (scale.md §4.4): то, что стоит перед героем или врагом под курсором и закрывает их, полупрозрачно
+    // m1f (P0.3): кроны растворяются над героем, над врагом под курсором и над каждым врагом в агро (погоня/бой), а также
+    // над невыбитой дверью избы; альфа плавно уходит к XRAY_A и возвращается (p._xa), поверх крон — силуэт врага в агро
     const xray = [];
     if (!hero.dead) { const [sx, sy] = toS(hero.x, hero.y); xray.push({ d: hero.x + hero.y, x: sx - 10, y: sy - 46, w: 20, h: 48 }); }
-    if (game.hoverEnemy) { const e = game.hoverEnemy, [sx, sy] = toS(e.x, e.y); xray.push({ d: e.x + e.y, x: sx - 10, y: sy - e.def.height, w: 20, h: e.def.height }); }
-    const covers = (p, d) => xray.some((q) => d > q.d && propCovers(p, toS, q));
+    const aggro = [];
+    for (const e of game.enemies) {
+      if (e.dead || e.dummy || !(e === game.hoverEnemy || isAggro(e))) continue;
+      const [sx, sy] = toS(e.x, e.y); if (!vis(sx, sy, e.def.height)) continue;
+      xray.push({ d: e.x + e.y, x: sx - 10, y: sy - e.def.height, w: 20, h: e.def.height });
+      if (e !== game.hoverEnemy || isAggro(e)) aggro.push(e);
+    }
+    for (const dd of map.objects) if (dd.type === 'hut' && !dd.done) {
+      const ax = dd.door === '+x', a0 = ax ? toS(dd.x, dd.y - 0.75) : toS(dd.x - 0.75, dd.y), a1 = ax ? toS(dd.x, dd.y + 0.75) : toS(dd.x + 0.75, dd.y);
+      xray.push({ a: XRAY_DOOR, d: dd.x + dd.y + 0.5, x: Math.min(a0[0], a1[0]), y: Math.min(a0[1], a1[1]) - 60, w: Math.abs(a1[0] - a0[0]) + 1, h: Math.abs(a1[1] - a0[1]) + 62 });
+    }
+    const covers = (p, d) => { let a = 1; for (const q of xray) if (d > q.d && (q.a ?? XRAY_A) < a && propCovers(p, toS, q)) a = q.a ?? XRAY_A; return a; };
+    const fdt = Math.min(0.1, Math.max(0, time - (this._xt ?? time))); this._xt = time;
+    let faded = 0;
     for (const o of list) {
       if (o.k === 0) {
-        if (o.p.type !== 'fire' && covers(o.p, o.d)) { ctx.save(); ctx.globalAlpha = 0.45; drawProp(ctx, o.p, toS, time); ctx.restore(); }
-        else drawProp(ctx, o.p, toS, time);
+        const p = o.p, want = p.type !== 'fire' ? covers(p, o.d) : 1;
+        p._xa = p._xa == null ? want : want < p._xa ? Math.max(want, p._xa - fdt / XRAY_T) : Math.min(want, p._xa + fdt / XRAY_T);
+        if (p._xa < 0.999) { faded++; ctx.save(); ctx.globalAlpha = p._xa; drawProp(ctx, p, toS, time); ctx.restore(); }
+        else drawProp(ctx, p, toS, time);
       } else if (o.k === 2) {
         const [sx, sy] = toS(o.e.x, o.e.y);
         if (!vis(sx, sy)) continue;
@@ -97,10 +121,7 @@ export class WorldRenderer {
       } else if (o.k === 5) {
         const [sx, sy] = toS(o.n.x, o.n.y);
         ctx.save(); ctx.globalAlpha = o.n.alpha ?? 1; drawNpc(ctx, sx, sy, o.n, time); ctx.restore();
-        if (o.n.role) {
-          drawText(ctx, sx, sy - (o.n.def.height || 40) - 16, o.n.name, PAL.linen, { align: 'c', outline: true });
-          if (o.n.mark) drawText(ctx, sx + textWidth(o.n.name) / 2 + 8, sy - (o.n.def.height || 40) - 16, o.n.mark, PAL.bronze_hi, { align: 'c', outline: true });
-        }
+        if (o.n.role) npcLabels.push({ n: o.n, sx, sy });
       } else if (o.k === 3) {
         const [sx, sy] = toS(hero.x, hero.y);
         if (hero.buffs.chur) drawChurRunes(ctx, sx, sy, hero.buffs.chur, time, false);
@@ -111,6 +132,13 @@ export class WorldRenderer {
         const [sx, sy] = toS(o.p.x, o.p.y);
         drawProjectile(ctx, sx, sy, o.p, time);
       }
+    }
+    game.xrayFaded = faded; game.xrayAggro = aggro.length;   // для автотеста m1f
+    // m1f (P0.3): силуэт врагов в агро поверх крон — враг читается даже за густой кроной
+    for (const e of aggro) {
+      if (e.state === 'rise') continue;
+      const [sx, sy] = toS(e.x, e.y);
+      ctx.save(); ctx.globalAlpha = 0.35; drawEnemy(ctx, sx, sy, e, e.dir, time, game.hoverEnemy === e); ctx.restore();
     }
     // силуэт героя, если он за препятствием
     if (!hero.dead) {
@@ -124,11 +152,61 @@ export class WorldRenderer {
     }
 
     this.renderFx(ctx, game, toS);
-    if (game.map.captions) for (const c of game.map.captions) { const [sx, sy] = toS(c.x, c.y); drawText(ctx, sx, sy, c.text, PAL.mist, { align: 'c', outline: true }); }
+    // m1f P1.6: имена NPC и подписи мест — после сцены, без наложений: имя не ложится на героя (поднимается над ним),
+    // подпись места, налезающая на имя, не рисуется; под открытым окном подписи мира и реплики гаснут
+    const quiet = game.ui.anyOpen;
+    const placed = [];
+    const hit = (r) => placed.some((q) => r.x < q.x + q.w && r.x + r.w > q.x && r.y < q.y + q.h && r.y + r.h > q.y);
+    let heroBox = null;
+    if (!hero.dead) { const [hx, hy] = toS(hero.x, hero.y); heroBox = { x: hx - 11, y: hy - 48, w: 22, h: 50 }; }
+    game.labelsDrawn = [];
+    if (!quiet) {
+      for (const L of npcLabels) {
+        const w = textWidth(L.n.name) + (L.n.mark ? 14 : 0);
+        let y = L.sy - (L.n.def.height || 40) - 16;
+        const r = { x: L.sx - w / 2 - 1, y: y - 1, w: w + 2, h: 10 };
+        if (heroBox && (hit.call(null, r) || (r.x < heroBox.x + heroBox.w && r.x + r.w > heroBox.x && r.y < heroBox.y + heroBox.h && r.y + r.h > heroBox.y))) { y = Math.min(y, heroBox.y - 11); r.y = y - 1; }
+        while (hit(r)) { y -= 10; r.y = y - 1; }
+        placed.push(r);
+        drawText(ctx, L.sx, y, L.n.name, PAL.linen, { align: 'c', outline: true });
+        if (L.n.mark) drawText(ctx, L.sx + textWidth(L.n.name) / 2 + 8, y, L.n.mark, PAL.bronze_hi, { align: 'c', outline: true });
+        game.labelsDrawn.push({ text: L.n.name, ...r });
+      }
+      // m1i (П.10b): подпись части города — явно не объект: бледная, без обводки и плашки, видна, только пока герой в этой
+      // части (ближе CAPTION_NEAR тайлов, гаснет к CAPTION_FAR); на курсор не реагирует (в labelRects/objects её нет)
+      if (game.map.captions) for (const c of game.map.captions) {
+        const dh = Math.hypot(hero.x - c.x, hero.y - c.y), ca = CAPTION_A * Math.max(0, Math.min(1, (CAPTION_FAR - dh) / (CAPTION_FAR - CAPTION_NEAR)));
+        if (ca <= 0.01) continue;
+        const [sx, sy] = toS(c.x, c.y), w = textWidth(c.text), r = { x: sx - w / 2 - 1, y: sy - 1, w: w + 2, h: 10 };
+        if (hit(r) || (heroBox && r.x < heroBox.x + heroBox.w && r.x + r.w > heroBox.x && r.y < heroBox.y + heroBox.h && r.y + r.h > heroBox.y)) continue;
+        placed.push(r); drawText(ctx, sx, sy, c.text, PAL.birch, { align: 'c', shadow: true, alpha: ca });
+        game.labelsDrawn.push({ text: c.text, caption: true, alpha: +ca.toFixed(2), outline: false, ...r });
+      }
+    }
     this.renderLight(ctx, game, toS);
     this.renderFxText(ctx, game, toS);
     this.renderObjects(ctx, game, toS);
     this.renderLabels(ctx, game, toS);
+    this.renderNameplates(ctx, game, toS);
+  }
+
+  /** GDD v1.11 §8.2: плашка былинного врага (def.nameplate.always) — всегда, пока он на экране, поверх крон:
+   *  «Имя · ур. N» бронзой (как имя элиты) и под ней плашка. Тексты — ru.json: def.nameplate.title (codex.*: Имя, Плашка),
+   *  proto.nameplate, ui.hud.level. */
+  renderNameplates(ctx, game, toS) {
+    game.nameplatesDrawn = [];
+    for (const e of game.enemies) {
+      const N = e.def && e.def.nameplate;
+      if (!N || !N.always || e.dead || e.state === 'rise') continue;
+      const [sx, sy] = toS(e.x, e.y);
+      if (sx < -60 || sx > VIEW_W + 60 || sy < -20 || sy > PANEL_Y + 60) continue;
+      const C = RU[N.title] || {}, name = C['Имя'] || e.name;
+      const line1 = t('proto.nameplate', { name, level: t('ui.hud.level', { level: e.mlvl }) }), line2 = C['Плашка'] || '';
+      const y = Math.round(sy - (e.def.height || 40) - 24);
+      drawText(ctx, sx, y, line1, PAL.bronze_hi, { align: 'c', outline: true });
+      if (line2) drawText(ctx, sx, y + 10, line2, PAL.bronze_lt, { align: 'c', outline: true });
+      game.nameplatesDrawn.push({ id: e.id, kind: e.kind, line1, line2, x: sx, y });
+    }
   }
 
   /** Огонь на земле: факелы поджигателей (полёт по дуге — fx_torch_flight, телеграф — красный круг, GDD §5.2 E11; горящая
@@ -197,6 +275,20 @@ export class WorldRenderer {
 
   /** Подсветка интерактивных объектов под курсором, подпись действия и полоса удержания (выбить дверь). */
   renderObjects(ctx, game, toS) {
+    // m1f (P0.1): невыбитая дверь избы подсвечена всегда — пульсирующая бронзовая рамка проёма поверх темноты
+    const pulse = 0.55 + 0.35 * Math.sin((game.time || 0) * 4);
+    let doorHi = 0;
+    for (const d of game.map.objects) {
+      if (d.type !== 'hut' || d.done) continue;
+      const ax = d.door === '+x', a0 = ax ? toS(d.x, d.y - 0.75) : toS(d.x - 0.75, d.y), a1 = ax ? toS(d.x, d.y + 0.75) : toS(d.x + 0.75, d.y);
+      if (a0[0] < -40 || a0[0] > VIEW_W + 40 || a0[1] < -80 || a0[1] > VIEW_H + 40) continue;
+      const pts = [[a0[0] - 2, a0[1] - 2], [a1[0] + 2, a1[1] - 2], [a1[0] + 2, a1[1] - 62], [a0[0] - 2, a0[1] - 62]];
+      ctx.save(); ctx.globalAlpha = pulse; ctx.strokeStyle = PAL.bronze_hi; ctx.lineWidth = 2;
+      ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.stroke();
+      ctx.globalAlpha = pulse * 0.18; ctx.fillStyle = PAL.flame; ctx.fill(); ctx.restore();
+      doorHi++;
+    }
+    game.doorHi = doorHi;                       // для автотеста: сколько дверей подсвечено в кадре
     const o = game.hoverObj;
     if (o) {
       const [sx, sy] = toS(o.x, o.y);
@@ -278,7 +370,9 @@ export class WorldRenderer {
     const d = this.dctx;
     d.globalCompositeOperation = 'source-over';
     d.clearRect(0, 0, VIEW_W, VIEW_H);
-    d.fillStyle = 'rgba(8,10,20,0.5)';
+    // m1i (П.16): над землёй Небыли (капище, realm "nebyl") темнота красноватая, в Были — прежняя синеватая
+    const nebyl = game.zone && game.zone.realm === 'nebyl';
+    d.fillStyle = game.darkTint = nebyl ? 'rgba(48,8,12,0.6)' : 'rgba(8,10,20,0.5)';
     d.fillRect(0, 0, VIEW_W, VIEW_H);
     d.globalCompositeOperation = 'destination-out';
     const hole = (sx, sy, r, a = 1) => {
@@ -290,7 +384,7 @@ export class WorldRenderer {
       d.fillRect(sx - r, sy - r, r * 2, r * 2);
     };
     const [hx, hy] = toS(game.hero.x, game.hero.y);
-    hole(hx, hy - 20, 190, 0.95);
+    hole(hx, hy - 20, 190, nebyl ? 0.8 : 0.95);   // в Небыли и у героя остаётся красноватая дымка
     const warm = [];
     for (const l of game.map.lights) {
       const [sx, sy] = toS(l.x, l.y);
@@ -303,10 +397,18 @@ export class WorldRenderer {
     const pr = game.map.perun;                                       // горящий Идол Перуна: тёплый свет ~5 тайлов от корня пламени (y − 70), подсказка художника
     if (pr && pr.burning) { const [sx, sy] = toS(pr.x + 1, pr.y + 1), r = 5 * HALF_W * Math.SQRT2 + Math.sin(game.time * 7) * 4; hole(sx, sy - 70, r, 1); warm.push([sx, sy - 70, r, 0.15]); }
     for (const p of game.combat.projectiles) { const [sx, sy] = toS(p.x, p.y); hole(sx, sy - 12, 60, 0.9); warm.push([sx, sy - 12, 50, 0.25]); }
-    for (const f of game.combat.fires || []) { const [sx, sy] = toS(f.x, f.y); const r = f.lit ? 70 + Math.sin(game.time * 9 + f.id) * 4 : 34; hole(sx, sy - 6, r, f.lit ? 1 : 0.6); warm.push([sx, sy - 6, r, f.lit ? 0.3 : 0.12]); }
+    for (const f of game.combat.fires || []) { const [sx, sy] = toS(f.x, f.y); const r = f.lit ? 70 + Math.sin(game.time * 9 + f.id) * 4 : 34; hole(sx, sy - 6, r, f.lit ? 1 : 0.6); warm.push([sx, sy - 6, r, f.lit ? 0.18 : 0.1]); }
     for (const e of game.enemies) if (!e.dead && e.def.torch) { const [sx, sy] = toS(e.x, e.y); if (sx > -60 && sx < VIEW_W + 60 && sy > -60 && sy < VIEW_H + 60) { hole(sx + 9 * e.facing, sy - 40, 46, 0.85); warm.push([sx + 9 * e.facing, sy - 40, 40, 0.22]); } }
-    for (const f of game.fx.flashes) { const [sx, sy] = toS(f.x, f.y); const k = 1 - f.t / f.dur; hole(sx, sy, f.r, k); warm.push([sx, sy, f.r, 0.35 * k]); }
+    for (const f of game.fx.flashes) { const [sx, sy] = toS(f.x, f.y); const k = 1 - f.t / f.dur; hole(sx, sy, f.r, k); warm.push([sx, sy, f.r, 0.28 * k]); }
     ctx.drawImage(this.dark, 0, 0);
+    // m1f P1.9: сумма тёплой альфы в любом месте не выше WARM_CAP — пересекающиеся огни (огнища, след Кривши, вспышки)
+    // делят бюджет пропорционально, кадр не уходит в белое и упыри в огне читаются
+    const near = (w, v) => Math.hypot(w[0] - v[0], w[1] - v[1]) < (w[2] + v[2]) * 0.5;
+    const fac = warm.map((w) => { let sum = 0; for (const v of warm) if (near(w, v)) sum += v[3]; return sum > WARM_CAP ? WARM_CAP / sum : 1; });
+    // каждый свет берёт самый строгий множитель соседей — тогда сумма у любого света ≤ WARM_CAP
+    const fmin = warm.map((w) => { let f = 1; warm.forEach((v, j) => { if (near(w, v)) f = Math.min(f, fac[j]); }); return f; });
+    warm.forEach((w, i) => { w[3] *= fmin[i]; });
+    game.warmPeak = warm.reduce((m, w) => { let s2 = 0; for (const v of warm) if (near(w, v)) s2 += v[3]; return Math.max(m, s2); }, 0);
     // тёплый подсвет от огня
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
@@ -322,7 +424,10 @@ export class WorldRenderer {
   }
 
   renderFxText(ctx, game, toS) {
+    game.speechDrawn = 0;
     for (const t of game.fx.texts) {
+      if (t.speech && game.ui.anyOpen) continue;          // m1f P1.6: под окном реплики мира не видны
+      if (t.speech) game.speechDrawn++;
       const [sx, sy] = toS(t.x, t.y);
       const k = t.t / t.dur;
       const a = k > 0.7 ? 1 - (k - 0.7) / 0.3 : 1;
@@ -343,28 +448,34 @@ export class WorldRenderer {
     const body = (a, hgt, half) => { const [bx, by] = toS(a.x, a.y); blockers.push({ x: bx - half, y: by - hgt - 2, w: half * 2, h: hgt + 4, block: true }); };
     if (!game.hero.dead) body(game.hero, 46, 10);
     if (game.hoverEnemy && !game.hoverEnemy.dead) body(game.hoverEnemy, game.hoverEnemy.def.height, 11);
-    const overlaps = (x, y, w, h, list) => list.find((r) => x < r.x + r.w && x + w > r.x && y < r.y + r.h + 1 && y + h + 1 > r.y);
+    const overlaps = (x, y, w, h, list) => list.find((r) => x < r.x + r.w && x + w > r.x && y < r.y + r.h + LABEL_GAP && y + h + LABEL_GAP > r.y);
     for (const p of pos) {
       const w = textWidth(p.it.label) + 7, h = 13;
       const x0 = Math.round(p.sx - w / 2), y0 = p.sy - 26;
       if (x0 + w < 0 || x0 > VIEW_W || y0 > PANEL_Y || y0 + h < 0) continue;
       // столбик вверх; если упёрлись в верх экрана — соседние столбики (QA B-08: большая куча добычи)
+      // m1i (П.16): столбик — «лесенкой»: каждая следующая плашка сдвинута вбок на STAGGER px (поочерёдно вправо/влево)
+      // и отделена зазором LABEL_GAP — подписи не слипаются в один брусок и не перекрываются
       let best = null;
       for (const off of [0, 1, -1, 2, -2, 3, -3]) {
-        let x = x0 + off * Math.round(w / 2 + 24), y = y0;
+        const cx = x0 + off * Math.round(w / 2 + 24);
+        let x = cx, y = y0, level = 0;
         if (off && (x < 0 || x + w > VIEW_W)) continue;
         for (let guard = 0; guard < 60; guard++) {
           const hit = overlaps(x, y, w, h, rects) || overlaps(x, y, w, h, blockers);
           if (!hit) break;
-          y = hit.y - h - 1;
+          level++;
+          y = hit.y - h - LABEL_GAP;
+          x = Math.max(0, Math.min(VIEW_W - w, cx + (level % 2 ? STAGGER : -STAGGER)));
         }
-        if (y >= 2) { best = { x, y }; break; }
+        if (y >= 2) { best = { x, y, level }; break; }
       }
       const fit = !!best;
       if (!best) best = { x: x0, y: y0 };
-      const r = { x: best.x, y: best.y, w, h, item: p.it, faded: !fit && !!overlaps(best.x, best.y, w, h, blockers) };
+      const r = { x: best.x, y: best.y, w, h, item: p.it, level: best.level || 0, faded: !fit && !!overlaps(best.x, best.y, w, h, blockers) };
       rects.push(r);
     }
+    game.lootLabels = rects.map((r) => ({ text: r.item.label, x: r.x, y: r.y, w: r.w, h: r.h, level: r.level }));   // для автотеста m1i
     const m = game.input;
     let hovered = null;
     if (!game.overUi) for (const r of rects) if (m.mx >= r.x && m.mx < r.x + r.w && m.my >= r.y && m.my < r.y + r.h) hovered = r.item;

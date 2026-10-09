@@ -185,7 +185,7 @@ def leshy_v2b():
 
 
 def idol():
-    """Чур / wooden idol of the капище: carved pillar with a stern face and cap."""
+    """Идол у ворот (was «чур») / wooden idol of the капище: carved pillar with a stern face and cap."""
     m = pk.MatCanvas(18, 58)
     m.rect(4, 8, 10, 50, "X")
     m.poly([(3, 9), (15, 9), (13, 3), (9, 0), (5, 3)], "z")         # cap (bronze-stained)

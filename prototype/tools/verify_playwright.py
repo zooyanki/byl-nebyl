@@ -17,6 +17,10 @@ from checks_m1b import run_m1b
 from checks_m1c import run_m1c
 from checks_m1d import run_m1d
 from checks_m1e import run_m1e
+from checks_m1f import run_m1f
+from checks_m1g import run_m1g
+from checks_m1h import run_m1h
+from checks_m1i import run_m1i
 from checks_v18 import run_balance18
 from playwright.async_api import async_playwright
 
@@ -75,14 +79,22 @@ async def main(a):
         await pg.mouse.move(960, 540)
         await pg.mouse.click(960, 300)              # жест пользователя: разблокирует WebAudio (и шаг героя)
         await wait(200)
-        # веха M1b: Мара Пепельная со свитой бродит по Залесью сверх 28 врагов зоны — для проверок M0/M1a её группу убираем
+        # веха M1b: Огнея Пепельная со свитой бродит по Залесью сверх 28 врагов зоны — для проверок M0/M1a её группу убираем
         # (её проверяют отдельно в разделе M1b на свежей загрузке)
         if a.balance_v18:                 # полный замер §12.3 GDD v1.8 (по N боёв на сценарий) → tools/balance_m1c.json
             await run_balance18(pg, G, a.balance_v18)
             print('консоль:', 'чисто' if not errors else errors[:5])
             await br.close()
             return 0
-        if a.only_m1b or a.only_m1c or a.only_m1d or a.only_m1e:
+        if a.only_m1b or a.only_m1c or a.only_m1d or a.only_m1e or a.only_m1f or a.only_m1g or a.only_m1h or a.only_m1i:
+            if a.only_m1i:
+                await run_m1i(pg, G, check, wait, client_of, client_scr, a)
+            if a.only_m1h:
+                await run_m1h(pg, G, check, wait, client_of, client_scr, a)
+            if a.only_m1g:
+                await run_m1g(pg, G, check, wait, client_of, client_scr, a)
+            if a.only_m1f:
+                await run_m1f(pg, G, check, wait, client_of, client_scr, a)
             if a.only_m1e:
                 await run_m1e(pg, G, check, wait, client_of, client_scr, a)
             if a.only_m1d:
@@ -127,13 +139,13 @@ async def main(a):
               u: p.kinds.filter(x => x === 'upyr').length, a: p.kinds.filter(x => x === 'anchutka').length, mlvl: p.mlvl }));
             const near = pk.slice().sort((a, b) => a.dk - b.dk)[0];
             return { n, m1: +(m1 / n).toFixed(2), pk, near, safe: z.safeZones.map(s => s.at + ':' + s.radius), well: !!m.props.find(p => p.type === 'well'), stone: !!c }; })()''')
-        sizesOk = all((p['mlvl'] == 1 and ((p['a'] == 0 and 3 <= p['u'] <= 4) or (p['u'] == 0 and 4 <= p['a'] <= 5))) or
+        sizesOk = all((p['mlvl'] == 1 and ((p['a'] == 0 and 3 <= p['u'] <= 4) or (p['u'] == 0 and 3 <= p['a'] <= 4) or (p['u'] == 3 and p['a'] == 1))) or   # m1g: GDD v1.11 — анчутки mlvl 1 по 3–4, стая 2 = 3 упыря + 1 анчутка
                       (p['mlvl'] == 2 and ((p['a'] == 0 and p['u'] == 3) or (p['u'] == 0 and p['a'] == 3) or (p['u'] <= 3 and p['a'] <= 1))) for p in z['pk'])
-        check('Залесье (GDD v1.7): 28 врагов — 18 mlvl 1 + 10 mlvl 2, анчутки mlvl 2 по 3, смешанная ≤ 3 упыря + 1 анчутка, первая встреча — 3 упыря mlvl 1',
+        check('Залесье (GDD v1.7/v1.11): 28 врагов — 18 mlvl 1 + 10 mlvl 2, анчутки mlvl 1 по 3–4, mlvl 2 по 3, смешанная ≤ 3 упыря + 1 анчутка, первая встреча — 3 упыря mlvl 1',
               z['n'] == 28 and z['m1'] == round(18 / 28, 2) and sizesOk and (z['near']['u'], z['near']['a'], z['near']['mlvl']) == (3, 0, 1), z)
         check('тихие круги: крада 10, Чуров камень у колодца 6; центры стай ≥ packMinDist = r+2 (12 / 8); колодец на карте',
               z['safe'] == ['krada:10', 'churStone:6'] and all(p['dk'] >= 12 and p['dc'] >= 8 for p in z['pk']) and z['well'] and z['stone'], z['safe'])
-        check('стартовый комплект GDD v1.4 (скрамасакс, малый щит, клёпаный шелом, короткая кольчуга) и пояс', sorted(s['kit']) == sorted(['Скрамасакс', 'Малый щит', 'Клёпаный шелом', 'Короткая кольчуга']) and s['belt'][:3] == ['life1x2', 'life1x1', 'yar1x2'], (s['kit'], s['belt']))
+        check('стартовый комплект GDD v1.4 (скрамасакс, малый щит, клёпаный шелом, короткая кольчуга) и пояс (v1.11: 2 + 2 слабых зелья жизни, 2 Яри)', sorted(s['kit']) == sorted(['Скрамасакс', 'Малый щит', 'Клёпаный шелом', 'Короткая кольчуга']) and s['belt'][:3] == ['life1x2', 'life1x2', 'yar1x2'], (s['kit'], s['belt']))
 
         # --- 2. полутайловая коллизия: тонкая стена в западной половине тайла (30, 24)
         await G(FREEZE)
@@ -615,7 +627,7 @@ async def main(a):
         s = await G('''(() => { const d = __game.dbg; return { p: [1, 3, 5, 11, 21, 22, 25, 111].map(n => n + ' ' + d.plural(n, 'враг', 'врага', 'врагов')),
             s: [d.silverText(1, 'counter'), d.silverText(21, 'lost'), d.silverText(86, 'ground')], ui: d.t('ui.error.no_yar') }; })()''')
         check('plural() для счётных слов; серебро без склонения («Серебро: N», «Потеряно серебра: N», «N сер.»); строки из data/ru.json',
-              s['p'] == ['1 враг', '3 врага', '5 врагов', '11 врагов', '21 враг', '22 врага', '25 врагов', '111 врагов'] and s['s'] == ['Серебро: 1', 'Потеряно серебра: 21', '86 сер.'] and s['ui'] == 'Ярь на исходе', s)
+              s['p'] == ['1 враг', '3 врага', '5 врагов', '11 врагов', '21 враг', '22 врага', '25 врагов', '111 врагов'] and s['s'] == ['Серебро: 1', 'Потеряно серебра: 21', '86 сер.'] and s['ui'] == 'Удаль на исходе', s)
 
         # 10.7 тихий круг у крады (QA B-16): не замечают, не заходят, погоня обрывается
         s = await G('''(() => { const g = __game, h = g.hero, k = g.map.krada; h.invuln = 0; h.hp = h.maxHp;
@@ -866,7 +878,7 @@ async def main(a):
             let tEnd = 0; while (g.restFx.sparksFrame >= 0 && tEnd < 2) { g.simulate(1 / 60); tEnd += 1 / 60; }
             const after = { full: h.hp === h.maxHp, kp: kp.restOn, src: g.restFx.src, tEnd: +tEnd.toFixed(2) }; g.simulate(0.4); after.a = ring();
             h.hp = h.maxHp; return { sheets, lay, phase, ringPx, mid, border, outNear, far, early, rest, after }; })()''')
-        ok = (len([k for k in s['sheets'] if not k.startswith(('k_', 'm_', 'a_', 'p_')) and k != 'item_beresta']) == 13 and sorted(s['lay']) == [[6, 55], [10, 91]] and s['phase'] and s['ringPx']['R10'][0] > 300 and s['ringPx']['R6'][0] > 150
+        ok = (len([k for k in s['sheets'] if not k.startswith(('k_', 'm_', 'a_', 'p_')) and k not in ('item_beresta', 'stump')]) == 13 and sorted(s['lay']) == [[6, 55], [10, 91]] and s['phase'] and s['ringPx']['R10'][0] > 300 and s['ringPx']['R6'][0] > 150
               and abs(s['ringPx']['R10'][1] - 128) <= 1 and s['mid']['a'] == 0 and s['mid']['src'] is None and s['mid']['sp'] == -1
               and s['border'] == {'a': 0.5, 'lit': False} and s['outNear'] == 0.5 and s['far'] == 0
               and not s['early']['r'] and s['early']['sp'] == -1 and not s['early']['kp']
@@ -920,11 +932,11 @@ async def main(a):
         # миссия с чистого листа: в проверках выше в Залесье ставили тестового поджигателя (цель «Найди поджигателя» уже открыта)
         await G('(() => { const g = __game, h = g.hero; g.quest = new g.quest.constructor(g, "m1"); g._barks = {}; h.hp = h.maxHp; h.invuln = 0; h.cmd = null; h.action = null; g.state = "play"; g.ui.closeAll(); })()')
         s = await G('''(() => { const g = __game, d = g.dbg, q = g.quest; return { title: q.title, act: d.t('quest.act'), lines: q.lines().map(l => [l.text, l.count, l.state]),
-            ru: ['quest.m1.obj.reach', 'quest.m1.obj.huts', 'quest.m1.obj.hearths'].map(k => d.t(k)), states: q.snapshot().map(o => o.id + ':' + o.state),
+            ru: ['quest.m1.obj.mal', 'quest.m1.obj.reach', 'quest.m1.obj.huts'].map(k => d.t(k)), states: q.snapshot().map(o => o.id + ':' + o.state),
             img: !!(window.__assetsOk !== false), frame: d.UI_ATLAS.hud_quest, cfg: !!d.CFG.quests.m1 }; })()''')
-        check('трекер: «Огонь на капище» / «Задание · Акт I», цели из data/quests.json, тексты из ru.json, не больше 3 строк',
+        check('трекер: «Огонь на капище» / «Задание · Акт I», цели из data/quests.json (m1f: первая — «Вызволи Мала…»), тексты из ru.json, не больше 3 строк',
               s['title'] == 'Огонь на капище' and s['act'] == 'Задание · Акт I' and [l[0] for l in s['lines']] == s['ru'] and len(s['lines']) == 3
-              and s['lines'][1][1] == '0/3' and s['lines'][2][2] == 'locked' and 'arsonist:hidden' in s['states'] and s['cfg'] and s['frame']['w'] == 208, s)
+              and s['lines'][2][1] == '0/3' and s['lines'][0][2] == 'active' and 'hearths:locked' in s['states'] and 'arsonist:hidden' in s['states'] and s['cfg'] and s['frame']['w'] == 208, s)
         # выход на тропу закрыт, пока Мал не показал дорогу
         await G(FREEZE)
         # стая у выхода (role exit) стоит телами на дороге — перебиваем её
@@ -946,22 +958,23 @@ async def main(a):
         await wait(900)
         p1 = await G("(() => { const c = __game.hero.cmd; return c && c.type === 'interact' ? { started: c.started, t: +c.holdT.toFixed(2) } : null; })()")
         await G("__game.hero.takeDamage(1, __game, 'fire')")
-        p2 = await G("({ cmd: __game.hero.cmd && __game.hero.cmd.type, notice: __game.notice && __game.notice.text, done: __game.objectById('hut1').done })")
+        p2 = await G("(() => { const c = __game.hero.cmd; return { cmd: c && c.type, t: c && c.holdT, pause: c && c.holdPause, notice: __game.notice && __game.notice.text, done: __game.objectById('hut1').done }; })()")
         await pg.mouse.up(); await wait(100)
         await pg.mouse.down()
         await wait(2600)
         await pg.mouse.up(); await wait(100)
         p3 = await G("(() => { const g = __game; return { done: g.objectById('hut1').done, huts: g.quest.get('huts').n, npcs: g.npcs.map(n => n.name), ev: g.quest.events.filter(e => e.event === 'hutFreed').map(e => e.hut) }; })()")
-        check('изба 1: дверь не выбить, пока жива стая; наведение — «Выбить дверь (держи ЛКМ)»; удержание ЛКМ 2 с, урон прерывает («Прервано!»)',
+        check('изба 1: дверь не выбить, пока жива стая; наведение — «Выбить дверь (держи ЛКМ)»; удержание ЛКМ 2 с, урон приостанавливает («Прервано!», m1f: прогресс не сброшен)',
               o['err0'] == 'ui.obj.enemies_near' and o['err1'] is None and hov['id'] == 'hut1' and hov['label'] == 'Выбить дверь (держи ЛКМ)'
-              and p1 and p1['started'] and p1['t'] > 0.2 and p2['cmd'] is None and p2['notice'] == 'Прервано!' and not p2['done'], (o, hov, p1, p2))
+              and p1 and p1['started'] and p1['t'] > 0.2 and p2['cmd'] == 'interact' and p2['t'] >= p1['t'] - 0.01 and p2['pause'] > 0
+              and p2['notice'] == 'Прервано!' and not p2['done'], (o, hov, p1, p2))
         check('изба 1 освобождена: «Спаси выживших» 1/3, селянка выбегает с репликой', p3['done'] and p3['huts'] == 1 and 'Селянка' in p3['npcs'] and p3['ev'] == ['hut1'], p3)
         # избы 2 и 3 (у колодца — Мал): цель 3/3, диалог Мала, тропа открыта
         s = await G('''(() => { const g = __game, h = g.hero, L = [], add0 = g.log.add; g.log.add = function (t, c) { L.push(t); return add0.call(this, t, c); };
             for (const id of ['hut2', 'hut3']) { const o = g.objectById(id), idx = g.map.packs.findIndex(p => p.role === o.pack);
               for (const e of g.enemies) if (!e.dead && (e.pack === idx || Math.hypot(e.x - o.x, e.y - o.y) < 6)) e.takeDamage(9999, g, 'melee', null);
               h.x = o.sx; h.y = o.sy + 0.3; h.cmd = null; g.autoHold = true; h.interact(o); g.simulate(4, () => o.done); g.autoHold = false; }
-            g.simulate(12); g.log.add = add0; const q = g.quest;   // M1d: +1 реплика Мала (награда, v1.9) — диалог на 2,6 с длиннее
+            g.simulate(20); g.log.add = add0; const q = g.quest;   // M1d: +1 реплика Мала (награда, v1.9) — диалог на 2,6 с длиннее; m1f P1.6: барки изб тоже в очереди реплик
             return { huts: q.get('huts').state + ' ' + q.get('huts').n, flag: q.flag('trailOpen'), mal: L.filter(t => t.startsWith('Мал:')), done: L.some(t => t.includes('Всех вывел')),
               lines: q.lines().map(l => [l.text, l.state, +l.alpha.toFixed(2)]) }; })()''')
         check('все 3 избы: цель выполнена («Всех вывел…»), Мал: «Они с капища шли!…», затем награда «Вот, мамкины зелья…» (v1.9) → тропа открыта (флаг trailOpen)',
@@ -1085,7 +1098,7 @@ async def main(a):
         # --- 12. Веха M1b: ответы дизайнера, Мара, вожаки, капище Перуна, Кривша (свежая загрузка; tools/checks_m1b.py)
         await run_m1b(pg, G, check, wait, client_of, client_scr, a)
 
-        # --- 13. Веха M1c: береста возврата и Чуров проход, былинные вещи (свежая загрузка; tools/checks_m1c.py)
+        # --- 13. Веха M1c: береста возврата и Путевой проход, былинные вещи (свежая загрузка; tools/checks_m1c.py)
         await run_m1c(pg, G, check, wait, client_of, client_scr, a)
 
         # --- 14. Веха M1d: GDD v1.9 — береста (заглушки сняты, арена, пояс), былинные, Мал, B-34, B-35 (tools/checks_m1d.py)
@@ -1093,6 +1106,18 @@ async def main(a):
 
         # --- 15. Веха M1e: хаб Ладога (GDD v1.10)
         await run_m1e(pg, G, check, wait, client_of, client_scr, a)
+
+        # --- 16. Веха m1f: замечания критиков m1e — P0/P1 (tools/checks_m1f.py)
+        await run_m1f(pg, G, check, wait, client_of, client_scr, a)
+
+        # --- 17. Веха m1g: GDD v1.11 — пояс, стаи, Мара, капище, подцель Мала, декор тупика (tools/checks_m1g.py)
+        await run_m1g(pg, G, check, wait, client_of, client_scr, a)
+
+        # --- 18. Веха m1h: замена терминов (story/rename_map.md): grep старых форм, новые имена, длины, старые флаги (tools/checks_m1h.py)
+        await run_m1h(pg, G, check, wait, client_of, client_scr, a)
+
+        # --- 19. Веха m1i: замечания критиков m1f — P2: ладья, торг, пауза, меню/слот, визуал кодом, подписи Ладоги, «Жезл» (tools/checks_m1i.py)
+        await run_m1i(pg, G, check, wait, client_of, client_scr, a)
 
         check('консоль без ошибок и предупреждений', not errors, errors[:5])
         await br.close()
@@ -1110,6 +1135,10 @@ if __name__ == '__main__':
     ap.add_argument('--only-m1c', action='store_true', help='только проверки вехи M1c')
     ap.add_argument('--only-m1d', action='store_true', help='только проверки вехи M1d (GDD v1.9)')
     ap.add_argument('--only-m1e', action='store_true', help='только проверки вехи M1e (Ладога)')
+    ap.add_argument('--only-m1f', action='store_true', help='только проверки вехи m1f (замечания критиков m1e, P0/P1)')
+    ap.add_argument('--only-m1g', action='store_true', help='только проверки вехи m1g (GDD v1.11)')
+    ap.add_argument('--only-m1h', action='store_true', help='только проверки вехи m1h (замена терминов, rename_map.md)')
+    ap.add_argument('--only-m1i', action='store_true', help='только проверки вехи m1i (замечания критиков m1f, P2)')
     ap.add_argument('--balance-v18', type=int, default=0, metavar='N', help='только замер §12.3 GDD v1.8: N боёв на сценарий (30 по GDD)')
     ap.add_argument('--throttle', type=float, default=1, help='замедление ЦП (CDP Emulation.setCPUThrottlingRate) — проверка на редких кадрах')
     sys.exit(asyncio.run(main(ap.parse_args())))

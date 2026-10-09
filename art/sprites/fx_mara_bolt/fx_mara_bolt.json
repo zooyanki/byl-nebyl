@@ -1,5 +1,5 @@
 {
- "effect": "Огненный сгусток Мары в полёте",
+ "effect": "Огненный сгусток Огнеи в полёте",
  "draw": "drawn facing +x (right); flip when moving left; raise it to the release height (38 px above the ground) and keep a 4x2 ink shadow on the ground",
  "pivot": [
   12,

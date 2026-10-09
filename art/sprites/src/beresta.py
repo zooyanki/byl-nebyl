@@ -1,11 +1,11 @@
-"""«Береста возврата» (GDD §4.4: свиток портала — открывает Чуров проход в Ладогу и обратно на 60 с, каст 1 с,
+"""«Береста возврата» (GDD §4.4: свиток портала — открывает Путевой проход в Ладогу и обратно на 60 с, каст 1 с,
 цена 25, стопка до 20, 1x1 в котомке; «не путать с берестяными грамотами»). Prototype: item kind 'scroll',
 scroll 'beresta', icon key 'beresta' (items.png atlas via tools/export_ui.py <- art/ui/src/items_rus.build()),
 ground item drawn by drawGroundItem (grey box: 12x5 birch roll).
 
 Look: a tight roll of white birch bark (dark lenticel dashes) tied with bronze wire, lying diagonally; the free end
-is curled out showing the tan inner side with a burning Чур sign (ember rhomb) scratched into it — the same bronze /
-ember language as the Чуров проход and the Чуров камень. The old icon (horizontal roll with a red cord) read like
+is curled out showing the tan inner side with a burning notch mark (ember rhomb) scratched into it — the same bronze /
+ember language as the Путевой проход and the Путевой камень. The old icon (horizontal roll with a red cord) read like
 the «Берестяная грамота» letter; this one is diagonal, compact, and has no red.
 
   icon:   20x20 (fits the 24-px 1x1 cell like the other 1x1 icons, e.g. old beresta 20x18), palette v2, ink outline

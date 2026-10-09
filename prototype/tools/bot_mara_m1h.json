@@ -1,0 +1,188 @@
+{
+ "v1121_lvl4_pot6_seed7": {
+  "seed": 7,
+  "rule": "v1121",
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 10,
+  "wins": 20,
+  "timeouts": 0,
+  "medianT": 38.8,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.8,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 11,
+   "trailMed": 56,
+   "heroMaxHp": 94,
+   "minHpMed": 0.32
+  }
+ },
+ "v1121_lvl4_pot6_seed11": {
+  "seed": 11,
+  "rule": "v1121",
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 7,
+  "wins": 23,
+  "timeouts": 0,
+  "medianT": 39.7,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.7,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 10,
+   "trailMed": 47,
+   "heroMaxHp": 94,
+   "minHpMed": 0.36
+  }
+ },
+ "v1121_lvl4_pot6_seed3": {
+  "seed": 3,
+  "rule": "v1121",
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 8,
+  "wins": 22,
+  "timeouts": 0,
+  "medianT": 43.4,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.9,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 11,
+   "trailMed": 53,
+   "heroMaxHp": 94,
+   "minHpMed": 0.23
+  }
+ },
+ "v1121_lvl3_pot6_seed7": {
+  "seed": 7,
+  "rule": "v1121",
+  "lvl": 3,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 12,
+  "wins": 18,
+  "timeouts": 0,
+  "medianT": 44.6,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.9,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 11,
+   "trailMed": 59,
+   "heroMaxHp": 86,
+   "minHpMed": 0.16
+  }
+ },
+ "v1121_lvl3_pot6_seed11": {
+  "seed": 11,
+  "rule": "v1121",
+  "lvl": 3,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 14,
+  "wins": 16,
+  "timeouts": 0,
+  "medianT": 43.4,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.9,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 11,
+   "trailMed": 51,
+   "heroMaxHp": 86,
+   "minHpMed": 0.16
+  }
+ },
+ "v1121_lvl3_pot6_seed3": {
+  "seed": 3,
+  "rule": "v1121",
+  "lvl": 3,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 11,
+  "wins": 19,
+  "timeouts": 0,
+  "medianT": 41.4,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.9,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 10,
+   "trailMed": 49,
+   "heroMaxHp": 86,
+   "minHpMed": 0.19
+  }
+ }
+}

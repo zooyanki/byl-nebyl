@@ -54,7 +54,7 @@ async def run_m1d(pg, G, check, wait, client_of, client_scr, a):
         out.text = g.t('ui.error.beresta_arena'); Math.random = rnd0; return out; })()'''.replace('__P__', P))
     E = s['text']
     check('M1d п.2 арена Кривши: до подъёма (11,8 от идола) и при живом боссе береста серая, «' + E + '», не тратится; в 12,4 от идола — читается; после смерти Кривши — читается',
-          E == 'Пока враг стоит, Чур прохода не откроет.' and s['state0'] == 'dormant'
+          E == 'Пока враг стоит, проход не откроется.' and s['state0'] == 'dormant'
           and s['dormant'] == {'ok': False, 'n': 0, 'note': E, 'portal': False, 'grey': True} and s['alive'] == {'ok': False, 'n': 0, 'note': E, 'portal': False, 'grey': True}
           and s['out12']['ok'] and s['out12']['portal'] and s['out12']['n'] == 1 and not s['out12']['grey']
           and s['bossDead'] == 'dead' and s['after']['ok'] and s['after']['portal'] and not s['after']['grey'], s)
@@ -141,7 +141,7 @@ async def run_m1d(pg, G, check, wait, client_of, client_scr, a):
           s['now'] == {'pot': 2, 'silver': 30} and s['pot'] == 2 and s['silver'] == 30 and s['xp'] == 0 and s['gifts'] == 1 and s['bark'] and s['again'] == [2, 30, 1] and s['data'] == [2, 30, 0, True]
           and s['tip14'].startswith('К боссу иди с полным поясом'), s)
 
-    # --- 6. B-34: сравнение «Громовника» — прибавка к каждому выученному навыку, а не сумма
+    # --- 6. B-34: сравнение «Громового знака» — прибавка к каждому выученному навыку, а не сумма
     s = await G('''(async () => { const g = __game, h = g.hero; const W = await import('/src/ui/windows.js'), I = await import('/src/data/items.js');
         const keepSk = { ...h.skills }, keepNeck = h.equip.neck; h.equip.neck = null; h.recalc(); const U2 = I.makeUnique('U2'); const out = {};
         for (const k of Object.keys(h.skills)) h.skills[k] = 0; h.skills.sshibka = 1; h.recalc(); out.one = W.compareLines(U2, h).map(l => l[0]);
@@ -150,7 +150,7 @@ async def run_m1d(pg, G, check, wait, client_of, client_scr, a):
         out.lines = I.itemLines(U2).lines.map(l => l[0]);
         Object.assign(h.skills, keepSk); h.equip.neck = keepNeck; h.recalc(); return out; })()''')
     one, three = s['one'], s['three']
-    check('B-34 сравнение «Громовника»: 1 выученный навык → «Каждый выученный навык: +1»; 3 выученных → тоже +1 (не сумма +3); без навыков строки нет; свойство «+1 ко всем выученным навыкам»',
+    check('B-34 сравнение «Громового знака»: 1 выученный навык → «Каждый выученный навык: +1»; 3 выученных → тоже +1 (не сумма +3); без навыков строки нет; свойство «+1 ко всем выученным навыкам»',
           'Каждый выученный навык: +1' in one and 'Каждый выученный навык: +1' in three and not any('+3' in l or 'Ранги' in l for l in one + three)
           and not any('навык' in l for l in s['none']) and any('+1 ко всем выученным навыкам' in str(l) for l in s['lines']), s)
 
@@ -173,4 +173,4 @@ async def run_m1d(pg, G, check, wait, client_of, client_scr, a):
     await pg.screenshot(path=SHOT_M1D)
     await G('(() => { const g = __game; g.ui.toggleInv(false); g.hero.invuln = 0; })()')
     check('M1d скриншот screenshot_m1d.png: арена живой Кривши, береста в поясе серая, клавиша 4 — уведомление, береста не потрачена',
-          note[0] == 'Пока враг стоит, Чур прохода не откроет.' and note[1] and note[2] == 4 and os.path.getsize(SHOT_M1D) > 50000, note)
+          note[0] == 'Пока враг стоит, проход не откроется.' and note[1] and note[2] == 4 and os.path.getsize(SHOT_M1D) > 50000, note)

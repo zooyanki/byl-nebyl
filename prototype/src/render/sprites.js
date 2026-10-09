@@ -258,13 +258,33 @@ export function drawCorpse(ctx, x, y, e) {
     for (let i = 0; i < 4; i++) rect(ctx, x - 20 + i * 8, y - 13, 3, 3, PAL.ember);   // догорающие угли
   } else if (e.kind === 'mara') {
     ellipse(ctx, x, y - 2, 14, 5, PAL.slate_lt, 0.9); rect(ctx, x - 6, y - 4, 12, 2, PAL.ember);   // кучка пепла
-  } else if (e.def.torch) {
-    figure(ctx, [{ x: x - 14, y: y - 6, w: 20, h: 6, c: PAL.wood_dk }, { x: x + 6, y: y - 7, w: 7, h: 6, c: PAL.slate_dk }]);
-    rect(ctx, x - 10, y - 4, 10, 2, PAL.red_dk);
-    rect(ctx, x - 18, y - 2, 6, 1, PAL.wood_lt); rect(ctx, x - 19, y - 3, 2, 2, PAL.slate);   // погасший факел
   } else {
-    figure(ctx, [{ x: x - 7, y: y - 4, w: 12, h: 4, c: PAL.red_dk }, { x: x + 5, y: y - 6, w: 6, h: 5, c: PAL.red }]);
+    // m1i (critics_m1f П.16): у кого нет кадров смерти (поджигатель, запасные фигуры) — не серый брусок, а его же кадр
+    // стоя, положенный набок и затемнённый (кэш на трупе)
+    drawLyingFrame(ctx, x, y, e);
   }
+  ctx.restore();
+}
+
+/** Кадр врага «лёжа»: обычный кадр стоя (без тени и обводки) повёрнут на 90° по направлению взгляда, сплющен по
+ *  изометрии и затемнён на CORPSE_DARK. Рисуется один раз в холст и держится на трупе (e._corpse). */
+const CORPSE_DARK = 0.5;
+export function drawLyingFrame(ctx, x, y, e) {
+  if (!e._corpse) {
+    const W = 72, H = 72, c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    const live = Object.assign(Object.create(Object.getPrototypeOf(e)), e, { dead: false, state: 'idle', moving: false, flash: 0, slowT: 0, elite: null, leader: false, t: 0, walkPhase: 0 });
+    try { drawEnemy(g, W / 2, H - 8, live, e.dir, 0, false); } catch (err) { /* без кадра — пусто */ }
+    g.globalCompositeOperation = 'source-atop'; g.globalAlpha = CORPSE_DARK; g.fillStyle = PAL.ink; g.fillRect(0, 0, W, H);
+    e._corpse = { c, W, H, side: (e.facing || 1) < 0 ? -1 : 1 };
+    e.corpseStyle = 'lying';
+  }
+  const C = e._corpse;
+  ctx.save();
+  ctx.translate(x, y - 2);
+  ctx.scale(1, 0.6);                        // лежит на земле: изометрия сплющивает фигуру по вертикали
+  ctx.rotate(C.side * Math.PI / 2);         // ногами к точке смерти, головой по взгляду
+  ctx.drawImage(C.c, -C.W / 2, -(C.H - 8));
   ctx.restore();
 }
 

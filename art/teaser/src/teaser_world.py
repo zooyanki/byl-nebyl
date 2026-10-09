@@ -108,7 +108,7 @@ TS.TM.update({"o": ("stone", 4, True, False), "q": ("stone", 2, False, False),
 def perun_idol():
     """Идол Перуна (teaser §2.2): 104 x 24 with the outline, carved face with a
     silver head-cap and a gold moustache (летопись: «глава сребрена, ус злат»),
-    arms holding a horn, belt, громовник on the lower trunk, stone plinth."""
+    arms holding a horn, belt, rosette on the lower trunk, stone plinth."""
     m = pk.MatCanvas(24, 102)
     # plinth of stones (24 wide)
     m.poly([(0, 95), (23, 95), (23, 101), (0, 101)], "o")
@@ -142,7 +142,7 @@ def perun_idol():
         m.px(x, 61, "g")
     # sword in relief hanging from the belt
     m.line(15, 63, 15, 80, "J"); m.line(13, 64, 17, 64, "J")
-    # громовник (six-petal rosette) on the lower trunk
+    # six-petal rosette (ornament) on the lower trunk
     for k in range(6):
         a = k / 6 * math.tau
         m.line(10, 74, 10 + math.cos(a) * 3.5, 74 + math.sin(a) * 3.5, "Z")
@@ -296,7 +296,7 @@ def inverted_pine(lit, x, base, h, seed=0, trunk=6):
 
 
 def fallen_idol(lit, cx, cy, k=1, seed=0, flip=False):
-    """Поваленный чур-идол: the idol sprite lying (rotated), blackened, no glow,
+    """Поваленный чёрный идол: the idol sprite lying (rotated), blackened, no glow,
     split in two with chips, plus the splintered stump."""
     spr = recolor(SR.idol(), ("wood", "bronze", "fire"), ("fur", "fur", "fur"))
     s = rot_sprite(spr, k)

@@ -62,7 +62,7 @@ export class SkillsWindow {
     const H = this.hover;
     // тиры
     L.tiers.forEach((y, i) => {
-      const txt = TIER_NAMES[i] + ' · ' + (TIER_REQ[i] > 1 ? 'с ' + TIER_REQ[i] + '-го уровня' : 'с начала');
+      const txt = TIER_NAMES[i] + ' · ' + (TIER_REQ[i] > 1 ? t('proto.skills.tier_from', { n: String(TIER_REQ[i]) }) : t('proto.skills.tier_start'));
       for (const b of ['ratnoe', 'vedovstvo']) drawText(ctx, L.cols[b][0] + 2, y, txt, h.level >= TIER_REQ[i] ? PAL.bronze_lt : PAL.slate_lt, { shadow: false });
     });
     // связи «нужен навык»
@@ -88,7 +88,7 @@ export class SkillsWindow {
       drawText(ctx, tx, r[1] + 4, fit(skillShort(id)), have ? PAL.linen : soon ? PAL.slate_lt : PAL.birch, { shadow: false });
       let rk = t('ui.skills.rank', { n: have });
       if (eff > have && have) rk += ' (+' + (eff - have) + ')';
-      const sub = fit(soon ? 'появится позже' : sk.type === 'passive' ? rk + ' · пасс.' : rk);
+      const sub = fit(soon ? t('proto.skills.soon') : sk.type === 'passive' ? rk + ' · ' + t('proto.skills.passive') : rk);
       drawText(ctx, tx, r[1] + 15, sub, eff > have && have ? PAL.blue_lt : PAL.mist, { shadow: false });
       // «+»
       const [px, py, ps] = L.plus[id];
@@ -102,8 +102,8 @@ export class SkillsWindow {
     // очки и подсказка
     const [fx, fy, fw] = L.points, pts = pointsFree(h);
     drawText(ctx, fx + 5, fy + 3, t('ui.skills.points', { n: pts }), pts > 0 ? PAL.flame : PAL.birch, { shadow: false });
-    drawText(ctx, fx + fw - 5, fy + 3, 'ПКМ: ' + (SKILLS[h.rmb] ? SKILLS[h.rmb].name : '—'), PAL.bronze_lt, { align: 'r', shadow: false });
-    drawText(ctx, L.hint[0] + 2, L.hint[1], 'ЛКМ по навыку — на ПКМ · F1–F6 над навыком — в ячейку', PAL.mist, { shadow: false });
+    drawText(ctx, fx + fw - 5, fy + 3, t('proto.sys.rmb_set', { skill: SKILLS[h.rmb] ? SKILLS[h.rmb].name : '—' }), PAL.bronze_lt, { align: 'r', shadow: false });
+    drawText(ctx, L.hint[0] + 2, L.hint[1], t('proto.skills.hint'), PAL.mist, { shadow: false });
     // подсказка навыка
     const id = H.skill || H.plus;
     if (id) drawSkillTooltip(ctx, h, id, L.win[0] - 3, m.my - 20, 'tr');
@@ -121,14 +121,14 @@ export function skillTipLines(h, id) {
   const L = [[sk.name, PAL.bronze_hi], [(branchOf(sk.branch) || {}).name + ' · ' + TIER_NAMES[sk.tier - 1] + (sk.type === 'passive' ? ' · ' + t('ui.skills.passive') : ''), PAL.mist]];
   if (o.chant) L.push([o.chant, PAL.birch]);
   const fill = (r) => (o.desc || '').replace(/\{(\w+)\}/g, (m, k) => { const v = descVars(h, id, r)[k]; return v == null ? m : String(Math.round(v * 10) / 10).replace('.', ','); });
-  if (sk.implemented === false) { L.push(['Навык появится в следующих итерациях', PAL.slate_lt]); return L; }
+  if (sk.implemented === false) { L.push([t('proto.skills.not_impl'), PAL.slate_lt]); return L; }
   if (eff) {
-    L.push([t('ui.skills.rank', { n: eff }) + (eff > have ? ' (+' + (eff - have) + ' с вещей)' : ''), PAL.linen]);
+    L.push([t('ui.skills.rank', { n: eff }) + (eff > have ? ' ' + t('proto.skills.from_items', { n: String(eff - have) }) : ''), PAL.linen]);
     L.push([fill(eff), PAL.linen]);
   }
   const cost = descVars(h, id, Math.max(1, eff)).cost;
   if (sk.type !== 'passive') L.push([t('ui.skills.cost', { n: cost }) + (sk.cd ? ' · ' + t('ui.skills.cd', { n: sk.cd }) : ''), PAL.blue_lt]);
-  if (h.lmb === id) L.push(['На ЛКМ · без Яри — обычный удар', PAL.nebyl]);
+  if (h.lmb === id) L.push([t('proto.skills.lmb_basic'), PAL.nebyl]);
   if (have < (sk.maxRank || RULES.maxRank)) {
     L.push([t('ui.skills.next') + ':', PAL.bronze_lt]);
     L.push([fill(eff + 1 > 10 ? 10 : (eff || 0) + 1), PAL.mist]);
