@@ -101,8 +101,8 @@ async def run_m1e(pg, G, check, wait, client_of, client_scr, a):
         const court = g.npcs.find(n => n.role === 'vyshata');
         h.x = north.x; h.y = north.y + 1.6; g.notice = null; g.simulate(0.05);
         const openNote = g.notice && g.notice.text;
-        h.x = west.x + 1.6; h.y = west.y; g.notice = null; g._gateWarn = 0; west.warnT = 0; g.simulate(0.05);
-        return { beforeBtn, s0, y0, r0, p0, y1, r1, p1, bark, mal, northWall: !!north.wall, westWall: !!west.wall,
+        const wg = g.objectById('gate_west') || west; h.x = wg.x + 1.6; h.y = wg.y; g.notice = null; g._gateWarn = 0; west.warnT = 0; wg.nearT = -99; g.simulate(0.05);
+        return { beforeBtn, s0, y0, r0, p0, y1, r1, p1, bark, mal, northWall: !!north.wall, westWall: !!west.wall || !!(g.objectById('gate_west') || {}).wall,
           s1, s2: h.silver, uSame: u0 === u1, px, py, holdX, holdY, cx: court.x, cy: court.y, openNote, westNote: g.notice && g.notice.text,
           regen: +(r1 / (r0 * (y1 / y0) * 1.1)).toFixed(3), turned: !!q.flags['m1.turnedIn'] }; })()''')
     check('M1e награда только у Вышаты при сдаче: +300, Ярь I (+15 и +10% восстановления), +1 очко, один раз',
@@ -158,7 +158,7 @@ async def run_m1e(pg, G, check, wait, client_of, client_scr, a):
         g.stash.autoAdd(it); h.inv.remove(it); g.stashSilver = 40; h.silver = 100;
         g.enterZone('zalesye', 'krada'); g.enterZone('ladoga', 'from_zalesye');
         const kept = g.stash.items.includes(it) && g.stashSilver == 40;
-        h.invuln = 0; h.hp = 1; h.takeDamage(99999, g); g.respawnHero();
+        h.invuln = 0; h.hp = 1; h.takeDamage(99999, g, 'fire'); g.respawnHero();   /* m1j: не melee — иначе бросок блока иногда спасает героя */
         return { kept, zone: g.zone.id, bag: h.silver, stash: g.stashSilver, still: g.stash.items.includes(it) }; })()''')
     check('M1e ладья хранит вещь и серебро после ухода и смерти; с котомки −10%, точка воскрешения миссии 1 — Залесье',
           death['kept'] and death['still'] and death['stash'] == 40 and death['bag'] == 90 and death['zone'] == 'zalesye', death)

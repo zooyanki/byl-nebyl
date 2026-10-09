@@ -70,7 +70,7 @@ export class Enemy extends Actor {
     if (res) dmg = dmg * (1 - res);
     dmg = Math.max(1, Math.floor(dmg));
     this.hp -= dmg;
-    this.flash = 0.12;
+    this.flash = 0.12; this.flashA = null;   // v1.13: альфу вспышки меча задаёт combat.hitFeel
     this.lastHitT = 0;
     const col = opts.crit ? PAL.flame : type === 'fire' ? PAL.ember : type === 'cold' ? PAL.blue_lt : PAL.linen;
     game.fx.text(this.x, this.y, String(dmg), col, this.def.height + 6, opts.crit ? { dur: 1.0 } : {});

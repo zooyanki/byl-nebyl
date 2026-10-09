@@ -1,0 +1,24 @@
+{
+ "effect": "«Сшибка»: след взмаха 120°, r 22 px (GDD v1.13 §12.1.7 H10)",
+ "direction": "se",
+ "mirror_for": "sw",
+ "pivot": [
+  24,
+  34
+ ],
+ "fps": 16,
+ "loop": false,
+ "timing": "frame 0 on the hit frame of the strike, frame 1 next, then hide (≈ 0.12 s)",
+ "layer": "S / SE: draw OVER the hero; N / NE: draw UNDER the hero (behind the body)",
+ "east_west": "E uses SE, W uses SW (mirror of SE) — the arc is a ground ellipse, the 22° difference is not readable",
+ "arc": "ellipse rx 22, ry 11 at 18 px above the feet (chest), band 0.42–1.0 of r (tapering to the tail); linen → birch → mist dither",
+ "image": "fx_swing_se.png",
+ "frame_size": [
+  48,
+  40
+ ],
+ "frame_count": 2,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

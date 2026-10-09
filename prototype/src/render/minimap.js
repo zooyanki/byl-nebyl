@@ -3,6 +3,8 @@
 import { PAL } from '../palette.js';
 import { pline, rect, disc } from './shapes.js';
 import { SUB } from '../world/collision.js';
+import { VA } from './village_art.js';
+import { CFG } from '../data/config.js';
 
 const TYPE = { free: 0, water: 1, tree: 2, rock: 3, wall: 4, palisade: 5, izba: 6, idol: 7, fire: 8, bush: 2, gate: 5 };
 const EDGE = { 1: PAL.sea, 2: PAL.moss, 3: PAL.slate_lt, 4: PAL.mist, 5: PAL.bronze_lt, 6: PAL.birch, 7: PAL.bronze, 8: PAL.ember };
@@ -126,8 +128,20 @@ export class Minimap {
     const cs = game.map.churStone;
     if (cs && this.isSeen(cs.x, cs.y)) { const q = P(cs.x, cs.y); if (inClip(q)) { disc(ctx, q[0], q[1], 2.5, PAL.ink); disc(ctx, q[0], q[1], 1.6, PAL.blue_lt); } }
     // объекты задания: двери изб, сундук, тело — ромбик; выходы и ворота — всегда видны
+    // m1k D5 (§10.2): ворота Ладоги — значки художника ui_minimap_icons_v113 (0 — открытые, бронзовый проём; 1 — закрытые,
+    // черта red_dk); церковь — точка linen (кадр 2). Указатель не рисуем.
+    const IC = VA.ui.ui_minimap_icons_v113, MM = ((CFG.stats && CFG.stats.nav) || {}).minimap || {};
+    game.miniIcons = [];
+    const icon = (fr, x, y, kind) => {
+      const q = P(x, y); if (!inClip(q)) return;
+      if (IC) ctx.drawImage(IC.img, fr * 5, 0, 5, 5, q[0] - 2, q[1] - 2, 5, 5);
+      else rect(ctx, q[0] - 1, q[1], 3, 1, fr === 0 ? PAL.bronze_hi : fr === 1 ? PAL.red_dk : PAL.linen);
+      game.miniIcons.push({ kind, frame: fr, x: q[0], y: q[1] });
+    };
+    if (MM.gateIcons !== false) for (const gt of game.map.gates || []) icon(gt.wall ? 1 : 0, gt.x, gt.y, gt.id);
+    if (MM.church !== false) { const ch = (game.map.props || []).find((p) => p.id === 'church'); if (ch) icon(2, ch.fp[0] + ch.fp[2] / 2, ch.fp[1] + ch.fp[3] / 2, 'church'); }
     for (const o of game.map.objects || []) {
-      if (o.done) continue;
+      if (o.done || o.type === 'lgate') continue;
       const way = o.type === 'exit' || o.type === 'gate';
       if (!way && !this.isSeen(o.x, o.y)) continue;
       const q = P(o.x, o.y); if (!inClip(q)) continue;
@@ -138,16 +152,15 @@ export class Minimap {
     // m1f (P0.2): метка активной цели (quests.json objectives[].markers[зона] → id объекта) — видна и в тумане; если цель
     // за краем мини-карты, метка прижата к краю
     game.goalMarks = [];
-    for (const g of game.quest ? game.quest.obj : []) {
-      const id = g.state === 'active' && g.def.markers && g.def.markers[game.zone && game.zone.id];
-      const o = id && (game.map.objects || []).find((x) => x.id === id);
-      if (!o || o.done) continue;
+    // m1k D5: цель — та же, что у стрелки (game.navTarget: в Ладоге после Кривши — Вышата)
+    { const T = game.navTarget ? game.navTarget() : null; const o = T;
+      if (o) {
       let [qx, qy] = P(o.x, o.y);
       qx = Math.max(clip.x + 4, Math.min(clip.x + clip.w - 5, qx)); qy = Math.max(clip.y + 4, Math.min(clip.y + clip.h - 5, qy));
       const r = 3.5 + Math.sin((game.time || 0) * 5) * 1.2;
       disc(ctx, qx, qy, r + 1.5, PAL.ink); disc(ctx, qx, qy, r, PAL.bronze_hi); disc(ctx, qx, qy, Math.max(1, r - 2), PAL.red_lt);
       game.goalMarks.push({ id: o.id, x: qx, y: qy });
-    }
+    } }
     const h = game.hero, hp = P(h.x, h.y);
     rect(ctx, hp[0] - 2, hp[1], 5, 1, PAL.linen); rect(ctx, hp[0], hp[1] - 2, 1, 5, PAL.linen); rect(ctx, hp[0], hp[1], 1, 1, PAL.red_lt);
   }

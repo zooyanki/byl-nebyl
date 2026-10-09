@@ -1,0 +1,25 @@
+{
+ "what": "minimap icons 5×5 (H17)",
+ "frame_size": [
+  5,
+  5
+ ],
+ "frame_count": 3,
+ "frames": [
+  "open_gate (bronze opening)",
+  "closed_gate (red_dk dash)",
+  "church (linen dot 2×2)"
+ ],
+ "pivot": [
+  2,
+  2
+ ],
+ "note": "for gates on the N/S walls rotate by code is NOT needed: use the same icon, it reads as a gap/dash in either wall; 2 px of the icon are the 3-px opening",
+ "image": "ui_minimap_icons_v113.png",
+ "size": [
+  15,
+  5
+ ],
+ "palette": "palette_v2",
+ "alpha": "0/255 only"
+}

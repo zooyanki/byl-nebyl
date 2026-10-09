@@ -11,6 +11,7 @@ export let CAST_TIME = 0.8;
 export let CAST_RELEASE = 0.3;
 export let UNARMED = { min: 1, max: 2, speed: 1.2 };
 export let HIT_STOP = 0.05;
+export let HIT_FX = null;              // GDD v1.13 §4.6: stats.hitFx — отклик удара (хит-стоп, тряска, вспышка, искры, след, звук)
 export let S = null;                  // весь stats.json
 
 export function applyStats(s) {
@@ -19,7 +20,7 @@ export function applyStats(s) {
   HERO_START = { ...s.heroStart };
   POINTS_PER_LEVEL = s.pointsPerLevel; MAX_LEVEL = s.maxLevel;
   HERO_SPEED = s.heroSpeed; MELEE_RANGE = s.meleeRange; HIT_FRAME = s.hitFrame;
-  CAST_TIME = s.castTime; CAST_RELEASE = s.castRelease; UNARMED = { ...s.unarmed }; HIT_STOP = s.hitStop;
+  CAST_TIME = s.castTime; CAST_RELEASE = s.castRelease; UNARMED = { ...s.unarmed }; HIT_FX = s.hitFx; HIT_STOP = s.hitFx ? s.hitFx.hitStop.hit : s.hitStop;
 }
 
 // XP_до_след(L) = round(100·L^1,75, до десятков); на максимальном уровне — кап

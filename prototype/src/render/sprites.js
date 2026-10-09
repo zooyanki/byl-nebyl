@@ -2,7 +2,7 @@
 import { PAL } from '../palette.js';
 import { drawText } from '../core/font.js';
 import { rect, ellipse, ellipseStroke, figure, pline, disc } from './shapes.js';
-import { ART, poseKrivsha, poseMara, poseAnchutka, poseUpyr, drawCharArt, drawCharOutline, restoreUpyrEyes, feedFrame, viewOf } from './boss_art.js';
+import { ART, poseKrivsha, poseMara, poseAnchutka, poseUpyr, posePriest, drawCharArt, drawCharOutline, restoreUpyrEyes, feedFrame, viewOf } from './boss_art.js';
 import { HALF_W, HALF_H } from '../config.js';
 import { drawFxFrame, FX } from './rest_fx.js';
 
@@ -108,7 +108,7 @@ export function drawUpyr(ctx, x, y, e, dir, time, outline = PAL.ink) {
     { x: x + f * 9 - (f < 0 ? 6 : 0) + f * lunge, y: T + 15, w: 6, h: 14, c: PAL.mist }, // длинные руки
     { x: x - 4 + f * 6, y: T, w: 9, h: 9, c: PAL.birch },              // голова вперёд
   ];
-  figure(ctx, parts, e.flash > 0, outline);
+  figure(ctx, parts, e.flash > 0 && (e.flashA || true), outline);
   rect(ctx, x - 9, T + 22, 18, 2, PAL.slate_dk);                     // лохмотья
   rect(ctx, x - 8, T + 26, 3, 4, PAL.slate_dk); rect(ctx, x + 3, T + 27, 3, 3, PAL.slate_dk);
   if (!back) {                                                       // глаза (спиной — не видно, виден горб)
@@ -133,7 +133,7 @@ export function drawAnchutka(ctx, x, y, e, dir, time, outline = PAL.ink) {
     { x: x - 6 + f, y: by - 26, w: 2, h: 3, c: PAL.birch },          // рожки
     { x: x + 4 + f, y: by - 26, w: 2, h: 3, c: PAL.birch },
   ];
-  figure(ctx, parts, e.flash > 0, outline);
+  figure(ctx, parts, e.flash > 0 && (e.flashA || true), outline);
   if (!back) {
     rect(ctx, x + f * 3, by - 21, 2, 2, PAL.flame);                  // глаза
     rect(ctx, x + f * 3 - f * 4, by - 21, 2, 2, PAL.flame);
@@ -164,7 +164,7 @@ export function drawArsonist(ctx, x, y, e, dir, time, outline = PAL.ink) {
     { x: x + f * 7 - (f < 0 ? 3 : 0), y: T + 13 - Math.round(wind * 8), w: 3, h: 11, c: PAL.wood_dk },   // рука с факелом
     { x: x - f * 9 - (f > 0 ? 0 : 3), y: T + 13, w: 3, h: 11, c: PAL.wood_dk },                         // рука с топором
   ];
-  figure(ctx, parts, e.flash > 0, outline);
+  figure(ctx, parts, e.flash > 0 && (e.flashA || true), outline);
   rect(ctx, x - 7, T + 24, 14, 2, PAL.red_dk);                          // кушак
   rect(ctx, x - 1, T + 13, 2, 9, PAL.ink);                              // волчья тамга на груди
   if (!back) { rect(ctx, x + f * 2 - 1, T + 8, 2, 1, PAL.flame); rect(ctx, x - 4, T + 11, 8, 2, PAL.slate_dk); }
@@ -183,6 +183,7 @@ export function drawArsonist(ctx, x, y, e, dir, time, outline = PAL.ink) {
 
 // Селяне и Мал (act1, М1): без оружия, бегут к пристани / показывают тропу.
 export function drawNpc(ctx, x, y, n, time) {
+  if (n.role === 'priest') { shadow(ctx, x, y, 8, 3); if (drawCharArt(ctx, posePriest(n, time), x, y, n.dir, n.facing)) return; }   // m1k: спрайт H19 (как упырь)
   const f = dirSide(n.dir, n.facing), small = n.kind === 'mal';
   const step = n.moving ? Math.sin(n.walkPhase * 2) : 0, l = Math.round(step * 2);
   const H = small ? 30 : (n.def && n.def.height) || 38, T = y - H + 1;
@@ -219,14 +220,14 @@ export function drawEnemy(ctx, x, y, e, dir, time, hovered) {
     const pose = poseUpyr(e, time);
     if (e.state !== 'rise') shadow(ctx, x, y, 10, 4);                    // в rise яма и земля уже нарисованы в листе
     if (ol !== PAL.ink) drawCharOutline(ctx, pose, x, y, dir, e.facing, ol);
-    drawCharArt(ctx, pose, x, y, dir, e.facing, { flash: e.flash > 0 });
+    drawCharArt(ctx, pose, x, y, dir, e.facing, { flash: e.flash > 0, flashA: e.flashA });
   } else if (e.kind === 'upyr') drawUpyr(ctx, x, y, e, dir, time, ol);
   else if (e.def.torch) drawArsonist(ctx, x, y, e, dir, time, ol);
   else if (ART.sheets.anchutka_idle_se) {                               // спрайт художника 6а (32×40, pivot 16,34) — сажа, не красный
     const pose = poseAnchutka(e, time);
     shadow(ctx, x, y, 6, 2.5);
     if (ol !== PAL.ink) drawCharOutline(ctx, pose, x, y, dir, e.facing, ol);
-    drawCharArt(ctx, pose, x, y, dir, e.facing, { flash: e.flash > 0 });
+    drawCharArt(ctx, pose, x, y, dir, e.facing, { flash: e.flash > 0, flashA: e.flashA });
   } else drawAnchutka(ctx, x, y, e, dir, time, ol);
   if (e.elite === 'champion') { ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = PAL.blue_lt; ctx.fillRect(x - 11, y - e.def.height, 22, e.def.height); ctx.restore(); }   // матёрый: холодный тинт
   if (e.slowT > 0) { ctx.save(); ctx.globalAlpha = 0.25; ctx.fillStyle = PAL.blue_lt; ctx.fillRect(x - 10, y - e.def.height, 20, e.def.height); ctx.restore(); }
@@ -371,7 +372,7 @@ export function drawMara(ctx, x, y, e, dir, time, outline = PAL.ink) {
   if (ART.sheets[pose.anim + '_se']) {                                   // спрайт художника M1b (64×64, pivot 32,56; парит над землёй)
     shadow(ctx, x, y, 9, 3.5);
     if (outline !== PAL.ink) drawCharOutline(ctx, pose, x, y, dir, e.facing, outline);
-    drawCharArt(ctx, pose, x, y, dir, e.facing, { flash: e.flash > 0 });
+    drawCharArt(ctx, pose, x, y, dir, e.facing, { flash: e.flash > 0, flashA: e.flashA });
     return;
   }
   const f = dirSide(dir, e.facing), sway = Math.round(Math.sin(time * 3 + e.id) * 1.5);
@@ -406,7 +407,7 @@ export function drawKrivsha(ctx, x, y, e, dir, time, outline = PAL.ink) {
       drawFxFrame(ctx, 'k_feed_back', ff, x, y - lift, { flip: fl });
     }
     if (outline !== PAL.ink) drawCharOutline(ctx, pose, x, y - lift, dir, e.facing, outline);
-    drawCharArt(ctx, pose, x, y - lift, dir, e.facing, { flash: e.flash > 0 });
+    drawCharArt(ctx, pose, x, y - lift, dir, e.facing, { flash: e.flash > 0, flashA: e.flashA });
     if (ff >= 0) drawFxFrame(ctx, 'k_feed', ff, x, y - lift, { flip: fl });
     if (e.state === 'jump' && e.t >= 0.6) {                              // удар в огнище: кадры 0–3 один раз, петля 4–7 до выхода (выключается со стартом «огнище питает»)
       const inv = (e.B && e.B.hearthPhase && e.B.hearthPhase.invuln) || 2, tE = inv - 0.75, u = e.t - 0.6;
