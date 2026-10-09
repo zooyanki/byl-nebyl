@@ -1,0 +1,114 @@
+{
+ "object": "Баня (мыльня) — тёс, кадка у входа",
+ "footprint_tiles": [
+  3,
+  3
+ ],
+ "tile_px": [
+  32,
+  16
+ ],
+ "heights_px": {
+  "wall": 60,
+  "ridge": 96,
+  "door": 53
+ },
+ "pivot": [
+  59,
+  115
+ ],
+ "pivot_rule": "screen point of the footprint centre at z = 0 (scale.md §4.1)",
+ "proto_corner_px": [
+  59,
+  91
+ ],
+ "footprint_px": [
+  [
+   59,
+   91
+  ],
+  [
+   107,
+   115
+  ],
+  [
+   59,
+   139
+  ],
+  [
+   11,
+   115
+  ]
+ ],
+ "front_corner_px": [
+  59,
+  139
+ ],
+ "placement": "place the sprite so that proto_corner_px lands on iso.js toS(p.x, p.y) (footprint min corner), equivalently pivot on the screen point of the footprint centre ((x0 + A/2), (y0 + B/2))",
+ "sort": "sort by the FRONT (lower, +x+y) corner of the footprint, scale.md §4.1: depth key = (x0+A) + (y0+B) in tiles, screen y of front_corner_px",
+ "xray": {
+  "rule": "scale.md 1.4 §4.4 / GDD v1.13 §10.3: if the sprite intersects the ellipse rx 56, ry 40 px centred at hero pivot − 22 px and the building sorts IN FRONT of the hero, draw the whole sprite at alpha 0.35 (0.2 s transition); hero gets a 1-px bronze_hi outline when ≥ 25% covered",
+  "alpha": 0.35,
+  "ellipse_px": [
+   56,
+   40
+  ],
+  "hero_center_offset_y": -22
+ },
+ "ridge_axis": "world x (as prototype props.js izba)",
+ "anchors_px": {
+  "smoke": {
+   "0": [
+    49,
+    91
+   ],
+   "1": [
+    35,
+    84
+   ],
+   "2": [
+    35,
+    84
+   ]
+  },
+  "caption": {
+   "0": [
+    35,
+    71
+   ],
+   "1": [
+    35,
+    71
+   ],
+   "2": [
+    35,
+    71
+   ]
+  }
+ },
+ "ladoga_ids": {
+  "banya_se": "+y → frame 0"
+ },
+ "notes": "",
+ "fps": 0,
+ "loop": false,
+ "door_frames": {
+  "+y": 0,
+  "+x": 1
+ },
+ "frame_2": "без видимой двери (задняя сторона); по GDD v1.13.2 двери только на +x/+y — для плана не использовать",
+ "frames": [
+  "door on the +y wall (south, lit)",
+  "door on the +x gable/wall (east)",
+  "door on a hidden side (−x / −y): windows only"
+ ],
+ "image": "bld_banya_tes.png",
+ "frame_size": [
+  119,
+  148
+ ],
+ "frame_count": 3,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

@@ -1,0 +1,36 @@
+{
+ "character": "Поп Иоанн (npc.priest, speaker id priest)",
+ "animation": "idle",
+ "direction": "ne",
+ "mirror_for": "nw",
+ "mirror_rule": "flip horizontally around the frame centre line x = 24.0; pivot stays (24, 50)",
+ "pivot": [
+  24,
+  50
+ ],
+ "fps": 3,
+ "loop": true,
+ "visible_height_px": [
+  43,
+  44,
+  44,
+  43
+ ],
+ "height_rule": "pivot row (soles) to the top visible pixel, outline included",
+ "footprint_tiles": [
+  1,
+  1
+ ],
+ "collision_r": 0.3,
+ "stands_at": "Ладога (27.0; 13.6), у южной паперти церкви Климента (GDD v1.13.2 §7.1.1)",
+ "notes": "scale.md §2 NPC: кадр 48×56, pivot (24,50), рост 44. Стоит на месте, idle 4 кадра (дыхание: голова и плечи на 1 px, пряди чуть качаются). Тёмный подрясник до земли, чёрная скуфья, длинные волосы с проседью до плеч, длинная узкая борода клином, маленький медный крест. Без нимба, книги и благословляющего жеста. Красного нет (scale.md §4.4).",
+ "image": "npc_priest_idle_ne.png",
+ "frame_size": [
+  48,
+  56
+ ],
+ "frame_count": 4,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

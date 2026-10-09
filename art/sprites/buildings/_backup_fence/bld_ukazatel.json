@@ -1,0 +1,92 @@
+{
+ "object": "Указатель у торга (H6)",
+ "footprint_tiles": [
+  1,
+  1
+ ],
+ "world_tile": [
+  26,
+  18
+ ],
+ "pivot": [
+  14,
+  59
+ ],
+ "proto_corner_px": [
+  14,
+  51
+ ],
+ "footprint_px": [
+  [
+   14,
+   51
+  ],
+  [
+   30,
+   59
+  ],
+  [
+   14,
+   67
+  ],
+  [
+   -2,
+   59
+  ]
+ ],
+ "front_corner_px": [
+  14,
+  67
+ ],
+ "heights_px": {
+  "post": 56,
+  "boards": "36–50 (E/W at 44–50, N/S at 36–42)"
+ },
+ "frames": [
+  "M1: Залесье (+x) и Пристань (+y) светлые, Сопки (−y) и Бор (−x) тёмные",
+  "после сдачи М1: + Сопки светлые",
+  "после сдачи М2: все светлые"
+ ],
+ "frame_by_stage": {
+  "m1": 0,
+  "m2.unlocked": 1,
+  "m3.unlocked": 2
+ },
+ "board_tips_px": {
+  "zalesye": [
+   27,
+   18
+  ],
+  "sopki": [
+   27,
+   14
+  ],
+  "bor": [
+   1,
+   6
+  ],
+  "pier": [
+   1,
+   26
+  ]
+ },
+ "boards": {
+  "sign.zalesye": "+x",
+  "sign.sopki": "−y",
+  "sign.bor": "−x",
+  "sign.pier": "+y"
+ },
+ "captions": "board labels are world captions by code (showRange 6), not baked",
+ "sort": "sort by the FRONT (lower, +x+y) corner of the footprint, scale.md §4.1: depth key = (x0+A) + (y0+B) in tiles, screen y of front_corner_px",
+ "fps": 0,
+ "loop": false,
+ "image": "bld_ukazatel.png",
+ "frame_size": [
+  29,
+  63
+ ],
+ "frame_count": 3,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

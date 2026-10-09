@@ -61,7 +61,7 @@ async def run_m1f(pg, G, check, wait, client_of, client_scr, a):
         for (const e of g.enemies) if (!e.dead && (e.pack === idx || Math.hypot(e.x - o.x, e.y - o.y) < 6)) e.takeDamage(9999, g, 'melee', null);
         h.x = o.sx; h.y = o.sy; h.stop(); g.autoHold = true; h.interact(o); g.simulate(1.0);
         const t1 = h.cmd && h.cmd.holdT; h.invuln = 0; h.graceT = 0; h.takeDamage(1, g, 'fire', null);
-        const after = { cmd: h.cmd && h.cmd.type, t: h.cmd && h.cmd.holdT, pause: h.cmd && h.cmd.holdPause, notice: g.notice && g.notice.text };
+        const after = { cmd: h.cmd && h.cmd.type, t: h.cmd && h.cmd.holdT, pause: h.cmd && h.cmd.holdPause, notice: ((g.notices || []).concat(g.noticeQ || []).map(n => n.text).find(x => x === 'Прервано!')) || (g.notice && g.notice.text) };   /* m1j §10.5: при 2 на экране уведомление ждёт в очереди */
         g.simulate(0.1); const t2 = h.cmd && h.cmd.holdT;
         let tt = 0; g.simulate(3, () => { tt += 1 / 60; return o.done; }); g.autoHold = false;
         return { t1: +t1.toFixed(2), after, t2: +(t2 || 0).toFixed(2), done: o.done, rest: +tt.toFixed(2) }; })()''')
@@ -80,7 +80,7 @@ async def run_m1f(pg, G, check, wait, client_of, client_scr, a):
     s['lad'] = await G("(__game.goalMarks || []).map(m => m.id)")
     await G("(() => { const g = __game; g.enterZone('zalesye', 'krada'); })()")
     check('m1f P0.2 трекер: первая строка — quest.m1.obj.mal (m1g: «Вызволи Мала у колодца», строка сценариста); метка цели — дверь избы 3 в Залесье, восточные ворота в Ладоге',
-          s['lines'][0] == s['want'] == 'Вызволи Мала у колодца' and s['st'] == 'active' and 'hut3' in s['marks'] and lad == 'ladoga' and 'to_zalesye' in s['lad'], s)
+          s['lines'][0] == s['want'] == 'Вызволи Мала у колодца' and s['st'] == 'active' and 'hut3' in s['marks'] and lad == 'ladoga' and ('to_zalesye' in s['lad'] or 'gate_east' in s['lad']), s)   # m1k D5: метка выхода — сами восточные ворота
 
     # ---------- P0.1 скриншот: герой у колодца, дверь в кадре и подсвечена
     await G(FRESH)
@@ -230,11 +230,12 @@ async def run_m1f(pg, G, check, wait, client_of, client_scr, a):
         g.simulate(2.7); const n3 = g.fx.texts.filter(t => t.speech).map(t => t.str);
         g.notice = null; g.noticeQ = [];
         g.notify('Серебро: +300', '#fff', 'rew-s'); g.notify('Удаль I', '#fff', 'rew-y'); g.notify('Очко навыка: +1', '#fff', 'rew-p');
-        const q0 = [g.notice.text, g.noticeQ.length]; g.simulate(1.7); const q1 = g.notice.text; g.simulate(1.7); const q2 = g.notice.text;
+        const q0 = [g.notices.map(n => n.text), g.noticeQ.length]; g.simulate(1.7); const q1 = g.notices.filter(n => g.noticeLive(n)).map(n => n.text); g.simulate(1.7); const q2 = g.notices.filter(n => g.noticeLive(n)).map(n => n.text);
         return { n0, n1, n2, n3, q0, q1, q2 }; })()''')
-    check('m1f P1.6 реплики не наслаиваются: барки и диалог идут по очереди по одной; награды — уведомления по очереди',
+    # m1j (GDD v1.13 §10.5): очередь уведомлений — на экране до 2 (новое снизу), третье ждёт; каждое ≥ 1,5 с
+    check('m1f P1.6 реплики не наслаиваются: барки и диалог идут по очереди по одной; уведомления с разными ключами — очередью (v1.13: до 2 на экране)',
           s['n0'] == 1 and s['n1'] == ['Первая реплика'] and s['n2'] == ['Вторая реплика'] and s['n3'] == ['Третья — диалог']
-          and s['q0'] == ['Серебро: +300', 2] and s['q1'] == 'Удаль I' and s['q2'] == 'Очко навыка: +1', s)
+          and s['q0'] == [['Серебро: +300', 'Удаль I'], 1] and s['q1'] == ['Очко навыка: +1'] and s['q2'] == [], s)
     await G('''(() => { const g = __game, h = g.hero; g.enterZone('ladoga', 'start'); g.ui.closeAll(); g._barks = {}; g.speechUntil = 0; g.dialogQ.length = 0;
         const tv = g.npcs.find(n => n.role === 'tverdyata'); h.x = tv.x + 0.3; h.y = tv.y + 0.9; h.stop(); g.bark(h, 'test.c', 'Реплика под окном'); })()''')
     await wait(200)

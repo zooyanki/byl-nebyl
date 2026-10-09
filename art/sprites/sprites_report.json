@@ -128,7 +128,53 @@
   "fx_chur_portal/fx_chur_portal_loop.png",
   "fx_chur_portal/fx_chur_portal_fading.png",
   "fx_chur_portal/fx_chur_portal_close.png",
-  "prop_stump_burnt/prop_stump_burnt.png"
+  "prop_stump_burnt/prop_stump_burnt.png",
+  "buildings/bld_church.png",
+  "buildings/bld_izba_small_tes_kon.png",
+  "buildings/bld_izba_small_dern.png",
+  "buildings/bld_izba_small_tes_prich.png",
+  "buildings/bld_izba_seni_tes.png",
+  "buildings/bld_izba_seni_dern.png",
+  "buildings/bld_klet.png",
+  "buildings/bld_banya_dern.png",
+  "buildings/bld_banya_tes.png",
+  "buildings/bld_ambar.png",
+  "buildings/bld_izba_podklet.png",
+  "buildings/bld_hlev.png",
+  "buildings/bld_ambar_pier_tes.png",
+  "buildings/bld_ambar_pier_dern.png",
+  "buildings/bld_masterskaya.png",
+  "buildings/bld_lavka.png",
+  "buildings/gate_e_open.png",
+  "buildings/gate_e_open_A.png",
+  "buildings/gate_e_open_B.png",
+  "buildings/gate_s_open.png",
+  "buildings/gate_s_open_A.png",
+  "buildings/gate_s_open_B.png",
+  "buildings/gate_n_open.png",
+  "buildings/gate_n_open_A.png",
+  "buildings/gate_n_open_B.png",
+  "buildings/gate_n_closed.png",
+  "buildings/gate_n_closed_A.png",
+  "buildings/gate_n_closed_B.png",
+  "buildings/gate_w_open.png",
+  "buildings/gate_w_open_A.png",
+  "buildings/gate_w_open_B.png",
+  "buildings/gate_w_closed.png",
+  "buildings/gate_w_closed_A.png",
+  "buildings/gate_w_closed_B.png",
+  "buildings/bld_ukazatel.png",
+  "fx_swing/fx_swing_se.png",
+  "fx_swing/fx_swing_ne.png",
+  "fx_swing/fx_swing_s.png",
+  "fx_swing/fx_swing_n.png",
+  "fx_smoke_wisp/fx_smoke_wisp.png",
+  "tiles/tile_mostovaya.png",
+  "tiles/tile_mostovaya_edge.png",
+  "buildings/prop_stog.png",
+  "buildings/prop_kadka.png",
+  "buildings/prop_roga.png",
+  "buildings/prop_telega_broken.png"
  ],
  "checks": {
   "arsonist_idle_se": {
@@ -644,6 +690,190 @@
    "alpha_ok": true
   },
   "prop_stump_burnt": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_church": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_izba_small_tes_kon": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_izba_small_dern": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_izba_small_tes_prich": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_izba_seni_tes": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_izba_seni_dern": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_klet": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_banya_dern": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_banya_tes": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_ambar": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_izba_podklet": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_hlev": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_ambar_pier_tes": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_ambar_pier_dern": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_masterskaya": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_lavka": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_e_open": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_e_open_A": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_e_open_B": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_s_open": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_s_open_A": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_s_open_B": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_n_open": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_n_open_A": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_n_open_B": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_n_closed": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_n_closed_A": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_n_closed_B": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_w_open": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_w_open_A": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_w_open_B": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_w_closed": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_w_closed_A": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "gate_w_closed_B": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "bld_ukazatel": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_swing_se": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_swing_ne": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_swing_s": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_swing_n": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "fx_smoke_wisp": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "tile_mostovaya": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "tile_mostovaya_edge": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "prop_stog": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "prop_kadka": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "prop_roga": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "prop_telega_broken": {
    "palette_ok": true,
    "alpha_ok": true
   }
@@ -1712,6 +1942,381 @@
    "pivot": [
     12,
     18
+   ]
+  },
+  "bld_church": {
+   "frame": [
+    166,
+    227
+   ],
+   "pivot": [
+    91,
+    192
+   ],
+   "footprint": [
+    6,
+    4
+   ],
+   "frames": 1
+  },
+  "bld_izba_small_tes_kon": {
+   "frame": [
+    151,
+    170
+   ],
+   "pivot": [
+    75,
+    135
+   ],
+   "footprint": [
+    4,
+    4
+   ],
+   "frames": 3
+  },
+  "bld_izba_small_dern": {
+   "frame": [
+    151,
+    170
+   ],
+   "pivot": [
+    75,
+    135
+   ],
+   "footprint": [
+    4,
+    4
+   ],
+   "frames": 3
+  },
+  "bld_izba_small_tes_prich": {
+   "frame": [
+    151,
+    170
+   ],
+   "pivot": [
+    75,
+    135
+   ],
+   "footprint": [
+    4,
+    4
+   ],
+   "frames": 3
+  },
+  "bld_izba_seni_tes": {
+   "frame": [
+    182,
+    186
+   ],
+   "pivot": [
+    91,
+    143
+   ],
+   "footprint": [
+    6,
+    4
+   ],
+   "frames": 3
+  },
+  "bld_izba_seni_dern": {
+   "frame": [
+    182,
+    186
+   ],
+   "pivot": [
+    91,
+    143
+   ],
+   "footprint": [
+    6,
+    4
+   ],
+   "frames": 3
+  },
+  "bld_klet": {
+   "frame": [
+    119,
+    142
+   ],
+   "pivot": [
+    59,
+    115
+   ],
+   "footprint": [
+    3,
+    3
+   ],
+   "frames": 3
+  },
+  "bld_banya_dern": {
+   "frame": [
+    119,
+    148
+   ],
+   "pivot": [
+    59,
+    115
+   ],
+   "footprint": [
+    3,
+    3
+   ],
+   "frames": 3
+  },
+  "bld_banya_tes": {
+   "frame": [
+    119,
+    148
+   ],
+   "pivot": [
+    59,
+    115
+   ],
+   "footprint": [
+    3,
+    3
+   ],
+   "frames": 3
+  },
+  "bld_ambar": {
+   "frame": [
+    119,
+    151
+   ],
+   "pivot": [
+    59,
+    115
+   ],
+   "footprint": [
+    3,
+    3
+   ],
+   "frames": 3
+  },
+  "bld_izba_podklet": {
+   "frame": [
+    183,
+    202
+   ],
+   "pivot": [
+    91,
+    159
+   ],
+   "footprint": [
+    5,
+    5
+   ],
+   "frames": 1
+  },
+  "bld_hlev": {
+   "frame": [
+    135,
+    143
+   ],
+   "pivot": [
+    67,
+    112
+   ],
+   "footprint": [
+    4,
+    3
+   ],
+   "frames": 1
+  },
+  "bld_ambar_pier_tes": {
+   "frame": [
+    135,
+    143
+   ],
+   "pivot": [
+    67,
+    112
+   ],
+   "footprint": [
+    4,
+    3
+   ],
+   "frames": 1
+  },
+  "bld_ambar_pier_dern": {
+   "frame": [
+    135,
+    143
+   ],
+   "pivot": [
+    67,
+    112
+   ],
+   "footprint": [
+    4,
+    3
+   ],
+   "frames": 1
+  },
+  "bld_masterskaya": {
+   "frame": [
+    160,
+    169
+   ],
+   "pivot": [
+    78,
+    132
+   ],
+   "footprint": [
+    5,
+    4
+   ],
+   "frames": 1
+  },
+  "bld_lavka": {
+   "frame": [
+    101,
+    102
+   ],
+   "pivot": [
+    50,
+    81
+   ],
+   "footprint": [
+    3,
+    2
+   ],
+   "frames": 1
+  },
+  "gate_e_open": {
+   "frame": [
+    70,
+    127
+   ],
+   "pivot": [
+    35,
+    111
+   ],
+   "frames": 4
+  },
+  "gate_s_open": {
+   "frame": [
+    70,
+    127
+   ],
+   "pivot": [
+    34,
+    111
+   ],
+   "frames": 4
+  },
+  "gate_n_open": {
+   "frame": [
+    70,
+    128
+   ],
+   "pivot": [
+    35,
+    111
+   ],
+   "frames": 4
+  },
+  "gate_n_closed": {
+   "frame": [
+    69,
+    127
+   ],
+   "pivot": [
+    34,
+    111
+   ],
+   "frames": 1
+  },
+  "gate_w_open": {
+   "frame": [
+    70,
+    128
+   ],
+   "pivot": [
+    34,
+    111
+   ],
+   "frames": 4
+  },
+  "gate_w_closed": {
+   "frame": [
+    69,
+    127
+   ],
+   "pivot": [
+    34,
+    111
+   ],
+   "frames": 1
+  },
+  "bld_ukazatel": {
+   "frame": [
+    29,
+    63
+   ],
+   "pivot": [
+    14,
+    59
+   ],
+   "frames": 3
+  },
+  "fx_swing": {
+   "frame": [
+    48,
+    40
+   ],
+   "pivot": [
+    24,
+    34
+   ]
+  },
+  "tile_mostovaya": {
+   "frame": [
+    32,
+    16
+   ],
+   "tiles": 4,
+   "edges": 4
+  },
+  "prop_stog": {
+   "frame": [
+    35,
+    51
+   ],
+   "pivot": [
+    17,
+    47
+   ]
+  },
+  "prop_kadka": {
+   "frame": [
+    14,
+    17
+   ],
+   "pivot": [
+    11,
+    13
+   ]
+  },
+  "prop_roga": {
+   "frame": [
+    17,
+    20
+   ],
+   "pivot": [
+    8,
+    18
+   ]
+  },
+  "prop_telega_broken": {
+   "frame": [
+    68,
+    33
+   ],
+   "pivot": [
+    39,
+    21
    ]
   }
  }

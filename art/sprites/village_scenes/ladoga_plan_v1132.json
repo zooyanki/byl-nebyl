@@ -1,0 +1,321 @@
+{
+ "version": "GDD v1.13.2 §7.1.1 (обновление дизайнера), 09.10.2026",
+ "coords": "клетки ladoga.json, x0,y0 — минимальный угол футпринта; дверь только +x/+y",
+ "frame_rule": "frame = door_frames[door] из JSON спрайта (+y→0, +x→1); у одно-кадровых спрайтов frame 0",
+ "buildings": [
+  {
+   "id": "church",
+   "sheet": "bld_church",
+   "x0": 26,
+   "y0": 9,
+   "footprint": [
+    6,
+    4
+   ],
+   "door": "+y",
+   "frame": 0,
+   "note": "к торгу и главной улице; паперть y 13–14,3"
+  },
+  {
+   "id": "seni_ne",
+   "sheet": "bld_izba_seni_tes",
+   "x0": 33,
+   "y0": 8,
+   "footprint": [
+    6,
+    4
+   ],
+   "door": "+y",
+   "frame": 0,
+   "note": ""
+  },
+  {
+   "id": "izba_nw",
+   "sheet": "bld_izba_small_dern",
+   "x0": 10,
+   "y0": 8,
+   "footprint": [
+    4,
+    4
+   ],
+   "door": "+y",
+   "frame": 0,
+   "note": ""
+  },
+  {
+   "id": "podklet_nw",
+   "sheet": "bld_izba_podklet",
+   "x0": 15,
+   "y0": 8,
+   "footprint": [
+    5,
+    5
+   ],
+   "door": "+x",
+   "frame": 0,
+   "note": "крыльцо к улице"
+  },
+  {
+   "id": "hlev_nw",
+   "sheet": "bld_hlev",
+   "x0": 10,
+   "y0": 14,
+   "footprint": [
+    4,
+    3
+   ],
+   "door": "+x",
+   "frame": 0,
+   "note": ""
+  },
+  {
+   "id": "lavka_e",
+   "sheet": "bld_lavka",
+   "x0": 30,
+   "y0": 14,
+   "footprint": [
+    3,
+    2
+   ],
+   "door": "+y",
+   "frame": 0,
+   "note": "прилавок к торгу"
+  },
+  {
+   "id": "seni_sw",
+   "sheet": "bld_izba_seni_dern",
+   "x0": 9,
+   "y0": 25,
+   "footprint": [
+    6,
+    4
+   ],
+   "door": "+x",
+   "frame": 1,
+   "note": ""
+  },
+  {
+   "id": "izba_sw",
+   "sheet": "bld_izba_small_tes_prich",
+   "x0": 13,
+   "y0": 31,
+   "footprint": [
+    4,
+    4
+   ],
+   "door": "+x",
+   "frame": 1,
+   "note": "было −y; +x — к главной улице x 22–25 (через двор клети)"
+  },
+  {
+   "id": "banya_sw",
+   "sheet": "bld_banya_dern",
+   "x0": 9,
+   "y0": 32,
+   "footprint": [
+    3,
+    3
+   ],
+   "door": "+x",
+   "frame": 1,
+   "note": "было −y; +y смотрит в тын (y 37), +x — к двору и улице"
+  },
+  {
+   "id": "klet_sw",
+   "sheet": "bld_klet",
+   "x0": 18,
+   "y0": 32,
+   "footprint": [
+    3,
+    3
+   ],
+   "door": "+x",
+   "frame": 1,
+   "note": ""
+  },
+  {
+   "id": "masterskaya",
+   "sheet": "bld_masterskaya",
+   "x0": 33,
+   "y0": 25,
+   "footprint": [
+    5,
+    4
+   ],
+   "door": "+y",
+   "frame": 0,
+   "note": "было −x; навес и дверь на +y"
+  },
+  {
+   "id": "izba_se",
+   "sheet": "bld_izba_small_tes_kon",
+   "x0": 27,
+   "y0": 31,
+   "footprint": [
+    4,
+    4
+   ],
+   "door": "+y",
+   "frame": 0,
+   "note": "дверь +y (было −x); сдвинута на 1 клетку к северу (y0 31, клетки 27–30×31–34) по решению дизайнера, чтобы дверь не пряталась за тыном"
+  },
+  {
+   "id": "banya_se",
+   "sheet": "bld_banya_tes",
+   "x0": 32,
+   "y0": 31,
+   "footprint": [
+    3,
+    3
+   ],
+   "door": "+y",
+   "frame": 0,
+   "note": ""
+  },
+  {
+   "id": "ambar_se",
+   "sheet": "bld_ambar",
+   "x0": 36,
+   "y0": 31,
+   "footprint": [
+    3,
+    3
+   ],
+   "door": "+y",
+   "frame": 0,
+   "note": "дверь +y (было −x; +x упирается в тын x 39); сдвинут на 1 клетку к северу (y0 31, клетки 36–38×31–33)"
+  },
+  {
+   "id": "ambar_p1",
+   "sheet": "bld_ambar_pier_tes",
+   "x0": 9,
+   "y0": 38,
+   "footprint": [
+    4,
+    3
+   ],
+   "door": "+y",
+   "frame": 0,
+   "note": "к воде"
+  },
+  {
+   "id": "ambar_p2",
+   "sheet": "bld_ambar_pier_dern",
+   "x0": 14,
+   "y0": 38,
+   "footprint": [
+    4,
+    3
+   ],
+   "door": "+y",
+   "frame": 0,
+   "note": "к воде"
+  },
+  {
+   "id": "milusha",
+   "sheet": "bld_izba_small_dern",
+   "x0": 17,
+   "y0": 26,
+   "footprint": [
+    4,
+    4
+   ],
+   "door": "+x",
+   "frame": 1,
+   "note": "изба Милуши (v1.10), облик «дёрн» подтверждён 09.10"
+  }
+ ],
+ "gates": {
+  "cells": 4,
+  "palisade_removed": {
+   "north": [
+    [
+     22,
+     6
+    ],
+    [
+     23,
+     6
+    ],
+    [
+     24,
+     6
+    ],
+    [
+     25,
+     6
+    ]
+   ],
+   "south": [
+    [
+     22,
+     37
+    ],
+    [
+     23,
+     37
+    ],
+    [
+     24,
+     37
+    ],
+    [
+     25,
+     37
+    ]
+   ],
+   "west": [
+    [
+     8,
+     20
+    ],
+    [
+     8,
+     21
+    ],
+    [
+     8,
+     22
+    ],
+    [
+     8,
+     23
+    ]
+   ],
+   "east": [
+    [
+     39,
+     20
+    ],
+    [
+     39,
+     21
+    ],
+    [
+     39,
+     22
+    ],
+    [
+     39,
+     23
+    ]
+   ]
+  },
+  "note": "Все четыре ворота по 4 клетки (столб, проём, проём, столб). Восток подтверждён дизайнером: частокол убрать на x 39 в клетках y 20 и y 23."
+ },
+ "npcs": [
+  {
+   "id": "priest",
+   "speaker": "npc.priest",
+   "name": "Поп Иоанн",
+   "at": [
+    27.0,
+    13.6
+   ],
+   "where": "у южной паперти церкви Климента",
+   "sprite": "npc_priest/npc_priest_idle_se.png (SE; SW — зеркало; NE/NW — npc_priest_idle_ne.png)",
+   "note": "точка сдвинута дизайнером с (28,5; 13,5): там его закрывал терем Вышаты; спрайт 48×56, pivot (24,50), idle 4 кадра 3 fps"
+  }
+ ],
+ "sort": "как map.js: постройки — центр футпринта x0 + A/2 + y0 + B/2; клетки частокола и сегменты ворот — x + y + 1; герой, NPC — x + y. Не по переднему углу (иначе seni_ne и ambar_se у восточного тына рисуются поверх частокола)."
+}

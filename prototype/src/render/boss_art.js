@@ -9,6 +9,7 @@ const SETS = {
   mara: ['idle', 'walk', 'cast', 'heal', 'hurt', 'death'],
   anchutka: ['idle', 'walk', 'coal_throw', 'hurt', 'death'],          // 6а (08.10, 22:42): стаи, свита Мары
   upyr: ['idle', 'walk', 'attack', 'hurt', 'death', 'rise'],           // m1c: стаи, засады, призыв Кривши
+  npc_priest: ['idle'],                                                 // m1k: поп Иоанн (H19), 48×56, pivot (24,50), 4 кадра 3 к/с; SW/NW — зеркало
 };
 const PROPS = { ognishche: ['desecrated', 'consecrate', 'consecrated', 'progress'], idol_perun: ['burning', 'extinguish', 'smoking'] };
 export const ART = { sheets: {}, ready: false, failed: [], hold: null };
@@ -118,6 +119,12 @@ export function poseUpyr(e, time) {
   return { anim: 'upyr_idle', frame: loopF(time + e.id * 0.09, 5, 4) };
 }
 
+/** Поза попа Иоанна (m1k, H19): петля idle 4 кадра, 3 к/с (fps из JSON листа). */
+export function posePriest(n, time) {
+  const sh = ART.sheets.npc_priest_idle_se, m = sh ? sh.meta : { fps: 3, frame_count: 4 };
+  return { anim: 'npc_priest_idle', frame: loopF(time, m.fps || 3, m.frame_count || 4) };
+}
+
 /** Лист вида и зеркало по направлению. */
 export function viewOf(dir, facing) {
   return { view: BACK.has(dir) ? 'ne' : 'se', flip: side(dir, facing) < 0 };
@@ -141,7 +148,7 @@ export function drawCharArt(ctx, pose, x, y, dir, facing, o = {}) {
   if (!sh) return false;
   blitF(ctx, sh, pose.frame, x, y, flip, o.alpha);
   if (o.flash) {                                             // вспышка попадания: силуэт светлым поверх
-    ctx.save(); ctx.globalAlpha *= FLASH_A; ctx.globalCompositeOperation = 'lighter'; blitF(ctx, sh, pose.frame, x, y, flip); ctx.restore();   // m1f P1.9: 0,5 → 0,28 (не в белое)
+    ctx.save(); ctx.globalAlpha *= o.flashA || FLASH_A; ctx.globalCompositeOperation = 'lighter'; blitF(ctx, sh, pose.frame, x, y, flip); ctx.restore();   // m1f P1.9: 0,5 → 0,28 (не в белое)
   }
   return true;
 }

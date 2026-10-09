@@ -1,0 +1,42 @@
+{
+ "what": "objective arrow 12×12, 8 directions (no engine rotation, scale.md §4.4)",
+ "frame_size": [
+  12,
+  12
+ ],
+ "frame_count": 8,
+ "layout": "horizontal strip, left to right",
+ "frames": [
+  "e",
+  "se",
+  "s",
+  "sw",
+  "w",
+  "nw",
+  "n",
+  "ne"
+ ],
+ "frame_angles_deg_screen": [
+  0,
+  45,
+  90,
+  135,
+  180,
+  225,
+  270,
+  315
+ ],
+ "pick": "frame = round(atan2(dy, dx) / 45°) mod 8 (screen angle, y down, 0 = east)",
+ "pivot": [
+  6,
+  6
+ ],
+ "usage": "GDD §10.2: 14 px inside the play-field edge, alpha pulse 0.7↔1.0 at 1 Hz, 0.4 in combat; distance under it in mist",
+ "image": "ui_nav_arrow.png",
+ "size": [
+  96,
+  12
+ ],
+ "palette": "palette_v2",
+ "alpha": "0/255 only"
+}

@@ -31,7 +31,7 @@ async def run_m1h(pg, G, check, wait, client_of, client_scr, a):
           pots: ['yar1', 'yar2', 'yar3'].map(k => I.POTIONS[k].name), pot, both: both ? I.itemLines(I.makePotion(both)).lines[1][0] : null,
           vedana: [t('npc.vedana'), t('ui.trade.vedana')], yar1: tObj('skill.yar1').name, tier: t('ui.hero.yar_tier'), cost: t('ui.skills.cost', { n: 5 }),
           portal: t('obj.chur_portal'), stone: t('ui.obj.chur_stone'), idol: t('ui.obj.idol'), arena: t('ui.error.beresta_arena'),
-          ids: [!!C.bosses.mara, !!P07, !!st, 'yar1' in I.POTIONS, !!RU['npc.vedana.s1'], !!RU['obj.chur_stone'], g.hero.maxYar > 0] }; })()''')
+          ids: [!!C.bosses.mara, !!P07, !!st, 'yar1' in I.POTIONS, !!RU['dlg.vedana.s1.1'], !!RU['obj.chur_stone'], g.hero.maxYar > 0] }; })()''')
     check('m1h новые имена в игре: шар «Удаль», resourceName «Удаль», U2 «Громовой знак», «Огнея Пепельная», «Посох волхва»/«Жезл» (m1i W), P07 «Жгучий/-ая/-ее/-ие», '
           'rareNames «Отвага» (без «Удаль»), зелья Удали, «Милуша»/«Изба Милуши», «Удаль I», «Удаль: ступень I», «Удаль: 5»; id/ключи прежние',
           s['hud'] == 'Удаль' and s['res'] == 'Удаль' and s['u2'] == 'Громовой знак' and s['boss'] == s['codex'] == 'Огнея Пепельная'

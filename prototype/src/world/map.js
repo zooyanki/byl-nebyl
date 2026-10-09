@@ -258,14 +258,76 @@ export function generateMap(seed, zone = null) {
         return hit;
       });
       for (const [x, y] of edge) m.addProp('bush', x, y, 1);
-      m.glade = { R, removedEdge: edge.length };
+      m.glade = { R, removedEdge: edge.length, box: [x0, y0, x1, y1] };
     }
     const pk = m.packs.find((p) => p.role === o.pack);
     if (pk) clearProps(m, pk.x, pk.y, 2.2);
   }
 
+  // m1k D9: деревья вдоль пути трекера (крада → избы 1–3 → выход на тропу), кольца у дверей изб и логов пачек;
+  // поляна у избы Мала (m.glade, v1.11) не меняется
+  if (zone && zone.treeRules) {
+    const hut = (id) => m.objects.find((o) => o.id === id);
+    const pts = [[m.krada.x, m.krada.y], ...['hut1', 'hut2', 'hut3'].map(hut).filter(Boolean).map((o) => [o.sx, o.sy])];
+    const ex = m.objects.find((o) => o.id === 'to_trail'); if (ex) pts.push([ex.x, ex.y]);
+    const TR = zone.treeRules, rings = [];
+    if ((TR.rings || []).includes('hutDoor')) for (const o of m.objects) if (o.type === 'hut') rings.push([o.x, o.y]);
+    if ((TR.rings || []).includes('pack')) for (const p of m.packs) rings.push([p.x, p.y]);
+    const G = m.glade && m.glade.box, pad = 3;
+    applyTreeRules(m, TR, pts, rings, G ? (x, y) => x > G[0] - pad && x < G[2] + pad && y > G[1] - pad && y < G[3] + pad : null);
+  }
   m.computeReach();
   return m;
+}
+
+/** m1k D9 (GDD v1.13 §8.2 «Деревья вдоль пути», §15 treeRules): путь — ломаная pts [[x, y], …]; rings — центры колец
+ *  (двери изб, логова пачек). В полосе pathClear от пути / колец — ни одного ствола: дерево заменяется пнём (половинный
+ *  ствол — пень с тем же футпринтом) или кустом (≤ 28 px); клетка остаётся непроходимой, взгляд больше не загораживает.
+ *  В полосе frontClear «перед» путём (x + y больше, чем у ближайшей точки пути) — только низкие: ель ≤ frontMaxH.fir,
+ *  берёза ≤ frontMaxH.birch (p.hMax). exempt(cx, cy) — не трогать (поляна Мала). → m.treeStats. */
+export function applyTreeRules(m, R, pts, rings, exempt = null) {
+  if (!R) return null;
+  const segD = (x, y) => {
+    let best = Infinity, q = null;
+    for (let i = 0; i < pts.length; i++) {
+      const [ax, ay] = pts[i], [bx, by] = pts[Math.min(i + 1, pts.length - 1)], dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy;
+      const k = L ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / L)) : 0, px = ax + dx * k, py = ay + dy * k, d = Math.hypot(x - px, y - py);
+      if (d < best) { best = d; q = [px, py]; }
+    }
+    return [best, q];
+  };
+  const trees = m.props.filter((p) => p.type === 'tree'), total = trees.length;
+  const st = { total, removed: 0, shortened: 0, pct: 0, exempt: 0, pathPts: pts.length, rings: rings.length };
+  const drop = new Set(), add = [];
+  for (const p of trees) {
+    const cx = p.fp[0] + p.fp[2] / 2, cy = p.fp[1] + p.fp[3] / 2;
+    if (exempt && exempt(cx, cy)) { st.exempt++; continue; }
+    let [d, q] = segD(cx, cy), front = d < R.frontClear && cx + cy > q[0] + q[1];
+    for (const [rx, ry] of rings) {
+      const dr = Math.hypot(cx - rx, cy - ry);
+      if (dr < d) d = dr;
+      if (dr < R.frontClear && cx + cy > rx + ry) front = true;
+    }
+    if (d < R.pathClear) {
+      drop.add(p); st.removed++;
+      const half = p.fp[2] < 1, v = Math.floor(hash2(Math.round(cx * 2), Math.round(cy * 2), 11) * 3) % 3;
+      if (half || hash2(Math.round(cx), Math.round(cy), 17) < 0.5) add.push(['stump', p.x, p.y, { fp: half ? p.fp.slice() : [p.x + 0.5, p.y + 0.5, 0, 0], variant: v, fromTree: true }]);
+      else add.push(['bush', p.x, p.y, { shared: true, fromTree: true }]);
+      for (let sy = Math.floor(p.fp[1] * SUB); sy < Math.ceil((p.fp[1] + p.fp[3]) * SUB - 1e-6); sy++)
+        for (let sx = Math.floor(p.fp[0] * SUB); sx < Math.ceil((p.fp[0] + p.fp[2]) * SUB - 1e-6); sx++)
+          if (sx >= 0 && sy >= 0 && sx < m.sw && sy < m.sh) m.opaque[sy * m.sw + sx] = 0;   // клетка непроходима, но не слепит
+    } else if (front) {
+      const H = p.birch ? (R.frontMaxH && R.frontMaxH.birch) || 112 : (R.frontMaxH && R.frontMaxH.fir) || 96;
+      const h0 = p.birch ? 96 + p.seed * 32 : 128 + p.seed * 32;
+      if (h0 > H) { p.hMax = H; st.shortened++; }
+    }
+  }
+  if (drop.size) m.props = m.props.filter((p) => !drop.has(p));
+  for (const [type, x, y, ex] of add) m.addProp(type, x, y, 1, ex);
+  st.pct = total ? +(100 * st.removed / total).toFixed(1) : 0;
+  st.overLimit = st.pct > (R.maxRemovedPct ?? 25);
+  m.treeStats = st;
+  return st;
 }
 
 /** Объекты зоны из JSON (двери изб, сундук, тело жреца, выходы, ворота) в мировые координаты.

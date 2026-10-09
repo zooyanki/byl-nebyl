@@ -3,7 +3,7 @@
 // Стаи, объекты и точки входа заданы по x вдоль тропы и смещению dy от осевой.
 import { makeRng, hash2 } from '../core/rng.js';
 import { SUB } from './collision.js';
-import { GameMap, T_GRASS, T_DIRT, T_FOREST, resolveObjects } from './map.js';
+import { GameMap, T_GRASS, T_DIRT, T_FOREST, resolveObjects, applyTreeRules } from './map.js';
 
 /** Осевая линия тропы. */
 export function trailCenter(path) {
@@ -121,6 +121,13 @@ export function generateTrail(seed, zone) {
 
   const e = m.entries.from_zalesye;
   m.start = { x: e.x, y: e.y };
+  // m1k D9: путь тропы — осевая линия от входа до ворот капища (по ней идут трекер и бот), кольца у логов пачек
+  if (zone.treeRules) {
+    const TR = zone.treeRules, pts = [];
+    for (let x = Math.floor(e.x); x <= gateX; x++) pts.push([x + 0.5, yc(x + 0.5)]);
+    const rings = (TR.rings || []).includes('pack') ? m.packs.map((p) => [p.x, p.y]) : [];
+    applyTreeRules(m, TR, pts, rings);
+  }
   m.computeReach();
   return m;
 }

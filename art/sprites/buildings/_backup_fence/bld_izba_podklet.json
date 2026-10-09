@@ -1,0 +1,91 @@
+{
+ "object": "Изба на подклете с крыльцом (H11)",
+ "footprint_tiles": [
+  5,
+  5
+ ],
+ "tile_px": [
+  32,
+  16
+ ],
+ "heights_px": {
+  "podklet": 24,
+  "wall": "24–88",
+  "ridge": 132,
+  "horse_top": 144,
+  "porch": 26
+ },
+ "pivot": [
+  91,
+  159
+ ],
+ "pivot_rule": "screen point of the footprint centre at z = 0 (scale.md §4.1)",
+ "proto_corner_px": [
+  91,
+  119
+ ],
+ "footprint_px": [
+  [
+   91,
+   119
+  ],
+  [
+   171,
+   159
+  ],
+  [
+   91,
+   199
+  ],
+  [
+   11,
+   159
+  ]
+ ],
+ "front_corner_px": [
+  91,
+  199
+ ],
+ "placement": "place the sprite so that proto_corner_px lands on iso.js toS(p.x, p.y) (footprint min corner), equivalently pivot on the screen point of the footprint centre ((x0 + A/2), (y0 + B/2))",
+ "sort": "sort by the FRONT (lower, +x+y) corner of the footprint, scale.md §4.1: depth key = (x0+A) + (y0+B) in tiles, screen y of front_corner_px",
+ "xray": {
+  "rule": "scale.md 1.4 §4.4 / GDD v1.13 §10.3: if the sprite intersects the ellipse rx 56, ry 40 px centred at hero pivot − 22 px and the building sorts IN FRONT of the hero, draw the whole sprite at alpha 0.35 (0.2 s transition); hero gets a 1-px bronze_hi outline when ≥ 25% covered",
+  "alpha": 0.35,
+  "ellipse_px": [
+   56,
+   40
+  ],
+  "hero_center_offset_y": -22
+ },
+ "ridge_axis": "world x (as prototype props.js izba)",
+ "anchors_px": {
+  "caption": {
+   "0": [
+    51,
+    115
+   ]
+  },
+  "smoke": {
+   "0": [
+    91,
+    23
+   ]
+  }
+ },
+ "ladoga_ids": {
+  "podklet_nw": "+x (крыльцо к улице) — frame 0"
+ },
+ "notes": "Одна вариация: дверь верхнего яруса и крыльцо на +x, как в плане. Крыльцо и лестница выступают за футпринт на +x до ~0,9 тайла",
+ "fps": 0,
+ "loop": false,
+ "door_frames": "single frame, door as on the plan (see ladoga_ids)",
+ "image": "bld_izba_podklet.png",
+ "frame_size": [
+  183,
+  202
+ ],
+ "frame_count": 1,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

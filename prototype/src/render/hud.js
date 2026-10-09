@@ -2,6 +2,8 @@
 // слоты ЛКМ/ПКМ, пояс 1–4, серебро; сверху — цель, задание, журнал.
 import { VIEW_W, VIEW_H, PANEL_Y } from '../config.js';
 import { PAL } from '../palette.js';
+import { drawFrame9 } from './dialogue_win.js';
+import { VA } from './village_art.js';
 import { rect, poly, disc, pline, figure } from './shapes.js';
 import { drawText, textWidth } from '../core/font.js';
 import { POTIONS, SCROLLS } from '../data/items.js';
@@ -259,12 +261,13 @@ export function drawHud(ctx, game) {
   // шары
   orb(ctx, L.orbL, h.hp / h.maxHp, 'life', tr('ui.hud.life'), Math.ceil(h.hp) + '/' + h.maxHp, t);
   orb(ctx, L.orbR, h.yar / h.maxYar, 'yar', tr('ui.hud.yar'), Math.floor(h.yar) + '/' + h.maxYar, t + 1.7);
+  // v1.13 §4.6: +1 Удали за попадание (и награда «Удаль I») — шар коротко светлеет (blue_lt)
+  if (h.yarGlow > 0) { ctx.save(); ctx.globalAlpha = 0.45 * Math.min(1, h.yarGlow / 0.15); disc(ctx, L.orbR.cx, L.orbR.cy, L.orbR.r - 2, PAL.blue_lt); ctx.restore(); game.yarGlowDrawn = game.time; }
   if (h.yarTier) drawText(ctx, L.orbR.cx, L.orbR.cy - L.orbR.r + 4, 'I', PAL.bronze_hi, { align: 'c', outline: true });
   if (h.chad >= 3) { ctx.save(); ctx.globalAlpha = 0.28; disc(ctx, L.orbR.cx, L.orbR.cy, L.orbR.r - 2, PAL.slate_lt); ctx.restore(); }   // чад: серая дымка на Яри
 
   drawTopUi(ctx, game);
-  drawLog(ctx, game);
-  drawHint(ctx, game);
+  if (!game.dlgWin) { drawLog(ctx, game); drawHint(ctx, game); }   // v1.13 §10.4: журнал и строка подсказок скрыты под окном диалога
 }
 
 export function drawHudTooltip(ctx, game) {
@@ -280,7 +283,7 @@ function plate(ctx, x, y, w, h, alpha = 0.72) {
 function drawTopUi(ctx, game) {
   const h = game.hero, ui = game.ui;
   // задание (под окном «Витязь» не рисуем)
-  if (!ui.charOpen && !(game.town && game.town.open) && game.quest) drawQuestTracker(ctx, game);   // m1i: и под окнами Ладоги (торг, ладья)
+  if (!ui.charOpen && !(game.town && game.town.open) && game.quest && !game.dlgWin) drawQuestTracker(ctx, game);   // v1.13 §10.4: под окном диалога трекер скрыт   // m1i: и под окнами Ладоги (торг, ладья)
   // зона, мини-карта и кнопки меню (как на макете HUD v2); под окном «Котомка» прячутся
   if (game.topRightVisible) {
     const [z1, z2] = game.zone.band;
@@ -350,7 +353,7 @@ function drawTopUi(ctx, game) {
   // подсказка в начале
   // m1f P1.5: только при первом входе в игру (флаг в localStorage ставится, когда подсказка догорела)
   if (game.time >= 14 && !game.ctrlHintSeen) { game.ctrlHintSeen = true; try { localStorage.setItem('byl_ctrl_hint_seen', '1'); } catch (e) { /* нет localStorage */ } }
-  if (game.time < 14 && !game.ctrlHintSeen && !game.hero.dead && !ui.anyOpen) {
+  if (game.time < 14 && !game.ctrlHintSeen && !game.hero.dead && !ui.anyOpen && !game.dlgWin) {
     const a = game.time < 11 ? 1 : (14 - game.time) / 3;
     const s = tr('proto.hud.ctrl_hint');
     const w = textWidth(s) + 10;
@@ -361,18 +364,25 @@ function drawTopUi(ctx, game) {
   }
   // уведомление
   drawLetter(ctx, game);
-  if (game.notice && game.time - game.notice.t < (game.notice.dur || 1.6)) {
+  drawRewardCard(ctx, game);
+  // v1.13 §10.5: на экране до 2 уведомлений (новое снизу), каждое — своей строкой (или баннером)
+  let yNext = null; game._noticeBoxes = [];
+  for (const N of (game.notices || []).filter((n) => game.time - n.t < (n.dur || 1.6))) {
     // длинное уведомление (советы tip.*) переносится по словам в ширину 300 px и опускается под трекер
     // QA B-27: при открытом окне свободная часть экрана уже — строка уведомления уходит ниже трекера и мини-карты (y ≥ 160)
     // и переносится по ширине свободной части
-    const N = game.notice, lines = [], win = ui.anyOpen;
+    const lines = [], win = ui.anyOpen;
     const maxW = win ? Math.max(120, Math.min(300, 2 * Math.min(game.camCX, VIEW_W - game.camCX) - 16)) : 300;
     if (textWidth(N.text) <= maxW) lines.push(N.text);
     else { let cur = ''; for (const w of N.text.split(' ')) { const nx = cur ? cur + ' ' + w : w; if (textWidth(nx) > maxW && cur) { lines.push(cur); cur = w; } else cur = nx; } if (cur) lines.push(cur); }
     // m1h: одна строка на y 64 стоит вровень с трекером задания (x ≤ 210, y ≤ 84) — если по ширине заходит на него, тоже опускаем под трекер
     const QA = UI_ATLAS.hud_quest, gap = QA ? 2 * (game.camCX - (QA.x + QA.w) - 4) : maxW;
-    const y0 = win ? 160 : lines.length > 1 || Math.max(...lines.map((l) => textWidth(l))) > gap ? 90 : 64;   // несколько строк — ниже трекера (он до y 84)
-    game._noticeBox = { x: game.camCX, y: y0, w: Math.max(...lines.map((l) => textWidth(l))), lines: lines.length };
+    let y0 = win ? 160 : lines.length > 1 || Math.max(...lines.map((l) => textWidth(l))) > gap ? 90 : 64;   // несколько строк — ниже трекера (он до y 84)
+    if (game.rewardCard && !win) y0 = Math.max(y0, game.rewardCard.y + game.rewardCard.h + 8);   // под плашкой «Награда»
+    if (yNext != null) { if (y0 < yNext && yNext < 90 && !win) y0 = 90; y0 = Math.max(y0, yNext); }   // второе — ниже первого
+    game._noticeBox = { x: game.camCX, y: y0, w: Math.max(...lines.map((l) => textWidth(l))), lines: lines.length, text: N.text };
+    game._noticeBoxes.push(game._noticeBox);
+    yNext = y0 + lines.length * 11 + (N.key === 'mission' ? 14 : 3);
     if (N.key === 'mission') drawMissionBanner(ctx, game, N, lines, y0);   // m1i (П.16): «Миссия пройдена» — плашкой-баннером
     else lines.forEach((l, i) => drawText(ctx, game.camCX, y0 + i * 11, l, N.color, { align: 'c', outline: true }));
   }
@@ -399,6 +409,30 @@ function drawMissionBanner(ctx, game, N, lines, y0) {
   game.bannerDrawn = { x, y, w, h, text: lines.join(' '), t: game.time };
 }
 
+/** Плашка «Награда» (GDD v1.13 §10.5, D13): 220×64 в (210; 64), рамка — 9-slice ui_dlg_frame художника (m1k),
+ *  фон night 0,92; заголовок уставом «Награда» (ui.map.reward, bronze_hi), под ним все строки награды сразу; hold с, гаснет fade с. */
+function drawRewardCard(ctx, game) {
+  const C = game.rewardCard;
+  if (!C) return;
+  const age = game.time - C.t, a = Math.max(0, Math.min(1, age / 0.15, age < C.hold ? 1 : 1 - (age - C.hold) / C.fade));
+  const { x, y, w, h } = C;
+  ctx.save(); ctx.globalAlpha = a;
+  // m1k (ответ дизайнера d): рамка — 9-slice художника ui_dlg_frame (как окно диалога), фон night 0,92 кодом; без арта — прежняя рамка кодом
+  ctx.globalAlpha = a * 0.92; rect(ctx, x + 2, y + 2, w - 4, h - 4, PAL.night); ctx.globalAlpha = a;
+  if (!drawFrame9(ctx, x, y, w, h)) {
+    rect(ctx, x, y, w, 1, PAL.ink); rect(ctx, x, y + h - 1, w, 1, PAL.ink); rect(ctx, x, y, 1, h, PAL.ink); rect(ctx, x + w - 1, y, 1, h, PAL.ink);
+    ctx.strokeStyle = PAL.bronze; ctx.lineWidth = 1; ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+    for (const [px, py] of [[x + 2, y + 2], [x + w - 4, y + 2], [x + 2, y + h - 4], [x + w - 4, y + h - 4]]) rect(ctx, px, py, 2, 2, PAL.bronze_hi);
+  }
+  game.rewardFrame = drawFrame9 && VA.ui.ui_dlg_frame ? '9slice' : 'code';
+  const title = tr('ui.map.reward').toUpperCase();   // в уставе только прописные (как заголовок трекера)
+  drawText(ctx, x + w / 2, y + 5, title, PAL.bronze_hi, { align: 'c', font: 'ustav' });
+  const n = C.lines.length, top = y + 22 + Math.max(0, (3 - n) * 5);
+  C.lines.forEach((l, i) => drawText(ctx, x + w / 2, top + i * 12, l.text, l.color, { align: 'c', outline: true }));
+  ctx.restore();
+  game.rewardDrawn = { x, y, w, h, title, lines: C.lines.map((l) => l.text), alpha: a, t: game.time };
+}
+
 // Трекер задания (макет gameplay_hud_v2 → draw_quest, GDD §8.2): резная рамка с буквицей (assets/hud_quest.png),
 // «Задание · Акт I», название уставом, до 3 целей «— цель  n/N»: выполненная — серым с галочкой и гаснет,
 // активная — льняным, следующая — серым.
@@ -413,9 +447,11 @@ function drawQuestTracker(ctx, game) {
   // буквица «О» запечена в рамку; если название начинается с другой буквы — пишем его целиком
   const baked = (L.title || '')[0];
   drawText(ctx, tx, iy + 14, title[0] === baked ? title.slice(1) : title, PAL.bronze_hi, { font: 'ustav' });
-  const oy = iy + bh + 3, rx0 = ix + iw - 3;
-  q.lines().forEach((l, i) => {
-    const y = oy + 10 * i, col = l.state === 'active' ? PAL.linen : PAL.slate_lt;
+  const QL = q.lines(), step = QL.length > 3 ? 9 : 10;   // m1k D5: 4-я строка (строка зоны) — шаг 9 px, чтобы влезть в рамку
+  const oy = iy + bh + 3 - (QL.length > 3 ? 1 : 0), rx0 = ix + iw - 3;
+  game.trackerDrawn = { lines: QL.map((l) => ({ id: l.id, text: l.text, zone: !!l.zone })), step };
+  QL.forEach((l, i) => {
+    const y = oy + step * i, col = l.state === 'active' ? PAL.linen : PAL.slate_lt;
     const a = l.alpha;
     let txt = '— ' + l.text, rx = rx0;
     if (l.state === 'done') { tick(ctx, rx - 7, y + 1, PAL.bronze_lt, a); rx -= 10; }

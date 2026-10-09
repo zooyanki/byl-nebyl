@@ -1,0 +1,19 @@
+{
+ "what": "9-slice source of the same frame",
+ "slice_px": {
+  "left": 8,
+  "top": 8,
+  "right": 8,
+  "bottom": 8
+ },
+ "note": "the GDD's 6-px border + 1-px inner ink line + 1-px overhang of the bronze corner plates = 8 px; draw the sliced frame at (x − 1, y − 1, w + 2, h + 2); edges are 48 / 24 px = whole 12-px notch periods → tile (repeat), a partial period at the far end is hidden under the corner",
+ "interior": "transparent (night 0.92 by code)",
+ "also": "ui_dlg_frame_400x88.png = this frame prebaked at 400×88",
+ "image": "ui_dlg_frame.png",
+ "size": [
+  64,
+  40
+ ],
+ "palette": "palette_v2",
+ "alpha": "0/255 only"
+}

@@ -21,6 +21,8 @@ from checks_m1f import run_m1f
 from checks_m1g import run_m1g
 from checks_m1h import run_m1h
 from checks_m1i import run_m1i
+from checks_m1j import run_m1j
+from checks_m1k import run_m1k
 from checks_v18 import run_balance18
 from playwright.async_api import async_playwright
 
@@ -74,6 +76,9 @@ async def main(a):
                 await pg.wait_for_timeout(20)
 
         await pg.add_init_script("try{ if (sessionStorage.getItem('byl_keep_gromovnik')!=='1') sessionStorage.removeItem('byl_m1_gromovnik'); }catch(e){}")
+        # m1k (D6): окно диалога ставит мир на паузу; проверки прежних вех писались под диалоги «над головой» — для них окно
+        # отключено (реплики сразу в журнал, последствия применяются); раздел m1k включает окно сам (__game.dlgAuto = false)
+        await pg.add_init_script("window.__dlgAuto = true;")
         await pg.goto(a.url)
         await pg.wait_for_function('window.__game && window.__game.time > 0.5', timeout=15000)
         await pg.mouse.move(960, 540)
@@ -86,7 +91,11 @@ async def main(a):
             print('консоль:', 'чисто' if not errors else errors[:5])
             await br.close()
             return 0
-        if a.only_m1b or a.only_m1c or a.only_m1d or a.only_m1e or a.only_m1f or a.only_m1g or a.only_m1h or a.only_m1i:
+        if a.only_m1b or a.only_m1c or a.only_m1d or a.only_m1e or a.only_m1f or a.only_m1g or a.only_m1h or a.only_m1i or a.only_m1j or a.only_m1k:
+            if a.only_m1k:
+                await run_m1k(pg, G, check, wait, client_of, client_scr, a)
+            if a.only_m1j:
+                await run_m1j(pg, G, check, wait, client_of, client_scr, a)
             if a.only_m1i:
                 await run_m1i(pg, G, check, wait, client_of, client_scr, a)
             if a.only_m1h:
@@ -115,14 +124,14 @@ async def main(a):
           return { cfg: Object.keys(d.CFG).sort(), hp: h.maxHp, yar: h.maxYar, regen: +h.yarRegen.toFixed(3), aps: h.attacksPerSec,
             xp: [1,2,3,10].map(d.xpToNext), up1: d.enemyStats('upyr', 1), an1: d.enemyStats('anchutka', 1), skill: [h.skillCost, h.skillRank],
             kit: Object.values(h.equip).filter(Boolean).map(i => i.name), belt: h.belt.map(b => b ? b.kind + 'x' + b.count : '-') }; })()''')
-        check('конфиги data/*.json (+ uniques, ru, quests, trade) и data/zones/*.json загружены', s['cfg'] == sorted(['stats', 'skills', 'monsters', 'bosses', 'items_base', 'affixes', 'droptables', 'uniques', 'ru', 'quests', 'trade', 'zones']), s['cfg'])
+        check('конфиги data/*.json (+ uniques, ru, quests, trade) и data/zones/*.json загружены', s['cfg'] == sorted(['stats', 'skills', 'monsters', 'bosses', 'items_base', 'affixes', 'droptables', 'uniques', 'ru', 'quests', 'trade', 'zones', 'dialogues']), s['cfg'])
         check('герой 1 ур.: 70 жизни / 40 Яри, Ярь +1,5%/с', s['hp'] == 70 and s['yar'] == 40 and abs(s['regen'] - 0.6) < 1e-6, (s['hp'], s['yar'], s['regen']))
         check('скорость атаки скрамасакса 1,4 удара/с', abs(s['aps'] - 1.4) < 1e-6, s['aps'])
         check('кривая опыта 100·L^1,75', s['xp'] == [100, 340, 680, 5620], s['xp'])
         u, an = s['up1'], s['an1']
         check('упырь mlvl1: 22 HP, 2–5 (урон ×1,1 по GDD v1.4), 10 опыта; анчутка: 13 HP, 1–3, 5 опыта',
               (u['hp'], u['dmgMin'], u['dmgMax'], u['xp']) == (22, 2, 5, 10) and (an['hp'], an['dmgMin'], an['dmgMax'], an['xp']) == (13, 1, 3, 5), (u, an))
-        check('«Огненный змей» стоит 5 Яри на ранге 1', s['skill'] == [5, 1], s['skill'])
+        check('«Огненный змей» стоит 6 Удали на ранге 1 (GDD v1.13, было 5)', s['skill'] == [6, 1], s['skill'])
         hc = await G('''(() => { const g = __game, h = g.hero, d = g.dbg, u2 = d.enemyStats('upyr', 2), u1 = d.enemyStats('upyr', 1);
             return { heroVsM2: +d.hitChance(h.ar, u2.dfn, 1, 2).toFixed(3), upyrM2VsHero: +d.hitChance(u2.ar, h.def, 2, 1).toFixed(3),
               equal: [+d.hitChance(h.ar, u1.dfn, 1, 1).toFixed(3), +(2 * h.ar / (h.ar + u1.dfn) * 0.5).toFixed(3)], ar: h.ar, def: h.def, u2: [u2.ar, u2.dfn] }; })()''')
@@ -208,7 +217,7 @@ async def main(a):
             e.stagger = 0; e.x = h.x + 1.0; e.y = h.y; const r0 = Math.random; Math.random = () => 0.01;
             const hs0 = g.counters.hitStop; g.combat.heroMelee(h, e); Math.random = r0;
             return { kb: !!e.kb || e.dead, hitStop: g.counters.hitStop - hs0, hst: g.hitStopT, id: e.id }; })''', s['id'])
-        check('удар даёт хит-стоп 50 мс и отбрасывание', s['kb'] and s['hitStop'] == 1 and s['hst'] > 0.04, s)
+        check('удар даёт хит-стоп (v1.13: 70 / 110 / 90 мс) и отбрасывание', s['kb'] and s['hitStop'] == 1 and s['hst'] > 0.065, s)
         await G(UNFREEZE)
 
         # --- 5. анчутка кидает угли
@@ -878,7 +887,7 @@ async def main(a):
             let tEnd = 0; while (g.restFx.sparksFrame >= 0 && tEnd < 2) { g.simulate(1 / 60); tEnd += 1 / 60; }
             const after = { full: h.hp === h.maxHp, kp: kp.restOn, src: g.restFx.src, tEnd: +tEnd.toFixed(2) }; g.simulate(0.4); after.a = ring();
             h.hp = h.maxHp; return { sheets, lay, phase, ringPx, mid, border, outNear, far, early, rest, after }; })()''')
-        ok = (len([k for k in s['sheets'] if not k.startswith(('k_', 'm_', 'a_', 'p_')) and k not in ('item_beresta', 'stump')]) == 13 and sorted(s['lay']) == [[6, 55], [10, 91]] and s['phase'] and s['ringPx']['R10'][0] > 300 and s['ringPx']['R6'][0] > 150
+        ok = (len([k for k in s['sheets'] if not k.startswith(('k_', 'm_', 'a_', 'p_', 'sw_')) and k not in ('item_beresta', 'stump', 'smoke')]) == 13 and sorted(s['lay']) == [[6, 55], [10, 91]] and s['phase'] and s['ringPx']['R10'][0] > 300 and s['ringPx']['R6'][0] > 150
               and abs(s['ringPx']['R10'][1] - 128) <= 1 and s['mid']['a'] == 0 and s['mid']['src'] is None and s['mid']['sp'] == -1
               and s['border'] == {'a': 0.5, 'lit': False} and s['outNear'] == 0.5 and s['far'] == 0
               and not s['early']['r'] and s['early']['sp'] == -1 and not s['early']['kp']
@@ -1118,6 +1127,10 @@ async def main(a):
 
         # --- 19. Веха m1i: замечания критиков m1f — P2: ладья, торг, пауза, меню/слот, визуал кодом, подписи Ладоги, «Жезл» (tools/checks_m1i.py)
         await run_m1i(pg, G, check, wait, client_of, client_scr, a)
+        # --- 20. Веха m1j (P0 часть A: бой F, ощущение удара, карточка награды, запуск)
+        await run_m1j(pg, G, check, wait, client_of, client_scr, a)
+        # --- 21. Веха m1k (D4 видимость, D5 навигация, D6 окно диалога, D7 Ладога, D9 деревья вдоль пути)
+        await run_m1k(pg, G, check, wait, client_of, client_scr, a)
 
         check('консоль без ошибок и предупреждений', not errors, errors[:5])
         await br.close()
@@ -1138,6 +1151,8 @@ if __name__ == '__main__':
     ap.add_argument('--only-m1f', action='store_true', help='только проверки вехи m1f (замечания критиков m1e, P0/P1)')
     ap.add_argument('--only-m1g', action='store_true', help='только проверки вехи m1g (GDD v1.11)')
     ap.add_argument('--only-m1h', action='store_true', help='только проверки вехи m1h (замена терминов, rename_map.md)')
+    ap.add_argument('--only-m1k', action='store_true', help='только проверки вехи m1k (D4, D5, D6, D7, D9)')
+    ap.add_argument('--only-m1j', action='store_true', help='только проверки вехи m1j (D1, D2, D13, D17)')
     ap.add_argument('--only-m1i', action='store_true', help='только проверки вехи m1i (замечания критиков m1f, P2)')
     ap.add_argument('--balance-v18', type=int, default=0, metavar='N', help='только замер §12.3 GDD v1.8: N боёв на сценарий (30 по GDD)')
     ap.add_argument('--throttle', type=float, default=1, help='замедление ЦП (CDP Emulation.setCPUThrottlingRate) — проверка на редких кадрах')

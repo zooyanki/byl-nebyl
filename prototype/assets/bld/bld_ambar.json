@@ -1,0 +1,101 @@
+{
+ "object": "Амбар на камнях-стульях, мешки у двери",
+ "footprint_tiles": [
+  3,
+  3
+ ],
+ "tile_px": [
+  32,
+  16
+ ],
+ "heights_px": {
+  "stones": 8,
+  "wall": "8–60",
+  "ridge": 96,
+  "door": "12–56"
+ },
+ "pivot": [
+  59,
+  115
+ ],
+ "pivot_rule": "screen point of the footprint centre at z = 0 (scale.md §4.1)",
+ "proto_corner_px": [
+  59,
+  91
+ ],
+ "footprint_px": [
+  [
+   59,
+   91
+  ],
+  [
+   107,
+   115
+  ],
+  [
+   59,
+   139
+  ],
+  [
+   11,
+   115
+  ]
+ ],
+ "front_corner_px": [
+  59,
+  139
+ ],
+ "placement": "place the sprite so that proto_corner_px lands on iso.js toS(p.x, p.y) (footprint min corner), equivalently pivot on the screen point of the footprint centre ((x0 + A/2), (y0 + B/2))",
+ "sort": "v1.13.2 fix (09.10): sort by the footprint CENTRE, exactly like prototype map.js addProp: depth = x0 + A/2 + y0 + B/2 (tiles); palisade / gate segments are 1×1 props → x + y + 1; hero, NPC, enemies → x + y. Do NOT use the front corner (x0+A)+(y0+B): buildings flush with the east palisade (seni_ne, ambar_se) then paint over the fence",
+ "xray": {
+  "rule": "scale.md 1.4 §4.4 / GDD v1.13 §10.3: if the sprite intersects the ellipse rx 56, ry 40 px centred at hero pivot − 22 px and the building sorts IN FRONT of the hero, draw the whole sprite at alpha 0.35 (0.2 s transition); hero gets a 1-px bronze_hi outline when ≥ 25% covered",
+  "alpha": 0.35,
+  "ellipse_px": [
+   56,
+   40
+  ],
+  "hero_center_offset_y": -22
+ },
+ "ridge_axis": "world x (as prototype props.js izba)",
+ "anchors_px": {
+  "caption": {
+   "0": [
+    35,
+    71
+   ],
+   "1": [
+    35,
+    71
+   ],
+   "2": [
+    35,
+    71
+   ]
+  }
+ },
+ "ladoga_ids": {
+  "ambar_se": "+y → frame 0 (v1.13.2; +x упирается в тын x 39)"
+ },
+ "notes": "Стулья 8 px + сруб 52 → стена до 60 (как у клети); мешки и сходня у двери",
+ "fps": 0,
+ "loop": false,
+ "door_frames": {
+  "+y": 0,
+  "+x": 1
+ },
+ "frame_2": "без видимой двери (задняя сторона); по GDD v1.13.2 двери только на +x/+y — для плана не использовать",
+ "frames": [
+  "door on the +y wall (south, lit)",
+  "door on the +x gable/wall (east)",
+  "door on a hidden side (−x / −y): windows only"
+ ],
+ "image": "bld_ambar.png",
+ "frame_size": [
+  119,
+  151
+ ],
+ "frame_count": 3,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

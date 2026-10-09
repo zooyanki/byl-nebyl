@@ -50,14 +50,19 @@ export function drawDeath(ctx, game) {
   if (game.deathT > (D.keyDelay ?? 2.5)) drawText(ctx, VIEW_W / 2, 222, t('proto.death.or_enter'), PAL.mist, { align: 'c', outline: true, alpha: 0.7 + 0.3 * Math.sin(game.time * 4) });
 }
 
-const PW = 360, PH = 250, PX = VIEW_W / 2 - PW / 2, PY = 40;
+const PW = 360, PH = 270, PX = VIEW_W / 2 - PW / 2, PY = 40;
 // m1i (critics_m1f П.13): подпись и «вкл/выкл» разведены — подпись слева, состояние в отдельной плашке справа;
 // весь блок (подпись + плашка) — зона щелчка. Тексты — ru.json (proto.pause.*, proto.toggle.*).
 const TG = { w: 108, h: 16, sw: 34 };
 export const PAUSE_BTNS = [
-  { id: 'sound', key: 'proto.pause.sound', x: PX + 14, y: PY + PH - 56, w: TG.w, h: TG.h },
-  { id: 'labels', key: 'proto.pause.labels', x: PX + 14 + 112, y: PY + PH - 56, w: TG.w, h: TG.h },
-  { id: 'minimap', key: 'proto.pause.minimap', x: PX + 14 + 224, y: PY + PH - 56, w: TG.w, h: TG.h },
+  { id: 'sound', key: 'proto.pause.sound', x: PX + 14, y: PY + PH - 75, w: TG.w, h: TG.h },
+  { id: 'labels', key: 'proto.pause.labels', x: PX + 14 + 112, y: PY + PH - 75, w: TG.w, h: TG.h },
+  { id: 'minimap', key: 'proto.pause.minimap', x: PX + 14 + 224, y: PY + PH - 75, w: TG.w, h: TG.h },
+  // v1.13 §4.6: «Тряска при ударе» (settings.shake: тряска кадра и хит-стоп) — второй ряд
+  { id: 'shake', key: 'ui.settings.shake', x: PX + 14, y: PY + PH - 56, w: 164, h: TG.h },
+  // m1k D4/D5 (§15 «Настройки»): «Прозрачные кроны» (settings.xray), «Стрелка к цели» (settings.navArrow)
+  { id: 'xray', key: 'ui.settings.xray', x: PX + 14 + 168, y: PY + PH - 56, w: 164, h: TG.h },
+  { id: 'navArrow', key: 'ui.settings.navArrow', x: PX + 14, y: PY + PH - 37, w: 164, h: TG.h },
 ];
 export function pauseButtonAt(m) { const b = PAUSE_BTNS.find((b) => inR(m, b)); return b ? b.id : null; }
 /** Строки справки: [клавиша, действие] — ключи ru.json; рывок (Пробел) — m1i. */
@@ -87,9 +92,9 @@ export function drawPause(ctx, game) {
     drawText(ctx, PX + 150, PY + 34 + i * 14, b, PAL.linen);
   });
   game.pauseLines = rows;   // для автотеста m1i
-  const st = { sound: !game.audio.muted, labels: game.labelsAlways, minimap: game.showMinimap };
+  const st = { sound: !game.audio.muted, labels: game.labelsAlways, minimap: game.showMinimap, shake: game.settings.shake !== false, xray: game.settings.xray !== false, navArrow: game.settings.navArrow !== false };
   for (const b of PAUSE_BTNS) toggle(ctx, b, t(b.key).replace(/ \(.\)$/, ''), st[b.id], inR(game.input, b));
-  drawText(ctx, VIEW_W / 2, PY + PH - 22, t('proto.pause.hint'), PAL.mist, { align: 'c' });
+  drawText(ctx, VIEW_W / 2, PY + PH - 15, t('proto.pause.hint'), PAL.mist, { align: 'c' });
 }
 
 // --- m1i (critics_m1f П.15, GDD §10/§11): главное меню, один слот. «Продолжить» — загрузка слота (серая, если слота нет),
