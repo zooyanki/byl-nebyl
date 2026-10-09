@@ -6,7 +6,7 @@
 import { Enemy } from './enemy.js';
 import { hitChance } from '../data/progression.js';
 import { CFG } from '../data/config.js';
-import { RU } from '../core/i18n.js';
+import { RU, t } from '../core/i18n.js';
 import { PAL } from '../palette.js';
 import { makeElite } from '../systems/elites.js';
 import { circleFree, lineWalkable } from '../world/collision.js';
@@ -238,7 +238,7 @@ export class Krivsha extends Enemy {
         g.counters.krivshaClaws = (g.counters.krivshaClaws || 0) + 1; me.clawHitT = me.t;   // clawHitT — кадр 6 спрайта (hit_frame) с этого момента
         if (hh.dead || !g.combat.inTele(T, hh.x, hh.y, hh.r * 0.5)) return;
         if (C.hitRoll && !(Math.random() < hitChance(me.ar, hh.def, me.mlvl, hh.level))) {   // v1.8: проверка попадания (§3.3)
-          g.counters.krivshaClawMiss = (g.counters.krivshaClawMiss || 0) + 1; g.fx.text(hh.x, hh.y, 'Мимо', PAL.mist, 50, { dur: 0.6 }); return;
+          g.counters.krivshaClawMiss = (g.counters.krivshaClawMiss || 0) + 1; g.fx.text(hh.x, hh.y, t('ui.combat.miss'), PAL.mist, 50, { dur: 0.6 }); return;
         }
         const dmg = Math.round((me.dmgMin + Math.floor(Math.random() * (me.dmgMax - me.dmgMin + 1))) * C.mul);
         const dealt = hh.takeDamage(dmg, g, 'melee', me);

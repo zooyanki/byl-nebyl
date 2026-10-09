@@ -6,7 +6,7 @@
  ],
  "fps": 6,
  "loop": true,
- "draw": "pivot = the item's ground point (where drawGroundItem gets x, y); keep the engine's ink shadow ellipse under it (7x3); frame 0 can be used as a static sprite; the 4-frame loop makes the Чур sign glint",
+ "draw": "pivot = the item's ground point (where drawGroundItem gets x, y); keep the engine's ink shadow ellipse under it (7x3); frame 0 can be used as a static sprite; the 4-frame loop makes the notch mark glint",
  "size_note": "18x12 incl. outline (loot scale.md §3.4: серебро 14x7, щит 13x8)",
  "layer": "ground loot, under characters (scale.md §4.1)",
  "image": "item_beresta_ground.png",

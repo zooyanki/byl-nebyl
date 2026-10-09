@@ -38,8 +38,8 @@ PROTO = {
     "proto.priest_body": "Тело жреца",
     "proto.quest.arsonist_hint": "Черноярцы с факелами — люди Чернояра.",
     # веха M1b (капище, Мара, Кривша): заглушки прототипа, у сценариста строк нет
-    "proto.respawn.krada": "Ратибор очнулся у крады.",
-    "proto.respawn.chur": "Ратибор очнулся у Чурова камня.",
+    "proto.respawn.krada": "Ратибор очнулся у костра.",
+    "proto.respawn.chur": "Ратибор очнулся у путевого камня.",
     "proto.chur_respawn_hint": "Теперь, если падёшь, очнёшься здесь.",
     "proto.krivsha_body": "Тело Кривши",
     "proto.bylina_soon": "Былинные вещи — в следующей вехе.",
@@ -49,8 +49,150 @@ PROTO = {
     # веха M1c (береста возврата, былинные вещи): заглушки прототипа, у сценариста строк нет
     "proto.beresta.use": "ПКМ — прочитать",
     "proto.beresta.reading": "Читаешь бересту…",
-    "proto.portal.closed": "Чуров проход закрылся",
+    "proto.portal.closed": "Путевой проход закрылся",
     "proto.bylina.got": "Былинная вещь: {item}",
+    # веха m1g (GDD v1.11 §8.2): плашка над головой былинного врага — «{name} · {level}», level = ui.hud.level
+    "proto.nameplate": "{name} · {level}",
+    # веха m1h (rename_map.md §3.3): видимые строки, раньше зашитые в код, — вынесены сюда (текст по таблице, прочие без изменений)
+    "proto.zone.title": "{zone} · ур. нечисти {mlvl}",
+    "proto.hero.res_full.hp": "Жизнь и так полна",
+    "proto.hero.res_full.yar": "Удаль и так полна",
+    "proto.belt.empty": "Ячейка {n} пуста",
+    "proto.potion.both": "Мгновенно восполняет {pct}% жизни и Удали",
+    "proto.potion.over_time": "+{amount} {res} за {dur} с",
+    "proto.potion.res.hp": "к жизни",
+    "proto.potion.res.yar": "к Удали",
+    "proto.skills.lmb_basic": "На ЛКМ · без Удали — обычный удар",
+    "proto.hero.attr.ene": "Дух: +2 к Удали, +1% к урону ведовства",
+    "proto.help.rmb": "Огненный змей (Удали: {n})",
+    "proto.labels.always": "Подписи добычи: всегда",
+    "proto.labels.alt": "Подписи добычи: по Alt",
+    # веха m1i (critics_m1f П.12–13, 15): столбец цены в торге, справка паузы и переключатели, главное меню — строки, раньше
+    # зашитые в код, вынесены сюда без изменения текста; новые — «Пробел · рывок», «Цена», подпись слота без сохранения
+    "proto.trade.price": "Цена",
+    "proto.pause.sound": "Звук (N)",
+    "proto.pause.labels": "Подписи (Z)",
+    "proto.pause.minimap": "Мини-карта",
+    "proto.toggle.on": "вкл",
+    "proto.toggle.off": "выкл",
+    "proto.pause.hint": "Пауза — Esc, чтобы продолжить",
+    "proto.help.move.key": "ЛКМ / зажать ЛКМ",
+    "proto.help.move": "идти; по нечисти — бить",
+    "proto.help.stand.key": "Shift + ЛКМ",
+    "proto.help.stand": "бить на месте",
+    "proto.help.pickup.key": "ЛКМ по подписи",
+    "proto.help.pickup": "поднять добычу (серебро — само)",
+    "proto.help.rmb.key": "ПКМ",
+    "proto.help.dash": "рывок к курсору (Удаль не тратит)",
+    "proto.help.belt.key": "1–4",
+    "proto.help.belt": "выпить зелье из пояса",
+    "proto.help.labels.key": "Alt (держать) / Z",
+    "proto.help.labels": "подписи добычи / всегда",
+    "proto.help.map.key": "Tab или M",
+    "proto.help.map": "большая карта поверх мира",
+    "proto.help.windows.key": "I или B / C",
+    "proto.help.windows": "котомка / витязь",
+    "proto.help.sound.key": "N",
+    "proto.help.sound": "звук вкл/выкл",
+    "proto.help.esc.key": "Esc",
+    "proto.help.esc": "закрыть окна / пауза",
+    # m1i follow-up: строки, которые были захардкожены в src/ (тексты дословно прежние)
+    "proto.tip.drink": "ПКМ — выпить",
+    "proto.tip.unique": "Былинная вещь",
+    "proto.tip.aps": "Атак в секунду: {n}",
+    "proto.tip.armor": "Броня: {n}",
+    "proto.tip.shield_block": "Блок щитом: {n}%",
+    "proto.tip.base_crit": "+{n}% к шансу удачного удара",
+    "proto.tip.base_nechist": "+{n}% к урону по Нечисти",
+    "proto.fx.invuln": "Неуязвим",
+    "proto.log.drunk": "Выпито: {item}",
+    "proto.fx.block": "Блок",
+    "proto.sys.unreachable": "Не дотянуться",
+    "proto.fx.xp": "+{n} опыта",
+    "proto.fx.squeal": "И-и-и!",
+    "proto.fx.level_up": "Новый уровень!",
+    "proto.log.hero_fell": "Ратибор пал…",
+    "proto.log.repopulated": "Нечисть снова собралась в округе: {n} {word}.",
+    "proto.sys.soon": "{what} — в следующей итерации",
+    "proto.sys.sound_off": "Звук выключен",
+    "proto.sys.sound_on": "Звук включён",
+    "proto.sys.lmb_set": "ЛКМ: {skill}",
+    "proto.sys.lmb_basic": "обычный удар",
+    "proto.sys.rmb_set": "ПКМ: {skill}",
+    "proto.small_window": "Окно меньше 640×360 — текст будет нечётким. Увеличьте окно.",
+    "proto.hud.silver_label": "Серебро:",
+    "proto.hud.lvl": "ур.",
+    "proto.hud.lmb": "ЛКМ",
+    "proto.hud.rmb": "ПКМ",
+    "proto.hud.muted": "Звук выключен (N)",
+    "proto.hud.labels_always": "Подписи: всегда (Z)",
+    "proto.hud.killed": "Убито {n}/{total}",
+    "proto.hud.ctrl_hint": "ЛКМ — идти/бить · ПКМ — навык · F1–F6 — выбрать навык · Пробел — рывок · T — навыки · Alt — подписи · Tab — карта",
+    "proto.hud.belt_slot": "{item} ×{n} — клавиша {key}",
+    "proto.hud.belt_empty": "Пустая ячейка пояса",
+    "proto.hud.skill_empty": "F{n}: пусто — наведи на навык в окне «Навыки» (T) и нажми F{n}",
+    "proto.hud.lmb_tip": "Удар оружием — урон {min}–{max}",
+    "proto.hud.no_weapon": "(без оружия)",
+    "proto.btn.map": "Карта",
+    "proto.btn.menu": "Меню",
+    "proto.death.penalty_note": "(10% из котомки)",
+    "proto.death.keep": "Опыт и снаряжение остаются при тебе.",
+    "proto.plural.vrag_upokoen": ["враг упокоен", "врага упокоено", "врагов упокоено"],
+    "proto.death.deaths": "Смертей: {n}",
+    "proto.death.or_enter": "или Enter",
+    "proto.log.def_buff": "{skill}: +{pct}% к защите на {dur} с",
+    "proto.target.bylina": "Былинный враг",
+    "proto.log.picked": "Подобрано: {item}",
+    "proto.log.to_belt": "(пояс)",
+    "proto.log.to_bag": "(котомка)",
+    "proto.zone.kapishche": "Капище",
+    "proto.log.got_kit": "Получено: {item} ×{n}, {silver} сер.",
+    "proto.skills.tier_from": "с {n}-го уровня",
+    "proto.skills.tier_start": "с начала",
+    "proto.skills.soon": "появится позже",
+    "proto.skills.passive": "пасс.",
+    "proto.skills.hint": "ЛКМ по навыку — на ПКМ · F1–F6 над навыком — в ячейку",
+    "proto.skills.not_impl": "Навык появится в следующих итерациях",
+    "proto.skills.from_items": "(+{n} с вещей)",
+    "proto.log.dropped": "Выброшено: {item}",
+    "proto.sys.wrong_slot": "Сюда это не надеть",
+    "proto.sys.need_level": "Требуется уровень {n}",
+    "proto.log.equipped": "Надето: {item}",
+    "proto.log.unequipped": "Снято: {item}",
+    "proto.hero.xp": "Опыт",
+    "proto.hero.max_level": "Предел уровней",
+    "proto.hero.to_level": "До уровня {n}",
+    "proto.hero.free_points": "Свободных очков",
+    "proto.hero.dmg_lmb": "Урон ЛКМ",
+    "proto.hero.dmg_rmb": "Урон ПКМ",
+    "proto.hero.hit_chance": "Шанс попасть",
+    "proto.hero.hint_points": "Жми [+], чтобы вложить свободные очки",
+    "proto.hero.hint_nopoints": "Очки свойств даются за новый уровень (+5)",
+    "proto.hero.str_tip": "Сила: +1% к физическому урону",
+    "proto.hero.dex_tip1": "Ловкость: +5 к меткости, +0,1% к удачному удару,",
+    "proto.hero.dex_tip2": "+1 к защите за каждые 4 очка",
+    "proto.hero.vit_tip": "Живучесть: +2 к жизни",
+    "proto.tip.equip_from": "Снарядить можно с {n}-го уровня",
+    "proto.cmp.dps": "Урон в секунду",
+    "proto.cmp.dps_n": "по нечисти",
+    "proto.cmp.block": "Блок, %",
+    "proto.cmp.rf": "Сопр. огню, %",
+    "proto.cmp.rc": "Сопр. холоду, %",
+    "proto.cmp.rp": "Сопр. яду, %",
+    "proto.cmp.spell": "Сила чар, %",
+    "proto.cmp.fire": "Урон огнём",
+    "proto.cmp.cold": "Урон холодом",
+    "proto.cmp.skl": "Ранги навыков",
+    "proto.cmp.pot": "Сила зелий, %",
+    "proto.cmp.ls": "Кража жизни, %",
+    "proto.cmp.thorns": "Шипы",
+    "proto.cmp.mf": "Удача в добыче, %",
+    "proto.cmp.speed": "Скорость бега",
+    "proto.cmp.each_skill": "Каждый выученный навык: {v}",
+    "proto.cmp.slot_free": "Слот «{slot}» свободен",
+    "proto.cmp.instead": "Вместо «{item}»:",
+    "proto.cmp.vs_equipped": "Против надетого:",
+    "proto.cmp.no_change": "без изменений",
 }
 
 def act1_strings():
@@ -67,6 +209,8 @@ def act1_strings():
     out["letter.priest"] = {"name": "Грамота жреца", "text": pr}
     od = re.search(r"\*\*\\\*Приказ Чернояра\*\*.*?\n\s*> «(.+?)»", a, re.S).group(1)
     out["letter.order"] = {"name": "Приказ Чернояра", "text": od}
+    # v1.11: подцель «Спаси выживших» — строка сценариста из act1.md (заменила временный ключ m1f)
+    out["quest.m1.obj.mal"] = re.search(r"\(`quest\.m1\.obj\.mal`\): (.+)", m1).group(1).strip()
     out["npc.mal"] = "Мал"
     out["npc.ratibor"] = "Ратибор"
     return out
@@ -132,7 +276,7 @@ def npc_dialogs():
     """Диалоги §5 act1_texts и реплики Вышаты из act1.md — дословно, без переписывания."""
     a = open(ACT1, encoding="utf-8").read()
     src = open(SRC, encoding="utf-8").read()
-    out = {"npc.vyshata": "Вышата", "npc.vedana": "Ведана", "npc.tverdyata": "Твердята"}
+    out = {"npc.vyshata": "Вышата", "npc.vedana": "Милуша", "npc.tverdyata": "Твердята"}
     sec = a.split("### Вышата, посадник Ладоги", 1)[1].split("###", 1)[0]
     out["npc.vyshata.greet"] = re.search(r"Приветствие: «(.+?)»", sec).group(1)
     def quotes(block):
@@ -165,7 +309,7 @@ out.update(npc_dialogs())
 out.update(PROTO)
 for k in SKIP:
     out.pop(k, None)
-doc = {"_about": "Тексты интерфейса и игры (источник — story/act1_texts.md v1.0, сборка tools/export_ru.py; правки GDD v1.4 §12.2.1). "
+doc = {"_about": "Тексты интерфейса и игры (источник — story/act1_texts.md v1.2, сборка tools/export_ru.py; правки GDD v1.4 §12.2.1). "
                  "Ключи quest.*, dialog.*, letter.*, npc.* — из act1.md v1.1 дословно; proto.* — заглушки прототипа (нет у сценариста). "
                  "Серебро по числам не склоняется («Серебро: N», «Потеряно серебра: N», «N сер.»), счётные слова — plural(n, one, few, many) (§10.1).",
        **dict(sorted(out.items()))}

@@ -1,5 +1,5 @@
 {
- "object": "Чуров проход (obj.chur_portal), the passage opened by «Береста возврата»; type 'portal' in the prototype; both ends (field + town at the крада) use the same sheets",
+ "object": "Путевой проход (obj.chur_portal), the passage opened by «Береста возврата»; type 'portal' in the prototype; both ends (field + town at the костёр) use the same sheets",
  "frame_size": [
   64,
   84

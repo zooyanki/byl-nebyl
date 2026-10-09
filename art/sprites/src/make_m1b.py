@@ -1,4 +1,4 @@
-"""Mission 1, milestone (b): Кривша (Обгорелый страж), Мара Пепельная, огнище, Идол Перуна + ability fx.
+"""Mission 1, milestone (b): Кривша (Обгорелый страж), Огнея Пепельная, огнище, Идол Перуна + ability fx.
 Writes krivsha/, mara/, ognishche/, idol_perun/, fx_krivsha_*/, fx_mara_*/ and scene previews (m1b_scenes/).
 Called from make_all.py (run(MEAS)); can also run alone: python3 make_m1b.py"""
 import os
@@ -140,21 +140,21 @@ def run(MEAS):
                  "feed": ["fx_krivsha_feed_back", "fx_krivsha_feed", "fx_krivsha_feed_source"]}
     save_manifest(man, out, "krivsha")
 
-    # ================================================================ Мара
-    mr_notes = ("Мара Пепельная (былинный враг M1, дух пожара): hovering ash shroud and hood, pale face, flame hair, "
+    # ================================================================ Огнея
+    mr_notes = ("Огнея Пепельная (былинный враг M1, дух пожара): hovering ash shroud and hood, pale face, flame hair, "
                 "smouldering hem and forearms. Hovers 2.5±1 px above the ground (pivot = ground point under her; keep the "
                 "shadow on the ground). Body 48-50 incl. hover, flame hair ≤ 53, raised fire bolt ≤ 55 "
                 "(scale.md: 48, flames to 54). Frame 64x64, pivot (32,56).")
-    man, out = char_sheets("mara", "Мара Пепельная", MR, [("mara", None, None)], MR_EVENTS, mr_notes, MEAS)
+    man, out = char_sheets("mara", "Огнея Пепельная", MR, [("mara", None, None)], MR_EVENTS, mr_notes, MEAS)
     man["retinue"] = ("4-6 анчуток mlvl 2 (bosses.json retinue.kind = anchutka): an existing monster type of the prototype; "
                       "there is no art sprite for the анчутка yet (grey box in the prototype). Not a new tinted variant.")
     man["fx"] = {"ash_trail": "fx_mara_ash_trail", "bolt": "fx_mara_bolt", "bolt_hit": "fx_mara_bolt_hit"}
     man["extra_animations"] = "walk (glide) and heal are not in GDD §12.1.2 (парение, ведовство, урон, гибель); added for the prototype's moves"
     save_manifest(man, out, "mara")
 
-    # ================================================================ анчутка (стаи Залесья и свита Мары)
+    # ================================================================ анчутка (стаи Залесья и свита Огнеи)
     an_notes = ("Анчутка (GDD §5.2 E1: мелкий бес-поджигатель, кидает угли и убегает; codex: водится у печей и пожарищ). "
-                "One sprite for the Залесье packs and Мара's retinue (GDD has no separate retinue variant). Hunched bald "
+                "One sprite for the Залесье packs and Огнея's retinue (GDD has no separate retinue variant). Hunched bald "
                 "soot imp: big head, swept-back pointed ears, bone horn nubs, ember eyes, long arms with ash-dusted forearms, "
                 "short legs, low tail with a smouldering tuft. Soot/ash greys + ember accents, no red (hero accent). "
                 "Body 26-27 incl. ears (scale.md 24-28; def.height 26), frame 32x40, pivot (16,34).")
@@ -171,7 +171,7 @@ def run(MEAS):
         "death": {"note": "squeals, topples, crumbles into a soot heap with dying embers; last frame holds (corpse)"},
     }
     man, out = char_sheets("anchutka", "Анчутка", AN, [("anchutka", None, None)], an_events, an_notes, MEAS)
-    man["roles"] = ("Залесье packs (mlvl 1-2), forest trail and капище (mlvl 2-5), Мара's retinue (4-6, mlvl 2), "
+    man["roles"] = ("Залесье packs (mlvl 1-2), forest trail and капище (mlvl 2-5), Огнея's retinue (4-6, mlvl 2), "
                     "Чернояр's summons in M3: the same sprite everywhere (elite / champion tints are the engine's)")
     man["height_for_engine"] = {"def.height": 26, "measured_body_px": "26-27 incl. ears (idle, walk, throw)", "r": 0.25}
     man["fx"] = {"coal": "fx_anchutka_coal"}
@@ -188,14 +188,14 @@ def run(MEAS):
     out = os.path.join(ROOT, "ognishche")
     og_d, og_c, og_t = KP.ognishche("desecrated"), KP.ognishche("consecrated"), KP.consecrate()
     og_p = KP.progress()
-    common = dict(object="Огнище (M1, 3 around the Идол Перуна), full object sprite: 8 standing stones with резы, log crib, flame",
-                  footprint="2x2 tiles, like the крада (stone ring r 21x10.5); pivot = centre of the footprint",
+    common = dict(object="Огнище (M1, 3 around the Идол Перуна), full object sprite: 8 standing stones with насечки, log crib, flame",
+                  footprint="2x2 tiles, like the костёр (stone ring r 21x10.5); pivot = centre of the footprint",
                   sizes_px=dict(log_crib=24, flame_from_ground=72, licks_sparks_above=True), layer="sorted by pivot y")
     for name, frs, fps, loop, note in (
-            ("ognishche_desecrated", og_d, 10, True, "green (nebyl) flame, sooted stones, резы dark with a green glint"),
+            ("ognishche_desecrated", og_d, 10, True, "green (nebyl) flame, sooted stones, насечки dark with a green glint"),
             ("ognishche_consecrate", og_t, 10, False, "one-shot transition when the hold completes: green dies, bronze/linen "
                                                        "flash, warm flame grows; the last frame == ognishche_consecrated frame 0"),
-            ("ognishche_consecrated", og_c, 10, True, "warm flame, резы glow bronze")):
+            ("ognishche_consecrated", og_c, 10, True, "warm flame, насечки glow bronze")):
         m = dict(common); m.update(state=name.split("_")[1], notes=note,
                                    visible_height_px=_hs(frs, KP.OG_PIV[1]),
                                    state_machine="desecrated --(hero holds Interact 3 s)--> consecrate (6 f) --> consecrated")
@@ -205,7 +205,7 @@ def run(MEAS):
     X.save_sheet(og_p, out, "ognishche_progress", dict(
         object="Consecration progress overlay (draw OVER the desecrated огнище while the hero holds Interact)",
         pivot=list(KP.PR_PIV), fps=0, loop=False, indexing="by progress, not by time: frame = min(11, floor(holdT / 3.0 * 12))",
-        notes="bronze ring on the ground fills clockwise from the front; the 8 резы light up in order; a warm core grows "
+        notes="bronze ring on the ground fills clockwise from the front; the 8 насечки light up in order; a warm core grows "
               "inside the green flame; motes rise. Frame 72x124 (wider/taller than the hearth so the ring fits), "
               "align by pivot. On release before 3 s: hide (or run frames backwards).",
         visible_height_px=_hs(og_p, KP.PR_PIV[1])))
@@ -273,12 +273,12 @@ def run(MEAS):
         draw="over the огнище (same 64x120 cell, same pivot) from the landing; frames 0-3 once, then loop 4-7 while he "
              "is inside (2 s), then stop when krivsha_fire_emerge starts"), "Прыжок в огнище · 4 + петля 4")
     fx_sheet("fx_mara_ash_trail", "fx_mara_ash_trail", F.trail("ash"), F.TR_PIV, 6, True, dict(
-        effect="Пепельный след Мары (bosses.json ashTrail, r 0.6 tile, burns 3 s)", radius_tiles=F.TR_R,
-        draw="ground decal, native size; engine alpha fade stays"), "Пепельный след Мары · 4")
+        effect="Пепельный след Огнеи (bosses.json ashTrail, r 0.6 tile, burns 3 s)", radius_tiles=F.TR_R,
+        draw="ground decal, native size; engine alpha fade stays"), "Пепельный след Огнеи · 4")
     fx_sheet("fx_mara_bolt", "fx_mara_bolt", F.bolt(), F.BO_PIV, 12, True, dict(
-        effect="Огненный сгусток Мары в полёте", draw="drawn facing +x (right); flip when moving left; raise it to the "
+        effect="Огненный сгусток Огнеи в полёте", draw="drawn facing +x (right); flip when moving left; raise it to the "
                                                     "release height (38 px above the ground) and keep a 4x2 ink shadow on the ground"),
-        "Сгусток Мары · 4")
+        "Сгусток Огнеи · 4")
     fx_sheet("fx_mara_bolt_hit", "fx_mara_bolt_hit", F.bolt_hit(), F.BH_PIV, 12, False, dict(
         effect="Попадание сгустка", draw="at the impact point (pivot on the ground)"), "Попадание · 5")
     # «огнище питает Крившу» (GDD v1.8 §5.4): three sheets, all 8 frames @10 = 0.8 s, heal on frame 6
@@ -364,7 +364,7 @@ def scenes(og_d, og_c, og_p, ib, MEAS):
     label(comp, 4, 3, "Идол горит · Кривша 96 · герой 44 · огн. фаза: ореол + след")
     paths["krivsha"] = _save_idx(comp, os.path.join(out, "krivsha_scene_x3.png"))
     _save_gif(frames, os.path.join(out, "krivsha_scene.gif"), 8)
-    # ---- 2. Мара: glide with ash trail, cast, bolt, hit ---------------------------------------
+    # ---- 2. Огнея: glide with ash trail, cast, bolt, hit ---------------------------------------
     W, H = 300, 110
     walk = [MR.frame(MR.walk, i % 6, "se") for i in range(6)]
     cast = [MR.frame(MR.cast, i, "se") for i in range(6)]
@@ -386,7 +386,7 @@ def scenes(og_d, og_c, og_p, ib, MEAS):
         _paste(g, hero_l, 266 - 32, 92 - 56)
         frames.append(g)
     comp = frames[3].copy()
-    label(comp, 4, 3, "Мара 48: пепел. след, сгусток · герой 44")
+    label(comp, 4, 3, "Огнея 48: пепел. след, сгусток · герой 44")
     paths["mara"] = _save_idx(comp, os.path.join(out, "mara_scene_x3.png"))
     _save_gif(frames, os.path.join(out, "mara_scene.gif"), 8)
     # ---- 3. капище: idol + 3 огнища (desecrated / consecrating / consecrated) ---------------------
@@ -436,7 +436,7 @@ def scenes(og_d, og_c, og_p, ib, MEAS):
     label(comp, 4, 3, "Огнище питает: поток · поглощение · вспышка (+15%)")
     paths["feed"] = _save_idx(comp, os.path.join(out, "krivsha_feed_scene_x3.png"))
     _save_gif(frames, os.path.join(out, "krivsha_feed_scene.gif"), 10)
-    # ---- 5. анчутки: стая Залесья + свита Мары, рядом герой для масштаба -------------------------
+    # ---- 5. анчутки: стая Залесья + свита Огнеи, рядом герой для масштаба -------------------------
     W, H = 300, 110
     an_w = [AN.frame(AN.walk, i, "se") for i in range(6)]
     an_i = [AN.frame(AN.idle, i, "se") for i in range(4)]
@@ -446,7 +446,7 @@ def scenes(og_d, og_c, og_p, ib, MEAS):
     frames = []
     for i in range(12):
         g = ground(W, H, seed=14)
-        for k, (ax, ay) in enumerate(((22, 70), (40, 92), (58, 76))):           # retinue behind Мара
+        for k, (ax, ay) in enumerate(((22, 70), (40, 92), (58, 76))):           # retinue behind Огнея
             _shadow(g, ax, ay, 5, 2)
             _paste(g, an_w[(i + k * 2) % 6], ax - AN.PIV[0], ay - AN.PIV[1])
         _shadow(g, 92, 84, 9, 3.5)
@@ -462,7 +462,7 @@ def scenes(og_d, og_c, og_p, ib, MEAS):
         _paste(g, hero_l, 268 - 32, 92 - 56)
         frames.append(g)
     comp = frames[7].copy()
-    label(comp, 4, 3, "Анчутки 26: свита Мары · стая · бросок угля · герой 44")
+    label(comp, 4, 3, "Анчутки 26: свита Огнеи · стая · бросок угля · герой 44")
     paths["anchutka"] = _save_idx(comp, os.path.join(out, "anchutka_scene_x3.png"))
     _save_gif(frames, os.path.join(out, "anchutka_scene.gif"), 8)
     MEAS["m1b_scenes"] = {k: os.path.relpath(v, ROOT) for k, v in paths.items()}

@@ -1,11 +1,11 @@
 {
- "effect": "Граница безопасной зоны: реза на земле (2:1)",
+ "effect": "Граница безопасной зоны: насечка на земле (2:1)",
  "state": "dim",
  "pivot": [
   6,
   4
  ],
- "frames_are": "4 rune variants, not rotated",
+ "frames_are": "4 notch-group variants (3, 2, 4, 2 wide), not rotated",
  "fps": 0,
  "loop": false,
  "layer": "ground decal under characters",

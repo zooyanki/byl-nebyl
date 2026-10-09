@@ -18,7 +18,8 @@ import { Audio } from './systems/audio.js';
 import { WorldRenderer } from './render/world.js';
 import { Minimap } from './render/minimap.js';
 import { drawHud, drawHudTooltip, drawCursor, isOverHud, beltSlotAt, buttonAt, hudSlotAt, BTN } from './render/hud.js';
-import { drawDeath, drawPause, overDeathButton, pauseButtonAt } from './render/screens.js';
+import { drawDeath, drawPause, overDeathButton, pauseButtonAt, drawMainMenu, mainMenuAt } from './render/screens.js';
+import { writeSave, readSave, applySave, applyZoneDone, SAVE_KEY } from './systems/save.js';
 import { InventoryUI, compareLines } from './ui/windows.js';
 import { TownUI } from './ui/town.js';
 import { Inventory } from './systems/inventory.js';
@@ -43,6 +44,8 @@ import { enemyBark } from './entities/boss.js';
 const LS_LABELS = 'byl_nebyl_labels';
 
 /** Герой занят действием, которое не даёт начать навык ('skill') или рывок ('dash') — те же условия, что в hero.useSkill/dash. */
+const QUEUED_NOTICE = /^(rew|m2|quest|mission|qn)/;   // m1f P1.6: уведомления, которые ждут своей очереди
+
 function heroBusy(h, what) {
   if (h.dashing || h.stun > 0) return true;
   if (!h.action) return false;
@@ -61,6 +64,8 @@ export class Game {
     this.fps = 60;
     this.labelsAlways = false;
     try { this.labelsAlways = localStorage.getItem(LS_LABELS) === '1'; } catch (e) { /* нет localStorage */ }
+    this.ctrlHintSeen = false;   // m1f P1.5: подсказка управления — только при первом входе
+    try { this.ctrlHintSeen = localStorage.getItem('byl_ctrl_hint_seen') === '1'; } catch (e) { /* нет localStorage */ }
     this.showMinimap = true;
     this.counters = { hitStop: 0, shake: 0, backoff: 0, casts: {}, cdBlocked: 0, barks: 0, barksSuppressed: 0 };
     this.t = t;
@@ -70,10 +75,57 @@ export class Game {
     // GDD §4.1, QA B-01: потеря фокуса или скрытая вкладка — пауза
     window.addEventListener('blur', () => { if (this.state === 'play') this.paused = true; });
     document.addEventListener('visibilitychange', () => { if (document.hidden && this.state === 'play') this.paused = true; });
-    this.reset();
+    // m1i (П.15): главное меню при запуске; ?seed=N (автотесты, отладка) — сразу в игру, ?menu=1 / ?menu=0 — принудительно.
+    // Мир под меню собирается заранее (фон), но автосейв при этом не пишется — слот не затирается до выбора в меню.
+    const qs = new URLSearchParams(location.search), mp = qs.get('menu');
+    const menu = mp === '1' || (mp !== '0' && !qs.has('seed'));
+    this.reset({ load: menu });
+    this._loading = false;
+    if (menu) this.openMainMenu();
   }
 
-  reset() {
+  // --- m1i (П.15, GDD §11): главное меню и один слот (systems/save.js)
+  openMainMenu() { this.state = 'menu'; this.paused = false; this.menu = { slot: readSave(), confirm: false }; }
+  /** Автосейв (вход в Ладогу, сдача миссии). Во время загрузки слота — не пишем. */
+  autosave(reason) { if (this._loading) return false; return writeSave(this, reason); }
+  /** Загрузить слот: свежая игра + состояние из слота, всегда в Ладоге. */
+  loadGame() {
+    const d = readSave();
+    if (!d) return false;
+    this.reset({ load: true });
+    applySave(this, d);
+    this._loading = false;
+    if (this.town) this.town.onEnter();
+    this.syncExitWalls();
+    this.state = 'play';
+    this.counters.loads = (this.counters.loads || 0) + 1;
+    return true;
+  }
+  newGame() {
+    try { sessionStorage.removeItem('byl_m1_gromovnik'); } catch (e) { /* */ }
+    this.reset();
+    this.state = 'play';
+  }
+  zoneName(id) { return (CFG.zones[id] && CFG.zones[id].name) || id; }
+  updateMenu() {
+    const inp = this.input, M = this.menu;
+    let b = inp.leftPressed ? mainMenuAt(inp, M) : null;
+    if (!b && inp.pressed('Enter')) b = M.confirm ? 'yes' : M.slot ? 'continue' : 'new';
+    if (!b && inp.pressed('Escape') && M.confirm) b = 'no';
+    if (!b) return;
+    this.audio.play('ui');
+    if (b === 'continue') this.loadGame();
+    else if (b === 'new') { if (M.slot) M.confirm = true; else this.newGame(); }
+    else if (b === 'yes') this.newGame();
+    else if (b === 'no') M.confirm = false;
+  }
+
+  reset(opts = {}) {
+    this._loading = !!opts.load;
+    this.savedZoneDone = null;
+    // GDD v1.12.2 §11: id из bosses.json, павшие навсегда. bossesDead — все павшие (пишется в слот bosses.dead);
+    // bossesDeadLoaded — павшие по загруженному слоту: только они не появляются при постройке зоны (в сессии зоны и так живут)
+    this.bossesDead = new Set(); this.bossesDeadLoaded = new Set();
     this.time = 0;
     this.state = 'play';
     this.paused = false;
@@ -170,7 +222,14 @@ export class Game {
     // повтор глушим, только если на экране уже это же сообщение (QA B-19)
     if (key && this._noticeKeys[key] && this.time - this._noticeKeys[key] < 1.2 && this.notice && this.notice.text === text) return;
     if (key) this._noticeKeys[key] = this.time;
-    this.notice = { text, color, t: this.time, dur: dur || (key === 'tut' || key === 'tip' || key === 'locked' || key === 'relic' ? 3.5 : 1.6) };
+    const N = { text, color, t: this.time, key, dur: dur || (key === 'tut' || key === 'tip' || key === 'locked' || key === 'relic' ? 3.5 : 1.6) };
+    // m1f P1.5: подсказки обучения и советы — в своём месте (справа, под мини-картой), не поверх трекера и «Блок»
+    if (key === 'tut' || key === 'tip') { this.hint = N; return; }
+    // m1f P1.6: награды, цели, миссия — очередью, по одной (раньше 4 уведомления награды перебивали друг друга)
+    if (key && QUEUED_NOTICE.test(key) && this.notice && this.time - this.notice.t < (this.notice.dur || 1.6) && QUEUED_NOTICE.test(this.notice.key || '')) {
+      (this.noticeQ = this.noticeQ || []).push(N); return;
+    }
+    this.notice = N;
   }
 
   // --- события
@@ -180,7 +239,7 @@ export class Game {
     h.kills++;
     const xp = e.xp > 0 ? Math.max(1, Math.round(e.xp * xpPenalty(h.level, e.mlvl))) : 0;   // призванные Кривши — 0 (GDD v1.8)
     if (!h.dead && xp > 0) {
-      this.fx.text(e.x, e.y, '+' + xp + ' опыта', PAL.bronze_lt, e.def.height + 16 + (this._xpStack = ((this._xpStack || 0) + 1) % 3) * 9, { dur: 1.1 });
+      this.fx.text(e.x, e.y, t('proto.fx.xp', { n: String(xp) }), PAL.bronze_lt, e.def.height + 16 + (this._xpStack = ((this._xpStack || 0) + 1) % 3) * 9, { dur: 1.1 });
       h.gainXp(xp, this);
     }
     this.audio.play('kill');
@@ -192,7 +251,7 @@ export class Game {
       if (!f || o.dead || o === e || o.state === 'flee' || o.state === 'idle') continue;
       if (Math.hypot(o.x - e.x, o.y - e.y) <= f.radius && Math.random() < f.chance) {
         o.scare(o.x - h.x, o.y - h.y, f.time);
-        this.fx.text(o.x, o.y, 'И-и-и!', PAL.nebyl, o.def.height + 10, { dur: 0.8 });
+        this.fx.text(o.x, o.y, t('proto.fx.squeal'), PAL.nebyl, o.def.height + 10, { dur: 0.8 });
       }
     }
   }
@@ -212,10 +271,12 @@ export class Game {
       for (const o of this.enemies) if (!o.dead && o !== e && o.pack === e.pack && o.def.fear && o.state !== 'idle') { o.scare(o.x - this.hero.x, o.y - this.hero.y, o.def.fear.time); }
     }
     if (e.boss) this.onBossKilled(e);
+    // GDD v1.12.2 §11: гибель босса / былинного врага из bosses.json (Кривша, Огнея-mara) — навсегда, в слот (bosses.dead)
+    if (CFG.bosses[e.kind] && (e.boss || e.elite === 'bylina') && !e.summoned) this.bossesDead.add(e.kind);
   }
   onLevelUp(h) {
     this.log.add(t('ui.sys.level_up', { n: h.level }) + ' ' + t('ui.sys.level_points') + ' (C, T)', PAL.bronze_hi);
-    this.fx.text(h.x, h.y, 'Новый уровень!', PAL.bronze_hi, 60, { dur: 1.8, big: true });
+    this.fx.text(h.x, h.y, t('proto.fx.level_up'), PAL.bronze_hi, 60, { dur: 1.8, big: true });
     this.fx.rise(h.x, h.y, PAL.bronze_hi, 26, 40);
     this.audio.play('levelup');
   }
@@ -232,7 +293,7 @@ export class Game {
     this.mapOverlay = false;
     this.combat.projectiles = this.combat.projectiles.filter((p) => p.hostile);   // снаряды героя гаснут (QA B-03)
     this.audio.play('death');
-    this.log.add('Ратибор пал…' + (lost ? ' ' + silverText(lost, 'lost') + '.' : ''), PAL.red_lt);
+    this.log.add(t('proto.log.hero_fell') + (lost ? ' ' + silverText(lost, 'lost') + '.' : ''), PAL.red_lt);
     this.deathInfo.line = 'death.line' + (1 + Math.floor(Math.random() * 5));
   }
   /** Возвращение у крады (замена Ладоги в однозонном прототипе): полные жизнь и Ярь, 2 с неуязвимости.
@@ -279,7 +340,7 @@ export class Game {
     this.audio.play('respawn');
     this.log.add(t(RP.log), PAL.flame);
     this.applyChad();
-    if (back) this.log.add('Нечисть снова собралась в округе: ' + back + ' ' + plural(back, 'враг', 'врага', 'врагов') + '.', PAL.nebyl);
+    if (back) this.log.add(t('proto.log.repopulated', { n: String(back), word: plural(back, 'plural.vrag') }), PAL.nebyl);
   }
   // стаи добираются до исходного состава; трупы убираются
   repopulate() {
@@ -344,18 +405,18 @@ export class Game {
     else if (key === 'M') { this.mapOverlay = !this.mapOverlay; this.audio.play('ui'); }
     else if (key === 'T') this.ui.toggleSkills();
     else if (key === 'ESC') { this.paused = true; this.audio.play('ui'); }
-    else { this.notify(BTN.labels[i] + ' — в следующей итерации', PAL.mist, 'soon'); this.audio.play('ui'); }
+    else { this.notify(t('proto.sys.soon', { what: BTN.labels[i] }), PAL.mist, 'soon'); this.audio.play('ui'); }
   }
 
   handleInput(dt) {
     const inp = this.input, h = this.hero, ui = this.ui;
     // переключатели, работающие всегда
-    if (inp.pressed('KeyN')) { const m = this.audio.toggle(); this.notify(m ? 'Звук выключен' : 'Звук включён', PAL.mist, 'snd'); }
+    if (inp.pressed('KeyN')) { const m = this.audio.toggle(); this.notify(t(m ? 'proto.sys.sound_off' : 'proto.sys.sound_on'), PAL.mist, 'snd'); }
     if (inp.pressed('KeyZ')) this.toggleLabels();
     if (this.state === 'dead') {
       const D = STATS.death;
       if ((this.deathT > (D.buttonDelay ?? 1.5) && inp.leftPressed && overDeathButton(inp)) ||
-          (this.deathT > (D.keyDelay ?? 2.5) && (inp.pressed('Enter') || inp.pressed('Space')))) this.respawnHero();
+          (this.deathT > (D.keyDelay ?? 2.5) && inp.pressed('Enter'))) this.respawnHero();   // m1f P1.7: Пробел — рывок, не воскрешает
       return;
     }
     if (inp.pressed('Escape')) {
@@ -399,11 +460,12 @@ export class Game {
         if (r !== 'busy') {
           this.dashBuf = null;
           if (r === 'ok') this.counters.dashBufferedFired = (this.counters.dashBufferedFired || 0) + 1;
-          else if (r === 'cd') { this.counters.cdBlocked++; this.audio.play('error'); }
+          else if (r === 'cd') { this.counters.cdBlocked++; this.denyRmb('cd'); }
+          else if (r === 'yar' || r === 'none') this.denyRmb(r);
         }
       }
     }
-    if (inp.pressed('KeyJ')) this.notify('Летопись — в следующей итерации', PAL.mist, 'soon');
+    if (inp.pressed('KeyJ')) this.notify(t('proto.sys.soon', { what: t('ui.journal.title') }), PAL.mist, 'soon');
     ['Digit1', 'Digit2', 'Digit3', 'Digit4'].forEach((k, i) => { if (inp.pressed(k)) h.drink(i, this); });
 
     // окна забирают клики на себя
@@ -421,7 +483,7 @@ export class Game {
       else if (this.overUi) {   // клик по HUD: F-ячейка — навык на ПКМ; ячейка ЛКМ — «Сшибка» ↔ обычный удар
         const hs = hudSlotAt(inp.mx, inp.my);
         if (hs && hs.kind === 'f') this.pressF(hs.i);
-        else if (hs && hs.kind === 'lmb') { h.lmb = h.lmb ? null : (rankOf(h, 'sshibka') ? 'sshibka' : null); this.audio.play('ui'); this.notify('ЛКМ: ' + (h.lmb ? SKILLS[h.lmb].name : 'обычный удар'), PAL.bronze_lt, 'lmb'); }
+        else if (hs && hs.kind === 'lmb') { h.lmb = h.lmb ? null : (rankOf(h, 'sshibka') ? 'sshibka' : null); this.audio.play('ui'); this.notify(t('proto.sys.lmb_set', { skill: h.lmb ? SKILLS[h.lmb].name : t('proto.sys.lmb_basic') }), PAL.bronze_lt, 'lmb'); }
       }
       else if (this.hoverLabel || this.hoverGround) { h.pickup(this.hoverLabel || this.hoverGround); this.leftMode = 'pickup'; }
       else if (this.hoverEnemy) {
@@ -464,22 +526,32 @@ export class Game {
         if (r === 'ok') { this.rmbBuf = null; if (tg) this.lastTarget = tg; }
         else if (r === 'busy' && inp.rightPressed) { this.rmbBuf = { t: 0.3, id, wx, wy, tg }; this.dashBuf = null; this.dropQueuedLmb(); this.counters.buffered = (this.counters.buffered || 0) + 1; }
         else if (r === 'town' && inp.rightPressed) { this.notify(t('ui.error.town_attack'), PAL.red_lt, 'townatk'); this.audio.play('error'); }
-        else if (r === 'cd' && inp.rightPressed) { this.counters.cdBlocked++; this.audio.play('error'); }
+        else if (r === 'cd' && inp.rightPressed) { this.counters.cdBlocked++; this.denyRmb('cd'); }
+        else if ((r === 'yar' || r === 'none') && inp.rightPressed) this.denyRmb(r);
       }
     } else if (this.rmbBuf) {
       // QA B-02: буфер живёт весь замах/каст (таймер стоит, пока герой занят) и ещё 0,3 с после
       const b = this.rmbBuf;
       if (!heroBusy(h, 'skill')) b.t -= dt;
-      if (b.t <= 0 || h.dead) this.rmbBuf = null;
+      if (b.t <= 0 || h.dead) { this.rmbBuf = null; if (!h.dead) this.denyRmb('late'); }
       else if (!heroBusy(h, 'skill')) {
         const r = h.useSkill(this, b.id, b.tg && !b.tg.dead ? b.tg.x : b.wx, b.tg && !b.tg.dead ? b.tg.y : b.wy, b.tg && !b.tg.dead ? b.tg : null);
         if (r !== 'busy') {
           this.rmbBuf = null;
           if (r === 'ok') this.counters.bufferedFired = (this.counters.bufferedFired || 0) + 1;
-          else if (r === 'cd') { this.counters.cdBlocked++; this.audio.play('error'); }
+          else if (r === 'cd') { this.counters.cdBlocked++; this.denyRmb('cd'); }
+          else if (r === 'yar' || r === 'none') this.denyRmb(r);
         }
       }
     }
+  }
+
+  /** m1f P0.4: ПКМ отказал (why: 'yar' | 'cd' | 'none' | 'late') — вспышка на иконке ПКМ и звук ошибки (не чаще раза в 0,25 с). */
+  denyRmb(why) {
+    const was = this.rmbDeny && this.rmbDeny.t > 0.35;
+    this.rmbDeny = { t: 0.6, why };
+    this.counters.rmbDenied = (this.counters.rmbDenied || 0) + 1;
+    if (!was) this.audio.play('error');
   }
 
   /** ПКМ/Пробел нажаты после ЛКМ в том же замахе — побеждает последнее: команда ЛКМ снимается. */
@@ -502,7 +574,7 @@ export class Game {
       return;
     }
     const id = h.bar[k];
-    if (id && h.setRmb(id)) { this.audio.play('ui'); this.notify('ПКМ: ' + SKILLS[id].name, PAL.bronze_lt, 'rmb'); }
+    if (id && h.setRmb(id)) { this.audio.play('ui'); this.notify(t('proto.sys.rmb_set', { skill: SKILLS[id].name }), PAL.bronze_lt, 'rmb'); }
     else this.audio.play('error');
   }
   // колесо мыши — перебор навыков панели на ПКМ (GDD §4.1)
@@ -519,22 +591,32 @@ export class Game {
     if (last != null && this.time - last < 15) { this.counters.barksSuppressed++; return false; }
     this._barks[key] = this.time;
     this.counters.barks++;
-    this.fx.text(actor.x, actor.y, text || t(key), PAL.linen, (actor.def ? actor.def.height : 46) + 12, { dur: 2.6 });
+    // m1f P1.6: реплики не наслаиваются — пока над кем-то висит реплика или ждёт очередь диалога, эта встаёт в очередь
+    if (this.time < (this.speechUntil || 0) || (this.dialogQ && this.dialogQ.length)) {
+      this.dialogQ.push({ who: null, actor, text: text || t(key), logged: true });
+      this.counters.barksQueued = (this.counters.barksQueued || 0) + 1;
+      return true;
+    }
+    this.fx.text(actor.x, actor.y, text || t(key), PAL.linen, (actor.def ? actor.def.height : 46) + 12, { dur: 2.6, speech: true });
+    this.speechUntil = this.time + 2.6;
     return true;
   }
 
   toggleLabels() {
     this.labelsAlways = !this.labelsAlways;
     try { localStorage.setItem(LS_LABELS, this.labelsAlways ? '1' : '0'); } catch (e) { /* нет localStorage */ }
-    this.notify(this.labelsAlways ? 'Подписи добычи: всегда' : 'Подписи добычи: по Alt', PAL.mist, 'lbl');
+    this.notify(t(this.labelsAlways ? 'proto.labels.always' : 'proto.labels.alt'), PAL.mist, 'lbl');
   }
 
   update(dt) {
+    if (this.state === 'menu') { this.updateMenu(); return; }
     this.computeHover();
     this.handleInput(dt);
     this.updateCamera();
     if (this.paused) return;
     this.time += dt;
+    if (this.rmbDeny && this.rmbDeny.t > 0) this.rmbDeny.t -= dt;
+    if (this.noticeQ && this.noticeQ.length && (!this.notice || this.time - this.notice.t >= (this.notice.dur || 1.6))) { this.notice = this.noticeQ.shift(); this.notice.t = this.time; }
     // тряска
     if (this.shakeT > 0) {
       this.shakeT = Math.max(0, this.shakeT - dt);
@@ -587,6 +669,7 @@ export class Game {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.imageSmoothingEnabled = false;
     this.renderer.render(ctx, this);
+    if (this.state === 'menu') { drawMainMenu(ctx, this); drawCursor(ctx, this); return; }
     if (this.mapOverlay) this.minimap.drawOverlay(ctx, this);
     drawHud(ctx, this);
     this.ui.draw(ctx);

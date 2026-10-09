@@ -55,8 +55,8 @@ export function eliteTitle(e) {
   const g = e.fem ? '.f' : '.m';
   const mods = (e.mods || []).map((m) => RU['ui.target.mod.' + m + g] || RU['ui.target.mod.' + m] || m);
   if (e.elite === 'leader') return [t('ui.target.leader'), ...mods].join(' · ');
-  if (e.elite === 'champion') return [RU['ui.target.champion' + g] || 'Матёрый', ...mods].join(' · ');
-  if (e.elite === 'bylina') return ['Былинный враг', ...mods].join(' · ');
+  if (e.elite === 'champion') return [RU['ui.target.champion' + g] || t('ui.target.champion.m'), ...mods].join(' · ');
+  if (e.elite === 'bylina') return [t('proto.target.bylina'), ...mods].join(' · ');
   return null;
 }
 

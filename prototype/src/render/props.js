@@ -5,7 +5,7 @@ import { PAL } from '../palette.js';
 import { HALF_W, HALF_H, TILE_W, TILE_H } from '../config.js';
 import { w2s } from '../core/iso.js';
 import { rect, poly, strokePoly, isoBox, disc, ellipse, figure } from './shapes.js';
-import { drawRestSource } from './rest_fx.js';
+import { drawRestSource, drawFxFrame } from './rest_fx.js';
 import { drawHearthArt, drawPerunArt } from './boss_art.js';
 
 // toS(x,y) -> [sx,sy] экранные координаты мировой точки
@@ -20,6 +20,7 @@ export function drawProp(ctx, p, toS, time) {
   if (p.type === 'cart') return cart(ctx, p, toS);
   if (p.type === 'anvil') return anvil(ctx, p, toS);
   if (p.type === 'relic') return relic(ctx, p, toS, time);
+  if (p.type === 'stump') { const [x, y] = toS(p.x + 0.5, p.y + 0.5); if (!drawFxFrame(ctx, 'stump', p.variant || 0, x, y, { flip: p.seed > 0.5 })) ashPile(ctx, p, toS); return; }   // горелый пень (GDD v1.11); без спрайта — кучка пепла
   if (!p._spr) p._spr = p.shared ? sharedSprite(p) : bake(p);   // остальное статично — запекаем в спрайт
   const [sx, sy] = toS(p.x, p.y);
   ctx.drawImage(p._spr.c, sx - p._spr.ox, sy - p._spr.oy);
@@ -49,9 +50,9 @@ export function propCovers(p, toS, r) {
 
 export function propHeight(p) {
   if (p.type === 'tree') return p.birch ? 132 : 166;
-  if (p.type === 'palisade') return p.gatepost ? 100 : 86;
+  if (p.type === 'palisade') return p.tyn ? 44 : p.gatepost ? 100 : 86;   // m1i: низкий тын Залесья — как стена (44)
   if (p.type === 'fire' && p.krada) return 112;       // спрайт fx_rest_krada: 120 px, опора на 108
-  return { rock: 36, wall: 36, izba: 132, fire: 80, hearth: 56, perun: 120, relic: 30, idol: 66, well: 64, churstone: 50, gate: 80, chest: 22, body: 12, bush: 24, ladya: 28, cart: 24, anvil: 16 }[p.type] || 40;
+  return { rock: 36, wall: 44, izba: 132, fire: 80, hearth: 56, perun: 120, relic: 30, idol: 66, well: 64, churstone: 50, gate: 80, chest: 22, body: 12, bush: 24, ladya: 28, cart: 24, anvil: 16, stump: 18 }[p.type] || 40;
 }
 
 function drawRaw(ctx, p, toS) {
@@ -132,6 +133,30 @@ function birch(ctx, p, toS) {
   rect(ctx, x - 1, cy + 4, 2, 14, PAL.birch);
 }
 
+// m1i (critics_m1f П.16): камни — тёплый серо-оливковый вместо холодного slate: грани — дизеринг двух цветов палитры,
+// шум (тёмные и светлые крапины) и мох на верхушке и по верхнему краю освещённой грани. Только палитра v2, без нового арта.
+const DITHER = new Map();
+function dither(ctx, a, b) {
+  const key = a + b;
+  let pat = DITHER.get(key);
+  if (!pat) {
+    const c = document.createElement('canvas'); c.width = 2; c.height = 2;
+    const g = c.getContext('2d');
+    g.fillStyle = a; g.fillRect(0, 0, 2, 2); g.fillStyle = b; g.fillRect(0, 0, 1, 1); g.fillRect(1, 1, 1, 1);
+    pat = { c, pats: new WeakMap() }; DITHER.set(key, pat);
+  }
+  let pt = pat.pats.get(ctx);
+  if (!pt) { pt = ctx.createPattern(pat.c, 'repeat'); pat.pats.set(ctx, pt); }
+  return pt;
+}
+function fillPoly(ctx, pts, style) {
+  ctx.fillStyle = style; ctx.beginPath();
+  pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.fill();
+}
+const hsh = (x, y, s) => { const v = Math.sin(x * 127.1 + y * 311.7 + s * 74.7) * 43758.5453; return v - Math.floor(v); };
+/** Цвета камня (для автотеста m1i): верх, освещённая грань, теневые грани, мох. */
+export const STONE = { top: [PAL.birch, PAL.slate_lt], lit: [PAL.moss_lt, PAL.slate_lt], shade: [PAL.slate, PAL.wood], back: [PAL.slate_dk, PAL.wood_dk], moss: [PAL.moss, PAL.moss_lt] };
+
 function rock(ctx, p, toS) {
   // валун: усечённая «пирамида» — верх меньше основания, чтобы не походило на ящик
   const s = p.size, ins = 0.08, k = 0.28 + p.seed * 0.12;
@@ -141,47 +166,78 @@ function rock(ctx, p, toS) {
   const top = [toS(a0, b0), toS(a1, b0), toS(a1, b1), toS(a0, b1)].map(([x, y]) => [x, y - h]);
   const [T, R, B, L] = base, [t, r, b, l] = top;
   poly(ctx, [T, R, B, L], PAL.ink);
-  poly(ctx, [L, B, b, l], PAL.slate);
-  poly(ctx, [B, R, r, b], PAL.slate_dk);
-  poly(ctx, [T, R, r, t], PAL.slate_dk);
-  poly(ctx, [L, T, t, l], PAL.slate_lt);
-  poly(ctx, [t, r, b, l], PAL.slate_lt);
-  strokePoly(ctx, [l, t, r], PAL.mist, false);
+  fillPoly(ctx, [L, B, b, l], dither(ctx, ...STONE.lit));
+  fillPoly(ctx, [B, R, r, b], dither(ctx, ...STONE.shade));
+  fillPoly(ctx, [T, R, r, t], dither(ctx, ...STONE.back));
+  fillPoly(ctx, [L, T, t, l], dither(ctx, ...STONE.lit));
+  fillPoly(ctx, [t, r, b, l], dither(ctx, ...STONE.top));
+  // шум: крапины по силуэту
+  const hull = [L, l, t, r, R, B];
+  const xs = hull.map((q) => q[0]), ys = hull.map((q) => q[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  ctx.save(); ctx.beginPath(); hull.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.clip();
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    const v = hsh(x, y, p.seed * 13 + p.x);
+    if (v < 0.06) rect(ctx, x, y, 1, 1, PAL.slate_dk);
+    else if (v > 0.965) rect(ctx, x, y, 1, 1, PAL.birch);
+  }
+  ctx.restore();
+  // мох: пятна на верхушке и потёки по верхнему краю освещённой грани
+  ctx.save(); ctx.beginPath(); [t, r, b, l].forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath();
+  [L, B, b, l].forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.clip();
+  const n = 3 + Math.round(p.seed * 4) + (s > 1 ? 4 : 0);
+  for (let i = 0; i < n; i++) {
+    const u = hsh(i, p.x, p.seed), w = hsh(p.y, i, p.seed + 1);
+    const mx = Math.round(l[0] + (r[0] - l[0]) * u), my = Math.round(t[1] + (b[1] + 3 - t[1]) * w);
+    const sz = 2 + Math.round(hsh(i, i, p.seed) * (s > 1 ? 4 : 2));
+    rect(ctx, mx - sz, my, sz * 2, Math.max(1, sz - 1), PAL.moss);
+    rect(ctx, mx - sz + 1, my, sz, 1, PAL.moss_lt);
+  }
+  ctx.restore();
+  strokePoly(ctx, [l, t, r], PAL.birch, false);
   strokePoly(ctx, [T, R, B, L], PAL.ink);
   strokePoly(ctx, [L, l, t], PAL.ink, false);
   strokePoly(ctx, [R, r], PAL.ink, false);
   strokePoly(ctx, [B, b], PAL.night, false);
-  if (s > 1) { const [mx, my] = toS(p.x + s / 2, p.y + s / 2); rect(ctx, mx - 6, my - h + 2, 5, 2, PAL.moss); rect(ctx, mx - 4, my - h + 1, 3, 1, PAL.moss_lt); }
 }
 
-function wall(ctx, p, toS) {
-  // футпринт кратен ½ тайла (тонкая стена развалин — ½ тайла толщиной)
-  const [fx, fy, fw, fh] = p.fp;
-  const [ox, oy] = toS(fx, fy);
-  const h = 32 - Math.round(p.seed * 6);            // полуэтаж 32 (развалины, местами осыпалось)
-  const b = isoBox(ctx, ox, oy, fw, fh, h, PAL.mist, PAL.slate, PAL.slate_dk);
-  for (let k = 6; k < h; k += 6) {
-    poly(ctx, [[b.L[0], b.L[1] - k], [b.B[0], b.B[1] - k], [b.B[0], b.B[1] - k + 1], [b.L[0], b.L[1] - k + 1]], PAL.slate_dk);
-    poly(ctx, [[b.B[0], b.B[1] - k], [b.R[0], b.R[1] - k], [b.R[0], b.R[1] - k + 1], [b.B[0], b.B[1] - k + 1]], PAL.night);
-  }
-  rect(ctx, b.B[0] - 3, b.B[1] - h + 3, 3, 1, PAL.slate_lt);
+// m1i (critics_m1f П.16): стены Залесья — той же логикой, что тын Ладоги (palisade): брёвна с заострёнными верхушками
+// и обвязкой; ось и линия брёвен — по футпринту стены (½ тайла), высота — прежняя (полуэтаж 32, местами ниже).
+export function wallAsTyn(p) {
+  const [fx, fy, fw, fh] = p.fp, ys = fh > fw;
+  return { ...p, x: ys ? fx + fw / 2 - 0.5 : fx, y: ys ? fy : fy + fh / 2 - 0.5, axis: ys ? 'y' : 'x', gatepost: false, tynH: 32 - Math.round(p.seed * 6), bands: [10, 22] };
+}
+function wall(ctx, p, toS) { palisade(ctx, wallAsTyn(p), toS); }
+/** Высоты трёх кольев звена (px, без острия). Низкий плетень-тын Залесья (p.tynH): строго TYN_MIN–TYN_MAX — герой (≈46 px)
+ *  виден из-за него (дизайнер, m1i); высокий тын посада Ладоги и капища — 80 (воротные столбы 96), как было. */
+export const TYN_MIN = 26, TYN_MAX = 32;
+export function stakeHeights(p) {
+  p = lowTyn(p);
+  const H = p.tynH || (p.gatepost ? 96 : 80);
+  return [0.17, 0.5, 0.83].map((t) => {
+    const j = Math.round(((t + 0.5) * 13 + p.seed * 7) % (p.tynH ? 5 : 8));
+    return p.tynH ? Math.max(TYN_MIN, Math.min(TYN_MAX, H - j + 2)) : H - j + (p.gatepost ? 0 : 4);
+  });
 }
 
+/** Низкий тын Залесья (p.tyn): высота кольев TYN_MIN–TYN_MAX, обвязка на 10 и 22 — как у стен (wallAsTyn). */
+export function lowTyn(p) { return p.tyn && !p.tynH ? { ...p, gatepost: false, tynH: 32 - Math.round(p.seed * 6), bands: [10, 22] } : p; }
 function palisade(ctx, p, toS) {
+  p = lowTyn(p);
   const ys = p.axis === 'y';
   const logs = [0.17, 0.5, 0.83].map((t) => (ys ? [0.5, t] : [t, 0.5]));   // шаг ≈ 0,31–0,33 тайла
-  const H = p.gatepost ? 96 : 80;
-  for (const [fx, fy] of logs) {
+  const hs = stakeHeights(p);
+  logs.forEach(([fx, fy], i) => {
     const [x, y] = toS(p.x + fx, p.y + fy);
-    const hh = H - Math.round(((fx + fy) * 13 + p.seed * 7) % 8) + (p.gatepost ? 0 : 4);
+    const hh = hs[i];
     figure(ctx, [{ x: x - 3, y: y - hh, w: 6, h: hh, c: PAL.wood }]);
     rect(ctx, x - 3, y - hh, 2, hh, PAL.wood_md);
     rect(ctx, x + 2, y - hh, 1, hh, PAL.wood_dk);
     poly(ctx, [[x - 4, y - hh], [x + 4, y - hh], [x, y - hh - 6]], PAL.ink);
     poly(ctx, [[x - 3, y - hh], [x + 3, y - hh], [x, y - hh - 5]], PAL.wood_lt);
-  }
+  });
   // обвязка на 24 и 64
-  for (const z of [24, 64]) {
+  for (const z of p.bands || [24, 64]) {
     const a = toS(p.x + (ys ? 0.5 : 0), p.y + (ys ? 0 : 0.5)), b = toS(p.x + (ys ? 0.5 : 1), p.y + (ys ? 1 : 0.5));
     poly(ctx, [[a[0], a[1] - z], [b[0], b[1] - z], [b[0], b[1] - z + 2], [a[0], a[1] - z + 2]], PAL.wood_dk);
   }
@@ -210,12 +266,14 @@ function izba(ctx, p, toS) {
     poly(ctx, [[box.B[0], box.B[1] - k], [box.R[0], box.R[1] - k], [box.R[0], box.R[1] - k + 1], [box.B[0], box.B[1] - k + 1]], PAL.wood_dk);
   }
   const P = (x, y, z) => { const [a, b] = toS(x, y); return [a, b - z]; };
+  // m1f: p.door === '+x' — дверь на торце +X (к колодцу), окно переезжает на фасад +Y
+  const dx = p.door === '+x';
   // окно 12×12 на высоте 28–44 (торец +X), светится
-  const w0 = P(p.x + s, p.y + 1.2, 28), w1 = P(p.x + s, p.y + 1.95, 28);
+  const w0 = dx ? P(p.x + 1.2, p.y + s, 28) : P(p.x + s, p.y + 1.2, 28), w1 = dx ? P(p.x + 1.95, p.y + s, 28) : P(p.x + s, p.y + 1.95, 28);
   poly(ctx, [[w0[0], w0[1] + 1], [w1[0], w1[1] + 1], [w1[0], w1[1] - 17], [w0[0], w0[1] - 17]], PAL.ink);
   poly(ctx, [w0, w1, [w1[0], w1[1] - 16], [w0[0], w0[1] - 16]], PAL.flame);
   // дверной проём 1,5 тайла × 56 от порога 4 (фасад +Y)
-  const d0 = P(p.x + 1.4, p.y + s, 4), d1 = P(p.x + 2.9, p.y + s, 4);
+  const d0 = dx ? P(p.x + s, p.y + 1.4, 4) : P(p.x + 1.4, p.y + s, 4), d1 = dx ? P(p.x + s, p.y + 2.9, 4) : P(p.x + 2.9, p.y + s, 4);
   poly(ctx, [[d0[0] - 2, d0[1] + 2], [d1[0] + 2, d1[1] + 2], [d1[0] + 2, d1[1] - 58], [d0[0] - 2, d0[1] - 58]], PAL.wood_lt);
   poly(ctx, [d0, d1, [d1[0], d1[1] - 56], [d0[0], d0[1] - 56]], PAL.wood_dk);
   // кровля: конёк вдоль оси X

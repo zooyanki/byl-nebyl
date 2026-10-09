@@ -67,7 +67,7 @@ def kolchuga(w=44, h=66):
 
 
 def round_shield(d=44, kind="gromovnik"):
-    """Round shield: red-painted planks with a birch-white громовник (six-petal
+    """Round shield: red-painted planks with a birch-white rosette (six-petal
     rosette in a ring, GDD §12.1.1 A5: no crosses), iron rim, bronze boss.
     kind="plain" gives unpainted planks."""
     m = MatCanvas(d, d)
@@ -176,7 +176,7 @@ def beresta():
 
 
 def beresta_v2():
-    """Береста возврата v2 (08.10, M1c): diagonal birch roll, bronze wire, burning Чур sign, no red cord.
+    """Береста возврата v2 (08.10, M1c): diagonal birch roll, bronze wire, burning ember rhomb, no red cord.
     Drawn in art/sprites/src/beresta.py (same drawing as art/sprites/item_beresta/item_beresta_icon.png)."""
     import os
     import sys
@@ -220,7 +220,7 @@ def grivna(d=20):
 
 
 def obereg(kind="lunnitsa"):
-    """Обереги: лунница (crescent pendant) or громовник disc on a cord."""
+    """Обереги: лунница (crescent pendant) or rosette disc on a cord."""
     m = MatCanvas(18, 18)
     if kind == "lunnitsa":
         yy, xx = np.mgrid[0:18, 0:18]

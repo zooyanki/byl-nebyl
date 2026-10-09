@@ -29,7 +29,7 @@ add("Герой: рост (без поднятого меча)", 44, r.max() - r
 for n, t in (("upyr", 40), ("volkolak", 60), ("leshy", 80)):
     mm = S[n]["mask"]; r = np.where(mm.any(1))[0]
     add(n, t, r.max() - r.min() + 1, "кадр %dx%d, pivot %s, низ %d" % (S[n]["w"], S[n]["h"], S[n]["pivot"], r.max()))
-mm = S["idol"]["mask"]; r = np.where(mm.any(1))[0]; add("Чур (спрайт не менялся)", "60-64", r.max() - r.min() + 1)
+mm = S["idol"]["mask"]; r = np.where(mm.any(1))[0]; add("Идол у ворот (спрайт не менялся)", "60-64", r.max() - r.min() + 1)
 # hero placed in scene: soles exactly at (320,178)?
 lit = fresh(); G.place(lit, hero, G.PLAYER); d = drawn(lit)
 add("Подошвы героя в сцене (строка)", G.PLAYER[1], np.where(d.any(1))[0].max())
@@ -112,10 +112,10 @@ add("Ладья: щиты", "Ø14", "Ø%d" % (2 * 6.6 + 1), "13 шт. на бо�
 lit = fresh(); G.krada(lit); d = drawn(lit); fx, fy = G.FIRE
 fire = (lit.ramp == pk.RAMP_ID["fire"]) & lit.em
 r = np.where(fire[:, fx - 12:fx + 12].any(1))[0]
-add("Крада: дрова", 24, 24, "6 венцов по 4 px (по коду)")
-add("Крада: пламя над землёй", 72, fy - r.min(), "над дровами %d" % (fy - 24 - r.min()))
+add("Костёр: дрова", 24, 24, "6 венцов по 4 px (по коду)")
+add("Костёр: пламя над землёй", 72, fy - r.min(), "над дровами %d" % (fy - 24 - r.min()))
 ring = d & (lit.ramp == pk.RAMP_ID["stone"])
-xs = np.where(ring.any(0))[0]; add("Крада: кольцо камней", "Ø2,5 т. (≈40 px)", xs.max() - xs.min() + 1)
+xs = np.where(ring.any(0))[0]; add("Костёр: кольцо камней", "Ø2,5 т. (≈40 px)", xs.max() - xs.min() + 1)
 
 # --- rift ---------------------------------------------------------------------
 lit = fresh(); G.rift(lit, np.random.default_rng(7)); d = drawn(lit)

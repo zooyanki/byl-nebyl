@@ -1,5 +1,5 @@
 """Mission 1, milestone (c): the last grey boxes of the prototype —
-Упырь (upyr/), Береста возврата (item_beresta/: bag icon + ground pickup), Чуров проход (fx_chur_portal/),
+Упырь (upyr/), Береста возврата (item_beresta/: bag icon + ground pickup), Путевой проход (fx_chur_portal/),
 scene previews (m1c_scenes/). Called from make_all.py (run(MEAS)); can also run alone: python3 make_m1c.py"""
 import os
 import sys
@@ -73,7 +73,7 @@ def run(MEAS):
         size_note="%dx%d incl. ink outline; centred in the 24-px cell like every 1x1 icon (old beresta 20x18)" % (ic.shape[1], ic.shape[0]),
         atlas="art/ui/src/items_rus.build() key 'beresta' now returns this drawing (beresta_v2 -> sprites/src/beresta.py); "
               "re-run prototype/tools/export_ui.py to refresh assets/items.png + src/data/ui_atlas.js",
-        notes="diagonal birch-bark roll, bronze wire, burning Чур rhomb (ember/flame); no red (old icon had a red cord)"))
+        notes="diagonal birch-bark roll, bronze wire, burning ember rhomb (ember/flame); no red (old icon had a red cord)"))
     X.preview([[ic]], ["иконка"], os.path.join(out, "preview"), "item_beresta_icon", 1, True, (ic.shape[1] // 2, ic.shape[0] // 2),
               title="Береста возврата · иконка котомки")
     gr = BE.ground()
@@ -83,7 +83,7 @@ def run(MEAS):
     X.save_sheet(gr, out, "item_beresta_ground", dict(
         item="Береста возврата on the ground (loot)", pivot=list(gpiv), fps=6, loop=True,
         draw="pivot = the item's ground point (where drawGroundItem gets x, y); keep the engine's ink shadow ellipse "
-             "under it (7x3); frame 0 can be used as a static sprite; the 4-frame loop makes the Чур sign glint",
+             "under it (7x3); frame 0 can be used as a static sprite; the 4-frame loop makes the notch mark glint",
         size_note="%dx%d incl. outline (loot scale.md §3.4: серебро 14x7, щит 13x8)" % (gw, gh),
         layer="ground loot, under characters (scale.md §4.1)"))
     X.preview([gr], ["на земле"], os.path.join(out, "preview"), "item_beresta_ground", 6, True, gpiv, title="Береста на земле · 4")
@@ -92,11 +92,11 @@ def run(MEAS):
     MEAS["item_beresta"] = dict(icon=[ic.shape[1], ic.shape[0]], ground=[gw, gh], ground_pivot=list(gpiv),
                                 ground_visible=[int((gr[0] >= 0).any(0).sum()), int((gr[0] >= 0).any(1).sum())])
 
-    # ================================================================ Чуров проход
+    # ================================================================ Путевой проход
     out = os.path.join(ROOT, "fx_chur_portal")
     op, lp, fd, cl = CP.opening(), CP.open_loop(), CP.fading(), CP.closing()
-    common = dict(object="Чуров проход (obj.chur_portal), the passage opened by «Береста возврата»; type 'portal' in the "
-                         "prototype; both ends (field + town at the крада) use the same sheets",
+    common = dict(object="Путевой проход (obj.chur_portal), the passage opened by «Береста возврата»; type 'portal' in the "
+                         "prototype; both ends (field + town at the костёр) use the same sheets",
                   frame_size=[CP.W, CP.H], pivot=list(CP.PIV),
                   sizes_px=dict(oval_top=CP.body_top(lp[0]), oval_width=int(2 * CP.OV_RX + 2),
                                 ground_ring=[round(2 * CP.RING_RX, 1), round(2 * CP.RING_RY, 1)], ring_r_tiles=CP.RING_R,
@@ -116,8 +116,8 @@ def run(MEAS):
                                    visible_height_px=_hs(frs, CP.PIV[1]), fps=fps, loop=loop)
         X.save_sheet(frs, out, name, m)
     X.preview([op, lp, fd, cl], ["открытие", "открыт", "угасает", "закрытие"],
-              os.path.join(out, "preview"), "fx_chur_portal", 10, True, CP.PIV, title="Чуров проход · 6 / 8 / 8 / 6")
-    M.save_manifest(dict(object="Чуров проход", key="obj.chur_portal", frame_size=[CP.W, CP.H], pivot=list(CP.PIV),
+              os.path.join(out, "preview"), "fx_chur_portal", 10, True, CP.PIV, title="Путевой проход · 6 / 8 / 8 / 6")
+    M.save_manifest(dict(object="Путевой проход", key="obj.chur_portal", frame_size=[CP.W, CP.H], pivot=list(CP.PIV),
                          files={n: n + ".png" for n, *_ in states},
                          states="closed = no object (nothing drawn) -> open (6 @10 once) -> loop (8 @10) "
                                 "[-> fading (8 @10 loop) for the last 10 s] -> close (6 @10 once) -> removed",
@@ -186,7 +186,7 @@ def scenes(MEAS, ic, gr, op, lp, cl):
         _paste(g, ic, 238 - ic.shape[1] // 2, 18 - ic.shape[0] // 2)
         frames.append(g)
     comp = np.concatenate([frames[2], frames[4 + 3], frames[12]], 1)
-    label(comp, 4, 3, "Береста: на земле · открытие · Чуров проход (герой 44)")
+    label(comp, 4, 3, "Береста: на земле · открытие · Путевой проход (герой 44)")
     paths["portal"] = _save_idx(comp, os.path.join(out, "beresta_portal_scene_x3.png"))
     _save_gif(frames, os.path.join(out, "beresta_portal_scene.gif"), 10)
     MEAS["m1c_scenes"] = {k: os.path.relpath(v, ROOT) for k, v in paths.items()}

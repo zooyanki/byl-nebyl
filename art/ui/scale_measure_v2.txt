@@ -2,7 +2,7 @@
 upyr                                       target 40         measured 40         кадр 64x64, pivot (32, 56), низ 56
 volkolak                                   target 60         measured 60         кадр 96x96, pivot (48, 88), низ 88
 leshy                                      target 80         measured 80         кадр 96x96, pivot (48, 88), низ 88
-Чур (спрайт не менялся)                    target 60-64      measured 60         
+Идол у ворот (спрайт не менялся)                    target 60-64      measured 60         
 Подошвы героя в сцене (строка)             target 178        measured 178        
 Дверь сруба: проём                         target 56         measured 56         по столбцам 55-57 (ступенька скоса 2:1); ширина по горизонтали 24 px (1,5 тайла = 24)
 Стена сруба до кровли                      target 68         measured 68         
@@ -24,8 +24,8 @@ leshy                                      target 80         measured 80        
 Ладья: корма (штевень) над водой           target 64-84      measured 76         
 Ладья: парус                               target 4 т. x 72  measured 4.0 т. x 72 
 Ладья: щиты                                target Ø14        measured Ø14        13 шт. на борт
-Крада: дрова                               target 24         measured 24         6 венцов по 4 px (по коду)
-Крада: пламя над землёй                    target 72         measured 72         над дровами 48
-Крада: кольцо камней                       target Ø2,5 т. (≈40 px) measured 40         
+Костёр: дрова                               target 24         measured 24         6 венцов по 4 px (по коду)
+Костёр: пламя над землёй                    target 72         measured 72         над дровами 48
+Костёр: кольцо камней                       target Ø2,5 т. (≈40 px) measured 40         
 Разлом Небыли: вертикальный разрыв         target 88         measured 88         
 Дверь / герой                              target 1,2-1,4    measured 1.27       

@@ -1,6 +1,6 @@
 """
 Theme «Русь / Гардарики» — palette v2 + carved-wood / forged-iron / bronze UI
-widgets with Slavic ornament (плетёнка, верёвочный бордюр, громовник-розетка),
+widgets with Slavic ornament (плетёнка, верёвочный бордюр, шестилепестковая розетка),
 serpent-framed orbs, themed skill & menu icons.
 
 Call theme_rus.activate() before drawing (switches pixelkit to palette v2).
@@ -161,7 +161,7 @@ def interlace(cv, x, y, w, h=9, period=14, fg=None, bg=None):
 
 
 def rosette(cv, cx, cy, r, line=None, ring=True):
-    """Six-petal громовник rosette (compass construction), engraved lines."""
+    """Six-petal rosette (ornament; «громовник» retired, rename_map) (compass construction), engraved lines."""
     line = line if line is not None else C["bronze_lt"]
     yy, xx = np.mgrid[0:cv.h, 0:cv.w]
     dO = np.hypot(xx - cx, yy - cy)
@@ -409,8 +409,8 @@ def icon_bogatyr(cv, x, y, s=22):
 
 
 def icon_veshchee(cv, x, y, s=22):
-    """«Вещее слово» (passive: Ярь regen, fire & cold damage): a bronze lunnitsa
-    breathing out a spiral of runes, one fiery, one frosty."""
+    """«Вещее слово» (passive: Удаль regen, fire & cold damage): a bronze lunnitsa
+    breathing out a spiral that ends in two sparks, one fiery, one frosty (no runes, rename_map §5)."""
     _bg(cv, x, y, s, C["blue_dk"], C["sea_dk"])
     f = s / 22.0
     cx, cy = x + 7 * f, y + 13 * f
@@ -421,11 +421,16 @@ def icon_veshchee(cv, x, y, s=22):
         px_, py_ = cx + math.cos(a) * r * 1.1 + t * 5 * f, cy - math.sin(a) * r * 0.8 - t * 4 * f
         c = C["blue_lt"] if t < 0.5 else (C["mist"] if t < 0.75 else C["linen"])
         cv.px(int(px_), int(py_), c)
-    # runes: fiery «ᚠ»-like and frosty «ᛁ»-like strokes
-    for (ax, ay, col) in ((15, 4, C["flame"]), (18, 10, C["blue_lt"])):
-        cv.line(int(x + ax * f), int(y + ay * f), int(x + ax * f), int(y + (ay + 6) * f), col)
-        cv.line(int(x + ax * f), int(y + (ay + 1) * f), int(x + (ax + 2) * f), int(y + ay * f), col)
-        cv.line(int(x + ax * f), int(y + (ay + 3) * f), int(x + (ax + 2) * f), int(y + (ay + 2) * f), col)
+    # rename_map §5 (09.10): no runes — the spoken word flies off as sparks, one fiery, one frosty
+    for (ax, ay, col, dim) in ((16, 5, C["flame"], C["ember"]), (19, 11, C["blue_lt"], C["blue"])):
+        sx_, sy_ = int(x + ax * f), int(y + ay * f)
+        cv.px(sx_, sy_, C["linen"])                                   # spark core
+        for (dx, dy) in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            cv.px(sx_ + dx, sy_ + dy, col)
+        for (dx, dy) in ((2, 0), (-2, 0), (0, 2), (0, -2)):
+            cv.px(sx_ + dx, sy_ + dy, dim)
+        for (dx, dy) in ((-3, 2), (2, -3)):                           # trailing motes
+            cv.px(sx_ + dx, sy_ + dy, dim)
     # bronze lunnitsa (crescent) at the speaker's side
     yy, xx = np.mgrid[0:cv.h, 0:cv.w]
     d1 = np.hypot(xx + 0.5 - (x + 6 * f), yy + 0.5 - (y + 16 * f))
@@ -480,7 +485,7 @@ MENU_ICONS = {
         ".....kk.....",
         "............"],
     "inventory": pk.MENU_ICONS["inventory"],
-    "skills": [  # rosette / rune
+    "skills": [  # flame-spindle in a ring (checked 09.10: not a rune, kept)
         "....kkkk....",
         "..kkyyyykk..",
         ".kyk.kk.kyk.",

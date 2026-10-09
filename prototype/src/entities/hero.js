@@ -10,6 +10,7 @@ import { circleFree, sightClear, moveWithCollision } from '../world/collision.js
 import { POTIONS, BELT_SIZE, BELT_STACK, POTION_COOLDOWN, SLOTS, TYPE_SLOTS, STARTER_KIT, STARTER_BELT, STARTER_BAG, SCROLLS, makeItem, makePotion, makeScroll } from '../data/items.js';
 import { Inventory } from '../systems/inventory.js';
 import { PAL } from '../palette.js';
+import { t } from '../core/i18n.js';
 
 // суммарный опыт для начала уровня L
 export function xpAtLevel(L) { let s = 0; for (let i = 1; i < L; i++) s += xpToNext(i); return s; }
@@ -17,7 +18,7 @@ export function xpAtLevel(L) { let s = 0; for (let i = 1; i < L; i++) s += xpToN
 export class Hero extends Actor {
   constructor(x, y) {
     super(x, y, 0.3);
-    this.name = 'Ратибор';
+    this.name = t('ui.hero.name');
     this.level = 1;
     this.xp = 0;                       // всего опыта
     this.base = { ...HERO_START };     // вложенные очки входят сюда
@@ -262,7 +263,9 @@ export class Hero extends Actor {
     if (this.stun > 0 || this.dashing) return 'busy';
     const sk = SKILLS[id];
     if (!sk || !rankOf(this, id) || sk.type === 'passive') return 'none';
-    if (this.action && !(this.action.type === 'cast' && this.action.fired && this.action.t > this.action.dur * 0.85)) return 'busy';
+    // хвост замаха/каста (удар уже прошёл, > 85% длительности) можно прервать навыком. m1f P0.4: раньше так было только у
+    // каста — при зажатой ЛКМ на враге новый замах начинался в том же кадре, и запомненный ПКМ не вылетал никогда
+    if (this.action && !((this.action.type === 'cast' || this.action.type === 'attack') && this.action.fired && this.action.t > this.action.dur * 0.85)) return 'busy';
     if (this.cdLeft(id) > 0) return 'cd';            // перезарядка видна сектором и цифрой на ячейке (GDD §12.2.1: без текста)
     const cost = skillCost(this, id);
     if (this.yar < cost) { game.notify(game.t('ui.error.no_yar'), PAL.blue_lt, 'noyar'); return 'yar'; }
@@ -353,7 +356,7 @@ export class Hero extends Actor {
   drink(slot, game) {
     if (this.dead) return;
     const s = this.belt[slot];
-    if (!s) { game.notify('Ячейка ' + (slot + 1) + ' пуста', PAL.mist, 'empty'); return; }
+    if (!s) { game.notify(t('proto.belt.empty', { n: slot + 1 }), PAL.mist, 'empty'); return; }
     // GDD v1.9 §4.4/§6.9: береста в ячейке пояса читается клавишей ячейки (1–4), ЛКМ/ПКМ по ячейке; тратится в конце каста
     if (s.scroll) { game.useScroll({ kind: 'scroll', scroll: s.scroll, beltSlot: slot }); return; }
     if (!this.canDrink(s.kind, game)) return;
@@ -372,7 +375,7 @@ export class Hero extends Actor {
     if (p.res !== 'both' && this.potionCds[p.res] > 0) { game.counters.potionCdBlocked = (game.counters.potionCdBlocked || 0) + 1; return false; }
     const hpFull = this.hp >= this.maxHp, yarFull = this.yar >= this.maxYar;
     if ((p.res === 'hp' && hpFull) || (p.res === 'yar' && yarFull) || (p.res === 'both' && hpFull && yarFull)) {
-      game.notify(p.res === 'yar' ? 'Ярь и так полна' : 'Жизнь и так полна', PAL.mist, 'full_' + p.res);
+      game.notify(t(p.res === 'yar' ? 'proto.hero.res_full.yar' : 'proto.hero.res_full.hp'), PAL.mist, 'full_' + p.res);
       return false;
     }
     return true;
@@ -398,7 +401,7 @@ export class Hero extends Actor {
     }
     const col = p.res === 'hp' ? PAL.red_lt : p.res === 'yar' ? PAL.blue_lt : PAL.bronze_hi;
     game.fx.burst(this.x, this.y, col, 12, 30);
-    game.log.add('Выпито: ' + p.name, col);
+    game.log.add(t('proto.log.drunk', { item: p.name }), col);
     game.audio.play('potion');
   }
   // пустую ячейку пояса пополняем зельями того же вида из котомки
@@ -500,7 +503,7 @@ export class Hero extends Actor {
   takeDamage(amount, game, type = 'melee', attacker = null) {
     if (this.dead || this.invuln > 0) return 0;
     if (type === 'melee' && this.block > 0 && Math.random() < this.block) {
-      game.fx.text(this.x, this.y, 'Блок', PAL.bronze_lt, 50);
+      game.fx.text(this.x, this.y, t('proto.fx.block'), PAL.bronze_lt, 50);
       game.audio.play('block');
       return 0;
     }
@@ -511,9 +514,10 @@ export class Hero extends Actor {
     if (dmg > 0) this.sinceHurt = 0;          // отдых в тихом круге — только после 2 с без урона (GDD v1.7 §4.5)
     this.flash = 0.12;
     game.fx.text(this.x, this.y, '-' + dmg, PAL.red_lt, 50);
-    // урон прерывает удержание (выбить дверь, GDD §8.2)
+    // урон приостанавливает удержание (выбить дверь, GDD §8.2; m1f P0.1 — прогресс не сбрасывается, только стоит на время
+    // реакции на удар STATS.heroStun.time; держать ЛКМ по-прежнему нужно)
     if (this.cmd && this.cmd.type === 'interact' && this.cmd.started && this.cmd.obj.hold) {
-      this.cmd = null;
+      this.cmd.holdPause = STATS.heroStun.time;
       game.notify(game.t('ui.obj.interrupted'), PAL.red_lt, 'interrupt');
       game.counters.holdInterrupted = (game.counters.holdInterrupted || 0) + 1;
     }
@@ -640,6 +644,7 @@ export class Hero extends Actor {
           if (!o.hold) { this.cmd = null; game.interact(o); return; }
         }
         if (!game.holdingInteract()) { this.cmd = null; return; }     // отпустили ЛКМ — удержание сброшено
+        if (c.holdPause > 0) { c.holdPause -= dt; return; }          // m1f: после удара — пауза, прогресс сохраняется
         c.holdT += dt;
         if (c.holdT >= o.hold) { this.cmd = null; game.interact(o); }
         return;
@@ -648,7 +653,7 @@ export class Hero extends Actor {
       if (c.repath <= 0 || !this.path) { this.setPath(map, o.sx, o.sy, true); c.repath = 0.5; }
       if (this.followPath(map, dt, this.curSpeed()) && Math.hypot(o.x - this.x, o.y - this.y) > o.reach) {
         c.fails++;
-        if (c.fails > 6) { this.cmd = null; game.notify('Не дотянуться', PAL.mist, 'reach'); }
+        if (c.fails > 6) { this.cmd = null; game.notify(t('proto.sys.unreachable'), PAL.mist, 'reach'); }
       }
     } else if (c.type === 'pickup') {
       const it = c.item;
@@ -662,7 +667,7 @@ export class Hero extends Actor {
       if (c.repath <= 0 || !this.path) { this.setPath(map, it.x, it.y, true); c.repath = 0.5; }
       if (this.followPath(map, dt, this.curSpeed()) && Math.hypot(it.x - this.x, it.y - this.y) > 0.8) {
         c.fails = (c.fails || 0) + 1;
-        if (c.fails > 6) { this.cmd = null; game.notify('Не дотянуться', PAL.mist, 'reach'); }
+        if (c.fails > 6) { this.cmd = null; game.notify(t('proto.sys.unreachable'), PAL.mist, 'reach'); }
       }
     }
   }

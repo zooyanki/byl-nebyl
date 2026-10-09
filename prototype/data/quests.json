@@ -13,6 +13,21 @@
   "_doneFadeNote": "Сколько секунд выполненная цель висит в трекере с галочкой, прежде чем погаснуть (принято дизайнером 08.10)",
   "objectives": [
    {
+    "id": "mal",
+    "textKey": "quest.m1.obj.mal",
+    "state0": "active",
+    "doneOn": {
+     "event": "hutFreed",
+     "hut": "hut3"
+    },
+    "required": true,
+    "markers": {
+     "zalesye": "hut3",
+     "ladoga": "to_zalesye"
+    },
+    "_note": "m1f P0.2 (критики m1e): первая цель — quest.m1.obj.mal (m1g: строка сценариста «Вызволи Мала у колодца»; подцель «Спаси выживших 0/3»); метка цели на мини-карте и карте: в Залесье — дверь избы 3, в Ладоге — восточные ворота (выход в Залесье). Метка видна и в тумане."
+   },
+   {
     "id": "reach",
     "textKey": "quest.m1.obj.reach",
     "state0": "active",
@@ -36,7 +51,9 @@
       "bark": "bark.m1.huts_done"
      }
     ],
-    "required": true
+    "required": true,
+    "progressUnique": "hut",
+    "_m1g": "GDD v1.11: «Вызволи Мала у колодца» (цель mal) — подцель этой цели; изба Мала (hut3) засчитывается в 0/3 один раз: progressUnique — одно и то же значение поля hut не продвигает счётчик повторно"
    },
    {
     "id": "hearths",

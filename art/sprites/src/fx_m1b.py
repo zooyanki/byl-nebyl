@@ -4,7 +4,7 @@
   fx_krivsha_aura        6 loop  80x48  pivot (40,26)  fire-phase ring r 1.5 tile, ground decal under the boss
   fx_krivsha_summon      8 once  48x56  pivot (24,44)  ground cracks + nebyl wisps where an упырь rises (0.8 s)
   fx_krivsha_leap_burst  8       64x120 pivot (32,108) flare of the огнище when Кривша lands in it (0-3 impact, 4-7 loop)
-  fx_mara_ash_trail      4 loop  40x28  pivot (20,16)  r 0.6 tile smouldering ash left behind by Мара
+  fx_mara_ash_trail      4 loop  40x28  pivot (20,16)  r 0.6 tile smouldering ash left behind by Огнея
   fx_mara_bolt           4 loop  24x16  pivot (12,8)   fire bolt in flight (faces +x; flip for -x)
   fx_mara_bolt_hit       5 once  32x32  pivot (16,24)  burst where the bolt lands
 Ellipse radii on the 2:1 ground: rx = r*22.63, ry = r*11.31 px (scale.md §1)."""
@@ -46,7 +46,7 @@ def _small_tongue(out, x, base, h, i_ph):
 
 
 # --------------------------------------------------------------------------
-# trails (r 0.6 tile): Кривша — burning ground; Мара — ash with smouldering specks
+# trails (r 0.6 tile): Кривша — burning ground; Огнея — ash with smouldering specks
 # --------------------------------------------------------------------------
 TR_W, TR_H, TR_PIV, TR_R = 40, 28, (20, 16), 0.6
 
@@ -228,7 +228,7 @@ def leap_burst():
 
 
 # --------------------------------------------------------------------------
-# Мара's fire bolt + hit
+# Огнея's fire bolt + hit
 # --------------------------------------------------------------------------
 BO_W, BO_H, BO_PIV = 24, 16, (12, 8)
 BH_W, BH_H, BH_PIV = 32, 32, (16, 24)

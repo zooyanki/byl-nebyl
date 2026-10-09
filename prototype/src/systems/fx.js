@@ -7,7 +7,7 @@ export class FX {
   constructor() { this.texts = []; this.parts = []; this.rings = []; this.flashes = []; this.bolts = []; }
 
   text(x, y, str, color, z = 24, opts = {}) {
-    this.texts.push({ x, y, str, color, z, t: 0, dur: opts.dur || 0.9, big: !!opts.big, ox: rnd(-4, 4) });
+    this.texts.push({ x, y, str, color, z, t: 0, dur: opts.dur || 0.9, big: !!opts.big, speech: !!opts.speech, ox: opts.speech ? 0 : rnd(-4, 4) });
   }
   burst(x, y, color, n = 8, z = 10, speed = 40) {
     for (let i = 0; i < n; i++) {

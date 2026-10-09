@@ -60,7 +60,12 @@ function nearestNode(pass, NW, NH, fx, fy, maxR) {
 export function findPath(map, sx, sy, tx, ty, r = 0.3, opts = {}) {
   const avoid = opts.avoid && opts.avoid.length ? opts.avoid : null;
   const maxIter = opts.maxIter || 9000;
-  if (circleFree(map, tx, ty, r) && lineWalkable(map, sx, sy, tx, ty, r, avoid)) return [[tx, ty]];
+  // m1g (GDD v1.11 §8.2): opts.forbid {x, y, r} — клетки ближе r к точке не берутся; если старт уже внутри круга —
+  // путь не подходит к центру ближе старта (выводит наружу в обход, а не через центр)
+  const F = opts.forbid || null, fd = F ? (x, y) => Math.hypot(x - F.x, y - F.y) : null;
+  const fr = F ? Math.min(F.r, fd(sx, sy) - 0.01) : 0;
+  const segOk = !F || segDist(F.x, F.y, sx, sy, tx, ty) >= fr;
+  if (segOk && circleFree(map, tx, ty, r) && lineWalkable(map, sx, sy, tx, ty, r, avoid)) return [[tx, ty]];
   const pass = map.passGrid(r), NW = map.sw + 1, NH = map.sh + 1;
   const st = nearestNode(pass, NW, NH, sx * SUB, sy * SUB, 3);
   const gt = nearestNode(pass, NW, NH, tx * SUB, ty * SUB, 14);
@@ -106,6 +111,7 @@ export function findPath(map, sx, sy, tx, ty, r = 0.3, opts = {}) {
       const ni = ny * NW + nx;
       if (!pass[ni] || closed[ni]) continue;
       if (dx && dy && (!pass[cy * NW + nx] || !pass[ny * NW + cx])) continue;
+      if (F && fd(nx / SUB, ny / SUB) < fr) continue;
       const ng = g[cur] + c + (pen && pen[ni] ? 6 : 0);
       if (ng < g[ni]) { g[ni] = ng; came[ni] = cur; heap.push(ng + hf(ni), ni); }
     }
@@ -139,4 +145,11 @@ export function findPath(map, sx, sy, tx, ty, r = 0.3, opts = {}) {
     i = j;
   }
   return out;
+}
+
+/** Расстояние от точки (px, py) до отрезка (ax, ay)–(bx, by). */
+function segDist(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy;
+  const k = L ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / L)) : 0;
+  return Math.hypot(ax + dx * k - px, ay + dy * k - py);
 }

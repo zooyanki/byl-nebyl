@@ -1,0 +1,29 @@
+{
+ "prop": "Горелый пень (GDD v1.11 Залесье: края поляны Мары r 9 — горелые пни и пепел вместо елей)",
+ "pivot": [
+  12,
+  18
+ ],
+ "fps": 0,
+ "loop": false,
+ "variants": {
+  "0": "срез (низкий, 10 px над опорой)",
+  "1": "обломанный ствол (18 px)",
+  "2": "широкий с корнями (8 px)"
+ },
+ "draw": "static prop: frame = variant (data maraDen.stumps[i][2]); pivot on the tile centre of the prop (x+0.5, y+0.5); no footprint (fp 0x0), depth like 'ash'; flip horizontally for more variety if wanted",
+ "visible_height_px": [
+  10,
+  18,
+  8
+ ],
+ "image": "prop_stump_burnt.png",
+ "frame_size": [
+  24,
+  22
+ ],
+ "frame_count": 3,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

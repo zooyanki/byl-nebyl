@@ -9,7 +9,9 @@ import { ATTRS, hitChance } from '../data/progression.js';
 import { itemColor } from '../systems/loot.js';
 import { SkillsWindow } from './skills_window.js';
 import { SKILLS, rankOf, boughtRank } from '../data/skills.js';
-import { t } from '../core/i18n.js';
+import { t, tObj } from '../core/i18n.js';
+import { drawGridEntries } from './grid_items.js';
+import { sellPrice } from '../systems/trade.js';
 
 const INV = UI_ATLAS.inventory_layout, CHR = UI_ATLAS.character_layout;
 const CELL = INV.cell;
@@ -50,7 +52,7 @@ export class InventoryUI {
     const g = this.game, it = this.hand;
     if (!it) return;
     g.loot.spawnItem(g.hero.x, g.hero.y, it);
-    g.log.add('Выброшено: ' + it.name, itemColor(it));
+    g.log.add(t('proto.log.dropped', { item: it.name }), itemColor(it));
     g.audio.play('ui');
     this.hand = null; this.drag = null;
   }
@@ -107,11 +109,11 @@ export class InventoryUI {
   tryEquip(item, slot) {
     const g = this.game, h = g.hero;
     const err = h.canEquip(item, slot);
-    if (err === 'type') { g.notify('Сюда это не надеть', PAL.mist, 'eqtype'); g.audio.play('error'); return false; }
-    if (err === 'level') { g.notify('Требуется уровень ' + item.req, PAL.red_lt, 'eqlvl'); g.audio.play('error'); return false; }
+    if (err === 'type') { g.notify(t('proto.sys.wrong_slot'), PAL.mist, 'eqtype'); g.audio.play('error'); return false; }
+    if (err === 'level') { g.notify(t('proto.sys.need_level', { n: String(item.req) }), PAL.red_lt, 'eqlvl'); g.audio.play('error'); return false; }
     const old = h.putOn(item, slot);
     this.hand = old;
-    g.log.add('Надето: ' + item.name, itemColor(item));
+    g.log.add(t('proto.log.equipped', { item: item.name }), itemColor(item));
     g.audio.play('equip');
     return true;
   }
@@ -125,21 +127,21 @@ export class InventoryUI {
     }
     const slot = h.slotFor(it);
     const err = h.canEquip(it, slot);
-    if (err === 'level') { g.notify('Требуется уровень ' + it.req, PAL.red_lt, 'eqlvl'); g.audio.play('error'); return; }
+    if (err === 'level') { g.notify(t('proto.sys.need_level', { n: String(it.req) }), PAL.red_lt, 'eqlvl'); g.audio.play('error'); return; }
     if (err) { g.audio.play('error'); return; }
     h.inv.remove(it);
     const old = h.putOn(it, slot);
     if (old && !(h.inv.fits(old, entry.c, entry.r) && h.inv.add(old, entry.c, entry.r)) && !h.inv.autoAdd(old)) this.hand = old;
-    g.log.add('Надето: ' + it.name, itemColor(it));
+    g.log.add(t('proto.log.equipped', { item: it.name }), itemColor(it));
     g.audio.play('equip');
   }
 
   unequipToBag(slot) {
     const g = this.game, h = g.hero, it = h.equip[slot];
     if (!it) return;
-    if (!h.inv.autoAdd(it)) { g.notify('Некуда положить', PAL.red_lt, 'full'); g.audio.play('error'); return; }
+    if (!h.inv.autoAdd(it)) { g.notify(t('ui.inventory.full'), PAL.red_lt, 'full'); g.audio.play('error'); return; }
     h.takeOff(slot);
-    g.log.add('Снято: ' + it.name, itemColor(it));
+    g.log.add(t('proto.log.unequipped', { item: it.name }), itemColor(it));
     g.audio.play('equip');
   }
 
@@ -202,7 +204,14 @@ export class InventoryUI {
       else if (H.entry) tip = H.entry.item;
     }
     this.lastTip = null;
-    if (tip) this.lastTip = { item: tip, ...drawItemTooltip(ctx, tip, h, INV.win[0] - 3, m.my - 40, tip.kind === 'gear' && !Object.values(h.equip).includes(tip)) };
+    const town = g.town && g.town.open ? g.town : null;
+    if (tip) {
+      // m1i (П.12): при открытом торге или ладье подсказка вещи котомки — справа (над «Котомкой»), не поверх цен лавки;
+      // в торге — строка цены продажи (§10.1 «Продать за N сер.»)
+      const extra = town && town.mode === 'trade' && !tip.quest && !tip.relic && H.entry ? [[t('ui.tip.price_sell', { n: sellPrice(tip) }), PAL.bronze_lt]] : null;
+      const right = town && (town.mode === 'trade' || town.mode === 'stash');
+      this.lastTip = { item: tip, ...drawItemTooltip(ctx, tip, h, right ? INV.win[0] + 4 : INV.win[0] - 3, m.my - 40, tip.kind === 'gear' && !Object.values(h.equip).includes(tip), right ? 'tl' : 'tr', extra) };
+    } else if (town) this.lastTip = town.drawTip(ctx, drawItemTooltip);
     else if (H.plus) drawPlainTip(ctx, plusTip(H.plus), m.mx + 8, m.my + 10);
     if (this.hand) {
       const [iw, ih] = [this.hand.w * CELL, this.hand.h * CELL];
@@ -228,19 +237,7 @@ export class InventoryUI {
     }
     // сетка
     const gx = INV.gx, gy = INV.gy;
-    for (const e of h.inv.entries) {
-      const x = gx + e.c * CELL, y = gy + e.r * CELL, w = e.item.w * CELL, hh = e.item.h * CELL;
-      const hov = H.entry === e && !this.hand;
-      ctx.save();
-      ctx.globalAlpha = hov ? 0.45 : 0.4;
-      rect(ctx, x + 1, y + 1, w - 1, hh - 1, hov ? PAL.bronze : e.item.kind !== 'gear' ? PAL.wood : PAL[RARITY[e.item.rarity].tint]);
-      ctx.restore();
-      if (hov) frame(ctx, x, y, w + 1, hh + 1, PAL.bronze_lt);
-      drawIcon(ctx, e.item.icon, x, y, w + 1, hh + 1);
-      if (e.item.kind === 'scroll' && this.game.berestaGrey()) { ctx.save(); ctx.globalAlpha = 0.6; rect(ctx, x + 1, y + 1, w - 1, hh - 1, PAL.slate_dk); ctx.restore(); }   // арена живого босса (GDD v1.9)
-      if (e.item.kind === 'scroll' && e.item.count > 1) drawText(ctx, x + w - 2, y + hh - 9, String(e.item.count), PAL.linen, { align: 'r' });   // стопка бересты
-      if (e.item.kind === 'gear' && e.item.req > h.level) { ctx.save(); ctx.globalAlpha = 0.25; rect(ctx, x + 1, y + 1, w - 1, hh - 1, PAL.red); ctx.restore(); }
-    }
+    drawGridEntries(ctx, this.game, h.inv, gx, gy, H.entry);   // m1i: тот же код, что в «Ладье»
     // куда ляжет предмет с курсора
     if (this.hand && H.cell) {
       const [c, r] = this.gridTarget(this.hand, g_mx(this), g_my(this));
@@ -250,7 +247,7 @@ export class InventoryUI {
       ctx.restore();
     }
     // подвал
-    drawText(ctx, INV.ix + 6, INV.fy + 3, 'Места: ' + h.inv.used + '/40', PAL.mist, { shadow: false });
+    drawText(ctx, INV.ix + 6, INV.fy + 3, t('ui.gear.slots', { used: String(h.inv.used), total: '40' }), PAL.mist, { shadow: false });
     drawText(ctx, INV.ix + INV.iw - 9, INV.fy + 3, fmtNum(h.silver), PAL.linen, { align: 'r', shadow: false });
     if (H.closeInv) frame(ctx, INV.close[0], INV.close[1], INV.close[2], INV.close[2], PAL.flame);
   }
@@ -261,8 +258,8 @@ export class InventoryUI {
     const top = C.top, hx = C.hx;
     const [lx, ly] = C.lvl;
     drawText(ctx, lx + 1, ly - 4, String(h.level), PAL.bronze_hi, { align: 'c', outline: true });
-    field(ctx, hx, top + 28, 150, 'Опыт', fmtNum(h.xp));
-    field(ctx, hx, top + 43, 150, h.level >= 20 ? 'Предел уровней' : 'До уровня ' + (h.level + 1), fmtNum(h.xpNext), PAL.mist, PAL.mist);
+    field(ctx, hx, top + 28, 150, t('proto.hero.xp'), fmtNum(h.xp));
+    field(ctx, hx, top + 43, 150, h.level >= 20 ? t('proto.hero.max_level') : t('proto.hero.to_level', { n: String(h.level + 1) }), fmtNum(h.xpNext), PAL.mist, PAL.mist);
     const ratio = Math.max(0, Math.min(1, h.xpRatio));
     rect(ctx, hx, top + 60, 150, 5, PAL.ink); rect(ctx, hx + 1, top + 61, 148, 3, PAL.night);
     rect(ctx, hx + 1, top + 61, Math.round(148 * ratio), 3, PAL.bronze); rect(ctx, hx + 1, top + 61, Math.round(148 * ratio), 1, PAL.bronze_hi);
@@ -280,29 +277,29 @@ export class InventoryUI {
     rect(ctx, lx0, py, colw, 15, PAL.ink);
     rect(ctx, lx0 + 1, py + 1, colw - 2, 13, h.points > 0 ? PAL.red_dk : PAL.wood_dk);
     frame(ctx, lx0 + 1, py + 1, colw - 2, 13, h.points > 0 ? PAL.ember : PAL.wood_md);
-    drawText(ctx, lx0 + 5, py + 4, 'Свободных очков', h.points > 0 ? PAL.flame : PAL.mist, { shadow: false });
+    drawText(ctx, lx0 + 5, py + 4, t('proto.hero.free_points'), h.points > 0 ? PAL.flame : PAL.mist, { shadow: false });
     drawText(ctx, lx0 + colw - 6, py + 4, String(h.points), PAL.linen, { align: 'r', outline: true });
     // показатели
     const refDef = 8 + 6 * h.level;
     const derived = [
-      ['Урон ЛКМ', h.dmgMin + '–' + h.dmgMax, null],
-      ['Урон ПКМ', h.skillMin + '–' + h.skillMax, PAL.ember],
-      ['Меткость', String(h.ar), null],
-      ['Шанс попасть', Math.round(hitChance(h.ar, refDef, h.level, h.level) * 100) + '%', null],
-      ['Защита', String(h.def), null],
-      ['Удачный удар', Math.round(h.crit * 100) + '%', null],
-      ['Жизнь', Math.ceil(h.hp) + ' / ' + h.maxHp, PAL.red_lt],
-      [h.yarTier ? 'Ярь I' : 'Ярь', Math.floor(h.yar) + ' / ' + h.maxYar, PAL.blue_lt],
+      [t('proto.hero.dmg_lmb'), h.dmgMin + '–' + h.dmgMax, null],
+      [t('proto.hero.dmg_rmb'), h.skillMin + '–' + h.skillMax, PAL.ember],
+      [t('ui.hero.ar'), String(h.ar), null],
+      [t('proto.hero.hit_chance'), Math.round(hitChance(h.ar, refDef, h.level, h.level) * 100) + '%', null],
+      [t('ui.hero.def'), String(h.def), null],
+      [t('ui.hero.crit'), Math.round(h.crit * 100) + '%', null],
+      [t('ui.hud.life'), Math.ceil(h.hp) + ' / ' + h.maxHp, PAL.red_lt],
+      [h.yarTier ? (tObj('skill.yar1') || {}).name : t('ui.hud.yar'), Math.floor(h.yar) + ' / ' + h.maxYar, PAL.blue_lt],
     ];
     derived.forEach(([l, v, c], k) => field(ctx, rx0, ry + k * 15, colw, l, v, null, c));
     // сопротивления
-    const res = [['Огню', h.res.fire, PAL.ember], ['Холоду', h.res.cold, PAL.blue_lt], ['Порче', h.res.poison, PAL.nebyl]];
+    const res = [[t('ui.hero.res_fire'), h.res.fire, PAL.ember], [t('ui.hero.res_cold'), h.res.cold, PAL.blue_lt], [t('ui.hero.res_porcha'), h.res.poison, PAL.nebyl]];
     res.forEach(([l, v, c], k) => {
       const y = C.rsy + 13 + k * 15;
       drawText(ctx, lx0 + 13, y + 3, l, c, { shadow: false });
       drawText(ctx, lx0 + colw - 4, y + 3, v + '%', PAL.linen, { align: 'r', shadow: false });
     });
-    drawText(ctx, C.ix + C.iw / 2, C.hy, h.points > 0 ? 'Жми [+], чтобы вложить свободные очки' : 'Очки свойств даются за новый уровень (+5)', PAL.mist, { align: 'c', shadow: false });
+    drawText(ctx, C.ix + C.iw / 2, C.hy, h.points > 0 ? t('proto.hero.hint_points') : t('proto.hero.hint_nopoints'), PAL.mist, { align: 'c', shadow: false });
     if (this.hover.closeChar) frame(ctx, C.close[0], C.close[1], C.close[2], C.close[2], PAL.flame);
   }
 }
@@ -328,10 +325,10 @@ function plusButton(ctx, x, y, s, active, hover) {
 }
 function plusTip(attr) {
   return {
-    str: ['Сила: +1% к физическому урону'],
-    dex: ['Ловкость: +5 к меткости, +0,1% к удачному удару,', '+1 к защите за каждые 4 очка'],
-    vit: ['Живучесть: +2 к жизни'],
-    ene: ['Дух: +2 к яри, +1% к урону ведовства'],
+    str: [t('proto.hero.str_tip')],
+    dex: [t('proto.hero.dex_tip1'), t('proto.hero.dex_tip2')],
+    vit: [t('proto.hero.vit_tip')],
+    ene: [t('proto.hero.attr.ene')],
   }[attr];
 }
 
@@ -352,17 +349,18 @@ function tipBox(ctx, x, y, w, h) {
 }
 
 /** Подсказка предмета (как на макете: имя цветом редкости, база, урон/броня, требования, свойства, сравнение). */
-export function drawItemTooltip(ctx, it, hero, ax, ay, compare = true, anchor = 'tr') {
+export function drawItemTooltip(ctx, it, hero, ax, ay, compare = true, anchor = 'tr', extra = null) {
   const { lines, seps } = itemLines(it);
   const L = lines.map(([t, c]) => [t, c === 'req' ? (hero.level < it.req ? PAL.red_lt : PAL.linen) : c === 'lore' ? PAL.bronze_lt : PAL[c], c === 'lore']);
   const sepSet = new Set(seps);
   if (it.kind === 'gear') {
-    if (hero.level < it.req) { sepSet.add(L.length - 1); L.push([`Снарядить можно с ${it.req}-го уровня`, PAL.mist]); }
+    if (hero.level < it.req) { sepSet.add(L.length - 1); L.push([t('proto.tip.equip_from', { n: String(it.req) }), PAL.mist]); }
     if (compare) {
       const cmp = compareLines(it, hero);
       if (cmp.length) { sepSet.add(L.length - 1); L.push(...cmp); }
     }
   }
+  if (extra && extra.length) { sepSet.add(L.length - 1); L.push(...extra); }   // m1i: цена покупки / продажи
   const pad = 5, lh = 11;
   const w = Math.max(...L.map(([t]) => textWidth(t))) + pad * 2 + 2;
   const h = L.length * lh - 2 + pad * 2 + sepSet.size * 3 - (sepSet.has(L.length - 1) ? 3 : 0);
@@ -380,7 +378,7 @@ export function drawItemTooltip(ctx, it, hero, ax, ay, compare = true, anchor = 
     yy += lh;
     if (sepSet.has(i) && i < L.length - 1) { for (let k = x + 8; k < x + w - 8; k += 2) rect(ctx, k, yy - 2, 1, 1, PAL.bronze_dk); yy += 3; }
   });
-  return { x, y, w, h };
+  return { x, y, w, h, lines: L.map((l) => l[0]) };
 }
 
 /** Снимок итоговых характеристик героя (то, что видно в «Витязе»). */
@@ -401,12 +399,12 @@ export function tryOn(h, it, slot) {
   return [before, after];
 }
 const CMP_KEYS = [
-  ['dps', 'Урон в секунду', 1], ['dpsN', 'по нечисти', 1], ['def', 'Защита', 0], ['hp', 'Жизнь', 0], ['yar', 'Ярь', 0],
-  ['str', 'Сила', 0], ['dex', 'Ловкость', 0], ['vit', 'Живучесть', 0], ['ene', 'Дух', 0],   // QA B-18: свойства тоже
-  ['ar', 'Меткость', 0], ['block', 'Блок, %', 0],
-  ['rf', 'Сопр. огню, %', 0], ['rc', 'Сопр. холоду, %', 0], ['rp', 'Сопр. яду, %', 0], ['spell', 'Сила чар, %', 0], ['fire', 'Урон огнём', 0], ['cold', 'Урон холодом', 0],
-  ['skl', 'Ранги навыков', 0], ['pot', 'Сила зелий, %', 0],
-  ['ls', 'Кража жизни, %', 0], ['thorns', 'Шипы', 0], ['mf', 'Удача в добыче, %', 0], ['speed', 'Скорость бега', 2],
+  ['dps', 'proto.cmp.dps', 1], ['dpsN', 'proto.cmp.dps_n', 1], ['def', 'ui.hero.def', 0], ['hp', 'ui.hud.life', 0], ['yar', 'ui.hud.yar', 0],
+  ['str', 'ui.hero.str', 0], ['dex', 'ui.hero.dex', 0], ['vit', 'ui.hero.vit', 0], ['ene', 'ui.hero.ene', 0],   // QA B-18: свойства тоже
+  ['ar', 'ui.hero.ar', 0], ['block', 'proto.cmp.block', 0],
+  ['rf', 'proto.cmp.rf', 0], ['rc', 'proto.cmp.rc', 0], ['rp', 'proto.cmp.rp', 0], ['spell', 'proto.cmp.spell', 0], ['fire', 'proto.cmp.fire', 0], ['cold', 'proto.cmp.cold', 0],
+  ['skl', 'proto.cmp.skl', 0], ['pot', 'proto.cmp.pot', 0],
+  ['ls', 'proto.cmp.ls', 0], ['thorns', 'proto.cmp.thorns', 0], ['mf', 'proto.cmp.mf', 0], ['speed', 'proto.cmp.speed', 2],
 ];
 /** B-34 (M1d): ранги навыков в сравнении — не сумма по всем навыкам, а прибавка к каждому выученному навыку
  *  (+к навыкам действует только на выученные, невыученные остаются 0; упор в макс. ранг тоже учтён).
@@ -415,7 +413,7 @@ export function skillRankDiffs(a, b) {
   const ids = Object.keys(b).filter((id) => id in a), d = ids.map((id) => [id, b[id] - a[id]]).filter(([, x]) => x !== 0);
   if (!d.length) return [];
   const col = (x) => (x > 0 ? PAL.nebyl : PAL.red_lt), sg = (x) => (x > 0 ? '+' : '−') + Math.abs(x);
-  if (d.length === ids.length && d.every(([, x]) => x === d[0][1])) return [['Каждый выученный навык: ' + sg(d[0][1]), col(d[0][1])]];
+  if (d.length === ids.length && d.every(([, x]) => x === d[0][1])) return [[t('proto.cmp.each_skill', { v: sg(d[0][1]) }), col(d[0][1])]];
   return d.map(([id, x]) => [SKILLS[id].name + ': ' + sg(x), col(x)]);
 }
 /** Сравнение с надетым (QA B-17/B-18): по итоговым числам героя, с учётом свойств; для перстней — с обоими. */
@@ -430,17 +428,18 @@ export function compareLines(it, hero) {
     if (cur === it) continue;
     const [a, b] = tryOn(hero, it, slot);
     const diffs = [];
-    for (const [k, name, dp] of CMP_KEYS) {
+    for (const [k, label, dp] of CMP_KEYS) {
+      const name = t(label);   // m1h/m1i: все подписи сравнения — ключи ru.json
       if (k === 'skl') { diffs.push(...skillRankDiffs(a.skl, b.skl)); continue; }
       const d = b[k] - a[k];
       if (Math.abs(d) < (dp ? Math.pow(10, -dp) / 2 : 0.5)) continue;
       if (k === 'dpsN' && Math.abs(d - (b.dps - a.dps)) < 0.05) continue;   // «по нечисти» — только если отличается от общего
       diffs.push([`${name}: ${d > 0 ? '+' : '−'}${fmt(Math.abs(d), dp)}`, d > 0 ? PAL.nebyl : PAL.red_lt]);
     }
-    const head = !cur ? 'Слот «' + SLOT_NAMES[slot] + '» свободен' : targets.length > 1 ? 'Вместо «' + cur.name + '»:' : 'Против надетого:';
+    const head = !cur ? t('proto.cmp.slot_free', { slot: SLOT_NAMES[slot] }) : targets.length > 1 ? t('proto.cmp.instead', { item: cur.name }) : t('proto.cmp.vs_equipped');
     if (!cur && !diffs.length) { out.push([head, PAL.nebyl]); continue; }
     out.push([head, !cur ? PAL.nebyl : PAL.mist]);
-    if (!diffs.length) out.push(['без изменений', PAL.mist]);
+    if (!diffs.length) out.push([t('proto.cmp.no_change'), PAL.mist]);
     else out.push(...diffs.slice(0, 6));
   }
   return out;

@@ -1,4 +1,4 @@
-"""Проверки вехи M1c: береста возврата и Чуров проход, былинные вещи. Вызываются из verify_playwright.py на свежей загрузке
+"""Проверки вехи M1c: береста возврата и Путевой проход, былинные вещи. Вызываются из verify_playwright.py на свежей загрузке
 (после раздела M1b); отдельно — `--only-m1c`."""
 import json
 import os
@@ -76,9 +76,9 @@ async def run_m1c(pg, G, check, wait, client_of, client_scr, a):
         return { portal: true, zone: P.zone, tzone: P.tzone, n: h.scrollCount(), inField: g.map.objects.includes(P.field), inTown: tz.objects.includes(P.town),
                  dHero: +Math.hypot(P.field.x - h.x, P.field.y - h.y).toFixed(2), dKrada: +Math.hypot(P.town.x - k.x, P.town.y - k.y).toFixed(2),
                  log: g.log.lines.slice(-3).map(l => l.text || l[0] || ''), notice: g.notice && g.notice.text, ttl: P.ttl }; })()''')
-    check('M1c ПКМ по бересте в котомке: подсказка «Береста возврата ×3», каст 1 с (на 0,5 с прохода ещё нет), затем «Чуров проход открыт», береста −1; конец прохода рядом с героем и у крады Ладоги (в тихом круге)',
+    check('M1c ПКМ по бересте в котомке: подсказка «Береста возврата ×3», каст 1 с (на 0,5 с прохода ещё нет), затем «Путевой проход открыт», береста −1; конец прохода рядом с героем и у крады Ладоги (в тихом круге)',
           tip and tip['kind'] == 'scroll' and mid['act'] == 'read' and not mid['portal'] and mid['n'] == n0 and s2['portal'] and s2['zone'] == 'trail' and s2['tzone'] == 'ladoga'
-          and s2['n'] == n0 - 1 and s2['inField'] and s2['inTown'] and s2['dHero'] < 2.5 and s2['dKrada'] < 6 and s2['notice'] == 'Чуров проход открыт' and s2['ttl'] == 60,
+          and s2['n'] == n0 - 1 and s2['inField'] and s2['inTown'] and s2['dHero'] < 2.5 and s2['dKrada'] < 6 and s2['notice'] == 'Путевой проход открыт' and s2['ttl'] == 60,
           {'tip': tip, 'mid': mid, 'after': s2})
 
     # --- 6. туда и обратно щелчками по проходу
@@ -104,8 +104,8 @@ async def run_m1c(pg, G, check, wait, client_of, client_scr, a):
     await G('(() => { const g = __game; if (g.portal && g.portal.closing) g.simulate(0.7); else if (g.portal) { g.closePortal("used"); g.simulate(0.7); } })()')
     s3 = await G('''(() => { const g = __game, h = g.hero, o = window.__open; return { zone: g.zone.id, d: +Math.hypot(h.x - o[0], h.y - o[1]).toFixed(2), portal: !!g.portal,
         objs: Object.values(g.zoneStates).reduce((n, st) => n + st.map.objects.filter(x => x.type === 'portal').length, 0), uses: g.counters.portalUses }; })()''')
-    check('M1c Чуров проход: щелчок по проходу (подпись «Чуров проход: Ладога») — к краде Ладоги; щелчок по проходу у крады — назад на тропу, к месту открытия; после возвращения проход закрыт',
-          hov and hov['type'] == 'portal' and hov['label'] == 'Чуров проход: Ладога' and s1['zone'] == 'ladoga' and s1['inTown'] and s1['d'] < 2.5
+    check('M1c Путевой проход: щелчок по проходу (подпись «Путевой проход: Ладога») — к краде Ладоги; щелчок по проходу у крады — назад на тропу, к месту открытия; после возвращения проход закрыт',
+          hov and hov['type'] == 'portal' and hov['label'] == 'Путевой проход: Ладога' and s1['zone'] == 'ladoga' and s1['inTown'] and s1['d'] < 2.5
           and s3['zone'] == 'trail' and s3['d'] < 3 and not s3['portal'] and s3['objs'] == 0 and s3['uses'] == 2, {'hover': hov, 'town': s1, 'back': s3})
 
     # --- 7. срок прохода 60 с — в любой зоне; прерывание каста сильным ударом; гибель не закрывает проход
@@ -150,19 +150,19 @@ async def run_m1c(pg, G, check, wait, client_of, client_scr, a):
         const c = I.rollItem(15, Math.random, 0, { forceRarity: 'unique' }); out.high = c.unique; const seen = new Set(); for (let i = 0; i < 400; i++) seen.add(I.rollItem(20, Math.random, 0, { forceRarity: 'unique' }).unique);
         out.pool = [...seen].sort(); const loot = g.loot.spawnItem(10, 10, b); out.color = loot.color; out.label = loot.label; g.loot.items = g.loot.items.filter(x => x !== loot);
         Math.random = rnd0; return out; })()'''.replace('__P__', P))
-    check('M1c выбор былинной (заглушка droptables.uniquePick): нет подходящей по ilvl — выпадает дивной; наградные «Громовник» и «Лунница» в случайном пуле не встречаются; подпись на земле бронзой (bronze_lt)',
+    check('M1c выбор былинной (заглушка droptables.uniquePick): нет подходящей по ilvl — выпадает дивной; наградные «Громовой знак» и «Лунница» в случайном пуле не встречаются; подпись на земле бронзой (bronze_lt)',
           s['low'] == 'rare' and s['mid'][0] == 'unique' and s['mid'][1] in ('U1', 'U3') and s['pool'] == ['U1', 'U3', 'U4', 'U5', 'U6', 'U7', 'U8'] and s['color'] == '#d39a45', s)
 
-    # --- 10. Кривша пал → «Громовник» у подножия идола: в котомку, один раз, фиксированные свойства
+    # --- 10. Кривша пал → «Громовой знак» у подножия идола: в котомку, один раз, фиксированные свойства
     s = await G('''(() => { const g = __game, h = g.hero; __P__ g.enterZone('trail', 'gate'); delete g.zoneStates.kapishche; g.enterZone('kapishche', 'from_trail'); const m = g.map;
         h.x = m.idol.x - 1; h.y = m.idol.y + 4; h.stop(); const b = g.riseBoss('test'); g.simulate(2.3); h.invuln = 0; b.takeDamage(99999, g, 'melee', h); g.simulate(0.3);
         const r = g.objectById('gromovnik'); h.x = r.sx; h.y = r.sy; h.cmd = null; h.interact(r); g.simulate(1, () => r.done);
         const items = h.inv.items.filter(i => i.unique === 'U2'); const it = items[0]; h.interact(r); g.simulate(1);
         Math.random = rnd0; return { done: r.done, n: items.length, n2: h.inv.items.filter(i => i.unique === 'U2').length, name: it && it.name, rar: it && it.rarity, mods: it && it.mods, req: it && it.req, lore: it && it.lore,
                  type: it && it.type, notice: g.notice && g.notice.text, hidden: !!(r.prop && r.prop.taken) }; })()'''.replace('__P__', P))
-    check('M1c «Громовник» (U2, награда М1): после Кривши у подножия идола, щелчок — в котомку один раз; оберег, треб. 5, +1 ко всем навыкам, +15 к жизни, сопр. огню +10%, присказка из act1_texts §14',
-          s['done'] and s['n'] == 1 and s['n2'] == 1 and s['name'] == 'Громовник' and s['rar'] == 'unique' and s['mods'] == {'skillAll': 1, 'hp': 15, 'resFire': 10}
-          and s['req'] == 5 and s['lore'] == 'Уцелел в пепле капища. Перун своих не оставляет.' and s['type'] == 'neck' and s['hidden'] and s['notice'] == 'Былинная вещь: Громовник', s)
+    check('M1c «Громовой знак» (U2, награда М1): после Кривши у подножия идола, щелчок — в котомку один раз; оберег, треб. 5, +1 ко всем навыкам, +15 к жизни, сопр. огню +10%, присказка из act1_texts §14',
+          s['done'] and s['n'] == 1 and s['n2'] == 1 and s['name'] == 'Громовой знак' and s['rar'] == 'unique' and s['mods'] == {'skillAll': 1, 'hp': 15, 'resFire': 10}
+          and s['req'] == 5 and s['lore'] == 'Уцелел в пепле капища. Перун своих не оставляет.' and s['type'] == 'neck' and s['hidden'] and s['notice'] == 'Былинная вещь: Громовой знак', s)
 
     # --- 11. тултип и сравнение (мышью), надевание ПКМ, свойства в силе
     s = await G('''(() => { const g = __game, h = g.hero; __P__ g.enterZone('zalesye', 'krada', { respawn: true }); let k = 0; while (h.level < 6 && k++ < 20) h.gainXp(g.dbg.xpToNext(h.level), g);
@@ -173,12 +173,12 @@ async def run_m1c(pg, G, check, wait, client_of, client_scr, a):
     await pg.mouse.move(*(await client_scr(cx, cy))); await wait(150)
     tip = await G('''(() => { const g = __game, T = g.ui.lastTip; if (!T) return null; const { lines } = g.dbg.itemLines(T.item); return { name: T.item.name, w: T.w, h: T.h, lines: lines.map(l => l[0]), cols: lines.map(l => l[1]), cmp: g.dbg.cmp(T.item).map(l => l[0]) }; })()''')
     check('M1c тултип былинной: имя и «Былинная вещь» бронзой, база, требование, свойства, присказка бронзой; сравнение — слот «Шея» свободен: Жизнь +15, Ранги навыков +, Сопр. огню +10',
-          tip and tip['lines'][0] == 'Громовник' and tip['lines'][1] == 'Былинная вещь' and tip['cols'][0] == tip['cols'][1] == 'bronze_lt' and 'Оберег-подвеска' in tip['lines']
+          tip and tip['lines'][0] == 'Громовой знак' and tip['lines'][1] == 'Былинная вещь' and tip['cols'][0] == tip['cols'][1] == 'bronze_lt' and 'Оберег-подвеска' in tip['lines']
           and '+1 ко всем выученным навыкам' in tip['lines'] and '+15 к жизни' in tip['lines'] and 'Сопротивление огню +10%' in tip['lines'] and tip['lines'][-1].startswith('Уцелел') and tip['cols'][-1] == 'lore'
           and tip['cmp'][0].startswith('Слот «') and 'Жизнь: +15' in tip['cmp'] and 'Сопр. огню, %: +10' in tip['cmp'] and 'Каждый выученный навык: +1' in tip['cmp'], tip)
     await pg.mouse.click(*(await client_scr(cx, cy)), button='right'); await wait(150)
     s = await G('''(() => { const g = __game, h = g.hero, n = h.equip.neck; return { neck: n && n.unique, hp: h.maxHp, rf: h.res.fire, rk: g.dbg.rankOf(h, 'sshibka'), skl: Object.keys(g.dbg.SKILLS).filter(id => (h.skills[id] || 0) > 0).length }; })()''')
-    check('M1c ПКМ — «Громовник» надет: жизнь +15, сопр. огню +10, «Сшибка» +1 ранг (+1 ко всем навыкам действует на выученные)',
+    check('M1c ПКМ — «Громовой знак» надет: жизнь +15, сопр. огню +10, «Сшибка» +1 ранг (+1 ко всем навыкам действует на выученные)',
           s['neck'] == 'U2' and s['hp'] == base['hp'] + 15 and s['rf'] == base['rf'] + 10 and s['rk'] == base['rk'] + 1, {'before': base, 'after': s})
     # сравнение против надетого и свойства остальных былинных M1-пула
     s = await G('''(async () => { const g = __game, h = g.hero, I = await import('/src/data/items.js'); __P__ const out = {};
@@ -198,7 +198,7 @@ async def run_m1c(pg, G, check, wait, client_of, client_scr, a):
         h.putOn(w0, 'rhand'); h.putOn(hd0, 'head'); h.equip.belt = null; h.equip.feet = null; h.recalc(); g.enterZone('zalesye', 'krada', { respawn: true }); h.hp = h.maxHp;
         Math.random = rnd0; return out; })()'''.replace('__P__', P))
     u1, u3, u4, u5 = s['u1'], s['u3'], s['u4'], s['u5']
-    check('M1c сравнение против надетого: заговорённый оберег против «Громовника» — «Против надетого:», Жизнь и Ранги навыков в минусе',
+    check('M1c сравнение против надетого: заговорённый оберег против «Громового знака» — «Против надетого:», Жизнь и Ранги навыков в минусе',
           s['cmpNeck'][0] == 'Против надетого:' and 'Каждый выученный навык: −1' in s['cmpNeck'], s['cmpNeck'])
     check('M1c свойства былинных в силе: Жало Сокола (+40–60% урона, +3 огня, +1 «Сшибка», огонь +10), Шелом (+30–40% брони, +3 Жив., кровопийство 3%, +20% по Нечисти), Пояс Святогоров (+20 жизни, +15% к зельям, +10% ко всем сопр.), Сапоги-скороходы (+20% бега, +10 Ловк., холод +15)',
           40 <= u1['ed'] <= 60 and u1['d'][1][1] > u1['d'][0][1] and u1['fire'] == 3 and u1['rk'] == 1 and u1['rf'] == 10
@@ -209,7 +209,7 @@ async def run_m1c(pg, G, check, wait, client_of, client_scr, a):
     check('M1c смена зон: надетые былинные, характеристики героя и береста сохраняются (тропа → Залесье → тропа)',
           z['same'] and z['eq'] == ['U1', 'U3', 'U4', 'U5', 'U2'] and z['sc'], z)
 
-    # --- 12. замер: ожидаемые былинные за М1 (GDD §6.8: ≈ 0,3 случайных + «Громовник»)
+    # --- 12. замер: ожидаемые былинные за М1 (GDD §6.8: ≈ 0,3 случайных + «Громовой знак»)
     s = await G('''(() => { const g = __game; __P__ const L = g.loot, keep = L.items; const pools = [];
         for (const id of ['zalesye', 'trail', 'kapishche']) { const st = g.zoneStates[id] || null; const list = st ? [...(st === g.zs ? g.enemies : st.enemies), ...(st.buried || [])] : [];
           pools.push(...list.filter(e => !e.summoned).map(e => ({ x: 10, y: 10, mlvl: e.mlvl, dropTable: e.dropTable, kind: e.kind }))); }
@@ -218,9 +218,9 @@ async def run_m1c(pg, G, check, wait, client_of, client_scr, a):
         for (let r = 0; r < R; r++) { g.firstKills = {}; for (const e of pools) { L.items = []; L.dropFrom(e); for (const d of L.items) if (d.item) { items++; if (d.item.rarity === 'unique') uq++; if (d.item.rarity === 'magic') magic++; if (d.item.rarity === 'rare') rare++; } } }
         L.items = keep; Math.random = rnd0; return { enemies: pools.length, perRun: { items: +(items / R).toFixed(1), magic: +(magic / R).toFixed(1), rare: +(rare / R).toFixed(2), bylina: +(uq / R).toFixed(2) } }; })()'''.replace('__P__', P))
     print('ЗАМЕР M1c:', json.dumps(s, ensure_ascii=False), flush=True)
-    check('M1c замер: добыча за М1 по всем врагам зон + Кривша (400 прогонов) — былинных в среднем > 0 (GDD §6.8 ≈ 0,3 + «Громовник»; расхождение — в отчёте)', s['perRun']['bylina'] > 0, s)
+    check('M1c замер: добыча за М1 по всем врагам зон + Кривша (400 прогонов) — былинных в среднем > 0 (GDD §6.8 ≈ 0,3 + «Громовой знак»; расхождение — в отчёте)', s['perRun']['bylina'] > 0, s)
 
-    # --- скриншот: тропа, открытый проход слева, котомка с тултипом «Громовника» (сравнение с надетым оберегом)
+    # --- скриншот: тропа, открытый проход слева, котомка с тултипом «Громового знака» (сравнение с надетым оберегом)
     sc = await G('''(async () => { const g = __game, h = g.hero, I = await import('/src/data/items.js'); __P__
         g.quest.flags.trailOpen = true; g.enterZone('trail', 'start'); const m = g.map; let best = null;
         for (let i = 0; i < 400 && !best; i++) { const x = m.w * (0.35 + 0.3 * Math.random()), y = m.h * (0.35 + 0.3 * Math.random()); if (g.dbg.circleFree(m, x, y, 0.5) && m.isReachableAt(x, y) && g.dbg.circleFree(m, x + 1, y - 1, 0.6)) best = [x, y]; }
@@ -238,8 +238,8 @@ async def run_m1c(pg, G, check, wait, client_of, client_scr, a):
     s = await G('''(() => { const g = __game, T = g.ui.lastTip, P = g.portal; const [sx, sy] = P ? g.toS(P.field.x, P.field.y) : [0, 0];
         return { zone: g.zone.id, tip: T && T.item.name, tipBox: T && [T.x, T.y, T.w, T.h], portal: !!P, ps: [Math.round(sx), Math.round(sy)] }; })()''')
     vis = s['portal'] and 0 < s['ps'][0] < 320 and 30 < s['ps'][1] < 300 and s['tipBox'] and (s['ps'][0] + 14 < s['tipBox'][0] or s['ps'][1] - 36 > s['tipBox'][1] + s['tipBox'][3] or s['ps'][1] + 6 < s['tipBox'][1])
-    check('скриншот screenshot_m1c.png (1920×1080 = 640×360 ×3): тропа, открытый Чуров проход, котомка с тултипом «Громовника» и сравнением',
-          os.path.exists(SHOT_M1C) and s['zone'] == 'trail' and s['tip'] == 'Громовник' and vis, s)
+    check('скриншот screenshot_m1c.png (1920×1080 = 640×360 ×3): тропа, открытый Путевой проход, котомка с тултипом «Громового знака» и сравнением',
+          os.path.exists(SHOT_M1C) and s['zone'] == 'trail' and s['tip'] == 'Громовой знак' and vis, s)
     await G('(() => { const g = __game; g.ui.closeAll(); if (g.portal) g.closePortal("replaced"); for (const e of g.enemies) e.stagger = 1e9; })()')
     await run_art(pg, G, check, wait, P)
     await run_v18(pg, G, check, wait)
@@ -349,7 +349,7 @@ async def run_art(pg, G, check, wait, P):
           and s['rise0'] == 'rise:0' and s['riseEnd'] == 'rise:5' and s['sumHidden'] == 'rise:0' and s['sumRise'].startswith('rise:')
           and s['corpse'] == 'death:7', s)
 
-    # --- A7. Чуров проход: open→loop→fading→closing 0,6 с (неюзабелен); хитбокс [14,-55,8]; береста на земле
+    # --- A7. Путевой проход: open→loop→fading→closing 0,6 с (неюзабелен); хитбокс [14,-55,8]; береста на земле
     s = await G('''(() => { const g = __game, h = g.hero; g.enterZone('trail', 'start'); if (g.portal) g.closePortal('replaced');
         h.addScroll('beresta', 2); const it = h.inv.items.find(i => i.kind === 'scroll'); h.stop(); h.action = null; h.readScroll(it, g); g.simulate(1.1);
         const P = g.portal; const age = g.time - P.opened;
@@ -365,7 +365,7 @@ async def run_art(pg, G, check, wait, P):
           beresta: !!(g.dbg /* placeholder */), fx: null }; })()''')
     fx = await G('''(async () => { const R = await import('/src/render/rest_fx.js'); return { p: !!R.FX.sheets.p_open && !!R.FX.sheets.p_loop && !!R.FX.sheets.p_fading && !!R.FX.sheets.p_close, b: !!R.FX.sheets.item_beresta }; })()''')
     s['fx'] = fx
-    check('арт Чуров проход (m1c): FX open/loop/fading/close + береста; closing 0,6 с — неюзабелен, затем снят; хитбокс [14,-55,8]',
+    check('арт Путевой проход (m1c): FX open/loop/fading/close + береста; closing 0,6 с — неюзабелен, затем снят; хитбокс [14,-55,8]',
           fx['p'] and fx['b'] and s['canUse'] and s['closing'] and s['blocked'] and s['gone'] and s['box'] == [14, -55, 8] and s['lifeFade'] < 0.17, s)
 
     await G('(() => { const g = __game; for (const e of g.enemies) e.stagger = 1e9; g.combat.teles.length = 0; })()')

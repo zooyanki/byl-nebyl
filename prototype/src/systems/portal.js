@@ -4,7 +4,7 @@
 import { PAL } from '../palette.js';
 import { CFG } from '../data/config.js';
 import { SCROLLS } from '../data/items.js';
-import { t, RU } from '../core/i18n.js';
+import { t } from '../core/i18n.js';
 import { circleFree } from '../world/collision.js';
 
 const SC = () => SCROLLS.beresta;
@@ -115,7 +115,7 @@ export const PortalMixin = {
     return z ? z.name : to;
   },
   portalLabel(o) {
-    const name = (RU['obj.chur_portal'] || {})['Текст'] || 'Чуров проход';
+    const name = t('obj.chur_portal');   // m1h: «Путевой проход» (ru.json), без запасного имени в коде
     return this.portal ? name + ': ' + this.portalDest(o) : name;
   },
   /** Шагнуть в проход: из поля — к краде (город), из города — туда, где проход открыт. */

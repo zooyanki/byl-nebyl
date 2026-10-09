@@ -1,5 +1,5 @@
 {
- "effect": "Кольцо рез на границе безопасной зоны (GDD §4.5, §12.1.5)",
+ "effect": "Кольцо насечек на границе безопасной зоны (GDD §4.5, §12.1.5)",
  "pieces": {
   "groove": {
    "dim": "fx_safe_ring_grooves_dim.png",
@@ -33,7 +33,7 @@
   "lit": "bronze, while the hero rests inside"
  },
  "placement": {
-  "centre": "zone centre = pivot of the крада / Чуров камень / костёр (ground point, screen px)",
+  "centre": "zone centre = pivot of the костёр Залесья / путевой камень / костёр М3 (ground point, screen px)",
   "ellipse": "ground circle of radius R tiles -> screen ellipse rx = R*16*sqrt(2) = R*22.627, ry = R*8*sqrt(2) = R*11.314 (scale.md §1: 22.6 / 11.3 px per tile)",
   "algorithm": [
    "sample the ellipse x = rx*cos(t), y = ry*sin(t); accumulate arc length; perimeter P",
@@ -55,7 +55,7 @@
  "layouts": {
   "R10": {
    "radius_tiles": 10,
-   "used_by": "крада / точка возрождения",
+   "used_by": "костёр / точка возрождения",
    "perimeter_px": 1096.1,
    "count": 91,
    "pieces": [
@@ -609,7 +609,7 @@
   },
   "R6": {
    "radius_tiles": 6,
-   "used_by": "Чуров камень, костёр М3",
+   "used_by": "Путевой камень, костёр М3",
    "perimeter_px": 657.7,
    "count": 55,
    "pieces": [

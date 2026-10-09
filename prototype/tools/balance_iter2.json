@@ -41,20 +41,20 @@
  "fight_L2_vs3anchutka_m2": {
   "runs": 30,
   "deaths": 0,
-  "time": 10.28,
-  "hpLeftPct": 59
+  "time": 10.69,
+  "hpLeftPct": 54
  },
  "fight_L2_vs3upyr1anchutka_m2": {
   "runs": 30,
   "deaths": 0,
-  "time": 13.54,
-  "hpLeftPct": 51
+  "time": 14.18,
+  "hpLeftPct": 53
  },
  "stand_L3": {
   "runs": 30,
-  "mean": 14.23,
+  "mean": 13.62,
   "min": 9.77,
-  "max": 20.77,
+  "max": 18.93,
   "hp": 91,
   "def": 25,
   "block": 0,
@@ -68,9 +68,9 @@
  },
  "stand_L6": {
   "runs": 30,
-  "mean": 10.93,
+  "mean": 11.36,
   "min": 7.93,
-  "max": 18.93,
+  "max": 17.1,
   "hp": 122,
   "def": 41,
   "block": 0,
@@ -84,9 +84,9 @@
  },
  "stand_L10": {
   "runs": 30,
-  "mean": 8.73,
-  "min": 6.1,
-  "max": 13.43,
+  "mean": 8.85,
+  "min": 4.27,
+  "max": 11.6,
   "hp": 164,
   "def": 62,
   "block": 0,

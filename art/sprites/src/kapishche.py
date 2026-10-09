@@ -1,5 +1,5 @@
 """Капище Перуна (М1) objects: огнище (3 around the idol) and идол Перуна.
-scale.md §3.3: огнище 2x2, «как крада»: кладка дров 24, пламя до 72; пламя «осквернённое»
+scale.md §3.3: огнище 2x2, «как костёр»: кладка дров 24, пламя до 72; пламя «осквернённое»
 (зелёное, nebyl) / «освящённое» (тёплое). Идол Перуна 2x2, 104 x 24, в М1 горит: пламя до 136;
 после боя — дымящийся. GDD §8.4 / §12.1.3 / §12.1.5: освящение огнища 6, удержание 3 с.
 Palette v2 only; functions return palette-index frames (-1 transparent)."""
@@ -12,12 +12,12 @@ import effects_rest as R
 from effects_rest import fire_field, sparks, _solid, _over, _glyph_mask, SMALL, TAU
 
 # --------------------------------------------------------------------------
-# огнище: frame 64x120, pivot (32,108) — same cell as the крада
+# огнище: frame 64x120, pivot (32,108) — same cell as the костёр
 # --------------------------------------------------------------------------
 OG_W, OG_H, OG_PIV = 64, 120, (32, 108)
 OG_FLAME = 52                         # above the crib top (24) -> 72 from the ground (+ licks)
 OG_STONES = [(k + 0.5) / 8 * TAU for k in range(8)]
-OG_GLYPH = ["plus", "x", "up", "bar", "x", "plus", "bar", "up"]
+OG_GLYPH = ["n1", "n2", "n3", "n4", "n2", "n1", "n4", "n3"]   # rename_map §5: notches, not signs
 GREEN = {C["red"]: C["pine_dk"], C["red_lt"]: C["nebyl_dk"], C["ember"]: C["nebyl"], C["flame"]: C["nebyl"], C["linen"]: C["linen"]}
 
 
@@ -180,7 +180,7 @@ PR_PAD = (PR_PIV[0] - OG_PIV[0], PR_H - OG_H - (PR_PIV[1] - OG_PIV[1]))   # (lef
 
 def progress():
     """12-frame overlay indexed by hold progress (frame = min(11, floor(p * 12))), drawn over the desecrated
-    hearth: a ground ring of bronze fills clockwise from the front, the stone резы light one by one,
+    hearth: a ground ring of bronze fills clockwise from the front, the stone насечки light one by one,
     a warm core grows at the flame root and warm motes rise."""
     base, masks, order = _hearth_base("desecrated", 0)
     padx, padb = PR_PAD
@@ -212,7 +212,7 @@ def progress():
         for (dx, dy) in ((0, 0), (1, 0), (-1, 0), (0, -1), (0, 1)):
             if 0 <= hx + dx < Wd and 0 <= hy + dy < H:
                 fr[hy + dy, hx + dx] = C["linen"] if (dx, dy) == (0, 0) else C["flame"]
-        # резы light in order
+        # насечки light in order
         _runes(fr, masks, order, None, 0, lit_upto=int(p * 8 + 1e-6))
         # warm core at the flame root (fights the green)
         top = PR_PIV[1] - 24

@@ -9,7 +9,7 @@
  "loop": false,
  "size_note": "20x20 incl. ink outline; centred in the 24-px cell like every 1x1 icon (old beresta 20x18)",
  "atlas": "art/ui/src/items_rus.build() key 'beresta' now returns this drawing (beresta_v2 -> sprites/src/beresta.py); re-run prototype/tools/export_ui.py to refresh assets/items.png + src/data/ui_atlas.js",
- "notes": "diagonal birch-bark roll, bronze wire, burning Чур rhomb (ember/flame); no red (old icon had a red cord)",
+ "notes": "diagonal birch-bark roll, bronze wire, burning ember rhomb (ember/flame); no red (old icon had a red cord)",
  "image": "item_beresta_icon.png",
  "frame_size": [
   20,

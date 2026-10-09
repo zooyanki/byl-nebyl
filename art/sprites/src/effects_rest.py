@@ -1,13 +1,13 @@
-"""Rest in safe zones (GDD v1.7 §4.5, §12.1.5): крада, Чуров камень, костёр М3,
+"""Rest in safe zones (GDD v1.7 §4.5, §12.1.5): костёр, Путевой камень, костёр М3,
 warm sparks over the hero, and the carved ring that marks the zone border.
 Palette v2 only; every function returns palette-index frames (-1 = transparent).
 
 Sizes (scale.md §3.3, §3.4, §1):
-  крада    2x2 tiles, stone ring r 20x10 (stones 6x4), log crib 24, flame to 72 (48 above
+  костёр    2x2 tiles, stone ring r 20x10 (stones 6x4), log crib 24, flame to 72 (48 above
            the wood); rest flare to 86 (ritual pillar 96 stays reserved)      frame 64x120, pivot (32,108)
-  Чуров камень 1x1, 24x40, carved резы                                         frame 32x56,  pivot (16,48)
+  Путевой камень 1x1, 24x40, carved насечки                                         frame 32x56,  pivot (16,48)
   костёр М3 (у поваленного идола) 1x1: firewood 8, flame 20-24 (rest 30),
-           ring of 8 stones with резы («работает как Чуров камень», GDD §8.4)   frame 48x56,  pivot (24,46)
+           ring of 8 stones with насечки («работает как Путевой камень», GDD §8.4)   frame 48x56,  pivot (24,46)
   hero sparks: overlay in the hero's own 64x64 frame                          frame 64x64,  pivot (32,56)
   zone ring: groove pieces (8 tangent directions) + 4 rune pieces, placed by
            arc length on the 2:1 ellipse (rx = R*22.63, ry = R*11.31 px).
@@ -55,7 +55,7 @@ def _ph(i, n=6):
 
 
 # --------------------------------------------------------------------------
-# fire field (shared by крада and костёр): tongues, loop of 6
+# fire field (shared by костёр and костёр): tongues, loop of 6
 # --------------------------------------------------------------------------
 TONGUES = ((-0.62, 0.55, 0.3), (-0.3, 0.86, 2.1), (0.0, 1.0, 4.0), (0.32, 0.8, 1.2), (0.62, 0.5, 5.0))
 
@@ -128,7 +128,7 @@ def sparks(shape, emitters, i, n=6, cols=("ember", "flame", "linen")):
 
 
 # --------------------------------------------------------------------------
-# 1. крада
+# 1. костёр
 # --------------------------------------------------------------------------
 KR_W, KR_H, KR_PIV = 64, 120, (32, 108)
 KR_FLAME = {"idle": 55, "rest": 68}          # above the wood (top of the crib at 24): 72 / 86 from the ground
@@ -203,15 +203,16 @@ def krada(state):
 
 
 # --------------------------------------------------------------------------
-# 2. Чуров камень (резы smoulder bronze; rest: bronze_hi + halo + rising motes)
+# 2. Путевой камень (насечки smoulder bronze; rest: bronze_hi + halo + rising motes)
 # --------------------------------------------------------------------------
 CH_W, CH_H, CH_PIV = 32, 56, (16, 48)
-GLYPHS = {
-    "tyr": ["...#...", "..###..", ".#.#.#.", "...#...", "...#...", "...#...", "...#..."],
-    "tree": ["#..#..#", ".#.#.#.", "..###..", "...#...", "...#...", "..#.#..", ".#...#."],
-    "romb": ["...#...", "..#.#..", ".#.#.#.", "#.###.#", ".#.#.#.", "..#.#..", "...#..."],
+GLYPHS = {   # rename_map §5 (09.10): plain notches on the waystone — no runes, no signs (was «стрела», «ромб с крестом», «древо»)
+    "cut2": [".......", ".#####.", ".......", ".#####.", ".......", ".......", "......."],          # two long cuts
+    "tally": [".......", "#.#.#.#", "#.#.#.#", "#.#.#.#", ".......", ".......", "......."],         # four short notches
+    "cut1": [".......", "#######", ".......", ".......", ".......", ".......", "......."],          # one long cut
 }
-SMALL = {"plus": [".#.", "###", ".#."], "x": ["#.#", ".#.", "#.#"], "up": [".#.", "#.#", "#.#"], "bar": ["#.#", "#.#", "###"]}
+# 3x3 notches on the stones of the костёр М3 and the огнища (were «plus», «x», «up», «bar»)
+SMALL = {"n1": ["...", "###", "..."], "n2": ["###", "...", "###"], "n3": ["#.#", "#.#", "#.#"], "n4": ["#.#", "#.#", "..."]}
 
 
 def _stone_static():
@@ -266,7 +267,7 @@ def churov(state):
     base = _stone_static()
     solid = base >= 0
     gx = CH_PIV[0] - 4
-    masks = [_glyph_mask(base.shape, n, gx, y) for n, y in (("tyr", 13), ("romb", 22), ("tree", 31))]
+    masks = [_glyph_mask(base.shape, n, gx, y) for n, y in (("cut2", 13), ("tally", 22), ("cut1", 31))]
     frames = []
     for i in range(6):
         fr = _rune_paint(base.copy(), masks, state, i, solid)
@@ -287,7 +288,7 @@ def churov(state):
 CF_W, CF_H, CF_PIV = 48, 56, (24, 46)
 CF_FLAME = {"idle": 21, "rest": 25}           # above the firewood top (8): 23 / 30 from the ground
 CF_STONES = [k / 8 * TAU for k in range(8)]
-CF_GLYPH = ["plus", "x", "up", "bar", "plus", "x", "up", "bar"]
+CF_GLYPH = ["n1", "n2", "n3", "n4", "n1", "n2", "n3", "n4"]
 
 
 def _campfire_base(state, i):
@@ -385,11 +386,11 @@ def hero_sparks():
 GR_W, GR_H, GR_PIV = 16, 12, (8, 6)
 RU_W, RU_H, RU_PIV = 12, 8, (6, 4)
 RING_COL = {"dim": ("night", "slate_dk"), "lit": ("bronze_dk", "bronze")}
-RUNES_G = [  # ground runes, squashed 2:1 (seen on the ground)
-    ["...#.....", "..###....", ".#.#.#...", "...#.....", "...#....."],
-    ["#...#...#", ".#..#..#.", "..#####..", "....#....", "...#.#..."],
-    ["....#....", "..##.##..", "##..#..##", "..##.##..", "....#...."],
-    ["..#...#..", "...#.#...", "....#....", "...#.#...", "..#...#.."],
+RUNES_G = [  # rename_map §5: «кольцо насечек» — groups of short notches across the groove (squashed 2:1); no runes
+    [".........", "..#.#.#..", "..#.#.#..", ".........", "........."],
+    [".........", "...#.#...", "...#.#...", ".........", "........."],
+    [".........", ".#.#.#.#.", ".#.#.#.#.", ".........", "........."],
+    [".........", "..#...#..", "..#...#..", ".........", "........."],
 ]
 SPACING_PX = 12.0          # arc length between pieces
 RUNE_EVERY = 4             # every 4th piece (k % 4 == 2) is a rune
@@ -405,7 +406,7 @@ def groove_pieces(state):
         for s in np.linspace(-3.5, 3.5, 29):
             x, y = GR_PIV[0] - 0.5 + u[0] * s, GR_PIV[1] - 0.5 + u[1] * s
             fr[int(round(y)), int(round(x))] = c0
-        for s in (-2.0, 2.0):                                 # two notches across the groove (резы)
+        for s in (-2.0, 2.0):                                 # two notches across the groove (насечки)
             x, y = GR_PIV[0] - 0.5 + u[0] * s, GR_PIV[1] - 0.5 + u[1] * s
             n_ = (-u[1], u[0])
             xx, yy = int(round(x + n_[0] * 1.2)), int(round(y + n_[1] * 1.2))

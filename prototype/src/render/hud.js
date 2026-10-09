@@ -35,7 +35,9 @@ export const LAYOUT = (() => {
   return L;
 })();
 
-export const BTN = (() => { const b = UI_ATLAS.hud_buttons; return { x: b.x, y: b.y, s: 20, g: 2, keys: b.keys, labels: b.labels }; })();
+// подписи кнопок — из ru.json (m1i: не из ui_atlas.js); порядок клавиш — из атласа
+const BTN_LABEL = { C: 'ui.hero.title', I: 'ui.gear.title', T: 'ui.skills.title', M: 'proto.btn.map', J: 'ui.journal.title', ESC: 'proto.btn.menu' };
+export const BTN = (() => { const b = UI_ATLAS.hud_buttons; return { x: b.x, y: b.y, s: 20, g: 2, keys: b.keys, get labels() { return b.keys.map((k) => tr(BTN_LABEL[k])); } }; })();
 export function buttonAt(mx, my) {
   if (my < BTN.y || my >= BTN.y + BTN.s) return -1;
   const i = Math.floor((mx - BTN.x) / (BTN.s + BTN.g));
@@ -154,11 +156,11 @@ function drawStatic(ctx) {
     rect(c, S.x, S.y, S.w, 26, PAL.ink);
     rect(c, S.x + 1, S.y + 1, S.w - 2, 24, PAL.wood_dk);
     for (const [a, b] of [[5, 16], [9, 14], [4, 12]]) { rect(c, S.x + a, S.y + b, 6, 2, PAL.slate_lt); rect(c, S.x + a, S.y + b - 1, 6, 1, PAL.birch); }
-    drawText(c, S.x + S.w - 4, S.y + 3, 'Серебро:', PAL.mist, { align: 'r' });   // «Серебро: N» (GDD §10.1)
+    drawText(c, S.x + S.w - 4, S.y + 3, tr('proto.hud.silver_label'), PAL.mist, { align: 'r' });   // «Серебро: N» (GDD §10.1)
     const lv = L.level;
     disc(c, lv.cx, lv.cy, 14, PAL.ink); disc(c, lv.cx, lv.cy, 13, PAL.bronze);
     disc(c, lv.cx, lv.cy, 11, PAL.ink); disc(c, lv.cx, lv.cy, 10, PAL.wood_dk);
-    drawText(c, lv.cx + 1, lv.cy - 10, 'ур.', PAL.bronze_lt, { align: 'c' });
+    drawText(c, lv.cx + 1, lv.cy - 10, tr('proto.hud.lvl'), PAL.bronze_lt, { align: 'c' });
   }
   ctx.drawImage(staticLayer, 0, 0);
 }
@@ -180,13 +182,22 @@ export function drawHud(ctx, game) {
   const ls = h.lmbSkill();
   if (ls) skillIcon(ctx, h, ls, L.lmb.x + 3, L.lmb.y + 3, 26, false, true);   // GDD v1.5: без Яри ЛКМ не сереет — базовый удар доступен
   else iconSword(ctx, L.lmb.x + 3, L.lmb.y + 3, L.lmb.s - 6);
-  drawText(ctx, L.lmb.x + 3, L.lmb.y + L.lmb.s - 11, 'ЛКМ', PAL.birch, { outline: true });
+  drawText(ctx, L.lmb.x + 3, L.lmb.y + L.lmb.s - 11, tr('proto.hud.lmb'), PAL.birch, { outline: true });
   // пояс
   const B = L.belt;
   B.slots.forEach((s, i) => {
     const hv = game.hoverBelt === i;
     woodSlot(ctx, s.x, s.y, s.s, hv);
     const b = h.belt[i];
+    // m1f P1.8: ячейка подкрашена по содержимому — жизнь красным, Ярь синим, живая вода зелёным (красные и синие путали)
+    const res = b && !b.scroll && POTIONS[b.kind] ? POTIONS[b.kind].res : null;
+    const tint = res === 'hp' ? [PAL.red_dk, PAL.red_lt] : res === 'yar' ? [PAL.blue_dk, PAL.blue_lt] : res ? [PAL.nebyl_dk, PAL.nebyl] : null;
+    (game.beltTint = game.beltTint || [])[i] = res;
+    if (tint) {
+      ctx.save(); ctx.globalAlpha = 0.85; rect(ctx, s.x + 1, s.y + 1, s.s - 2, s.s - 2, tint[0]); ctx.restore();
+      rect(ctx, s.x + 1, s.y + s.s - 3, s.s - 2, 2, tint[1]);
+      ctx.strokeStyle = tint[1]; ctx.lineWidth = 1; ctx.globalAlpha = 0.8; ctx.strokeRect(s.x + 0.5, s.y + 0.5, s.s - 1, s.s - 1); ctx.globalAlpha = 1;
+    }
     if (b) {
       drawIcon(ctx, b.scroll ? SCROLLS[b.scroll].icon : POTIONS[b.kind].icon, s.x, s.y + 1, s.s, s.s);
       if (b.scroll && game.berestaGrey()) { ctx.save(); ctx.globalAlpha = 0.6; rect(ctx, s.x + 1, s.y + 1, s.s - 2, s.s - 2, PAL.slate_dk); ctx.restore(); }   // береста серая на арене живого босса
@@ -207,7 +218,15 @@ export function drawHud(ctx, game) {
   const R = L.rmb;
   woodSlot(ctx, R.x, R.y, R.s, true);
   if (h.rmb && SKILLS[h.rmb]) skillIcon(ctx, h, h.rmb, R.x + 3, R.y + 3, 26, false);
-  drawText(ctx, R.x + 3, R.y + R.s - 11, 'ПКМ', PAL.birch, { outline: true });
+  // m1f P0.4: отказ ПКМ (нет Яри, перезарядка, запомненный щелчок не дождался) — вспышка на иконке: синяя — Ярь, красная — прочее
+  const dn = game.rmbDeny;
+  if (dn && dn.t > 0) {
+    const k = Math.min(1, dn.t / 0.25);
+    ctx.save(); ctx.globalAlpha = 0.55 * k; rect(ctx, R.x + 3, R.y + 3, 26, 26, dn.why === 'yar' ? PAL.blue : PAL.red); ctx.restore();
+    ctx.save(); ctx.globalAlpha = k; ctx.strokeStyle = dn.why === 'yar' ? PAL.blue_lt : PAL.red_lt; ctx.lineWidth = 2;
+    ctx.strokeRect(R.x + 1, R.y + 1, R.s - 2, R.s - 2); ctx.restore();
+  }
+  drawText(ctx, R.x + 3, R.y + R.s - 11, tr('proto.hud.rmb'), PAL.birch, { outline: true });
   // рывок (Пробел)
   const D = L.dash;
   drawIcon(ctx, 'sk_ryvok_16', D.x + 1, D.y + 1, 16, 16);
@@ -238,13 +257,14 @@ export function drawHud(ctx, game) {
   const lv = L.level;
   drawText(ctx, lv.cx + 1, lv.cy - 1, String(h.level), PAL.bronze_hi, { align: 'c', outline: true });
   // шары
-  orb(ctx, L.orbL, h.hp / h.maxHp, 'life', 'Жизнь', Math.ceil(h.hp) + '/' + h.maxHp, t);
-  orb(ctx, L.orbR, h.yar / h.maxYar, 'yar', 'Ярь', Math.floor(h.yar) + '/' + h.maxYar, t + 1.7);
+  orb(ctx, L.orbL, h.hp / h.maxHp, 'life', tr('ui.hud.life'), Math.ceil(h.hp) + '/' + h.maxHp, t);
+  orb(ctx, L.orbR, h.yar / h.maxYar, 'yar', tr('ui.hud.yar'), Math.floor(h.yar) + '/' + h.maxYar, t + 1.7);
   if (h.yarTier) drawText(ctx, L.orbR.cx, L.orbR.cy - L.orbR.r + 4, 'I', PAL.bronze_hi, { align: 'c', outline: true });
   if (h.chad >= 3) { ctx.save(); ctx.globalAlpha = 0.28; disc(ctx, L.orbR.cx, L.orbR.cy, L.orbR.r - 2, PAL.slate_lt); ctx.restore(); }   // чад: серая дымка на Яри
 
   drawTopUi(ctx, game);
   drawLog(ctx, game);
+  drawHint(ctx, game);
 }
 
 export function drawHudTooltip(ctx, game) {
@@ -260,7 +280,7 @@ function plate(ctx, x, y, w, h, alpha = 0.72) {
 function drawTopUi(ctx, game) {
   const h = game.hero, ui = game.ui;
   // задание (под окном «Витязь» не рисуем)
-  if (!ui.charOpen && game.quest) drawQuestTracker(ctx, game);
+  if (!ui.charOpen && !(game.town && game.town.open) && game.quest) drawQuestTracker(ctx, game);   // m1i: и под окнами Ладоги (торг, ладья)
   // зона, мини-карта и кнопки меню (как на макете HUD v2); под окном «Котомка» прячутся
   if (game.topRightVisible) {
     const [z1, z2] = game.zone.band;
@@ -287,14 +307,14 @@ function drawTopUi(ctx, game) {
       drawText(ctx, tx + 4, BTN.y + BTN.s + 5, txt, PAL.linen);
     }
     let sy = BTN.y + BTN.s + (hb >= 0 ? 19 : 4);
-    if (game.audio.muted) { drawText(ctx, VIEW_W - 6, sy, 'Звук выключен (N)', PAL.mist, { align: 'r', outline: true }); sy += 10; }
-    if (game.labelsAlways) drawText(ctx, VIEW_W - 6, sy, 'Подписи: всегда (Z)', PAL.mist, { align: 'r', outline: true });
+    if (game.audio.muted) { drawText(ctx, VIEW_W - 6, sy, tr('proto.hud.muted'), PAL.mist, { align: 'r', outline: true }); sy += 10; }
+    if (game.labelsAlways) drawText(ctx, VIEW_W - 6, sy, tr('proto.hud.labels_always'), PAL.mist, { align: 'r', outline: true });
   }
   if (game.debug) {
     // отладочный слой для QA (ответ дизайнера 08.10: счётчика «N/28» в HUD нет — только здесь, по ?debug)
     drawText(ctx, VIEW_W - 6, 150, 'FPS ' + Math.round(game.fps), PAL.mist, { align: 'r' });
     const k = game.zoneKills();
-    drawText(ctx, VIEW_W - 6, 160, 'Убито ' + k.killed + '/' + k.total, PAL.mist, { align: 'r' });
+    drawText(ctx, VIEW_W - 6, 160, tr('proto.hud.killed', { n: String(k.killed), total: String(k.total) }), PAL.mist, { align: 'r' });
   }
   // полоса здоровья босса (GDD §5.4): во всю верхнюю середину, имя и фаза; пока босс в бою или поднимается
   const b = game.boss, bossBar = b && !b.dead && b.state !== 'idle' && !ui.anyOpen;
@@ -309,7 +329,7 @@ function drawTopUi(ctx, game) {
     rect(ctx, x, y + 1, fw, 1, b.phase === 2 ? PAL.flame : PAL.red_lt);
     if (b.B && b.B.hearthPhase) rect(ctx, x + Math.round(w * b.B.hearthPhase.atHpPct / 100), y + 1, 1, 10, PAL.bronze_hi);   // отметка фазы огнища
     drawText(ctx, VIEW_W / 2, y + 2, b.name, PAL.bronze_hi, { align: 'c', outline: true });
-    if (b.invuln > 0 && b.state !== 'rise') drawText(ctx, VIEW_W / 2, y + 15, 'Неуязвим', PAL.flame, { align: 'c', outline: true });
+    if (b.invuln > 0 && b.state !== 'rise') drawText(ctx, VIEW_W / 2, y + 15, tr('proto.fx.invuln'), PAL.flame, { align: 'c', outline: true });
   }
   // цель
   const e = game.hoverEnemy || (game.lastTarget && !game.lastTarget.dead && game.lastTarget.lastHitT < 3 ? game.lastTarget : null);
@@ -321,14 +341,18 @@ function drawTopUi(ctx, game) {
     rect(ctx, x, y, w, 11, PAL.red_dk);
     rect(ctx, x, y, Math.round(w * e.hp / e.maxHp), 11, PAL.red);
     rect(ctx, x, y, Math.round(w * e.hp / e.maxHp), 1, PAL.red_lt);
-    drawText(ctx, VIEW_W / 2, y + 1, e.name + ' · ур. ' + e.mlvl, e.elite ? PAL.bronze_hi : PAL.linen, { align: 'c', outline: true });
+    drawText(ctx, VIEW_W / 2, y + 1, tr('proto.nameplate', { name: e.name, level: tr('ui.hud.level', { level: e.mlvl }) }), e.elite ? PAL.bronze_hi : PAL.linen, { align: 'c', outline: true });
     if (title) drawText(ctx, VIEW_W / 2, y + 15, title, PAL.bronze_lt, { align: 'c', outline: true });
-    drawText(ctx, VIEW_W / 2, y + (title ? 26 : 15), e.def.family + ' · ' + e.def.realm, e.def.realm === 'Быль' ? PAL.red_lt : PAL.nebyl, { align: 'c', outline: true });
+    // m1f P1.10: у Соломенника (и всего без семьи/царства) строки «семья · царство» нет — раньше было «· UNDEFINED»
+    game.targetSub = e.def.family && e.def.realm ? e.def.family + ' · ' + e.def.realm : null;
+    if (e.def.family && e.def.realm) drawText(ctx, VIEW_W / 2, y + (title ? 26 : 15), e.def.family + ' · ' + e.def.realm, e.def.realm === 'Быль' ? PAL.red_lt : PAL.nebyl, { align: 'c', outline: true });
   }
   // подсказка в начале
-  if (game.time < 14 && !game.hero.dead && !ui.anyOpen) {
+  // m1f P1.5: только при первом входе в игру (флаг в localStorage ставится, когда подсказка догорела)
+  if (game.time >= 14 && !game.ctrlHintSeen) { game.ctrlHintSeen = true; try { localStorage.setItem('byl_ctrl_hint_seen', '1'); } catch (e) { /* нет localStorage */ } }
+  if (game.time < 14 && !game.ctrlHintSeen && !game.hero.dead && !ui.anyOpen) {
     const a = game.time < 11 ? 1 : (14 - game.time) / 3;
-    const s = 'ЛКМ — идти/бить · ПКМ — навык · F1–F6 — выбрать навык · Пробел — рывок · T — навыки · Alt — подписи · Tab — карта';
+    const s = tr('proto.hud.ctrl_hint');
     const w = textWidth(s) + 10;
     ctx.save(); ctx.globalAlpha = a;
     plate(ctx, VIEW_W / 2 - w / 2, 290, w, 14, 0.6);
@@ -345,10 +369,34 @@ function drawTopUi(ctx, game) {
     const maxW = win ? Math.max(120, Math.min(300, 2 * Math.min(game.camCX, VIEW_W - game.camCX) - 16)) : 300;
     if (textWidth(N.text) <= maxW) lines.push(N.text);
     else { let cur = ''; for (const w of N.text.split(' ')) { const nx = cur ? cur + ' ' + w : w; if (textWidth(nx) > maxW && cur) { lines.push(cur); cur = w; } else cur = nx; } if (cur) lines.push(cur); }
-    const y0 = win ? 160 : lines.length > 1 ? 90 : 64;   // несколько строк — ниже трекера (он до y 84)
+    // m1h: одна строка на y 64 стоит вровень с трекером задания (x ≤ 210, y ≤ 84) — если по ширине заходит на него, тоже опускаем под трекер
+    const QA = UI_ATLAS.hud_quest, gap = QA ? 2 * (game.camCX - (QA.x + QA.w) - 4) : maxW;
+    const y0 = win ? 160 : lines.length > 1 || Math.max(...lines.map((l) => textWidth(l))) > gap ? 90 : 64;   // несколько строк — ниже трекера (он до y 84)
     game._noticeBox = { x: game.camCX, y: y0, w: Math.max(...lines.map((l) => textWidth(l))), lines: lines.length };
-    lines.forEach((l, i) => drawText(ctx, game.camCX, y0 + i * 11, l, N.color, { align: 'c', outline: true }));
+    if (N.key === 'mission') drawMissionBanner(ctx, game, N, lines, y0);   // m1i (П.16): «Миссия пройдена» — плашкой-баннером
+    else lines.forEach((l, i) => drawText(ctx, game.camCX, y0 + i * 11, l, N.color, { align: 'c', outline: true }));
   }
+}
+
+/** «Миссия пройдена»: баннер — тёмная плашка с бронзовой рамкой и «хвостами» ленты по бокам, текст бронзой; въезжает
+ *  и гаснет вместе с уведомлением. Ширина — по тексту. */
+function drawMissionBanner(ctx, game, N, lines, y0) {
+  const tw = Math.max(...lines.map((l) => textWidth(l))), w = tw + 36, h = 10 + lines.length * 11, x = Math.round(game.camCX - w / 2), y = y0 - 6;
+  const age = game.time - N.t, dur = N.dur || 4, a = Math.min(1, age / 0.25, (dur - age) / 0.5);
+  ctx.save(); ctx.globalAlpha = Math.max(0, a);
+  for (const sd of [-1, 1]) {                                            // хвосты ленты
+    const ex = sd < 0 ? x - 10 : x + w + 10, ix = sd < 0 ? x + 4 : x + w - 4;
+    poly(ctx, [[ix, y + 4], [ex, y + 4], [ex - sd * 5, y + h / 2 + 2], [ex, y + h], [ix, y + h]], PAL.red_dk);
+    poly(ctx, [[ix, y + h], [ix + sd * 6, y + h], [ix, y + h + 3]], PAL.ink);
+  }
+  rect(ctx, x, y, w, h, PAL.ink);
+  rect(ctx, x + 1, y + 1, w - 2, h - 2, PAL.bronze);
+  rect(ctx, x + 2, y + 2, w - 4, h - 4, PAL.wood_dk);
+  rect(ctx, x + 3, y + 3, w - 6, 1, PAL.bronze_dk);
+  for (const [px, py] of [[x + 2, y + 2], [x + w - 4, y + 2], [x + 2, y + h - 4], [x + w - 4, y + h - 4]]) rect(ctx, px, py, 2, 2, PAL.bronze_hi);
+  lines.forEach((l, i) => drawText(ctx, game.camCX, y + 5 + i * 11, l, PAL.bronze_hi, { align: 'c', outline: true }));
+  ctx.restore();
+  game.bannerDrawn = { x, y, w, h, text: lines.join(' '), t: game.time };
 }
 
 // Трекер задания (макет gameplay_hud_v2 → draw_quest, GDD §8.2): резная рамка с буквицей (assets/hud_quest.png),
@@ -400,16 +448,50 @@ function drawLetter(ctx, game) {
   drawText(ctx, VIEW_W / 2, y + 21, L.text, PAL.ink, { align: 'c', shadow: false, alpha: a });
 }
 
+// m1f P1.5: журнал прижат к левому краю над шаром жизни (шар — x < 90, y ≥ 292), не больше LOG_ROWS строк,
+// полупрозрачная подложка, быстрое угасание (LOG_HOLD + LOG_FADE с); под окнами, на паузе и на экране смерти скрыт.
+export const LOG_BOX = { x: 4, bottom: 286, w: 236, rows: 4 };
+const LOG_HOLD = 4, LOG_FADE = 1;
+function wrapLine(text, w) {
+  if (textWidth(text) <= w) return [text];
+  const out = []; let cur = '';
+  for (const word of text.split(' ')) { const nx = cur ? cur + ' ' + word : word; if (textWidth(nx) > w && cur) { out.push(cur); cur = word; } else cur = nx; }
+  if (cur) out.push(cur);
+  return out;
+}
 function drawLog(ctx, game) {
-  const lines = game.log.lines;
-  let y = 278 - (game.time < 14 ? 16 : 0);
-  for (let i = lines.length - 1; i >= 0; i--) {
-    const l = lines[i];
-    const age = game.log.time - l.t;
-    const a = age > 6 ? Math.max(0, 1 - (age - 6) / 2) : 1;
-    drawText(ctx, 96, y, l.text, l.color, { outline: true, alpha: a });
+  game.logDrawn = 0;
+  if (game.ui.anyOpen || game.state === 'dead' || game.hero.dead || game.paused) return;
+  const rows = [];
+  for (let i = game.log.lines.length - 1; i >= 0 && rows.length < LOG_BOX.rows; i--) {
+    const l = game.log.lines[i], age = game.log.time - l.t;
+    if (age >= LOG_HOLD + LOG_FADE) continue;
+    const a = age > LOG_HOLD ? Math.max(0, 1 - (age - LOG_HOLD) / LOG_FADE) : 1;
+    const parts = wrapLine(l.text, LOG_BOX.w - 6);
+    for (let k = parts.length - 1; k >= 0 && rows.length < LOG_BOX.rows; k--) rows.push({ text: parts[k], color: l.color, a });
+  }
+  let y = LOG_BOX.bottom - 10;
+  for (const r of rows) {
+    ctx.save(); ctx.globalAlpha = 0.5 * r.a; rect(ctx, LOG_BOX.x, y - 1, Math.min(LOG_BOX.w, textWidth(r.text) + 6), 10, PAL.ink); ctx.restore();
+    drawText(ctx, LOG_BOX.x + 3, y, r.text, r.color, { alpha: r.a });
     y -= 10;
   }
+  game.logDrawn = rows.length; game.logBox = { x: LOG_BOX.x, y: y + 10, w: LOG_BOX.w, h: LOG_BOX.bottom - y - 10 };
+}
+
+// m1f P1.5: подсказки обучения и советы — отдельная плашка справа под мини-картой и кнопками (не поверх трекера,
+// не поверх всплывающих «Блок» над героем); под окнами скрыта
+export const HINT_BOX = { right: VIEW_W - 6, y: 176, w: 200 };
+function drawHint(ctx, game) {
+  const H = game.hint; game.hintBox = null;
+  if (!H || game.time - H.t >= H.dur || game.ui.anyOpen || game.state === 'dead' || game.paused) return;
+  const age = game.time - H.t, a = age > H.dur - 0.5 ? Math.max(0, (H.dur - age) / 0.5) : 1;
+  const lines = wrapLine(H.text, HINT_BOX.w - 10), w = Math.max(...lines.map((l) => textWidth(l))) + 10, h = lines.length * 11 + 6;
+  const x = HINT_BOX.right - w;
+  ctx.save(); ctx.globalAlpha = 0.62 * a; rect(ctx, x, HINT_BOX.y, w, h, PAL.ink); ctx.restore();
+  ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = PAL.bronze; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, HINT_BOX.y + 0.5, w - 1, h - 1); ctx.restore();
+  lines.forEach((l, i) => drawText(ctx, x + 5, HINT_BOX.y + 4 + i * 11, l, H.color, { alpha: a }));
+  game.hintBox = { x, y: HINT_BOX.y, w, h };
 }
 
 function drawTooltip(ctx, game) {
@@ -417,17 +499,17 @@ function drawTooltip(ctx, game) {
   let txt = null;
   if (game.hoverBelt >= 0) {
     const b = h.belt[game.hoverBelt];
-    txt = b ? (b.scroll ? SCROLLS[b.scroll].name : POTIONS[b.kind].name) + ' ×' + b.count + ' — клавиша ' + (game.hoverBelt + 1) : 'Пустая ячейка пояса';
+    txt = b ? tr('proto.hud.belt_slot', { item: b.scroll ? SCROLLS[b.scroll].name : POTIONS[b.kind].name, n: String(b.count), key: String(game.hoverBelt + 1) }) : tr('proto.hud.belt_empty');
   } else if (inSlot(m, LAYOUT.rmb) && h.rmb) { drawSkillTooltip(ctx, h, h.rmb, m.mx, PANEL_Y - 6, 'bc'); return; }
   else if (inSlot(m, LAYOUT.dash)) { drawSkillTooltip(ctx, h, 'dash', m.mx, PANEL_Y - 6, 'bc'); return; }
   else if (LAYOUT.f.some((f) => inSlot(m, f))) {
     const i = LAYOUT.f.findIndex((f) => inSlot(m, f)), id = h.bar[i];
     game._tip = { slot: i, id: id || null };   // для автотеста: подсказка F-слота (ответ дизайнера 08.10, п.5)
     if (id && rankOf(h, id)) { drawSkillTooltip(ctx, h, id, m.mx, PANEL_Y - 6, 'bc'); return; }
-    txt = 'F' + (i + 1) + ': пусто — наведи на навык в окне «Навыки» (T) и нажми F' + (i + 1);
+    txt = tr('proto.hud.skill_empty', { n: String(i + 1) });
   } else if (inSlot(m, LAYOUT.lmb) && h.lmbSkill()) { drawSkillTooltip(ctx, h, h.lmbSkill(), m.mx, PANEL_Y - 6, 'bc'); return; }
   else if (game._chadIcon && inSlot(m, game._chadIcon)) txt = tr('ui.debuff.chad') + ' ' + h.chad + ': ' + tr('ui.debuff.chad.desc', { regen: Math.round(h.chad * (h.chadDef?.regenPctPerStage ?? 10)), ar: Math.round(h.chad * (h.chadDef?.arPctPerStage ?? 5)) });
-  else if (inSlot(m, LAYOUT.lmb)) txt = 'Удар оружием — урон ' + h.dmgMin + '–' + h.dmgMax + (h.equip.rhand ? ' (' + h.equip.rhand.name + ')' : ' (без оружия)');
+  else if (inSlot(m, LAYOUT.lmb)) txt = tr('proto.hud.lmb_tip', { min: String(h.dmgMin), max: String(h.dmgMax) }) + (h.equip.rhand ? ' (' + h.equip.rhand.name + ')' : ' ' + tr('proto.hud.no_weapon'));
   if (!txt) return;
   const w = textWidth(txt) + 8;
   const x = Math.max(2, Math.min(VIEW_W - w - 2, m.mx - w / 2));

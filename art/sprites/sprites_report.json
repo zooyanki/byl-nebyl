@@ -127,7 +127,8 @@
   "fx_chur_portal/fx_chur_portal_open.png",
   "fx_chur_portal/fx_chur_portal_loop.png",
   "fx_chur_portal/fx_chur_portal_fading.png",
-  "fx_chur_portal/fx_chur_portal_close.png"
+  "fx_chur_portal/fx_chur_portal_close.png",
+  "prop_stump_burnt/prop_stump_burnt.png"
  ],
  "checks": {
   "arsonist_idle_se": {
@@ -639,6 +640,10 @@
    "alpha_ok": true
   },
   "fx_chur_portal_close": {
+   "palette_ok": true,
+   "alpha_ok": true
+  },
+  "prop_stump_burnt": {
    "palette_ok": true,
    "alpha_ok": true
   }
@@ -1698,6 +1703,16 @@
   "m1c_scenes": {
    "upyr": "m1c_scenes/upyr_scene_x3.png",
    "portal": "m1c_scenes/beresta_portal_scene_x3.png"
+  },
+  "prop_stump_burnt": {
+   "frame": [
+    24,
+    22
+   ],
+   "pivot": [
+    12,
+    18
+   ]
   }
  }
 }

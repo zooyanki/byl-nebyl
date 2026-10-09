@@ -87,7 +87,7 @@
    }
   }
  },
- "roles": "Залесье packs (mlvl 1-2), forest trail and капище (mlvl 2-5), Мара's retinue (4-6, mlvl 2), Чернояр's summons in M3: the same sprite everywhere (elite / champion tints are the engine's)",
+ "roles": "Залесье packs (mlvl 1-2), forest trail and капище (mlvl 2-5), Огнея's retinue (4-6, mlvl 2), Чернояр's summons in M3: the same sprite everywhere (elite / champion tints are the engine's)",
  "height_for_engine": {
   "def.height": 26,
   "measured_body_px": "26-27 incl. ears (idle, walk, throw)",

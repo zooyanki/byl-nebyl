@@ -249,8 +249,8 @@ def info_panel(cv, x, y, w, h):
     U.section_title(cv, x + 4, ty, w - 8, "Награда")
     ty += 13
     U.silver_icon(cv, x + 8, ty)
-    T.text_ru(cv, x + 22, ty + 1, "Серебро: +300 · «Ярь I»", C["linen"], outline=False)   # GDD v1.4 §10.1
-    T.text_ru(cv, x + 7, ty + 12, "Амулет «Громовник»", C["bronze_lt"], outline=False)
+    T.text_ru(cv, x + 22, ty + 1, "Серебро: +300 · «Удаль I»", C["linen"], outline=False)   # GDD v1.4 §10.1
+    T.text_ru(cv, x + 7, ty + 12, "Амулет «Громовой знак»", C["bronze_lt"], outline=False)
     T.text_ru(cv, x + 7, ty + 24, "Сложность: ", C["mist"], outline=False)
     T.text_ru(cv, x + 7 + pk.text_width("Сложность: ", FONT_RU), ty + 24, "уровень 1–6", C["flame"], outline=False)
     # missions list

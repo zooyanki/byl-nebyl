@@ -1,5 +1,5 @@
 {
- "effect": "Пепельный след Мары (bosses.json ashTrail, r 0.6 tile, burns 3 s)",
+ "effect": "Пепельный след Огнеи (bosses.json ashTrail, r 0.6 tile, burns 3 s)",
  "radius_tiles": 0.6,
  "draw": "ground decal, native size; engine alpha fade stays",
  "pivot": [

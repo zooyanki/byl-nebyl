@@ -58,9 +58,9 @@ SK_M3 = dict(lmb=("sword", False), rmb=("fire_serpent", True),
 Q_M3_T = dict(title="РАЗЛОМ В ЧЁРНОМ БОРУ", act="Задание · Акт I")
 # goals verbatim per teaser.md 1.1 (act1 v1.1)
 Q_M3_23 = dict(Q_M3_T, goals=(("— Пройди Чёрный бор", "", "slate_lt", True),
-                              ("— Повали чур-идолы", "1/3", "linen", False),
+                              ("— Повали чёрные идолы", "1/3", "linen", False),
                               ("— Одолей Чернояра", "", "linen", False)))
-Q_M3_4S = dict(Q_M3_T, goals=(("— Повали чур-идолы", "3/3", "slate_lt", True),
+Q_M3_4S = dict(Q_M3_T, goals=(("— Повали чёрные идолы", "3/3", "slate_lt", True),
                               ("— Одолей Чернояра", "", "linen", False),
                               ("— Закрой Разлом", "", "nebyl", False)))
 Q_M3_4E = dict(Q_M3_T, goals=(("— Одолей Чернояра", "", "slate_lt", True),

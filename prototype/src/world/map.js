@@ -1,6 +1,6 @@
 // Локация «Окрестности Залесья»: земля по тайлам, проходимость и видимость по полутайловой сетке
 // (design/scale.md §1, §4.2), препятствия (пропсы) с футпринтом, кратным ½ тайла, точки спавна.
-import { MAP_W, MAP_H } from '../config.js';
+import { MAP_W, MAP_H, HALF_W, HALF_H } from '../config.js';
 import { makeRng, hash2 } from '../core/rng.js';
 import { SUB, circleFree } from './collision.js';
 import { generateTrail } from './trail.js';
@@ -56,6 +56,7 @@ export class GameMap {
     return true;
   }
   markRect(x, y, w, h, opaque) {
+    if (!(w > 0) || !(h > 0)) return;   // m1g: пустой футпринт (декор 0×0) никогда не блокирует — раньше при нецелых x·2, y·2 метил сабтайл
     for (let sy = Math.floor(y * SUB); sy < Math.ceil((y + h) * SUB - 1e-6); sy++)
       for (let sx = Math.floor(x * SUB); sx < Math.ceil((x + w) * SUB - 1e-6); sx++) {
         if (sx < 0 || sy < 0 || sx >= this.sw || sy >= this.sh) continue;
@@ -165,12 +166,13 @@ export function generateMap(seed, zone = null) {
   m.addProp('idol', S.x + 3, S.y - 4, 1);                   // чур
   m.addProp('izba', 11, 12, 4);                             // малая изба 4×4
   m.addProp('izba', 31, 1, 4);
-  if (LM.hut3) m.addProp('izba', LM.hut3.x, LM.hut3.y, LM.hut3.size || 4);   // изба 3 у колодца (в ней Мал, act1)
+  if (LM.hut3) m.addProp('izba', LM.hut3.x, LM.hut3.y, LM.hut3.size || 4, LM.hut3.door ? { door: LM.hut3.door } : {});   // изба 3 у колодца (в ней Мал, act1); m1f: дверь к колодцу (+X)
   for (let x = 28; x <= 45; x++) {                           // частокол с воротами (проём 2 тайла), толщина 1 тайл
     if (x === 38 || x === 39) continue;
-    m.addProp('palisade', x, 7, 1, { gatepost: x === 37 ? 'left' : x === 40 ? 'right' : false });
+    // m1i (дизайнер): в Залесье — низкий дворовый тын (колья 26–32 px, герой виден из-за него); проём без воротных столбов
+    m.addProp('palisade', x, 7, 1, { gatepost: false, tyn: true });
   }
-  for (let y = 2; y <= 6; y++) m.addProp('palisade', 28, y, 1, { axis: 'y' });
+  for (let y = 2; y <= 6; y++) m.addProp('palisade', 28, y, 1, { axis: 'y', tyn: true });
   // каменные развалины: тонкая (½ тайла) Г-образная стена с проломом — обход и проверка полутайловой коллизии
   for (let x = 13; x <= 21; x++) {
     if (x === 16) continue;
@@ -192,7 +194,10 @@ export function generateMap(seed, zone = null) {
   m.packs = (zone && zone.packs ? zone.packs : []).map((p) => ({ x: p.x, y: p.y, kinds: [...p.kinds], mlvl: p.mlvl, role: p.role, ambush: !!p.ambush }));
   resolveObjects(m, zone, (o) => [o.x, o.y]);
   // перед дверьми изб — свободно (подход к двери)
-  for (const o of m.objects) if (o.type === 'hut') for (let y = Math.floor(o.y); y <= Math.floor(o.y) + 1; y++) for (let x = Math.floor(o.x) - 1; x <= Math.floor(o.x) + 1; x++) m.keepClear = (m.keepClear || []).concat([[x, y]]);
+  for (const o of m.objects) if (o.type === 'hut') {
+    if (o.door === '+x') { for (let y = Math.floor(o.y) - 1; y <= Math.floor(o.y) + 1; y++) for (let x = Math.floor(o.x); x <= Math.floor(o.x) + 2; x++) m.keepClear = (m.keepClear || []).concat([[x, y]]); }   // m1f: поляна 3×3 перед дверью
+    else for (let y = Math.floor(o.y); y <= Math.floor(o.y) + 1; y++) for (let x = Math.floor(o.x) - 1; x <= Math.floor(o.x) + 1; x++) m.keepClear = (m.keepClear || []).concat([[x, y]]);
+  }
   const nearPack = (x, y, r) => m.packs.some((p) => d(x + 0.5, y + 0.5, p.x, p.y) < r);
 
   // --- лесная кромка по периметру: сплошная чаща (весь тайл непроходим)
@@ -225,6 +230,39 @@ export function generateMap(seed, zone = null) {
   if (den) carveMaraDen(m, den, inDen, makeRng(seed + 7331));   // тупик Мары (GDD v1.8.1 B-31) — после чащи кромки и россыпи
   const lad = (zone.objects || []).find((o) => o.id === 'to_ladoga');
   if (lad) clearProps(m, lad.x, lad.y, 1.6);
+  // m1f (P0.1): перед дверью избы с дверью к колодцу — поляна 2–3 тайла без подлеска; стая избы — на открытом месте
+  for (const o of m.objects) if (o.type === 'hut' && o.door === '+x') {
+    clearProps(m, o.x + 1.5, o.y, 2.6);
+    // m1f (P0.1, владелец): поляна между дверью и колодцем — деревьев нет ни на земле (прямоугольник дверь…колодец),
+    // ни по экрану: деревья кромки (до 166 px), чьи кроны закрывают фасад избы, дверь или точку у колодца, убраны;
+    // убранные деревья самой кромки (y ≥ H − 3) заменены низким подлеском — граница карты остаётся непроходимой
+    const W = LM.well;
+    if (W) {
+      const x0 = Math.floor(o.x), x1 = W.x + (W.size || 2), y0 = Math.min(Math.floor(o.y), W.y) - 1, y1 = Math.max(Math.floor(o.y), W.y + (W.size || 2)) + 1;
+      clearProps(m, 0, 0, 0, (p) => p.type === 'tree' && p.fp[0] + p.fp[2] > x0 && p.fp[0] < x1 && p.fp[1] + p.fp[3] > y0 && p.fp[1] < y1);
+      const hz = LM.hut3 || { x: o.x - 4, y: o.y - 2, size: 4 }, hs = hz.size || 4;
+      const S = (x, y) => [(x - y) * HALF_W, (x + y) * HALF_H];
+      const V = [W.x - 1, W.y + 2.6];                              // где стоит герой «у колодца»
+      const pts = [S(hz.x, hz.y + hs), S(hz.x + hs, hz.y), S(hz.x + hs, hz.y + hs), S(V[0], V[1])];
+      const R = { x0: Math.min(...pts.map((q) => q[0])) - 8, x1: Math.max(...pts.map((q) => q[0])) + 8,
+        y0: S(hz.x, hz.y)[1] - 116, y1: Math.max(...pts.map((q) => q[1])) + 4 };
+      const front = hz.x + hz.y;                                    // деревья позади избы её не закрывают
+      const edge = [];
+      clearProps(m, 0, 0, 0, (p) => {
+        if (p.type !== 'tree') return false;
+        const cx = p.fp[0] + p.fp[2] / 2, cy = p.fp[1] + p.fp[3] / 2;
+        if (cx + cy <= front) return false;
+        const [sx, sy] = S(cx, cy), h = p.birch ? 132 : 166;
+        const hit = sx + 20 > R.x0 && sx - 20 < R.x1 && sy - 20 > R.y0 && sy - h < R.y1;
+        if (hit && p.fp[2] >= 1 && p.y >= m.h - 3) edge.push([p.x, p.y]);
+        return hit;
+      });
+      for (const [x, y] of edge) m.addProp('bush', x, y, 1);
+      m.glade = { R, removedEdge: edge.length };
+    }
+    const pk = m.packs.find((p) => p.role === o.pack);
+    if (pk) clearProps(m, pk.x, pk.y, 2.2);
+  }
 
   m.computeReach();
   return m;
@@ -239,8 +277,15 @@ export function resolveObjects(m, zone, pos) {
     const o = { ...def, done: false };
     if (def.type === 'hut') {
       const [ix, iy] = def.izba, s = def.size || 4;
-      o.x = ix + 2.15; o.y = iy + s;            // дверной проём на фасаде +Y (props.js: x+1,4…2,9)
-      o.sx = o.x; o.sy = o.y + 0.75;
+      if (def.door === '+x') {                  // m1f: дверь на фасаде +X (props.js: y+1,4…2,9) — изба Мала смотрит на колодец
+        o.x = ix + s; o.y = iy + 2.15;
+        o.sx = o.x + 0.75; o.sy = o.y;
+        o.out = [o.x + 0.6, o.y];               // куда выходят спасённые
+      } else {
+        o.x = ix + 2.15; o.y = iy + s;          // дверной проём на фасаде +Y (props.js: x+1,4…2,9)
+        o.sx = o.x; o.sy = o.y + 0.75;
+        o.out = [o.x, o.y + 0.6];
+      }
       o.reach = 1.0;
     } else {
       [o.x, o.y] = pos(def);
@@ -259,8 +304,8 @@ export function resolveObjects(m, zone, pos) {
 
 /** Тупик Мары Пепельной (GDD v1.8.1 B-31): поляна-пепелище за избой 2 на северо-востоке, вход — горловина от восточной
  *  кромки Залесья; у входа обгоревший сарай и пепел (вход читается с пути «ворота частокола → изба 3»). */
-function clearProps(m, x, y, rad) {
-  const drop = m.props.filter((p) => (p.type === 'tree' || p.type === 'rock') && Math.hypot(p.x + 0.5 - x, p.y + 0.5 - y) <= rad);
+function clearProps(m, x, y, rad, pred = null) {
+  const drop = m.props.filter((p) => (p.type === 'tree' || p.type === 'rock') && (pred ? pred(p) : Math.hypot(p.x + 0.5 - x, p.y + 0.5 - y) <= rad));
   if (!drop.length) return;
   const kill = new Set(drop);
   m.props = m.props.filter((p) => !kill.has(p));
@@ -280,7 +325,7 @@ function denShape(den) {
   return (x, y) => Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= den.clearR || (x >= C.x0 && x <= C.x1 && y >= C.y0 && y <= C.y1);
 }
 function carveMaraDen(m, den, inDen, rng) {
-  const W = m.w, H = m.h, W0 = MAP_W;
+  const W = m.w, H = m.h, W0 = MAP_W, [cx, cy] = den.center;
   m.maraDen = { center: [...den.center], clearR: den.clearR };
   // пол: пепелище в тупике и горловине
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (inDen(x, y)) m.ground[y * W + x] = T_ASH;
@@ -300,7 +345,16 @@ function carveMaraDen(m, den, inDen, rng) {
     m.ground[y * W + x] = T_FOREST;
     m.markRect(x, y, 1, 1, true);
     const dd = dist[y * W + x], p = dd <= 1 ? 0.8 : dd === 2 ? 0.5 : dd === 3 ? 0.3 : 0.08;
-    if (rng() < p) m.addProp('tree', x, y, 1, { birch: rng() < 0.2, shared: true });
+    if (rng() < p) {
+      const birch = rng() < 0.2;
+      // m1g (решение дизайнера v1.11): первый ряд елей на южной кромке поляны закрывал её кронами — вместо них горелые пни;
+      // тайл остаётся непроходимым лесом (markRect выше), поток rng не меняется
+      const T = den.thinSouth, front = T && (y + 0.5 > cy + T.minDy || (T.minFront != null && y + 0.5 > cy && x + y + 1 - cx - cy > T.minFront));   // юг + передняя по экрану часть юго-востока
+      if (T && dd <= (T.rows || 1) && front && Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= den.clearR + 0.6 + (T.rows || 1)) {
+        if (dd <= 1 || hash2(x, y, 13) < (T.stumpShare ?? 0.5)) m.addProp('stump', x, y, 1, { fp: [x + 0.5, y + 0.5, 0, 0], variant: Math.floor(hash2(x, y, 11) * 3) % 3 });
+        m.thinned = (m.thinned || 0) + 1;
+      } else m.addProp('tree', x, y, 1, { birch, shared: true });
+    }
   }
   m.forestFrom = W0 - 2;                                   // мини-карта: непроходимые тайлы без пропса за этой x — лес
   // обгоревший сарай у входа (южнее горловины) и пепел на подходе
@@ -308,4 +362,6 @@ function carveMaraDen(m, den, inDen, rng) {
   b.depth = B[0] + B[2] / 2 + B[1] + 1;
   for (const [x, y] of den.ash || []) m.addProp('ash', x, y, 1, { fp: [x + 0.5, y + 0.5, 0, 0] });
   for (const [x, y] of den.ash || []) if (m.groundAt(Math.floor(x), Math.floor(y)) !== T_WATER) m.ground[Math.floor(y) * W + Math.floor(x)] = T_ASH;
+  // GDD v1.11: горелые пни по краю поляны — декор без коллизии (спрайт prop_stump_burnt, кадр = вариант)
+  for (const [x, y, v] of den.stumps || []) m.addProp('stump', x, y, 1, { fp: [x + 0.5, y + 0.5, 0, 0], variant: v | 0 });
 }

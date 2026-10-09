@@ -31,6 +31,8 @@ export class Quest {
       if ((o.state === 'hidden' || o.state === 'locked') && match(d.activateOn, ev)) this.activate(o);
       if (o.state === 'done') continue;
       if (d.count && match(d.progressOn, ev)) {
+        // m1g (GDD v1.11): progressUnique — счётчик по разным значениям поля (изба Мала в «Спаси выживших» — один раз)
+        if (d.progressUnique) { o.seen = o.seen || new Set(); const k = ev[d.progressUnique]; if (o.seen.has(k)) continue; o.seen.add(k); }
         o.n++;
         if (o.n >= d.count) this.complete(o);
       } else if (match(d.doneOn, ev)) this.complete(o);

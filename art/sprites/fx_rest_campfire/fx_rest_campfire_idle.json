@@ -1,6 +1,6 @@
 {
- "effect": "Костёр у поваленного чур-идола (М3), безопасная зона r = 6 тайлов",
- "interpretation": "GDD §8.4: the campfire «работает как Чуров камень», and §12.1.5 groups it with the stone («резы тлеют bronze»). So it is a small сторожевой костёр (scale.md §3.3: firewood 8, flame 20-24) inside a ring of 8 stones with резы; the резы behave like the Чуров камень and the fire grows a little in rest (≈23 -> ≈30 px) with sparks",
+ "effect": "Костёр у поваленного чёрного идола (М3), безопасная зона r = 6 тайлов",
+ "interpretation": "GDD §8.4: the campfire «работает как путевой камень», and §12.1.5 groups it with the stone («насечки тлеют bronze»). So it is a small сторожевой костёр (scale.md §3.3: firewood 8, flame 20-24) inside a ring of 8 stones with насечки; the насечки behave like the путевой камень and the fire grows a little in rest (≈23 -> ≈30 px) with sparks",
  "footprint": "1x1 tile; stone ring r 18x9 px (stones 5x5), centre = pivot",
  "sizes_px": {
   "firewood": 8,
@@ -19,7 +19,7 @@
   "idle": "fx_rest_campfire_idle.png",
   "rest": "fx_rest_campfire_rest.png"
  },
- "state_switch": "rest while the hero stands in the zone and Жизнь/Ярь regenerate (2 s without damage, GDD §4.5); both loops are phase-aligned, so switch at the same frame index without a pop; back to idle when regen stops",
+ "state_switch": "rest while the hero stands in the zone and Жизнь/Удаль regenerate (2 s without damage, GDD §4.5); both loops are phase-aligned, so switch at the same frame index without a pop; back to idle when regen stops",
  "anchors": {
   "flame_root": [
    24,
