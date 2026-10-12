@@ -123,7 +123,7 @@ async def run_v18(pg, G, check, wait):
         g.lastTarget = b; h.cmd = null; h.attack(b, false, h.lmbSkill(), true); let tHit = null, tt = 0; const u0 = u.hp;
         g.simulate(1.5, () => { tt += 1 / 60; if (u.hp < u0 || (h.action && h.action.target === u)) { tHit = +tt.toFixed(2); return true; } return false; });
         out.block = { tHit, plate: g.lastTarget === b, cmdTarget: h.cmd && h.cmd.target === b, actT: h.action && h.action.target === u };
-        u.hp = 1; let bHit = null; tt = 0; const b0 = b.hp; g.simulate(5, () => { tt += 1 / 60; if (h.action && h.action.target === b) { bHit = +tt.toFixed(2); return true; } return false; });
+        u.hp = 1; let bHit = null; tt = 0; const b0 = b.hp; g.simulate(5, () => { tt += 1 / 60; if (u.dead && h.action && h.action.target === b) { bHit = +tt.toFixed(2); return true; } return false; });   // m1j: ждём гибели упыря (промах по нему — ещё взмах; зерно сдвинулось — тряска теперь на crand)
         out.after = { uDead: u.dead, bHit, plate: g.lastTarget === b };
         // Shift+ЛКМ: удар на месте, заслон не включается
         const u2 = new Enemy('upyr', b.x - 1.9, b.y, 'krivsha', 4); u2.stagger = 1e9; u2.mass = 99; g.enemies.push(u2); h.x = b.x - 3.2; h.y = b.y; h.cmd = null; h.action = null; g.counters.blockerHits = 0;

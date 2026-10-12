@@ -1,0 +1,494 @@
+{
+ "_about": "GDD v1.13 §10.4/§15: окно диалога. Тексты — только ключи dlg.* и npc.*.greet/idle* из ru.json (act1_texts v1.3 §5); сборка tools/build_dialogues.py",
+ "speakers": {
+  "ratibor": {
+   "nameKey": "npc.ratibor",
+   "portrait": "portrait_ratibor"
+  },
+  "vyshata": {
+   "nameKey": "npc.vyshata",
+   "portrait": "portrait_vyshata"
+  },
+  "vedana": {
+   "nameKey": "npc.vedana",
+   "portrait": "portrait_milusha"
+  },
+  "tverdyata": {
+   "nameKey": "npc.tverdyata",
+   "portrait": "portrait_tverdyata"
+  },
+  "mal": {
+   "nameKey": "npc.mal",
+   "portrait": "portrait_mal"
+  },
+  "priest": {
+   "nameKey": "npc.priest",
+   "portrait": "portrait_priest"
+  },
+  "sbyslav": {
+   "nameKey": "npc.sbyslav",
+   "portrait": "portrait_sbyslav"
+  }
+ },
+ "dialogues": {
+  "m1.mal": {
+   "who": "mal",
+   "once": true,
+   "lines": [
+    {
+     "speaker": "mal",
+     "key": "dlg.m1.mal.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.m1.mal.2"
+    },
+    {
+     "speaker": "mal",
+     "key": "dlg.m1.mal.3"
+    }
+   ],
+   "after": [
+    {
+     "bark": "bark.m1.mal_gift"
+    },
+    {
+     "call": "malRun"
+    }
+   ]
+  },
+  "mal.s1": {
+   "who": "mal",
+   "stage": 1,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "mal",
+     "key": "dlg.mal.s1.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.mal.s1.2"
+    },
+    {
+     "speaker": "mal",
+     "key": "dlg.mal.s1.3"
+    },
+    {
+     "speaker": "mal",
+     "key": "dlg.mal.s1.4"
+    }
+   ]
+  },
+  "mal.s2": {
+   "who": "mal",
+   "stage": 2,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "mal",
+     "key": "dlg.mal.s2.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.mal.s2.2"
+    },
+    {
+     "speaker": "mal",
+     "key": "dlg.mal.s2.3"
+    },
+    {
+     "speaker": "mal",
+     "key": "dlg.mal.s2.4"
+    }
+   ]
+  },
+  "mal.s3": {
+   "who": "mal",
+   "stage": 3,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "mal",
+     "key": "dlg.mal.s3.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.mal.s3.2"
+    },
+    {
+     "speaker": "mal",
+     "key": "dlg.mal.s3.3"
+    }
+   ]
+  },
+  "priest.s0": {
+   "who": "priest",
+   "stage": 0,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "priest",
+     "key": "dlg.priest.s0.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.priest.s0.2"
+    },
+    {
+     "speaker": "priest",
+     "key": "dlg.priest.s0.3"
+    }
+   ]
+  },
+  "priest.s1": {
+   "who": "priest",
+   "stage": 1,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "priest",
+     "key": "dlg.priest.s1.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.priest.s1.2"
+    },
+    {
+     "speaker": "priest",
+     "key": "dlg.priest.s1.3"
+    }
+   ]
+  },
+  "sbyslav.s2": {
+   "who": "sbyslav",
+   "stage": 2,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "sbyslav",
+     "key": "dlg.sbyslav.s2.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.sbyslav.s2.2"
+    },
+    {
+     "speaker": "sbyslav",
+     "key": "dlg.sbyslav.s2.3"
+    }
+   ]
+  },
+  "sbyslav.s3": {
+   "who": "sbyslav",
+   "stage": 3,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "sbyslav",
+     "key": "dlg.sbyslav.s3.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.sbyslav.s3.2"
+    },
+    {
+     "speaker": "sbyslav",
+     "key": "dlg.sbyslav.s3.3"
+    }
+   ]
+  },
+  "tverdyata.s0": {
+   "who": "tverdyata",
+   "stage": 0,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "tverdyata",
+     "key": "dlg.tverdyata.s0.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.tverdyata.s0.2"
+    },
+    {
+     "speaker": "tverdyata",
+     "key": "dlg.tverdyata.s0.3"
+    }
+   ]
+  },
+  "tverdyata.s1": {
+   "who": "tverdyata",
+   "stage": 1,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "tverdyata",
+     "key": "dlg.tverdyata.s1.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.tverdyata.s1.2"
+    },
+    {
+     "speaker": "tverdyata",
+     "key": "dlg.tverdyata.s1.3"
+    }
+   ]
+  },
+  "tverdyata.s2": {
+   "who": "tverdyata",
+   "stage": 2,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "tverdyata",
+     "key": "dlg.tverdyata.s2.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.tverdyata.s2.2"
+    },
+    {
+     "speaker": "tverdyata",
+     "key": "dlg.tverdyata.s2.3"
+    }
+   ]
+  },
+  "tverdyata.s3": {
+   "who": "tverdyata",
+   "stage": 3,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "tverdyata",
+     "key": "dlg.tverdyata.s3.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.tverdyata.s3.2"
+    },
+    {
+     "speaker": "tverdyata",
+     "key": "dlg.tverdyata.s3.3"
+    }
+   ]
+  },
+  "vedana.m3_edge": {
+   "who": "vedana",
+   "once": true,
+   "lines": [
+    {
+     "speaker": "vedana",
+     "key": "dlg.vedana.m3_edge.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.vedana.m3_edge.2"
+    },
+    {
+     "speaker": "vedana",
+     "key": "dlg.vedana.m3_edge.3"
+    }
+   ]
+  },
+  "vedana.s0": {
+   "who": "vedana",
+   "stage": 0,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "vedana",
+     "key": "dlg.vedana.s0.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.vedana.s0.2"
+    },
+    {
+     "speaker": "vedana",
+     "key": "dlg.vedana.s0.3"
+    }
+   ]
+  },
+  "vedana.s1": {
+   "who": "vedana",
+   "stage": 1,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "vedana",
+     "key": "dlg.vedana.s1.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.vedana.s1.2"
+    },
+    {
+     "speaker": "vedana",
+     "key": "dlg.vedana.s1.3"
+    }
+   ]
+  },
+  "vedana.s2": {
+   "who": "vedana",
+   "stage": 2,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "vedana",
+     "key": "dlg.vedana.s2.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.vedana.s2.2"
+    },
+    {
+     "speaker": "vedana",
+     "key": "dlg.vedana.s2.3"
+    }
+   ]
+  },
+  "vedana.s3": {
+   "who": "vedana",
+   "stage": 3,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "vedana",
+     "key": "dlg.vedana.s3.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.vedana.s3.2"
+    },
+    {
+     "speaker": "vedana",
+     "key": "dlg.vedana.s3.3"
+    }
+   ]
+  },
+  "vyshata.s0": {
+   "who": "vyshata",
+   "stage": 0,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "vyshata",
+     "key": "dlg.vyshata.s0.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.vyshata.s0.2"
+    },
+    {
+     "speaker": "vyshata",
+     "key": "dlg.vyshata.s0.3"
+    },
+    {
+     "speaker": "vyshata",
+     "key": "dlg.vyshata.m1.dir"
+    }
+   ],
+   "after": [
+    {
+     "flag": "m1.briefed"
+    }
+   ]
+  },
+  "vyshata.s1": {
+   "who": "vyshata",
+   "stage": 1,
+   "once": true,
+   "lines": [
+    {
+     "speaker": "vyshata",
+     "key": "dlg.vyshata.s1.1"
+    },
+    {
+     "speaker": "ratibor",
+     "key": "dlg.vyshata.s1.2"
+    },
+    {
+     "speaker": "vyshata",
+     "key": "dlg.vyshata.s1.3"
+    }
+   ]
+  }
+ },
+ "repeat": {
+  "vyshata": {
+   "beforeTurnIn": [
+    "npc.vyshata.idle_m1"
+   ],
+   "default": [
+    "npc.vyshata.greet"
+   ]
+  },
+  "vedana": [
+   "npc.vedana.greet",
+   "npc.vedana.idle1"
+  ],
+  "tverdyata": [
+   "npc.tverdyata.greet",
+   "npc.tverdyata.idle1",
+   "npc.tverdyata.idle2"
+  ],
+  "mal": [
+   "npc.mal.greet"
+  ],
+  "priest": [
+   "npc.priest.greet"
+  ]
+ },
+ "window": {
+  "x": 120,
+  "y": 222,
+  "w": 400,
+  "h": 88,
+  "portrait": 64,
+  "portraitAt": [
+   130,
+   234
+  ],
+  "portraitFrame": [
+   128,
+   232,
+   68,
+   68
+  ],
+  "nameAt": [
+   204,
+   230
+  ],
+  "ruleY": 241,
+  "textX": 204,
+  "textY": 246,
+  "textW": 304,
+  "lineH": 11,
+  "maxLines": 4,
+  "moreAt": [
+   502,
+   298
+  ],
+  "counterAt": [
+   470,
+   296
+  ],
+  "bgAlpha": 0.92,
+  "frame": "ui_dlg_frame_400x88",
+  "frameAt": [
+   119,
+   221
+  ],
+  "cps": 40,
+  "inputLock": 0.15,
+  "pauseWorld": true,
+  "blockIfAggroR": 12,
+  "blockAfterHit": 3,
+  "queueCalm": 3,
+  "queueNearR": 8,
+  "queueTimeout": 30,
+  "blinkHz": 2
+ }
+}

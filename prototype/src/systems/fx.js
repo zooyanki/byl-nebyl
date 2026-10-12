@@ -4,7 +4,7 @@ import { crand } from '../core/rng.js';
 const rnd = (lo, hi) => lo + crand() * (hi - lo);   // B-35: косметика не тратит игровое зерно
 
 export class FX {
-  constructor() { this.texts = []; this.parts = []; this.rings = []; this.flashes = []; this.bolts = []; }
+  constructor() { this.texts = []; this.parts = []; this.rings = []; this.flashes = []; this.bolts = []; this.smears = []; }
 
   text(x, y, str, color, z = 24, opts = {}) {
     this.texts.push({ x, y, str, color, z, t: 0, dur: opts.dur || 0.9, big: !!opts.big, speech: !!opts.speech, ox: opts.speech ? 0 : rnd(-4, 4) });
@@ -13,6 +13,14 @@ export class FX {
     for (let i = 0; i < n; i++) {
       const a = rnd(0, Math.PI * 2);
       this.parts.push({ x, y, ox: 0, oy: -z, vx: Math.cos(a) * rnd(0.3, 1) * speed, vy: Math.sin(a) * rnd(0.3, 1) * speed * 0.6 - speed * 0.5, g: 120, t: 0, dur: rnd(0.35, 0.7), color, size: crand() < 0.3 ? 2 : 1 });
+    }
+  }
+  /** Искры удара (GDD v1.13 §4.6): n штук разлетаются по направлению удара (sdx, sdy — экранный вектор) на spread px за t с. */
+  sparks(x, y, sdx, sdy, z, n, color, spread = [10, 18], t = 0.15) {
+    const a0 = Math.atan2(sdy, sdx) || 0;
+    for (let i = 0; i < n; i++) {
+      const a = a0 + rnd(-0.6, 0.6), d = rnd(spread[0], spread[1]);
+      this.parts.push({ x, y, ox: 0, oy: -z, vx: Math.cos(a) * d / t, vy: Math.sin(a) * d / t, g: 0, t: 0, dur: t, color, size: 1, spark: true });
     }
   }
   rise(x, y, color, n = 20, h = 40) {
@@ -39,10 +47,12 @@ export class FX {
     for (const r of this.rings) r.t += dt;
     for (const f of this.flashes) f.t += dt;
     for (const b of this.bolts) b.t += dt;
+    for (const m of this.smears) m.t += dt;
     this.texts = this.texts.filter((t) => t.t < t.dur);
     this.parts = this.parts.filter((p) => p.t < p.dur);
     this.rings = this.rings.filter((r) => r.t < r.dur);
     this.flashes = this.flashes.filter((f) => f.t < f.dur);
     this.bolts = this.bolts.filter((b) => b.t < b.dur);
+    this.smears = this.smears.filter((m) => m.t < m.dur);
   }
 }

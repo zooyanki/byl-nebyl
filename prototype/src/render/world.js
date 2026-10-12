@@ -13,11 +13,13 @@ import { CFG } from '../data/config.js';
 import { drawPortal } from './portal.js';
 import { ART } from './boss_art.js';
 import { t, RU } from '../core/i18n.js';
+import { VA } from './village_art.js';
+import { XR, xrayRegions, xrayWants, outlineIfCovered, outlineColor } from './xray.js';
 
 const WARM_CAP = 0.36;   // m1f P1.9: потолок суммы тёплой альфы
 const CAPTION_A = 0.55, CAPTION_NEAR = 8, CAPTION_FAR = 11;   // m1i П.10b: альфа подписи части города, видна в радиусе (тайлы)
 const STAGGER = 6, LABEL_GAP = 2;   // m1i П.16: подписи добычи лесенкой
-const XRAY_A = 0.6, XRAY_DOOR = 0.3, XRAY_T = 0.25;   // m1f: альфа растворённой кроны (над дверью избы — прозрачнее), время перехода, с
+// m1k D4: числа видимости — stats.json → xray (src/render/xray.js); прежние XRAY_A 0,6 и «призраки» 0,28/0,35 убраны
 /** Враг «в агро»: гонится, бьёт, стреляет, отступает для выстрела, встаёт из земли (не стоит у логова и не уходит к нему). */
 const isAggro = (e) => e.state !== 'idle' && e.state !== 'return' && e.state !== 'wander' && !e.buried;
 
@@ -68,29 +70,18 @@ export class WorldRenderer {
     for (const o of map.objects) if (o.type === 'portal') list.push({ d: o.x + o.y, k: 6, o });   // Чуров проход (M1c)
     list.sort((a, b) => a.d - b.d);
 
-    // «рентген» (scale.md §4.4): то, что стоит перед героем или врагом под курсором и закрывает их, полупрозрачно
-    // m1f (P0.3): кроны растворяются над героем, над врагом под курсором и над каждым врагом в агро (погоня/бой), а также
-    // над невыбитой дверью избы; альфа плавно уходит к XRAY_A и возвращается (p._xa), поверх крон — силуэт врага в агро
-    const xray = [];
-    if (!hero.dead) { const [sx, sy] = toS(hero.x, hero.y); xray.push({ d: hero.x + hero.y, x: sx - 10, y: sy - 46, w: 20, h: 48 }); }
-    const aggro = [];
-    for (const e of game.enemies) {
-      if (e.dead || e.dummy || !(e === game.hoverEnemy || isAggro(e))) continue;
-      const [sx, sy] = toS(e.x, e.y); if (!vis(sx, sy, e.def.height)) continue;
-      xray.push({ d: e.x + e.y, x: sx - 10, y: sy - e.def.height, w: 20, h: e.def.height });
-      if (e !== game.hoverEnemy || isAggro(e)) aggro.push(e);
-    }
-    for (const dd of map.objects) if (dd.type === 'hut' && !dd.done) {
-      const ax = dd.door === '+x', a0 = ax ? toS(dd.x, dd.y - 0.75) : toS(dd.x - 0.75, dd.y), a1 = ax ? toS(dd.x, dd.y + 0.75) : toS(dd.x + 0.75, dd.y);
-      xray.push({ a: XRAY_DOOR, d: dd.x + dd.y + 0.5, x: Math.min(a0[0], a1[0]), y: Math.min(a0[1], a1[1]) - 60, w: Math.abs(a1[0] - a0[0]) + 1, h: Math.abs(a1[1] - a0[1]) + 62 });
-    }
-    const covers = (p, d) => { let a = 1; for (const q of xray) if (d > q.d && (q.a ?? XRAY_A) < a && propCovers(p, toS, q)) a = q.a ?? XRAY_A; return a; };
+    // m1k D4 (GDD v1.13.2 §10.3): видимость — окно-эллипс вокруг героя всегда, над врагами в агро / под курсором 0,35,
+    // над прочими врагами в 9 тайлах 0,5, над дверью невыбитой избы 0,3; ≤ 12 растворённых (ближайшие к герою); переход 0,2 с
+    const regions = xrayRegions(game, toS, vis, isAggro);
+    const wants = xrayWants(game, list.filter((o) => o.k === 0).map((o) => o.p), toS, regions);
+    const XT = XR().t ?? 0.2;
+    const aggro = game.enemies.filter((e) => !e.dead && !e.dummy && e.state !== 'rise' && (e === game.hoverEnemy || isAggro(e)) && vis(...toS(e.x, e.y), (e.def && e.def.height) || 40));
     const fdt = Math.min(0.1, Math.max(0, time - (this._xt ?? time))); this._xt = time;
     let faded = 0;
     for (const o of list) {
       if (o.k === 0) {
-        const p = o.p, want = p.type !== 'fire' ? covers(p, o.d) : 1;
-        p._xa = p._xa == null ? want : want < p._xa ? Math.max(want, p._xa - fdt / XRAY_T) : Math.min(want, p._xa + fdt / XRAY_T);
+        const p = o.p, want = wants.get(p) ?? 1;
+        p._xa = p._xa == null ? want : want < p._xa ? Math.max(want, p._xa - fdt / XT) : Math.min(want, p._xa + fdt / XT);
         if (p._xa < 0.999) { faded++; ctx.save(); ctx.globalAlpha = p._xa; drawProp(ctx, p, toS, time); ctx.restore(); }
         else drawProp(ctx, p, toS, time);
       } else if (o.k === 2) {
@@ -125,7 +116,11 @@ export class WorldRenderer {
       } else if (o.k === 3) {
         const [sx, sy] = toS(hero.x, hero.y);
         if (hero.buffs.chur) drawChurRunes(ctx, sx, sy, hero.buffs.chur, time, false);
+        this.drawSmears(ctx, game, toS, 'under');            // H10: след взмаха на север — за телом героя
+        const shBack = hero.blockSt && (hero.blockSt.dx + hero.blockSt.dy) < -0.2;   // щит к северу экрана — за телом
+        if (shBack) this.drawHeroShield(ctx, hero, sx, sy);
         drawHero(ctx, sx, sy, hero, hero.dir, time);
+        if (hero.blockSt && !shBack) this.drawHeroShield(ctx, hero, sx, sy);
         if (hero.buffs.chur) drawChurRunes(ctx, sx, sy, hero.buffs.chur, time, true);
         if (RF && RF.sparksFrame >= 0) drawRestSparks(ctx, sx, sy, RF.sparksFrame);     // искры отдыха поверх героя
       } else {
@@ -133,23 +128,25 @@ export class WorldRenderer {
         drawProjectile(ctx, sx, sy, o.p, time);
       }
     }
-    game.xrayFaded = faded; game.xrayAggro = aggro.length;   // для автотеста m1f
-    // m1f (P0.3): силуэт врагов в агро поверх крон — враг читается даже за густой кроной
+    game.xrayFaded = faded; game.xrayAggro = aggro.length; game.xrayRegions = regions.length;   // для автотестов m1f/m1k
+    // m1k D4: вместо «призраков» — контур 1 px по силуэту, если закрыто ≥ 25% пикселей: враги в агро / под курсором, затем герой
+    const OL = XR().outline || {}, outl = [];
     for (const e of aggro) {
-      if (e.state === 'rise') continue;
-      const [sx, sy] = toS(e.x, e.y);
-      ctx.save(); ctx.globalAlpha = 0.35; drawEnemy(ctx, sx, sy, e, e.dir, time, game.hoverEnemy === e); ctx.restore();
+      const [sx, sy] = toS(e.x, e.y), keep = e.lastHitT;
+      const r = outlineIfCovered(ctx, game, toS, sx, sy, e.x + e.y, (c, ax, ay) => { e.lastHitT = 99; try { drawEnemy(c, ax, ay, e, e.dir, time, false); } finally { e.lastHitT = keep; } }, outlineColor(e));
+      outl.push({ id: e.id ?? e.kind, kind: e.kind, frac: +r.frac.toFixed(2), drawn: r.drawn, color: outlineColor(e) });
     }
-    // силуэт героя, если он за препятствием
     if (!hero.dead) {
       const [sx, sy] = toS(hero.x, hero.y);
-      ctx.save(); ctx.globalAlpha = 0.28; drawHero(ctx, sx, sy, hero, hero.dir, time); ctx.restore();
+      const r = outlineIfCovered(ctx, game, toS, sx, sy, hero.x + hero.y, (c, ax, ay) => drawHero(c, ax, ay, hero, hero.dir, time), PAL[OL.hero || 'bronze_hi']);
+      outl.push({ id: 'hero', frac: +r.frac.toFixed(2), drawn: r.drawn, color: PAL[OL.hero || 'bronze_hi'] });
     } else {
       const [sx, sy] = toS(hero.x, hero.y);
       ctx.fillStyle = PAL.ink; ctx.fillRect(sx - 15, sy - 7, 30, 8);
       ctx.fillStyle = PAL.red_dk; ctx.fillRect(sx - 14, sy - 6, 22, 6);
       ctx.fillStyle = PAL.slate_lt; ctx.fillRect(sx + 7, sy - 7, 7, 6);
     }
+    game.xrayOutlines = outl;
 
     this.renderFx(ctx, game, toS);
     // m1f P1.6: имена NPC и подписи мест — после сцены, без наложений: имя не ложится на героя (поднимается над ним),
@@ -172,15 +169,47 @@ export class WorldRenderer {
         if (L.n.mark) drawText(ctx, L.sx + textWidth(L.n.name) / 2 + 8, y, L.n.mark, PAL.bronze_hi, { align: 'c', outline: true });
         game.labelsDrawn.push({ text: L.n.name, ...r });
       }
+      // m1k (§7.4 п. 5): доски указателя — подписи мира, когда герой ближе showRange тайлов или зажат Alt.
+      // Раскладка до подписей частей города: доски одной стороны не налезают друг на друга (северная/западная — вверх,
+      // восточная/южная — вниз), а бледная подпись части города рядом с досками гаснет (не спорит с указателем).
+      const SG = game.map.sign, sp = SG && game.map.props.find((p) => p.type === 'sign'), signR = [];
+      if (SG && sp && sp._spr && (Math.hypot(hero.x - SG.x - 0.5, hero.y - SG.y - 0.5) <= SG.showRange || game.input.alt)) {
+        const tips = (VA.sheets.bld_ukazatel && VA.sheets.bld_ukazatel.meta.board_tips_px) || {};
+        const [bx, by] = toS(sp.x, sp.y), L = [];
+        for (const B of SG.boards) {
+          const id = B.key.split('.')[1], tp = tips[id]; if (!tp) continue;
+          const text = t(B.key), w = textWidth(text), right = tp[0] > 14;
+          const tx = bx - sp._spr.ox + tp[0] + (right ? 3 : -3), ty = by - sp._spr.oy + tp[1] - 4;
+          L.push({ B, text, w, right, x: right ? tx : tx - w, y: ty, up: B.to === 'north' || B.to === 'west' });
+        }
+        for (const side of [true, false]) {
+          const S = L.filter((l) => l.right === side).sort((a, b) => a.y - b.y);
+          for (let i = 1; i < S.length; i++) {
+            const a = S[i - 1], b = S[i], need = 11 - (b.y - a.y); if (need <= 0) continue;
+            if (a.up && !b.up) { const ua = Math.ceil(need / 2); a.y -= ua; b.y += need - ua; }
+            else if (a.up) a.y -= need; else b.y += need;
+            for (let j = i - 1; j > 0 && S[j].y - S[j - 1].y < 11; j--) S[j - 1].y = S[j].y - 11;
+          }
+        }
+        for (const l of L) {
+          const r = { x: l.x - 1, y: l.y - 1, w: l.w + 2, h: 10 };
+          drawText(ctx, l.x, l.y, l.text, PAL.linen, { outline: true });
+          signR.push(r); placed.push(r);
+          game.labelsDrawn.push({ text: l.text, sign: true, key: l.B.key, ...r });
+        }
+      }
       // m1i (П.10b): подпись части города — явно не объект: бледная, без обводки и плашки, видна, только пока герой в этой
       // части (ближе CAPTION_NEAR тайлов, гаснет к CAPTION_FAR); на курсор не реагирует (в labelRects/objects её нет)
       if (game.map.captions) for (const c of game.map.captions) {
         const dh = Math.hypot(hero.x - c.x, hero.y - c.y), ca = CAPTION_A * Math.max(0, Math.min(1, (CAPTION_FAR - dh) / (CAPTION_FAR - CAPTION_NEAR)));
         if (ca <= 0.01) continue;
-        const [sx, sy] = toS(c.x, c.y), w = textWidth(c.text), r = { x: sx - w / 2 - 1, y: sy - 1, w: w + 2, h: 10 };
+        const text = c.textKey ? t(c.textKey) : c.text;   // m1k (§15): подписи частей города — ключи ladoga.caption.*
+        const [sx, sy] = toS(c.x, c.y), w = textWidth(text), r = { x: sx - w / 2 - 1, y: sy - 1, w: w + 2, h: 10 };
+        // рядом с досками указателя (запас 12 px) — гаснет
+        if (signR.some((q) => r.x < q.x + q.w + 12 && r.x + r.w + 12 > q.x && r.y < q.y + q.h + 12 && r.y + r.h + 12 > q.y)) continue;
         if (hit(r) || (heroBox && r.x < heroBox.x + heroBox.w && r.x + r.w > heroBox.x && r.y < heroBox.y + heroBox.h && r.y + r.h > heroBox.y)) continue;
-        placed.push(r); drawText(ctx, sx, sy, c.text, PAL.birch, { align: 'c', shadow: true, alpha: ca });
-        game.labelsDrawn.push({ text: c.text, caption: true, alpha: +ca.toFixed(2), outline: false, ...r });
+        placed.push(r); drawText(ctx, sx, sy, text, PAL.birch, { align: 'c', shadow: true, alpha: ca });
+        game.labelsDrawn.push({ text, caption: true, key: c.textKey, alpha: +ca.toFixed(2), outline: false, ...r });
       }
     }
     this.renderLight(ctx, game, toS);
@@ -271,6 +300,27 @@ export class WorldRenderer {
         ctx.globalAlpha = 0.6; ctx.beginPath(); pts2.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.stroke(); ctx.restore();
       }
     }
+    // v1.14 E2 (§4.7): поднятый щит — дуга сектора 120° на земле, bronze, альфа 0,25
+    const H = game.hero, B = H && H.blockSt;
+    if (B && !H.dead) {
+      const half = Math.PI / 3, a0 = Math.atan2(B.dy, B.dx), R = 1.2, n = 10, k = Math.min(1, B.t / 0.15);
+      const pts = [toS(H.x, H.y)];
+      for (let i = 0; i <= n; i++) { const a = a0 - half + (2 * half * i) / n; pts.push(toS(H.x + Math.cos(a) * R * k, H.y + Math.sin(a) * R * k)); }
+      ctx.save(); ctx.globalAlpha = 0.25; ctx.fillStyle = PAL.bronze; ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 0.5; ctx.strokeStyle = PAL.bronze_lt; ctx.lineWidth = 1; ctx.beginPath(); pts.slice(1).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke(); ctx.restore();
+      game._blockArcDrawn = (game._blockArcDrawn || 0) + 1;
+    }
+  }
+
+  /** v1.14 E2: щит перед героем (заглушка кодом до арта H21): круглый, умбон, обод bronze; дрожит при принятом ударе. */
+  drawHeroShield(ctx, hero, sx, sy) {
+    const B = hero.blockSt; if (!B) return;
+    if (ART.sheets['hero_block_hold_se']) return;                // v1.14 H21: есть лист художника — щит в нём
+    const k = Math.min(1, B.t / 0.15), ex = (B.dx - B.dy) * 16, ey = (B.dx + B.dy) * 8, L = Math.hypot(ex, ey) || 1;
+    const jig = hero.blockFx > 0 ? -1 : 0;
+    const x = Math.round(sx + (ex / L) * (7 + jig) * k), y = Math.round(sy - 22 + (ey / L) * (5 + jig) * k - 6 * k);
+    disc(ctx, x, y, 7, PAL.ink); disc(ctx, x, y, 6, PAL.bronze); disc(ctx, x, y, 5, PAL.wood_md); disc(ctx, x, y, 2, PAL.bronze_lt);
+    if (hero.blockFx > 0) { ctx.save(); ctx.globalAlpha = Math.min(1, hero.blockFx * 5); ctx.strokeStyle = PAL.bronze_hi; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, 7.5, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
   }
 
   /** Подсветка интерактивных объектов под курсором, подпись действия и полоса удержания (выбить дверь). */
@@ -321,6 +371,36 @@ export class WorldRenderer {
     }
   }
 
+  /** След взмаха: направление по экрану → лист и зеркало (H10). layer 'under' — N/NE/NW, 'over' — остальные. */
+  drawSmears(ctx, game, toS, layer) {
+    for (const m of game.fx.smears || []) {
+      const [cx, cy] = toS(m.x, m.y), fr = Math.min(m.frames - 1, Math.floor(m.t / m.ft));
+      const vx = m.dx - m.dy, vy = (m.dx + m.dy) / 2, oct = ((Math.round(Math.atan2(vy, vx) / (Math.PI / 4)) % 8) + 8) % 8;   // 0 E, 1 SE, 2 S, 3 SW, 4 W, 5 NW, 6 N, 7 NE
+      const [key, flip] = [['sw_se', false], ['sw_se', false], ['sw_s', false], ['sw_se', true], ['sw_se', true], ['sw_ne', true], ['sw_n', false], ['sw_ne', false]][oct];
+      const under = oct >= 5;
+      if ((layer === 'under') !== under) continue;
+      const spr = drawFxFrame(ctx, key, fr, cx, cy, { flip });
+      if (!spr || m.crit) this.codeSmear(ctx, m, cx, cy, fr);
+      game.smearDrawn = { t: game.time, frame: fr, x: cx, y: cy, color: m.color, deg: m.deg, r: m.r, sprite: spr ? key : null, flip, under };
+    }
+  }
+
+  /** Дуга взмаха кодом: эллипс r × r/2 на высоте груди, кадр 1 — 3 px, альфа 0,6; кадр 2 — 2 px, 0,3; целые пиксели. */
+  codeSmear(ctx, m, cx, cy, fr) {
+    const a0 = Math.atan2(m.dx + m.dy, m.dx - m.dy), half = m.deg / 2 * Math.PI / 180, th = fr === 0 ? 3 : 2;
+    ctx.globalAlpha = 0.6 * (1 - fr / m.frames);
+    const seen = new Set();
+    for (let k = 0; k < th; k++) {
+      const rr = m.r - k, steps = Math.ceil(rr * 2 * half);
+      for (let i = 0; i <= steps; i++) {
+        const a = a0 - half + (2 * half * i) / steps, px = cx + Math.round(rr * Math.cos(a)), py = cy - 8 + Math.round(rr * 0.5 * Math.sin(a));
+        const key = px * 4096 + py; if (seen.has(key)) continue; seen.add(key);
+        rect(ctx, px, py, 1, 1, m.color);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
   renderFx(ctx, game, toS) {
     const fx = game.fx;
     for (const f of game.combat.sprFx || []) { const [sx, sy] = toS(f.x, f.y); drawFxFrame(ctx, f.key, Math.min(4, Math.floor(f.t * f.fps)), sx, sy); }
@@ -336,8 +416,13 @@ export class WorldRenderer {
       const [sx, sy] = toS(p.x, p.y);
       ctx.globalAlpha = Math.max(0, 1 - p.t / p.dur);
       rect(ctx, sx + p.ox, sy + p.oy, p.size, p.size, p.color);
+      if (p.spark) rect(ctx, Math.round(sx + p.ox - p.vx * 0.012), Math.round(sy + p.oy - p.vy * 0.012), 1, 1, p.color);   // хвостик искры
     }
     ctx.globalAlpha = 1;
+    // GDD v1.13 §4.6 / H10: след взмаха «Сшибки». Спрайт художника fx_swing_{se,ne,s,n} (48×40, 2 кадра, опора — ступни);
+    // S/SE/E/SW/W — поверх героя (здесь), N/NE/NW — под героем (drawSmears(..., 'under') перед drawHero). Время кадра — ft из
+    // stats.json (§4.6). Удачный удар — поверх спрайта дуга bronze_lt кодом. Нет спрайта — дуга кодом целиком (как в m1j-черновике).
+    this.drawSmears(ctx, game, toS, 'over');
     // молнии «Перунова скока»
     for (const b of fx.bolts) {
       const k = b.t / b.dur, [sx, sy] = toS(b.x1, b.y1), [ox, oy] = toS(b.x0, b.y0);
@@ -387,6 +472,7 @@ export class WorldRenderer {
     hole(hx, hy - 20, 190, nebyl ? 0.8 : 0.95);   // в Небыли и у героя остаётся красноватая дымка
     const warm = [];
     for (const l of game.map.lights) {
+      if (l.gate && !l.gate.open) continue;   // m1k: факелы ворот горят только у открытых
       const [sx, sy] = toS(l.x, l.y);
       // отдых у крады: свет шире и ярче (подсказка художника: радиус 3 → 4 тайла, +25%); у Чурова камня — +25%
       const src = game.restFx && game.restFx.src, F = CFG.stats.restFx || {};

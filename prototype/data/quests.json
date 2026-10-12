@@ -1,185 +1,225 @@
 {
- "_about": "Миссии и цели трекера (GDD v1.5 §8.2, act1.md v1.1). Машина состояний в данных: у цели state0 (hidden — не показана, locked — показана серым как следующая, active), условия activateOn / progressOn / doneOn — событие {event, ...поля}, все поля должны совпасть. count — счётчик «n/count». Действия onActivate / onDone / triggers[].do: bark (реплика героя или говорящего), dialog (цепочка реплик из ru.json), flag (флаг миссии), notify, log. Тексты — ключи data/ru.json. Трекер показывает не больше maxLines строк: только что выполненные (гаснут за doneFade с), активные, затем следующие серым (GDD §8.2: «не больше 3 строк, выполненные гаснут»). implemented:false — цель есть в данных, но её события появятся в следующих вехах (капище, Кривша).",
- "events": {
-  "_about": "Какие события шлёт игра: zoneEnter {zone}; reach {target} — герой дошёл до точки зоны; hutFreed {hut}; arsonistSeen — первая встреча с черноярцем-поджигателем (тот заметил героя или герой видит его ближе sightRange); relicTaken {relic}; letterRead {letter}; chestOpened {chest}; bossKilled {boss}. Веха M1b: churTouched — герой коснулся Чурова камня у капища; hearthFreed {hearth}; bossRise {boss}; bossKilled {boss}; missionDone.",
-  "arsonistSightRange": 9,
-  "_arsonistSightRangeNote": "Принято дизайнером 08.10 (GDD v1.7): с 9 тайлов герой «видит» поджигателя (реплика и цель)"
- },
- "m1": {
-  "titleKey": "quest.m1.title",
-  "actKey": "quest.act",
-  "maxLines": 3,
-  "doneFade": 4,
-  "_doneFadeNote": "Сколько секунд выполненная цель висит в трекере с галочкой, прежде чем погаснуть (принято дизайнером 08.10)",
-  "objectives": [
-   {
-    "id": "mal",
-    "textKey": "quest.m1.obj.mal",
-    "state0": "active",
-    "doneOn": {
-     "event": "hutFreed",
-     "hut": "hut3"
-    },
-    "required": true,
-    "markers": {
-     "zalesye": "hut3",
-     "ladoga": "to_zalesye"
-    },
-    "_note": "m1f P0.2 (критики m1e): первая цель — quest.m1.obj.mal (m1g: строка сценариста «Вызволи Мала у колодца»; подцель «Спаси выживших 0/3»); метка цели на мини-карте и карте: в Залесье — дверь избы 3, в Ладоге — восточные ворота (выход в Залесье). Метка видна и в тумане."
-   },
-   {
-    "id": "reach",
-    "textKey": "quest.m1.obj.reach",
-    "state0": "active",
-    "doneOn": {
-     "event": "reach",
-     "target": "kapishche_gate"
-    },
-    "required": true,
-    "_note": "Цель закрывается у ворот капища в конце Лесной тропы (за ними — капище, вход у Чурова камня, GDD §8.1)"
-   },
-   {
-    "id": "huts",
-    "textKey": "quest.m1.obj.huts",
-    "state0": "active",
-    "count": 3,
-    "progressOn": {
-     "event": "hutFreed"
-    },
-    "onDone": [
-     {
-      "bark": "bark.m1.huts_done"
-     }
-    ],
-    "required": true,
-    "progressUnique": "hut",
-    "_m1g": "GDD v1.11: «Вызволи Мала у колодца» (цель mal) — подцель этой цели; изба Мала (hut3) засчитывается в 0/3 один раз: progressUnique — одно и то же значение поля hut не продвигает счётчик повторно"
-   },
-   {
-    "id": "hearths",
-    "textKey": "quest.m1.obj.hearths",
-    "state0": "locked",
-    "count": 3,
-    "activateOn": {
-     "event": "zoneEnter",
-     "zone": "kapishche"
-    },
-    "progressOn": {
-     "event": "hearthFreed"
-    },
-    "required": false,
-    "_note": "Отбить огнище: перебить пачку, затем держать ЛКМ 3 с (урон прерывает). Реплики bark.m1.hearth1–3 / hearth_after — в коде капища (src/systems/kapishche.js)",
-    "optional": true,
-    "_optionalNote": "GDD v1.8.1 §8.2: необязательная цель — после «Миссия пройдена» строка остаётся в трекере, огнища можно отбить позже"
-   },
-   {
-    "id": "krivsha",
-    "textKey": "quest.m1.obj.krivsha",
-    "state0": "locked",
-    "activateOn": {
-     "event": "zoneEnter",
-     "zone": "kapishche"
-    },
-    "doneOn": {
-     "event": "bossKilled",
-     "boss": "krivsha"
-    },
-    "required": true
-   },
-   {
-    "id": "arsonist",
-    "textKey": "quest.m1.obj.arsonist",
-    "state0": "hidden",
-    "activateOn": {
-     "event": "arsonistSeen"
-    },
-    "onActivate": [
-     {
-      "bark": "bark.m1.arsonist"
-     }
-    ],
-    "doneOn": {
-     "event": "letterRead",
-     "letter": "order"
-    },
-    "required": true,
-    "_note": "Открывается при первой встрече с поджигателем, закрывается грамотой «Приказ Чернояра» на теле Кривши (GDD §8.2 п.5, п.7)"
-   }
-  ],
-  "triggers": [
-   {
-    "on": {
-     "event": "hutFreed",
-     "hut": "hut3"
-    },
-    "do": [
-     {
-      "dialog": "dialog.m1.mal"
-     },
-     {
-      "flag": "trailOpen"
-     }
-    ],
-    "_note": "Мал в избе у колодца открывает тропу (GDD §8.2 п.2)"
-   },
-   {
-    "on": {
-     "event": "relicTaken",
-     "relic": "knife"
-    },
-    "do": [
-     {
-      "bark": "bark.m1.knife"
-     }
-    ]
-   },
-   {
-    "on": {
-     "event": "chestOpened",
-     "chest": "trail_chest"
-    },
-    "do": [
-     {
-      "notify": "ui.tut.bag"
-     }
-    ],
-    "_note": "Сундук с заговорённым оружием — обучение котомке (GDD §8.2 п.3)"
-   },
-   {
-    "on": {
-     "event": "zoneEnter",
-     "zone": "kapishche"
-    },
-    "do": [
-     {
-      "bark": "bark.m1.kapishche"
-     },
-     {
-      "notify": "ui.tut.chad"
-     }
-    ],
-    "_note": "Вход в капище: ложится «Чад» (act1_texts §4)"
-   }
-  ],
-  "completeOn": "required",
-  "malGift": {
-   "_about": "GDD v1.9 §8.2/§15 (журнал п.7): Мал при выходе из избы даёт 2 слабых зелья жизни и 30 серебра, без опыта, один раз за М1; реплика bark.m1.mal_gift. Награда миссии (300 сер., «Ярь I» от Вышаты) — заглушка до хаба Ладоги.",
-   "potions": {
-    "life1": 2
-   },
-   "silver": 30,
-   "xp": 0,
-   "once": true,
-   "barkKey": "bark.m1.mal_gift"
+  "_about": "Миссии и цели трекера (GDD v1.5 §8.2, act1.md v1.1). Машина состояний в данных: у цели state0 (hidden — не показана, locked — показана серым как следующая, active), условия activateOn / progressOn / doneOn — событие {event, ...поля}, все поля должны совпасть. count — счётчик «n/count». Действия onActivate / onDone / triggers[].do: bark (реплика героя или говорящего), dialog (цепочка реплик из ru.json), flag (флаг миссии), notify, log. Тексты — ключи data/ru.json. Трекер показывает не больше maxLines строк: только что выполненные (гаснут за doneFade с), активные, затем следующие серым (GDD §8.2: «не больше 3 строк, выполненные гаснут»). implemented:false — цель есть в данных, но её события появятся в следующих вехах (капище, Кривша).",
+  "events": {
+    "_about": "Какие события шлёт игра: zoneEnter {zone}; reach {target} — герой дошёл до точки зоны; hutFreed {hut}; arsonistSeen — первая встреча с черноярцем-поджигателем (тот заметил героя или герой видит его ближе sightRange); relicTaken {relic}; letterRead {letter}; chestOpened {chest}; bossKilled {boss}. Веха M1b: churTouched — герой коснулся Чурова камня у капища; hearthFreed {hearth}; bossRise {boss}; bossKilled {boss}; missionDone.",
+    "arsonistSightRange": 9,
+    "_arsonistSightRangeNote": "Принято дизайнером 08.10 (GDD v1.7): с 9 тайлов герой «видит» поджигателя (реплика и цель)"
   },
-  "reward": {
-   "silver": 300,
-   "yarTier": 1,
-   "yarMax": 15,
-   "yarRegenPct": 10,
-   "skillPoints": 1,
-   "giver": "vyshata",
-   "bark": "bark.vyshata.reward"
+  "m1": {
+    "titleKey": "quest.m1.title",
+    "actKey": "quest.act",
+    "maxLines": 3,
+    "doneFade": 4,
+    "_doneFadeNote": "Сколько секунд выполненная цель висит в трекере с галочкой, прежде чем погаснуть (принято дизайнером 08.10)",
+    "objectives": [
+      {
+        "id": "mal",
+        "textKey": "quest.m1.obj.mal",
+        "state0": "active",
+        "doneOn": {
+          "event": "hutFreed",
+          "hut": "hut3"
+        },
+        "required": true,
+        "markers": {
+          "zalesye": "hut3",
+          "ladoga": "to_zalesye"
+        },
+        "_note": "m1f P0.2 (критики m1e): первая цель — quest.m1.obj.mal (m1g: строка сценариста «Вызволи Мала у колодца»; подцель «Спаси выживших 0/3»); метка цели на мини-карте и карте: в Залесье — дверь избы 3, в Ладоге — восточные ворота (выход в Залесье). Метка видна и в тумане."
+      },
+      {
+        "id": "reach",
+        "textKey": "quest.m1.obj.reach",
+        "state0": "active",
+        "doneOn": {
+          "event": "reach",
+          "target": "kapishche_gate"
+        },
+        "required": true,
+        "_note": "Цель закрывается у ворот капища в конце Лесной тропы (за ними — капище, вход у Чурова камня, GDD §8.1)"
+      },
+      {
+        "id": "huts",
+        "textKey": "quest.m1.obj.huts",
+        "state0": "active",
+        "count": 3,
+        "progressOn": {
+          "event": "hutFreed"
+        },
+        "onDone": [
+          {
+            "bark": "bark.m1.huts_done"
+          }
+        ],
+        "required": true,
+        "progressUnique": "hut",
+        "_m1g": "GDD v1.11: «Вызволи Мала у колодца» (цель mal) — подцель этой цели; изба Мала (hut3) засчитывается в 0/3 один раз: progressUnique — одно и то же значение поля hut не продвигает счётчик повторно"
+      },
+      {
+        "id": "hearths",
+        "textKey": "quest.m1.obj.hearths",
+        "state0": "locked",
+        "count": 3,
+        "activateOn": {
+          "event": "zoneEnter",
+          "zone": "kapishche"
+        },
+        "progressOn": {
+          "event": "hearthFreed"
+        },
+        "required": false,
+        "_note": "Отбить огнище: перебить пачку, затем держать ЛКМ 3 с (урон прерывает). Реплики bark.m1.hearth1–3 / hearth_after — в коде капища (src/systems/kapishche.js)",
+        "optional": true,
+        "_optionalNote": "GDD v1.8.1 §8.2: необязательная цель — после «Миссия пройдена» строка остаётся в трекере, огнища можно отбить позже"
+      },
+      {
+        "id": "krivsha",
+        "textKey": "quest.m1.obj.krivsha",
+        "state0": "locked",
+        "activateOn": {
+          "event": "zoneEnter",
+          "zone": "kapishche"
+        },
+        "doneOn": {
+          "event": "bossKilled",
+          "boss": "krivsha"
+        },
+        "required": true
+      },
+      {
+        "id": "arsonist",
+        "textKey": "quest.m1.obj.arsonist",
+        "state0": "hidden",
+        "activateOn": {
+          "event": "arsonistSeen"
+        },
+        "onActivate": [
+          {
+            "bark": "bark.m1.arsonist"
+          }
+        ],
+        "doneOn": {
+          "event": "letterRead",
+          "letter": "order"
+        },
+        "required": true,
+        "_note": "Открывается при первой встрече с поджигателем, закрывается грамотой «Приказ Чернояра» на теле Кривши (GDD §8.2 п.5, п.7)"
+      }
+    ],
+    "triggers": [
+      {
+        "on": {
+          "event": "hutFreed",
+          "hut": "hut3"
+        },
+        "do": [
+          {
+            "dialog": "m1.mal"
+          },
+          {
+            "flag": "trailOpen"
+          }
+        ],
+        "_note": "Мал в избе у колодца открывает тропу (GDD §8.2 п.2)"
+      },
+      {
+        "on": {
+          "event": "relicTaken",
+          "relic": "knife"
+        },
+        "do": [
+          {
+            "bark": "bark.m1.knife"
+          }
+        ]
+      },
+      {
+        "on": {
+          "event": "chestOpened",
+          "chest": "trail_chest"
+        },
+        "do": [
+          {
+            "notify": "ui.tut.bag"
+          }
+        ],
+        "_note": "Сундук с заговорённым оружием — обучение котомке (GDD §8.2 п.3)"
+      },
+      {
+        "on": {
+          "event": "zoneEnter",
+          "zone": "kapishche"
+        },
+        "do": [
+          {
+            "bark": "bark.m1.kapishche"
+          },
+          {
+            "notify": "ui.tut.chad"
+          }
+        ],
+        "_note": "Вход в капище: ложится «Чад» (act1_texts §4)"
+      }
+    ],
+    "completeOn": "required",
+    "malGift": {
+      "_about": "GDD v1.9 §8.2/§15 (журнал п.7): Мал при выходе из избы даёт 2 слабых зелья жизни и 30 серебра, без опыта, один раз за М1; реплика bark.m1.mal_gift. Награда миссии (300 сер., «Ярь I» от Вышаты) — заглушка до хаба Ладоги.",
+      "potions": {
+        "life1": 2
+      },
+      "silver": 30,
+      "xp": 0,
+      "once": true,
+      "barkKey": "bark.m1.mal_gift"
+    },
+    "reward": {
+      "silver": 300,
+      "yarTier": 1,
+      "yarMax": 15,
+      "yarRegenPct": 10,
+      "skillPoints": 1,
+      "giver": "vyshata",
+      "bark": "bark.vyshata.reward"
+    },
+    "zoneLines": {
+      "ladoga": [
+        {
+          "key": "quest.m1.obj.ladoga_exit",
+          "while": {
+            "anyActive": [
+              "mal",
+              "reach"
+            ]
+          }
+        },
+        {
+          "key": "quest.m1.obj.report",
+          "while": {
+            "bossKilled": "krivsha",
+            "notTurnedIn": true
+          }
+        }
+      ]
+    },
+    "markers": {
+      "ladoga": "vyshata"
+    },
+    "_markersNote": "m1k D5 (GDD v1.13 §7.4, §10.2): метка зоны уровня миссии — действует после bossKilled krivsha и до сдачи; до того — markers активной цели (в Ладоге to_zalesye)",
+    "hints": [
+      {
+        "zone": "ladoga",
+        "after": {
+          "dialogEnd": "vyshata.s0"
+        },
+        "sec": 90,
+        "notNear": {
+          "marker": "to_zalesye",
+          "r": 10
+        },
+        "bark": "bark.ladoga.m1_where",
+        "once": "perVisit",
+        "arrowFlash": 3
+      }
+    ]
   }
- }
 }

@@ -1,0 +1,282 @@
+{
+ "character": "Ратибор (герой) — блок щитом, H21",
+ "folder": "hero",
+ "frame_size": [
+  64,
+  64
+ ],
+ "pivot": [
+  32,
+  56
+ ],
+ "directions": {
+  "drawn": [
+   "s",
+   "se",
+   "e",
+   "ne",
+   "n"
+  ],
+  "mirrored": {
+   "sw": "se",
+   "w": "e",
+   "nw": "ne"
+  },
+  "prototype_dirs": {
+   "0": "s",
+   "7": "se",
+   "6": "e",
+   "5": "ne",
+   "4": "n",
+   "1": "se + mirror",
+   "2": "e + mirror",
+   "3": "ne + mirror"
+  },
+  "rule": "GDD §12.1.2 / scale.md §4.1: hero 5 drawn + 3 mirrored; mirror = flip around x = 32, pivot stays (32, 56)"
+ },
+ "animations": {
+  "hero_block_raise": {
+   "frames": 2,
+   "fps": 13,
+   "loop": false,
+   "events": {
+    "block_active_after_last_frame": true,
+    "raised": 1
+   },
+   "notes": "0,15 с (§4.7): щит от бедра к груди, меч опущен назад. Опускание = эти кадры в обратном порядке.",
+   "files": {
+    "s": "hero_block_raise_s.png",
+    "se": "hero_block_raise_se.png",
+    "e": "hero_block_raise_e.png",
+    "ne": "hero_block_raise_ne.png",
+    "n": "hero_block_raise_n.png"
+   }
+  },
+  "hero_block_hold": {
+   "frames": 2,
+   "fps": 4,
+   "loop": true,
+   "events": {
+    "block_active": [
+     0,
+     1
+    ]
+   },
+   "notes": "цикл; кромка щита на уровне подбородка, закрывает лицо наполовину",
+   "files": {
+    "s": "hero_block_hold_s.png",
+    "se": "hero_block_hold_se.png",
+    "e": "hero_block_hold_e.png",
+    "ne": "hero_block_hold_ne.png",
+    "n": "hero_block_hold_n.png"
+   }
+  },
+  "hero_block_walk": {
+   "frames": 6,
+   "fps": 8,
+   "loop": true,
+   "events": {
+    "block_active": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "footstep": [
+     0,
+     3
+    ]
+   },
+   "notes": "шаг со щитом (скорость × 0,5), цикл 0,75 с",
+   "files": {
+    "s": "hero_block_walk_s.png",
+    "se": "hero_block_walk_se.png",
+    "e": "hero_block_walk_e.png",
+    "ne": "hero_block_walk_ne.png",
+    "n": "hero_block_walk_n.png"
+   }
+  },
+  "hero_block_hit": {
+   "frames": 3,
+   "fps": 12,
+   "loop": false,
+   "events": {
+    "block_active": [
+     0,
+     1,
+     2
+    ],
+    "hit": 0,
+    "sparks": 0,
+    "recoil_px": 1
+   },
+   "notes": "принятый удар: щит дрогнул, отдача в плечо, сдвиг на 1 px назад; искры H23 — в кадре 0 у anchors.shield_rim",
+   "files": {
+    "s": "hero_block_hit_s.png",
+    "se": "hero_block_hit_se.png",
+    "e": "hero_block_hit_e.png",
+    "ne": "hero_block_hit_ne.png",
+    "n": "hero_block_hit_n.png"
+   }
+  },
+  "hero_block_break": {
+   "frames": 4,
+   "fps": 13,
+   "loop": false,
+   "events": {
+    "block_active": [],
+    "break": 0,
+    "sparks": 0,
+    "shield_down": 3
+   },
+   "notes": "пробитие: щит отбит в сторону, герой качнулся, затем опускает щит; блок снят с кадра 0; 13 fps: 4 кадра ≈ 0,3 с = оглушение §4.7",
+   "files": {
+    "s": "hero_block_break_s.png",
+    "se": "hero_block_break_se.png",
+    "e": "hero_block_break_e.png",
+    "ne": "hero_block_break_ne.png",
+    "n": "hero_block_break_n.png"
+   }
+  }
+ },
+ "heights": {
+  "raise_s": [
+   44,
+   44
+  ],
+  "raise_se": [
+   44,
+   44
+  ],
+  "raise_e": [
+   44,
+   44
+  ],
+  "raise_ne": [
+   44,
+   44
+  ],
+  "raise_n": [
+   44,
+   44
+  ],
+  "hold_s": [
+   44,
+   43
+  ],
+  "hold_se": [
+   44,
+   43
+  ],
+  "hold_e": [
+   44,
+   43
+  ],
+  "hold_ne": [
+   44,
+   43
+  ],
+  "hold_n": [
+   44,
+   43
+  ],
+  "walk_s": [
+   44,
+   43,
+   43,
+   44,
+   43,
+   43
+  ],
+  "walk_se": [
+   44,
+   43,
+   43,
+   44,
+   43,
+   43
+  ],
+  "walk_e": [
+   44,
+   43,
+   43,
+   44,
+   43,
+   43
+  ],
+  "walk_ne": [
+   44,
+   43,
+   43,
+   44,
+   43,
+   43
+  ],
+  "walk_n": [
+   44,
+   43,
+   43,
+   44,
+   43,
+   43
+  ],
+  "hit_s": [
+   44,
+   45,
+   44
+  ],
+  "hit_se": [
+   44,
+   44,
+   44
+  ],
+  "hit_e": [
+   44,
+   44,
+   44
+  ],
+  "hit_ne": [
+   44,
+   43,
+   44
+  ],
+  "hit_n": [
+   44,
+   43,
+   44
+  ],
+  "break_s": [
+   45,
+   46,
+   45,
+   44
+  ],
+  "break_se": [
+   44,
+   45,
+   44,
+   44
+  ],
+  "break_e": [
+   44,
+   43,
+   44,
+   44
+  ],
+  "break_ne": [
+   43,
+   42,
+   43,
+   44
+  ],
+  "break_n": [
+   43,
+   41,
+   43,
+   44
+  ]
+ },
+ "total_frames": 85
+}

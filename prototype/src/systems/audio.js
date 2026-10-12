@@ -1,6 +1,6 @@
 import { crand } from '../core/rng.js';   // B-35: звук не тратит игровое зерно
 // Звуки-заглушки: всё синтезируется WebAudio на лету, без файлов.
-// play(name): hit, crit, throw, miss, hurt, block, skill, explode, kill, pickup, silver, potion, equip, levelup, death, respawn, ui, error.
+// play(name): hit, crit, throw, miss, hurt, block, guard_break, skill, explode, kill, pickup, silver, potion, equip, levelup, death, respawn, ui, error.
 const STORE_KEY = 'byl_nebyl_mute';
 
 export class Audio {
@@ -60,18 +60,30 @@ export class Audio {
     s.start(t, crand() * 0.2); s.stop(t + dur + 0.02);
   }
 
-  play(name) {
+  play(name, o = null) {
     this.count[name] = (this.count[name] || 0) + 1;
+    if (name === 'hit' && o) { const k = 'hit_' + (o.mat || 'flesh'); this.count[k] = (this.count[k] || 0) + 1; if (o.tier !== 'hit') this.count['hit_' + o.tier] = (this.count['hit_' + o.tier] || 0) + 1; }
     if (!this.ctx || this.muted) return;
     const now = this.ctx.currentTime;
     if (this.last[name] && now - this.last[name] < 0.03) return;
     this.last[name] = now;
     switch (name) {
-      case 'hit': this.noise(0.09, 0.35, 'bandpass', 900, 1.2); this.tone('sine', 140, 50, 0.1, 0.35); break;
+      case 'hit': {         // GDD v1.13 §4.6: 3 варианта по материалу (плоть / дерево-щит / кость), высота ±pitch, 0 дБ;
+        // удачный удар +critDb и низкий удар; добивание — глухой «бух» killDb
+        const O = o || {}, p = 1 + (crand() * 2 - 1) * (O.pitch ?? 0.08), mat = O.mat || 'flesh', tier = O.tier || 'hit';
+        const g = tier === 'crit' ? Math.pow(10, (O.critDb ?? 2) / 20) : 1;
+        if (mat === 'wood') { this.noise(0.07, 0.3 * g, 'bandpass', 1800 * p, 3); this.tone('square', 320 * p, 180 * p, 0.06, 0.12 * g); this.tone('triangle', 520 * p, 400 * p, 0.05, 0.1 * g); }
+        else if (mat === 'bone') { this.noise(0.06, 0.28 * g, 'highpass', 2600 * p, 1.5); this.tone('square', 900 * p, 500 * p, 0.04, 0.1 * g); this.tone('sine', 180 * p, 70 * p, 0.08, 0.25 * g); }
+        else { this.noise(0.09, 0.35 * g, 'bandpass', 700 * p, 1.0); this.tone('sine', 130 * p, 45 * p, 0.11, 0.35 * g); }
+        if (tier === 'crit') this.tone('sine', 70, 35, 0.18, 0.35 * g);
+        if (tier === 'kill') { const k = Math.pow(10, (O.killDb ?? -3) / 20); this.noise(0.2, 0.35 * k, 'lowpass', 300, 1, 0.02, 90); this.tone('sine', 80, 40, 0.2, 0.3 * k, 0.02); }
+        break;
+      }
       case 'crit': this.noise(0.12, 0.4, 'bandpass', 1600, 1.5); this.tone('square', 220, 60, 0.14, 0.18); this.tone('triangle', 1200, 900, 0.08, 0.12); break;
-      case 'miss': this.noise(0.12, 0.18, 'highpass', 2500, 0.7, 0, 5000); break;
+      case 'miss': this.noise(0.12, 0.09, 'highpass', 2500, 0.7, 0, 5000); break;   // v1.13 §4.6: свист −6 дБ (0,18 → 0,09)
       case 'hurt': this.tone('square', 180, 90, 0.12, 0.16); this.noise(0.06, 0.2, 'lowpass', 700); break;
       case 'block': this.tone('square', 900, 700, 0.06, 0.12); this.noise(0.08, 0.25, 'bandpass', 3000, 3); break;
+      case 'guard_break': this.noise(0.22, 0.35, 'lowpass', 900, 0.9, 0, 200); this.tone('square', 260, 80, 0.18, 0.16); break;   // v1.14 E2: треск пробитого щита
       case 'skill': this.tone('sawtooth', 160, 620, 0.28, 0.12); this.noise(0.25, 0.12, 'bandpass', 600, 2, 0, 2400); break;
       case 'explode': this.noise(0.45, 0.5, 'lowpass', 1400, 0.8, 0, 120); this.tone('sine', 90, 35, 0.35, 0.4); break;
       case 'kill': this.noise(0.18, 0.25, 'lowpass', 500, 1, 0, 150); this.tone('triangle', 200, 70, 0.2, 0.15); break;

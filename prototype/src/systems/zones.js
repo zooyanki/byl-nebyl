@@ -35,10 +35,11 @@ export const ZoneMixin = {
   /** Перейти в зону id к точке входа entry. opts.respawn — возрождение у крады (без надписи и без пополнения стай). */
   enterZone(id, entry = 'start', opts = {}) {
     const prev = this.zs;
+    this.navHint = null; this.navFlashUntil = 0;   // m1k D5: подсказка «потерялся» — один раз за вход
     // GDD v1.9 (журнал п.4): выход из зоны живого вступившего в бой босса — поводок (полное HP, фаза заново, призванные рассыпаются)
     if (prev && prev.zone.id !== id && prev.boss && !prev.boss.dead && prev.boss.state !== 'idle' && prev.boss.leash) prev.boss.leash(this, 'zone', true);
     if (prev && prev.id === 'ladoga' && id !== 'ladoga' && this.town) this.town.onLeave();
-    if (prev) { this.finishDialog(prev); this.saveZone(); }
+    if (prev) { this.flushDialogs(); this.finishDialog(prev); this.saveZone(); }
     const st = this.zoneStates[id] || (this.zoneStates[id] = this.buildZone(id));
     this.zs = st; this.zone = st.zone; this.map = st.map; this.renderer = st.renderer; this.minimap = st.minimap;
     this.enemies = st.enemies; this.buried = st.buried; this.loot.items = st.items; this.combat.fires = st.fires; this.npcs = st.npcs;
@@ -58,7 +59,8 @@ export const ZoneMixin = {
     if (opts.respawn) st.needRepop = false;
     this.enemyTotal = st.total;
     const h = this.hero, [x, y] = this.entryPoint(entry);
-    h.x = x; h.y = y; h.path = null; h.cmd = null; h.moving = false; h.kb = null; h.dashing = null;
+    h.x = x; h.y = y; h.path = null; h.cmd = null; h.moving = false; h.kb = null; h.dashing = null; h.blockSt = null; h.lowerT = h.breakT = h.blockHitT = null;
+    { const E = typeof entry === 'string' && ((this.zone && this.zone.entries && this.zone.entries[entry]) || this.map.entries[entry]); if (E && E.face) h.face(E.face[0], E.face[1]); }   // v1.14 E4: герой смотрит вглубь зоны / к воротам
     this.hoverEnemy = null; this.hoverGround = null; this.hoverObj = null; this.lastTarget = null; this.labelRects = [];
     for (const o of this.map.objects) o.inside = Math.hypot(h.x - o.x, h.y - o.y) <= (o.r || 0);
     this.updateCamera();
@@ -67,11 +69,15 @@ export const ZoneMixin = {
     this.counters.zoneChanges = (this.counters.zoneChanges || 0) + (prev ? 1 : 0);
     if (prev && !opts.respawn) {
       this.notify(this.zone.name, PAL.bronze_hi, 'zone');
-      this.log.add(this.zone.mlvl && this.zone.mlvl.length ? t('proto.zone.title', { zone: this.zone.name, mlvl: this.zone.mlvl.join('–') }) : this.zone.name, PAL.bronze_lt);
+      // m1k: повторный вход в ту же зону (портал/телепорт), пока прежняя строка ещё в журнале, — без второй строки «Ладога»
+      const zl = this.zone.mlvl && this.zone.mlvl.length ? t('proto.zone.title', { zone: this.zone.name, mlvl: this.zone.mlvl.join('–') }) : this.zone.name;
+      if (!this.log.lines.some((l) => l.text === zl)) this.log.add(zl, PAL.bronze_lt);
       this.audio.play('ui');
     }
     st.maraWarn = null;      // GDD v1.11: предупреждение у пепла — раз за посещение зоны (новый вход — новое посещение)
     this.quest.emit({ event: 'zoneEnter', zone: id });
+    // v1.14 §12.2.4: обучение «E — навык» — при первом входе в Залесье (первая боевая зона); «ПКМ — щит» — при первом ударе врага
+    if (id === 'zalesye' && !this._tutSkillE && !opts.respawn) { this._tutSkillE = true; this.notify(t('ui.tut.skill_e'), PAL.bronze_lt, 'tut'); }
     this.boss = st.boss && !st.boss.dead ? st.boss : null;
     this.applyChad();
     this.syncExitWalls();
@@ -208,6 +214,7 @@ export const ZoneMixin = {
     if (o.type === 'portal') return this.portalLabel(o);
     if (o.type === 'npc') return o.npc ? o.npc.name : '';
     if (o.type === 'stash') return t('obj.stash');
+    if (o.type === 'lgate') return t(o.wall ? (this.map.gateRules || {}).closedHoverKey || 'ui.gate.closed' : o.hoverKey);   // m1k (§7.4 п. 3)
     if (o.type === 'gate') return (RU['zone.m1.kapishche'] || {})['Название'] || t('proto.zone.kapishche');
     const z = CFG.zones[o.to];
     return t('proto.exit.to', { zone: z ? z.name : o.to });
@@ -220,7 +227,7 @@ export const ZoneMixin = {
       if (o.done) continue;
       if (o.type === 'portal' && this.portal && this.portal.closing) continue;   // closing: неюзабелен, без hover
       const [sx, sy] = this.toS(o.x, o.y), dx = mx - sx, dy = my - sy;
-      const box = o.type === 'hut' ? [13, -58, 4] : o.type === 'chest' || o.type === 'reward' ? [13, -20, 6] : o.type === 'body' ? [17, -12, 7] : o.type === 'hearth' ? [16, -30, 8] : o.type === 'stone' ? [10, -38, 6] : o.type === 'portal' ? [14, -55, 8] : o.type === 'npc' ? [16, -52, 8] : o.type === 'stash' ? [18, -28, 10] : [16, -34, 8];
+      const box = o.type === 'hut' ? [13, -58, 4] : o.type === 'chest' || o.type === 'reward' ? [13, -20, 6] : o.type === 'body' ? [17, -12, 7] : o.type === 'hearth' ? [16, -30, 8] : o.type === 'stone' ? [10, -38, 6] : o.type === 'portal' ? [14, -55, 8] : o.type === 'npc' ? [16, -52, 8] : o.type === 'stash' ? [18, -28, 10] : o.type === 'lgate' ? [30, -96, 10] : [16, -34, 8];
       if (Math.abs(dx) <= box[0] && dy >= box[1] && dy <= box[2] && Math.abs(dx) + Math.abs(dy) < bd) { bd = Math.abs(dx) + Math.abs(dy); best = o; }
     }
     return best;
@@ -235,10 +242,9 @@ export const ZoneMixin = {
     for (const [kind, n] of Object.entries(G.potions || {})) for (let i = 0; i < n; i++) if (!h.addPotion(kind)) this.loot.spawnItem(h.x + 0.6, h.y + 0.4, makePotion(kind));
     if (G.silver) { h.silver += G.silver; this.audio.play('silver'); }
     this.counters.malGift = (this.counters.malGift || 0) + 1;
-    const b = RU[G.barkKey], text = b && typeof b === 'object' ? b['Текст'] : t(G.barkKey);
-    // реплика — в очередь диалога сразу после первой реплики Мала («Они с капища шли!…»), чтобы не накладываться на неё
-    const who = (b && b['Кто']) || t('npc.mal'), i = this.dialogQ.findIndex((l) => l.who === who);
-    if (i >= 0) this.dialogQ.splice(i + 1, 0, { who, text }); else this.dialog([[who, text]]);
+    // m1k (D6): реплика о подарке — последствие диалога m1.mal (after: bark), после окна; без диалога — сразу
+    const D = CFG.dialogues && CFG.dialogues.dialogues && CFG.dialogues.dialogues['m1.mal'];
+    if (!(D && (D.after || []).some((a) => a.bark === G.barkKey))) this.say(this.npcs.find((n) => n.kind === 'mal' && !n.gone) || h, G.barkKey);
     this.log.add(t('proto.log.got_kit', { item: POTIONS.life1.name, n: String((G.potions || {}).life1 || 0), silver: String(G.silver) }), PAL.birch);
     return true;
   },
@@ -378,6 +384,7 @@ export const ZoneMixin = {
     const m = this.map;
     let changed = false;
     for (const o of m.objects) {
+      if (o.type === 'lgate') { changed = this.syncGate(o) || changed; continue; }
       if (o.type !== 'exit' && o.type !== 'gate') continue;
       const lock = this.exitLocked(o);
       if (lock && !o.wall) {
@@ -396,12 +403,97 @@ export const ZoneMixin = {
     }
     if (changed) { m.passCache.clear(); m.computeReach(); }
   },
+  /** m1k: ворота Ладоги — закрытые перекрывают проём (2 средние клетки), открылись — проём свободен, факелы горят. */
+  syncGate(o) {
+    const m = this.map, SUB = m.sw / m.w, lock = !!(o.opens && !this.quest.flag(o.opens));
+    for (const sg of o.segs) sg.open = !lock;
+    if (lock && !o.wall) {
+      const cells = [];
+      for (const [x, y, w, hh] of o.cells)
+        for (let sy = y * SUB; sy < (y + hh) * SUB; sy++) for (let sx = x * SUB; sx < (x + w) * SUB; sx++) { const i = sy * m.sw + sx; cells.push([i, m.sub[i], m.opaque[i]]); m.sub[i] = 1; m.opaque[i] = 1; }
+      const dx = 24 - o.x, dy = 22 - o.y, L = Math.hypot(dx, dy) || 1;
+      o.wall = { cells, front: [o.x + (dx / L) * 1.6, o.y + (dy / L) * 1.6] };
+      return true;
+    }
+    if (!lock && o.wall) { for (const [i, v, op] of o.wall.cells) { m.sub[i] = v; m.opaque[i] = op; } o.wall = null; return true; }
+    return false;
+  },
+  /** m1k (v1.13.1): у закрытых ворот подход ближе r — уведомление (кд cd), щелчок — реплика Ратибора (свой кд);
+   *  щелчок вплотную — только реплика: уведомление на этот подход не дублируется. */
+  clickGate(o) {
+    const R = this.map.gateRules || {}, C = R.closedClick || {}, N = R.closedNear || {};
+    if (this.time - (o.clickT ?? -99) >= (C.cd ?? 10)) {
+      o.clickT = this.time;
+      this._barks[C.bark || 'bark.ladoga.gate_closed'] = null;   // m1k: частоту решает cd 10 с (closedClick), а не общие 15 с реплик
+      this.say(this.hero, C.bark || 'bark.ladoga.gate_closed');
+      this.counters.gateBark = (this.counters.gateBark || 0) + 1;
+    }
+    o.nearT = this.time;   // уведомление подхода в этот раз не показываем
+    if (Math.hypot(this.hero.x - o.x, this.hero.y - o.y) > (N.r ?? 2)) this.hero.moveTo(this.map, o.wall.front[0], o.wall.front[1]);
+  },
+  /** m1k D5 (GDD v1.13 §10.2): цель стрелки и маркера — метка обязательной цели в зоне (Quest.markerId). Выход за воротами
+   *  ведёт к самим воротам (ближайшие открытые ворота в 12 тайлах); NPC — по роли/id. → {x, y, id, kind: 'gate'|'npc'|'obj'} или null. */
+  navTarget() {
+    const zid = this.zone && this.zone.id, id = this.quest && this.quest.markerId(zid);
+    if (!id) return null;
+    const npc = this.npcs.find((n) => !n.gone && (n.id === id || n.role === id || n.kind === id));
+    if (npc) return { x: npc.x, y: npc.y, id, kind: 'npc' };
+    const o = (this.map.objects || []).find((x) => x.id === id);
+    if (!o || o.done) return null;
+    if (o.type === 'exit' && this.map.gates) {
+      let best = null, bd = 12;
+      for (const gt of this.map.gates) { if (gt.wall) continue; const d = Math.hypot(gt.x - o.x, gt.y - o.y); if (d < bd) { bd = d; best = gt; } }
+      if (best) return { x: best.x, y: best.y, id: best.id, kind: 'gate', exit: o.id };
+    }
+    return { x: o.x, y: o.y, id: o.id, kind: o.type === 'exit' ? 'gate' : 'obj' };
+  },
+  /** m1k D5 (§7.4 п. 7): quests.json hints — потерялся в зоне: sec с после dialogEnd и ни разу не ближе r к метке →
+   *  реплика (один раз за вход), стрелка arrowFlash с мигает ярче. Счётчик времени — только в этом заходе. */
+  updateNavHints(dt) {
+    const H = this.quest && this.quest.def.hints, zid = this.zone && this.zone.id;
+    if (!H || !zid) return;
+    const st = this.navHint || (this.navHint = {});
+    H.forEach((hn, i) => {
+      if (hn.zone !== zid) return;
+      const s = st[i] || (st[i] = { t: 0, near: false, done: false });
+      if (s.done) return;
+      if (hn.after && hn.after.dialogEnd && !(this.dlgDone && this.dlgDone[hn.after.dialogEnd] != null)) return;
+      if (hn.notNear) {
+        if (this.quest.markerId(zid) !== hn.notNear.marker) return;   // цель сменилась (миссия взята, но ещё не к воротам — не подсказываем)
+        const T = this.navTarget(), o = (this.map.objects || []).find((x) => x.id === hn.notNear.marker);
+        const near = (p) => p && Math.hypot(this.hero.x - p.x, this.hero.y - p.y) < hn.notNear.r;
+        if (near(T) || near(o)) s.near = true;
+      }
+      if (s.near) return;
+      s.t += dt;
+      if (s.t < hn.sec) return;
+      s.done = true;
+      this._barks[hn.bark] = null;
+      this.say(this.hero, hn.bark);
+      if (hn.arrowFlash) this.navFlashUntil = this.time + hn.arrowFlash;
+      this.counters.navHint = (this.counters.navHint || 0) + 1;
+    });
+  },
+  updateGates() {
+    const h = this.hero, N = (this.map.gateRules || {}).closedNear;
+    if (!N || h.dead) return;
+    for (const o of this.map.gates || []) {
+      if (!o.wall) continue;
+      if (Math.hypot(h.x - o.x, h.y - o.y) > N.r) continue;
+      if (this.time - (o.nearT ?? -99) < N.cd) continue;
+      o.nearT = this.time;
+      this.notify(t(N.key), PAL.mist, 'gate');
+      this.audio.play('error');
+      this.counters.gateNear = (this.counters.gateNear || 0) + 1;
+    }
+  },
   updateZone(dt) {
     const h = this.hero;
     this.updateRest(dt);
     for (const n of this.npcs) n.update(dt, this);
     if (this.npcs.some((n) => n.gone)) this.npcs = this.npcs.filter((n) => !n.gone);
     this.updateDialog();
+    this.updateDialogQueue();
     if (this.letter && this.time - this.letter.t > 10) this.letter = null;
     if (h.dead) return;
     // волны: упыри встают из земли, когда герой подходит
@@ -438,6 +530,7 @@ export const ZoneMixin = {
     if (this.zone.landmarks && this.zone.landmarks.maraDen && this.zone.landmarks.maraDen.warn) this.updateMaraWarn();
     this.applyChad();
     if (this.zone.id === 'ladoga') this.updateLadoga();
+    this.updateNavHints(dt);
     // выходы и ворота (QA B-28): переход — только по намерению (приказ идти в круг выхода или щелчок по выходу);
     // закрытый выход — обычная стена (syncExitWalls), без выталкивания; сообщение и звук ошибки — один раз на попытку
     this.syncExitWalls();
@@ -487,13 +580,17 @@ export const ZoneMixin = {
     const q = this.quest, h = this.hero;
     if (!q.flag('vyshataIntro') && this.time > 1 && !h.dead) {
       q.flags.vyshataIntro = true; q.flags.vyshataSpoke = true;
-      const lines = RU['npc.vyshata.s0'];
-      if (Array.isArray(lines)) this.dialog(lines);
+      // v1.13 §10.4/§7.4 п. 6 (D6): бриф М1 на пристани — окно диалога vyshata.s0, последняя реплика dlg.vyshata.m1.dir
+      if (this.town) this.town.seen['vyshata:s0'] = true;
+      this.startDialog('vyshata.s0', this.npcs.find((n) => n.role === 'vyshata'));
     }
     if (!this._tutAtk) {
       const d = this.enemies.find((e) => e.dummy);
       if (d && Math.hypot(d.x - h.x, d.y - h.y) < 6) { this._tutAtk = true; this.notify(t('ui.tut.attack'), PAL.bronze_lt, 'tut'); }
     }
+    this.updateGates();
+    const sg = this.map.props.find((p) => p.type === 'sign');
+    if (sg) sg.stage = q.flag('m2.turnedIn') ? 2 : q.flag('m1.turnedIn') ? 1 : 0;   // кадр указателя: М1 / после М1 / после М2
     for (const n of this.npcs) if (n.role === 'vyshata') {
       n.mark = !q.flag('vyshataIntro') ? '!' : (q.missionDone && !q.flag('m1.turnedIn')) ? '?' : '';
     }

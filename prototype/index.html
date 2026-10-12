@@ -16,6 +16,20 @@
 <body>
   <canvas id="game" width="640" height="360"></canvas>
   <noscript>Для игры нужен JavaScript.</noscript>
-  <script type="module" src="src/main.js"></script>
+  <script>
+    // Если игра не стартовала (модуль не загрузился, конфиг не прочитался) — показать причину вместо чёрного экрана.
+    function bootFail(msg) {
+      if (window.__ready || document.getElementById('boot-fail')) return;
+      var d = document.createElement('div'); d.id = 'boot-fail';
+      d.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;color:#f2ecd8;font:15px sans-serif;text-align:center;white-space:pre-line;background:#0d0b0a;z-index:3';
+      d.textContent = 'Игра не запустилась: ' + msg + '\n\nЗапускайте через сервер из папки prototype: py serve.py (Windows) или python3 serve.py, затем откройте http://localhost:8000/ и обновите страницу с Ctrl+Shift+R.\nПодробности — в консоли браузера (F12).';
+      document.body.appendChild(d);
+    }
+    addEventListener('unhandledrejection', function (e) { bootFail(String(e.reason && e.reason.message || e.reason)); });
+    // m1j (D17): ошибка в коде модуля (синтаксис, сбой импорта) до старта игры — тоже сообщение; и страховка по времени
+    addEventListener('error', function (e) { if (e.target && e.target.tagName) return;   /* сбой загрузки скрипта — ловит onerror у <script> ниже */ if (!window.__ready) bootFail(String(e.message || (e.target && e.target.src) || 'ошибка загрузки')); }, true);
+    setTimeout(function () { if (!window.__ready) bootFail(location.protocol === 'file:' ? 'страница открыта как файл (file://) — браузер не грузит модули и данные с диска.' : 'игра не стартовала за 20 с (не загрузились модули или данные).'); }, 20000);
+  </script>
+  <script type="module" src="src/main.js" onerror="bootFail(location.protocol === 'file:' ? 'страница открыта как файл (file://) — браузер не грузит модули и данные с диска.' : 'не загрузился src/main.js (часто: сервер отдал .js с MIME text/plain).')"></script>
 </body>
 </html>

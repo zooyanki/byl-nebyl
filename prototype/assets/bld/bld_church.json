@@ -1,0 +1,107 @@
+{
+ "object": "Церковь клетская (Церковь Климента)",
+ "footprint_tiles": [
+  6,
+  4
+ ],
+ "tile_px": [
+  32,
+  16
+ ],
+ "heights_px": {
+  "chetverik_wall": 88,
+  "chetverik_ridge": 160,
+  "glavka_cross_top": 184,
+  "prirub_wall": 64,
+  "prirub_ridge": 112,
+  "paperte": 48,
+  "door": 60
+ },
+ "pivot": [
+  91,
+  192
+ ],
+ "pivot_rule": "screen point of the footprint centre at z = 0 (scale.md §4.1)",
+ "proto_corner_px": [
+  75,
+  152
+ ],
+ "footprint_px": [
+  [
+   75,
+   152
+  ],
+  [
+   171,
+   200
+  ],
+  [
+   107,
+   232
+  ],
+  [
+   11,
+   184
+  ]
+ ],
+ "front_corner_px": [
+  107,
+  232
+ ],
+ "placement": "place the sprite so that proto_corner_px lands on iso.js toS(p.x, p.y) (footprint min corner), equivalently pivot on the screen point of the footprint centre ((x0 + A/2), (y0 + B/2))",
+ "sort": "v1.13.2 fix (09.10): sort by the footprint CENTRE, exactly like prototype map.js addProp: depth = x0 + A/2 + y0 + B/2 (tiles); palisade / gate segments are 1×1 props → x + y + 1; hero, NPC, enemies → x + y. Do NOT use the front corner (x0+A)+(y0+B): buildings flush with the east palisade (seni_ne, ambar_se) then paint over the fence",
+ "xray": {
+  "rule": "scale.md 1.4 §4.4 / GDD v1.13 §10.3: if the sprite intersects the ellipse rx 56, ry 40 px centred at hero pivot − 22 px and the building sorts IN FRONT of the hero, draw the whole sprite at alpha 0.35 (0.2 s transition); hero gets a 1-px bronze_hi outline when ≥ 25% covered",
+  "alpha": 0.35,
+  "ellipse_px": [
+   56,
+   40
+  ],
+  "hero_center_offset_y": -22
+ },
+ "ridge_axis": "world x (as prototype props.js izba)",
+ "anchors_px": {
+  "cross_top": {
+   "0": [
+    75,
+    1
+   ]
+  },
+  "caption": {
+   "0": [
+    24,
+    146
+   ]
+  },
+  "door": {
+   "0": [
+    43,
+    200
+   ]
+  },
+  "bilo": {
+   "0": [
+    53,
+    221
+   ]
+  }
+ },
+ "ladoga_ids": {
+  "church": "+y (юг, к торгу) — frame 0"
+ },
+ "notes": "v1.13.2: дверь 56 + порог и паперть-навес (48 у края) на +y, к торгу; навес и ступени выходят за футпринт на +y на 1,3 тайла (y 13–14,3, на клетках улицы перед церковью; это перед зданием, сортировке не мешает). Варианта +x нет: на востоке алтарный прируб, дверей там не делают. Главка: сруб-барабан 6, шлемовидная главка в лемехе 8, крест 10 → 184. Окна тёплые — лампада. Прежний вариант (паперть на западе) — buildings/_backup_v1131/.",
+ "fps": 0,
+ "loop": false,
+ "door_frames": {
+  "+y": 0
+ },
+ "image": "bld_church.png",
+ "frame_size": [
+  166,
+  227
+ ],
+ "frame_count": 1,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

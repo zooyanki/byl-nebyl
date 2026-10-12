@@ -99,7 +99,8 @@ export function figure(ctx, parts, flash = false, outline = PAL.ink) {
     }
   };
   fill(null);
-  if (flash) { ctx.save(); ctx.globalAlpha *= 0.55; fill(PAL.linen); ctx.restore(); }
+  if (flash) { ctx.save(); ctx.globalAlpha *= typeof flash === 'number' ? flash : 0.55;   // v1.13 §4.6: число — альфа вспышки удара
+    fill(PAL.linen); ctx.restore(); }
 }
 
 // Пиксельная линия (Брезенхем) — для клинков и посохов.

@@ -13,13 +13,15 @@ async def main(a):
         await pg.goto(a.url); await pg.wait_for_function('window.__game && window.__game.time > 0.5', timeout=60000)
         await pg.mouse.click(960, 300); await pg.wait_for_timeout(300)
         await pg.evaluate(f'window.__N = {a.runs}; window.__SEED = {a.seed}; window.__CAP = {a.cap};')
+        if a.block: print('block policy', await pg.evaluate(open(os.path.join(HERE, 'block_policy.js'), encoding='utf-8').read()))   # m1l: справочно с блоком (GDD v1.14 §4.7)
         r = await pg.evaluate(open(os.path.join(HERE, 'bot_zalesye_clear.js')).read())
         await br.close()
     det = r.pop('det'); print(json.dumps(r, ensure_ascii=False)); print('errors', errs[:3])
     OUTF = a.out or OUT
     d = json.load(open(OUTF)) if os.path.exists(OUTF) else {}
-    d[str(a.seed) + ('_throttle%g' % a.throttle if a.throttle > 1 else '')] = {**r, 'det': det}
+    d[str(a.seed) + ('_throttle%g' % a.throttle if a.throttle > 1 else '') + ('_block' if a.block else '')] = {**r, 'det': det}
     json.dump(d, open(OUTF, 'w'), ensure_ascii=False, indent=1)
 ap = argparse.ArgumentParser(); ap.add_argument('--url', default='http://127.0.0.1:8031/index.html?seed=7')
 ap.add_argument('--seed', type=int, default=7); ap.add_argument('--runs', type=int, default=30); ap.add_argument('--cap', type=int, default=400); ap.add_argument('--throttle', type=float, default=1); ap.add_argument('--out', default='')
+ap.add_argument('--block', type=int, default=0)
 asyncio.run(main(ap.parse_args()))

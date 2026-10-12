@@ -9,7 +9,9 @@ const SETS = {
   mara: ['idle', 'walk', 'cast', 'heal', 'hurt', 'death'],
   anchutka: ['idle', 'walk', 'coal_throw', 'hurt', 'death'],          // 6а (08.10, 22:42): стаи, свита Мары
   upyr: ['idle', 'walk', 'attack', 'hurt', 'death', 'rise'],           // m1c: стаи, засады, призыв Кривши
+  npc_priest: ['idle'],                                                 // m1k: поп Иоанн (H19), 48×56, pivot (24,50), 4 кадра 3 к/с; SW/NW — зеркало
 };
+const HERO_BLOCK = ['block_raise', 'block_hold', 'block_walk', 'block_hit', 'block_break'], HERO_VIEWS = ['s', 'se', 'e', 'ne', 'n'];
 const PROPS = { ognishche: ['desecrated', 'consecrate', 'consecrated', 'progress'], idol_perun: ['burning', 'extinguish', 'smoking'] };
 export const ART = { sheets: {}, ready: false, failed: [], hold: null };
 
@@ -28,6 +30,9 @@ export function loadBossArt() {
     jobs.push(loadSheet(DIR + slug + '/' + key, key));
   }
   for (const [slug, states] of Object.entries(PROPS)) for (const s of states) jobs.push(loadSheet(DIR + slug + '/' + slug + '_' + s, slug + '_' + s));
+  // v1.14 H21: Ратибор — блок щитом, 5 видов (s, se, e, ne, n; sw/w/nw — зеркало), assets/chars/hero/hero_block_<anim>_<view>
+  for (const a of HERO_BLOCK) for (const v of HERO_VIEWS) jobs.push(loadSheet(DIR + 'hero/hero_' + a + '_' + v, 'hero_' + a + '_' + v));
+  jobs.push(loadSheet('assets/ui/ic_block', 'ic_block'));    // v1.14 H22: значок щита для слота ПКМ (кадр 0 — норма, 1 — пробит)
   return Promise.all(jobs).then(() => { ART.ready = true; if (ART.failed.length) console.warn('Не загрузились листы:', ART.failed.join(', ')); });
 }
 
@@ -118,9 +123,54 @@ export function poseUpyr(e, time) {
   return { anim: 'upyr_idle', frame: loopF(time + e.id * 0.09, 5, 4) };
 }
 
+/** Поза попа Иоанна (m1k, H19): петля idle 4 кадра, 3 к/с (fps из JSON листа). */
+export function posePriest(n, time) {
+  const sh = ART.sheets.npc_priest_idle_se, m = sh ? sh.meta : { fps: 3, frame_count: 4 };
+  return { anim: 'npc_priest_idle', frame: loopF(time, m.fps || 3, m.frame_count || 4) };
+}
+
 /** Лист вида и зеркало по направлению. */
 export function viewOf(dir, facing) {
   return { view: BACK.has(dir) ? 'ne' : 'se', flip: side(dir, facing) < 0 };
+}
+
+/** v1.14 H21: вид листа героя (5 видов) по dir прототипа: 0→s, 7→se, 6→e, 5→ne, 4→n; 1/2/3 — se/e/ne зеркалом по x = 32. */
+export function heroView(dir) { return [['s', false], ['se', true], ['e', true], ['ne', true], ['n', false], ['ne', false], ['e', false], ['se', false]][((dir | 0) % 8 + 8) % 8]; }
+
+/** v1.14 H21: поза героя в блоке { anim, frame } или null (рисуется кодом). raise 2 @13 (опускание — обратно), hold 2 @4, walk 6 @8,
+ *  hit 3 @12 (принятый удар), break 4 @13 (пробитие ≈ оглушение 0,3 с); fps — из JSON. Тайминги GDD не трогаем. */
+const HB_DEF = { raise: [13, 2], hold: [4, 2], walk: [8, 6], hit: [12, 3], break: [13, 4] };
+const hbFps = (a) => { const sh = ART.sheets['hero_block_' + a + '_se'], m = sh && sh.meta; return m ? [m.fps || HB_DEF[a][0], m.frame_count || HB_DEF[a][1]] : HB_DEF[a]; };   // fps — из JSON художника
+export function poseHeroBlock(h, time) {
+  if (h.dead) return null;
+  const B = h.blockSt, [rf, rn] = hbFps('raise'), [bf, bn] = hbFps('break'), [hf, hn] = hbFps('hit');
+  if (h.breakT != null && h.breakT < bn / bf && !B) return { anim: 'hero_block_break', frame: once(h.breakT, bf, bn) };   // 4 кадра @13 ≈ оглушение 0,3 с
+  if (B) {
+    if (B.t < rn / rf) return { anim: 'hero_block_raise', frame: once(B.t, rf, rn) };
+    if (h.blockHitT != null && h.blockHitT < hn / hf) return { anim: 'hero_block_hit', frame: once(h.blockHitT, hf, hn) };
+    if (h.moving) { const [f, n] = hbFps('walk'); return { anim: 'hero_block_walk', frame: loopF(time, f, n) }; }
+    const [f, n] = hbFps('hold'); return { anim: 'hero_block_hold', frame: loopF(time, f, n) };
+  }
+  if (h.lowerT != null && h.lowerT < rn / rf) return { anim: 'hero_block_raise', frame: rn - 1 - once(h.lowerT, rf, rn) };
+  return null;
+}
+
+/** v1.14: лист блока героя; false — листа нет. o.flash — вспышка попадания. Искры H23 — в anchors.shield_rim кадра на hit / break. */
+export function drawHeroBlock(ctx, h, x, y, time, o = {}) {
+  const pose = poseHeroBlock(h, time); if (!pose) return false;
+  const [view, flip] = heroView(h.dir), sh = ART.sheets[pose.anim + '_' + view];
+  if (!sh) return false;
+  blitF(ctx, sh, pose.frame, x, y, flip);
+  if (o.flash) { ctx.save(); ctx.globalAlpha *= o.flashA || FLASH_A; ctx.globalCompositeOperation = 'lighter'; blitF(ctx, sh, pose.frame, x, y, flip); ctx.restore(); }
+  const rim = sh.meta.anchors && sh.meta.anchors.shield_rim && sh.meta.anchors.shield_rim[pose.frame];
+  if (rim && o.sparks) {
+    const [px, py] = sh.meta.pivot, rx = x + (flip ? (63 - rim[0]) - px : rim[0] - px), ry = y + rim[1] - py;
+    const hitS = pose.anim === 'hero_block_hit' && h.blockHitT < 0.15, brkS = pose.anim === 'hero_block_break' && h.breakT < 0.15;
+    if (hitS) { o.sparks(rx, ry, Math.floor(h.blockHitT * 20), !!h.blockFromLeft); ART.sparksHit = (ART.sparksHit || 0) + 1; }
+    if (brkS) { ART.sparksBreak = (ART.sparksBreak || 0) + 2; o.sparks(rx, ry, Math.floor(h.breakT * 20), false); o.sparks(rx, ry, Math.floor(h.breakT * 20), true); }
+  }
+  ART.heroBlockPose = pose.anim + '_' + view + (flip ? '_flip' : '') + ':' + pose.frame;   // для автотеста m1l
+  return true;
 }
 
 function blitF(ctx, sh, frame, x, y, flip, alpha) {
@@ -141,7 +191,7 @@ export function drawCharArt(ctx, pose, x, y, dir, facing, o = {}) {
   if (!sh) return false;
   blitF(ctx, sh, pose.frame, x, y, flip, o.alpha);
   if (o.flash) {                                             // вспышка попадания: силуэт светлым поверх
-    ctx.save(); ctx.globalAlpha *= FLASH_A; ctx.globalCompositeOperation = 'lighter'; blitF(ctx, sh, pose.frame, x, y, flip); ctx.restore();   // m1f P1.9: 0,5 → 0,28 (не в белое)
+    ctx.save(); ctx.globalAlpha *= o.flashA || FLASH_A; ctx.globalCompositeOperation = 'lighter'; blitF(ctx, sh, pose.frame, x, y, flip); ctx.restore();   // m1f P1.9: 0,5 → 0,28 (не в белое)
   }
   return true;
 }

@@ -1,0 +1,10 @@
+{
+ "what": "■ 7×5 — last line of the dialogue (same place as ▼)",
+ "image": "ui_dlg_end.png",
+ "size": [
+  7,
+  5
+ ],
+ "palette": "palette_v2",
+ "alpha": "0/255 only"
+}

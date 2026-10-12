@@ -13,6 +13,7 @@ import make_rest  # GDD v1.7 §12.1.5 rest fx (fx_rest_*, fx_safe_ring)
 import make_m1b   # M1 milestone (b): krivsha, mara, ognishche, idol_perun, fx_krivsha_*, fx_mara_*
 import make_m1c   # M1 milestone (c): upyr, item_beresta, fx_chur_portal (the last grey boxes)
 import make_decor # GDD v1.11 Залесье decor: prop_stump_burnt (layout: art/layout/)
+import make_village  # GDD v1.13 §12.1.7: buildings/, gates, указатель, fx_swing, fx_smoke_wisp
 
 ROOT = X.ROOT
 VIEWS = ("se", "ne")
@@ -172,6 +173,7 @@ if __name__ == "__main__":
     make_m1b.run(MEAS)
     make_m1c.run(MEAS)
     make_decor.run(MEAS)
+    make_village.run(MEAS)
     X.REPORT["measures"] = MEAS
     with open(os.path.join(ROOT, "sprites_report.json"), "w") as f:
         json.dump(X.REPORT, f, ensure_ascii=False, indent=1)

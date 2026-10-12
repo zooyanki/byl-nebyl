@@ -1,8 +1,9 @@
 # Веха m1i: замечания критиков m1f — P2 (п.11–16), 10b (подписи частей Ладоги), W (staff_3 «Жезл»).
+from pathlib import Path
 import os, json
 from check_cyrillic import scan as cyr_scan, selftest as cyr_selftest
 
-ROOT = '/workspace/game/prototype/'
+ROOT = str(Path(__file__).resolve().parent.parent) + '/'   # B-39: корень прототипа от расположения файла
 SHOT_STASH = ROOT + 'screenshot_m1i_stash.png'
 SHOT_TRADE = ROOT + 'screenshot_m1i_trade.png'
 SHOT_MENU = ROOT + 'screenshot_m1i_menu.png'
@@ -103,7 +104,7 @@ async def run_m1i(pg, G, check, wait, client_of, client_scr, a):
     flat = ' '.join(a_ + ' ' + b_ for a_, b_ in s['lines'])
     check('m1i П.13 пауза: подпись и «вкл/выкл» раздельно (подпись не заходит на плашку 34 px), «Удали» с прописной, строка рывка «Пробел»',
           all(w + 4 <= bw - 34 for w, bw in zip(s['lw'], s['bw'])) and s['on'] == 'вкл' and s['off'] == 'выкл'
-          and 'Удали' in flat and 'удали' not in flat and any(a_ == 'Пробел' and 'рывок' in b_ for a_, b_ in s['lines']) and len(s['lines']) == 11, s)
+          and 'Удали' in flat and 'удали' not in flat and any(a_ == 'Пробел' and 'рывок' in b_ for a_, b_ in s['lines']) and len(s['lines']) == 12, s)
     await G('(() => { __game.paused = false; })()')
 
     # ---------- 14. Капище — realm nebyl; 16: красноватая темнота
@@ -120,7 +121,7 @@ async def run_m1i(pg, G, check, wait, client_of, client_scr, a):
         for (const id of ['sword_1', 'ring_1', 'body_2', 'staff_3', 'staff_1', 'ring_1']) g.loot.spawnItem(h.x + 1, h.y, I.makeItem(id, 'magic', 4));
         g.labelsAlways = true;
         const e = g.spawnTest('chernoyarets_arsonist', h.x + 2, h.y + 1.2, 1); e.hp = 0; e.dead = true; e.corpseT = 1; e.state = 'dead'; window.__m1iCorpse = e;
-        g.notify(g.t('ui.sys.mission_done', { mission: g.quest.title }), '#f2d48a', 'mission', 4); })()''')
+        g.notice = null; g.notify(g.t('ui.sys.mission_done', { mission: g.quest.title }), '#f2d48a', 'mission', 4); })()''')   # m1j: очередь уведомлений (§10.5) — сначала очистить экран
     await pg.mouse.move(1910, 10)
     await wait(400)
     s = await G('''(async () => { const g = __game, P = await import('/src/render/props.js'), { PAL } = await import('/src/palette.js');
@@ -154,7 +155,8 @@ async def run_m1i(pg, G, check, wait, client_of, client_scr, a):
     same = None
     if os.path.exists(BAK + 'data/zones/ladoga.json'):
         A = json.load(open(BAK + 'data/zones/ladoga.json')); B = json.load(open(ROOT + 'data/zones/ladoga.json'))
-        same = json.dumps(A.get('npcs'), sort_keys=True) == json.dumps(B.get('npcs'), sort_keys=True)
+        nb = [n for n in (B.get('npcs') or []) if n.get('role') != 'priest']  # m1k D7: + священник
+        same = json.dumps(A.get('npcs'), sort_keys=True) == json.dumps(nb, sort_keys=True)
     check('m1i П.10b подписи частей Ладоги: бледные (alpha ≤ 0.6), без обводки/рамки, наведение их не ловит; NPC на прежних местах',
           cap and all(c['alpha'] <= 0.6 and c['outline'] is False for c in cap) and s['hl'] is None and s['ho'] is None and same is not False,
           {'cap': cap[:2], **s, 'npcs_same': same})

@@ -2,6 +2,8 @@
 // слоты ЛКМ/ПКМ, пояс 1–4, серебро; сверху — цель, задание, журнал.
 import { VIEW_W, VIEW_H, PANEL_Y } from '../config.js';
 import { PAL } from '../palette.js';
+import { drawFrame9 } from './dialogue_win.js';
+import { VA } from './village_art.js';
 import { rect, poly, disc, pline, figure } from './shapes.js';
 import { drawText, textWidth } from '../core/font.js';
 import { POTIONS, SCROLLS } from '../data/items.js';
@@ -11,6 +13,8 @@ import { SKILLS, DASH, rankOf, skillCost, pointsFree } from '../data/skills.js';
 import { drawSkillTooltip } from '../ui/skills_window.js';
 import { t as tr } from '../core/i18n.js';
 import { eliteTitle } from '../systems/elites.js';
+import { blockCfg } from '../entities/hero.js';
+import { ART } from './boss_art.js';
 
 export const LAYOUT = (() => {
   const by = 328, big = 32, sm = 26, beltW = 4 * 24 + 3 * 2 + 6;
@@ -27,7 +31,9 @@ export const LAYOUT = (() => {
   L.rmb = { x, y: by, s: big };
   // слот рывка 18×18 справа от ПКМ в одном ряду, зазор 2 px (GDD §10)
   L.dash = { x: x + big + 2, y: by + big - 18, s: 18 };
-  L.silver = { x: L.dash.x + 18 + 3, y: 331, w: 42 };
+  // v1.14 E2 (§10): слот щита 18×18 справа от рывка, зазор 3 px — (509; 342); серебро сдвинуто: x 530, ширина 40
+  L.shield = { x: L.dash.x + 18 + 3, y: L.dash.y, s: 18 };
+  L.silver = { x: L.shield.x + 18 + 3, y: 331, w: 40 };
   L.level = { cx: 112, cy: 343 };
   L.xp = { x: 96, y: 322, w: VIEW_W - 192 };
   L.orbL = { cx: 40, cy: 322, r: 27 };
@@ -147,6 +153,8 @@ function drawStatic(ctx) {
     for (const f of L.f) woodSlot(c, f.x, f.y, f.s);
     const D = L.dash;
     rect(c, D.x, D.y, D.s, D.s, PAL.ink); rect(c, D.x + 1, D.y + 1, D.s - 2, D.s - 2, PAL.wood_md);
+    const SH = L.shield;
+    rect(c, SH.x, SH.y, SH.s, SH.s, PAL.ink); rect(c, SH.x + 1, SH.y + 1, SH.s - 2, SH.s - 2, PAL.wood_md);
     const B = L.belt;
     rect(c, B.x, B.y, B.w, 30, PAL.ink);
     rect(c, B.x + 1, B.y + 1, B.w - 2, 28, PAL.wood_dk);
@@ -226,7 +234,7 @@ export function drawHud(ctx, game) {
     ctx.save(); ctx.globalAlpha = k; ctx.strokeStyle = dn.why === 'yar' ? PAL.blue_lt : PAL.red_lt; ctx.lineWidth = 2;
     ctx.strokeRect(R.x + 1, R.y + 1, R.s - 2, R.s - 2); ctx.restore();
   }
-  drawText(ctx, R.x + 3, R.y + R.s - 11, tr('proto.hud.rmb'), PAL.birch, { outline: true });
+  drawText(ctx, R.x + 3, R.y + R.s - 11, tr('proto.hud.e'), PAL.birch, { outline: true });   // v1.14 E3: слот E (было «ПКМ»)
   // рывок (Пробел)
   const D = L.dash;
   drawIcon(ctx, 'sk_ryvok_16', D.x + 1, D.y + 1, 16, 16);
@@ -234,6 +242,12 @@ export function drawHud(ctx, game) {
   if (h.cds.dash != null && h.cdLeft('dash') === 0 && (h._dashReadyAt == null || h._dashReadyAt > t)) h._dashReadyAt = t;
   if (h.cdLeft('dash') > 0) h._dashReadyAt = null;
   if (h._dashReadyAt != null && t - h._dashReadyAt < 0.25) { ctx.strokeStyle = PAL.bronze_hi; ctx.strokeRect(D.x + 0.5, D.y + 0.5, D.s - 1, D.s - 1); }   // вспышка рамки в конце КД
+  // v1.14 E2: слот щита (ПКМ): готов / поднят (рамка bronze_hi) / пробит (сектор отката) / щита нет (серый)
+  const SH = L.shield, hasSh = h.hasShield(), st = !hasSh ? 'none' : h.blockCd > 0 ? 'broken' : h.blockSt ? 'raised' : 'ready';
+  shieldIcon(ctx, SH.x + 1, SH.y + 1, st);
+  if (st === 'broken') cooldownSector(ctx, SH.x + 1, SH.y + 1, 16, h.blockCd / blockCfg().breakCd, h.blockCd);
+  if (st === 'raised') { ctx.strokeStyle = PAL.bronze_hi; ctx.lineWidth = 1; ctx.strokeRect(SH.x + 0.5, SH.y + 0.5, SH.s - 1, SH.s - 1); }
+  game._shieldSlot = st;
   // бафф «Чур-оберег» — иконка 12×12 над шаром Жизни (GDD §10)
   if (h.buffs.chur) {
     const bx = L.orbL.cx - 6, byy = L.orbL.cy - L.orbL.r - 22;
@@ -259,12 +273,13 @@ export function drawHud(ctx, game) {
   // шары
   orb(ctx, L.orbL, h.hp / h.maxHp, 'life', tr('ui.hud.life'), Math.ceil(h.hp) + '/' + h.maxHp, t);
   orb(ctx, L.orbR, h.yar / h.maxYar, 'yar', tr('ui.hud.yar'), Math.floor(h.yar) + '/' + h.maxYar, t + 1.7);
+  // v1.13 §4.6: +1 Удали за попадание (и награда «Удаль I») — шар коротко светлеет (blue_lt)
+  if (h.yarGlow > 0) { ctx.save(); ctx.globalAlpha = 0.45 * Math.min(1, h.yarGlow / 0.15); disc(ctx, L.orbR.cx, L.orbR.cy, L.orbR.r - 2, PAL.blue_lt); ctx.restore(); game.yarGlowDrawn = game.time; }
   if (h.yarTier) drawText(ctx, L.orbR.cx, L.orbR.cy - L.orbR.r + 4, 'I', PAL.bronze_hi, { align: 'c', outline: true });
   if (h.chad >= 3) { ctx.save(); ctx.globalAlpha = 0.28; disc(ctx, L.orbR.cx, L.orbR.cy, L.orbR.r - 2, PAL.slate_lt); ctx.restore(); }   // чад: серая дымка на Яри
 
   drawTopUi(ctx, game);
-  drawLog(ctx, game);
-  drawHint(ctx, game);
+  if (!game.dlgWin) { drawLog(ctx, game); drawHint(ctx, game); }   // v1.13 §10.4: журнал и строка подсказок скрыты под окном диалога
 }
 
 export function drawHudTooltip(ctx, game) {
@@ -280,7 +295,7 @@ function plate(ctx, x, y, w, h, alpha = 0.72) {
 function drawTopUi(ctx, game) {
   const h = game.hero, ui = game.ui;
   // задание (под окном «Витязь» не рисуем)
-  if (!ui.charOpen && !(game.town && game.town.open) && game.quest) drawQuestTracker(ctx, game);   // m1i: и под окнами Ладоги (торг, ладья)
+  if (!ui.charOpen && !(game.town && game.town.open) && game.quest && !game.dlgWin) drawQuestTracker(ctx, game);   // v1.13 §10.4: под окном диалога трекер скрыт   // m1i: и под окнами Ладоги (торг, ладья)
   // зона, мини-карта и кнопки меню (как на макете HUD v2); под окном «Котомка» прячутся
   if (game.topRightVisible) {
     const [z1, z2] = game.zone.band;
@@ -350,7 +365,7 @@ function drawTopUi(ctx, game) {
   // подсказка в начале
   // m1f P1.5: только при первом входе в игру (флаг в localStorage ставится, когда подсказка догорела)
   if (game.time >= 14 && !game.ctrlHintSeen) { game.ctrlHintSeen = true; try { localStorage.setItem('byl_ctrl_hint_seen', '1'); } catch (e) { /* нет localStorage */ } }
-  if (game.time < 14 && !game.ctrlHintSeen && !game.hero.dead && !ui.anyOpen) {
+  if (game.time < 14 && !game.ctrlHintSeen && !game.hero.dead && !ui.anyOpen && !game.dlgWin) {
     const a = game.time < 11 ? 1 : (14 - game.time) / 3;
     const s = tr('proto.hud.ctrl_hint');
     const w = textWidth(s) + 10;
@@ -361,18 +376,25 @@ function drawTopUi(ctx, game) {
   }
   // уведомление
   drawLetter(ctx, game);
-  if (game.notice && game.time - game.notice.t < (game.notice.dur || 1.6)) {
+  drawRewardCard(ctx, game);
+  // v1.13 §10.5: на экране до 2 уведомлений (новое снизу), каждое — своей строкой (или баннером)
+  let yNext = null; game._noticeBoxes = [];
+  for (const N of (game.notices || []).filter((n) => game.time - n.t < (n.dur || 1.6))) {
     // длинное уведомление (советы tip.*) переносится по словам в ширину 300 px и опускается под трекер
     // QA B-27: при открытом окне свободная часть экрана уже — строка уведомления уходит ниже трекера и мини-карты (y ≥ 160)
     // и переносится по ширине свободной части
-    const N = game.notice, lines = [], win = ui.anyOpen;
+    const lines = [], win = ui.anyOpen;
     const maxW = win ? Math.max(120, Math.min(300, 2 * Math.min(game.camCX, VIEW_W - game.camCX) - 16)) : 300;
     if (textWidth(N.text) <= maxW) lines.push(N.text);
     else { let cur = ''; for (const w of N.text.split(' ')) { const nx = cur ? cur + ' ' + w : w; if (textWidth(nx) > maxW && cur) { lines.push(cur); cur = w; } else cur = nx; } if (cur) lines.push(cur); }
     // m1h: одна строка на y 64 стоит вровень с трекером задания (x ≤ 210, y ≤ 84) — если по ширине заходит на него, тоже опускаем под трекер
     const QA = UI_ATLAS.hud_quest, gap = QA ? 2 * (game.camCX - (QA.x + QA.w) - 4) : maxW;
-    const y0 = win ? 160 : lines.length > 1 || Math.max(...lines.map((l) => textWidth(l))) > gap ? 90 : 64;   // несколько строк — ниже трекера (он до y 84)
-    game._noticeBox = { x: game.camCX, y: y0, w: Math.max(...lines.map((l) => textWidth(l))), lines: lines.length };
+    let y0 = win ? 160 : lines.length > 1 || Math.max(...lines.map((l) => textWidth(l))) > gap ? 90 : 64;   // несколько строк — ниже трекера (он до y 84)
+    if (game.rewardCard && !win) y0 = Math.max(y0, game.rewardCard.y + game.rewardCard.h + 8);   // под плашкой «Награда»
+    if (yNext != null) { if (y0 < yNext && yNext < 90 && !win) y0 = 90; y0 = Math.max(y0, yNext); }   // второе — ниже первого
+    game._noticeBox = { x: game.camCX, y: y0, w: Math.max(...lines.map((l) => textWidth(l))), lines: lines.length, text: N.text };
+    game._noticeBoxes.push(game._noticeBox);
+    yNext = y0 + lines.length * 11 + (N.key === 'mission' ? 14 : 3);
     if (N.key === 'mission') drawMissionBanner(ctx, game, N, lines, y0);   // m1i (П.16): «Миссия пройдена» — плашкой-баннером
     else lines.forEach((l, i) => drawText(ctx, game.camCX, y0 + i * 11, l, N.color, { align: 'c', outline: true }));
   }
@@ -399,6 +421,30 @@ function drawMissionBanner(ctx, game, N, lines, y0) {
   game.bannerDrawn = { x, y, w, h, text: lines.join(' '), t: game.time };
 }
 
+/** Плашка «Награда» (GDD v1.13 §10.5, D13): 220×64 в (210; 64), рамка — 9-slice ui_dlg_frame художника (m1k),
+ *  фон night 0,92; заголовок уставом «Награда» (ui.map.reward, bronze_hi), под ним все строки награды сразу; hold с, гаснет fade с. */
+function drawRewardCard(ctx, game) {
+  const C = game.rewardCard;
+  if (!C) return;
+  const age = game.time - C.t, a = Math.max(0, Math.min(1, age / 0.15, age < C.hold ? 1 : 1 - (age - C.hold) / C.fade));
+  const { x, y, w, h } = C;
+  ctx.save(); ctx.globalAlpha = a;
+  // m1k (ответ дизайнера d): рамка — 9-slice художника ui_dlg_frame (как окно диалога), фон night 0,92 кодом; без арта — прежняя рамка кодом
+  ctx.globalAlpha = a * 0.92; rect(ctx, x + 2, y + 2, w - 4, h - 4, PAL.night); ctx.globalAlpha = a;
+  if (!drawFrame9(ctx, x, y, w, h)) {
+    rect(ctx, x, y, w, 1, PAL.ink); rect(ctx, x, y + h - 1, w, 1, PAL.ink); rect(ctx, x, y, 1, h, PAL.ink); rect(ctx, x + w - 1, y, 1, h, PAL.ink);
+    ctx.strokeStyle = PAL.bronze; ctx.lineWidth = 1; ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+    for (const [px, py] of [[x + 2, y + 2], [x + w - 4, y + 2], [x + 2, y + h - 4], [x + w - 4, y + h - 4]]) rect(ctx, px, py, 2, 2, PAL.bronze_hi);
+  }
+  game.rewardFrame = drawFrame9 && VA.ui.ui_dlg_frame ? '9slice' : 'code';
+  const title = tr('ui.map.reward').toUpperCase();   // в уставе только прописные (как заголовок трекера)
+  drawText(ctx, x + w / 2, y + 5, title, PAL.bronze_hi, { align: 'c', font: 'ustav' });
+  const n = C.lines.length, top = y + 22 + Math.max(0, (3 - n) * 5);
+  C.lines.forEach((l, i) => drawText(ctx, x + w / 2, top + i * 12, l.text, l.color, { align: 'c', outline: true }));
+  ctx.restore();
+  game.rewardDrawn = { x, y, w, h, title, lines: C.lines.map((l) => l.text), alpha: a, t: game.time };
+}
+
 // Трекер задания (макет gameplay_hud_v2 → draw_quest, GDD §8.2): резная рамка с буквицей (assets/hud_quest.png),
 // «Задание · Акт I», название уставом, до 3 целей «— цель  n/N»: выполненная — серым с галочкой и гаснет,
 // активная — льняным, следующая — серым.
@@ -413,9 +459,11 @@ function drawQuestTracker(ctx, game) {
   // буквица «О» запечена в рамку; если название начинается с другой буквы — пишем его целиком
   const baked = (L.title || '')[0];
   drawText(ctx, tx, iy + 14, title[0] === baked ? title.slice(1) : title, PAL.bronze_hi, { font: 'ustav' });
-  const oy = iy + bh + 3, rx0 = ix + iw - 3;
-  q.lines().forEach((l, i) => {
-    const y = oy + 10 * i, col = l.state === 'active' ? PAL.linen : PAL.slate_lt;
+  const QL = q.lines(), step = QL.length > 3 ? 9 : 10;   // m1k D5: 4-я строка (строка зоны) — шаг 9 px, чтобы влезть в рамку
+  const oy = iy + bh + 3 - (QL.length > 3 ? 1 : 0), rx0 = ix + iw - 3;
+  game.trackerDrawn = { lines: QL.map((l) => ({ id: l.id, text: l.text, zone: !!l.zone })), step };
+  QL.forEach((l, i) => {
+    const y = oy + step * i, col = l.state === 'active' ? PAL.linen : PAL.slate_lt;
     const a = l.alpha;
     let txt = '— ' + l.text, rx = rx0;
     if (l.state === 'done') { tick(ctx, rx - 7, y + 1, PAL.bronze_lt, a); rx -= 10; }
@@ -502,6 +550,7 @@ function drawTooltip(ctx, game) {
     txt = b ? tr('proto.hud.belt_slot', { item: b.scroll ? SCROLLS[b.scroll].name : POTIONS[b.kind].name, n: String(b.count), key: String(game.hoverBelt + 1) }) : tr('proto.hud.belt_empty');
   } else if (inSlot(m, LAYOUT.rmb) && h.rmb) { drawSkillTooltip(ctx, h, h.rmb, m.mx, PANEL_Y - 6, 'bc'); return; }
   else if (inSlot(m, LAYOUT.dash)) { drawSkillTooltip(ctx, h, 'dash', m.mx, PANEL_Y - 6, 'bc'); return; }
+  else if (inSlot(m, LAYOUT.shield)) txt = tr('proto.help.block.key') + ' — ' + tr('proto.help.block', { n: String(blockCfg().cost) });
   else if (LAYOUT.f.some((f) => inSlot(m, f))) {
     const i = LAYOUT.f.findIndex((f) => inSlot(m, f)), id = h.bar[i];
     game._tip = { slot: i, id: id || null };   // для автотеста: подсказка F-слота (ответ дизайнера 08.10, п.5)
@@ -515,6 +564,23 @@ function drawTooltip(ctx, game) {
   const x = Math.max(2, Math.min(VIEW_W - w - 2, m.mx - w / 2));
   plate(ctx, x, PANEL_Y - 22, w, 13, 0.9);
   drawText(ctx, x + 4, PANEL_Y - 20, txt, PAL.linen);
+}
+
+/** v1.14 E2: значок щита 16×16 кодом (до арта H22 `ic_block`): круглый щит с умбоном; пробит — трещина; нет щита — серый. */
+function shieldIcon(ctx, x, y, st) {
+  const ic = ART.sheets.ic_block;                               // H22: арт ic_block (32×16): кадр 0 — норма, 1 — пробит; рамка / сектор / затемнение — кодом
+  if (ic) {
+    ctx.drawImage(ic.img, st === 'broken' ? 16 : 0, 0, 16, 16, x, y, 16, 16);
+    if (st === 'none') { ctx.save(); ctx.globalAlpha = 0.6; rect(ctx, x, y, 16, 16, PAL.slate_dk); ctx.restore(); }
+    ART.icBlockDrawn = st;
+    return;
+  }
+  const cx = x + 8, cy = y + 8, grey = st === 'none';
+  disc(ctx, cx, cy, 7, PAL.ink);
+  disc(ctx, cx, cy, 6, grey ? PAL.slate : PAL.bronze);
+  disc(ctx, cx, cy, 5, grey ? PAL.slate_dk : PAL.wood_md);
+  disc(ctx, cx, cy, 2, grey ? PAL.slate : PAL.bronze_lt);
+  if (st === 'broken') { ctx.strokeStyle = PAL.ink; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx - 4.5, cy - 3.5); ctx.lineTo(cx - 1, cy - 0.5); ctx.lineTo(cx + 0.5, cy + 2); ctx.lineTo(cx + 4, cy + 4.5); ctx.stroke(); }
 }
 
 /** Иконка навыка с перезарядкой и серым при нехватке Яри. */
@@ -539,7 +605,7 @@ function cooldownSector(ctx, x, y, s, k, secs) {
   drawText(ctx, x + s / 2, y + s / 2 - 4, String(Math.ceil(secs)), PAL.linen, { align: 'c', outline: true });
 }
 
-/** Ячейка HUD под курсором: { kind: 'f', i } | { kind: 'lmb' } | { kind: 'rmb' } | { kind: 'dash' } | null. */
+/** Ячейка HUD под курсором: { kind: 'f', i } | { kind: 'lmb' } | { kind: 'rmb' } (слот E) | { kind: 'dash' } | { kind: 'shield' } | null. */
 export function hudSlotAt(mx, my) {
   const m = { mx, my }, L = LAYOUT;
   const i = L.f.findIndex((f) => inSlot(m, f));
@@ -547,6 +613,7 @@ export function hudSlotAt(mx, my) {
   if (inSlot(m, L.lmb)) return { kind: 'lmb' };
   if (inSlot(m, L.rmb)) return { kind: 'rmb' };
   if (inSlot(m, L.dash)) return { kind: 'dash' };
+  if (inSlot(m, L.shield)) return { kind: 'shield' };
   return null;
 }
 

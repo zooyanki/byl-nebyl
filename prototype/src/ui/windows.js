@@ -283,7 +283,7 @@ export class InventoryUI {
     const refDef = 8 + 6 * h.level;
     const derived = [
       [t('proto.hero.dmg_lmb'), h.dmgMin + '–' + h.dmgMax, null],
-      [t('proto.hero.dmg_rmb'), h.skillMin + '–' + h.skillMax, PAL.ember],
+      [t('proto.hero.dmg_e'), h.skillMin + '–' + h.skillMax, PAL.ember],
       [t('ui.hero.ar'), String(h.ar), null],
       [t('proto.hero.hit_chance'), Math.round(hitChance(h.ar, refDef, h.level, h.level) * 100) + '%', null],
       [t('ui.hero.def'), String(h.def), null],

@@ -1,0 +1,25 @@
+{
+ "object": "мостовая из плах (H16)",
+ "frame_size": [
+  32,
+  16
+ ],
+ "pivot": [
+  16,
+  8
+ ],
+ "frames": [
+  "road along x (W–E), var 1",
+  "along x, var 2",
+  "road along y (N–S), var 1",
+  "along y, var 2"
+ ],
+ "placement": "same as prototype ground tiles: top vertex of the diamond at w2s(x, y)",
+ "fps": 0,
+ "loop": false,
+ "image": "tile_mostovaya.png",
+ "frame_count": 4,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

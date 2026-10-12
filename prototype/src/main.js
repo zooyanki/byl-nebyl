@@ -36,6 +36,7 @@ fit();
 await loadAssets();
 const game = new Game(canvas);
 window.__ready = true;
+{ const bf = document.getElementById('boot-fail'); if (bf) bf.remove(); }   // m1j (D17): игра всё же стартовала (медленная загрузка) — убрать сообщение
 window.__game = game; // для отладки и автотестов
 
 let last = performance.now();

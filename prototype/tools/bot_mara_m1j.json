@@ -1,0 +1,104 @@
+{
+ "_m1j": "D3: Огнея, tools/bot_mara_ref_v1121.js, __FLEE 0, ур. 4, сиды 7/11/3 × 30",
+ "bySeed": {
+  "7": {
+   "v1121_lvl4_pot6_seed7": {
+    "seed": 7,
+    "rule": "v1121",
+    "lvl": 4,
+    "pot": 6,
+    "runs": 30,
+    "deaths": 7,
+    "wins": 23,
+    "timeouts": 0,
+    "medianT": 45.8,
+    "retinue": [
+     4
+    ],
+    "drunkAvg": 5.7,
+    "mara": {
+     "mlvl": 4,
+     "mods": 0,
+     "hp": 258,
+     "dmg": [
+      8,
+      18
+     ]
+    },
+    "extra": {
+     "fled": 0,
+     "steps": 12,
+     "trailMed": 62,
+     "heroMaxHp": 94,
+     "minHpMed": 0.35
+    }
+   }
+  },
+  "11": {
+   "v1121_lvl4_pot6_seed11": {
+    "seed": 11,
+    "rule": "v1121",
+    "lvl": 4,
+    "pot": 6,
+    "runs": 30,
+    "deaths": 9,
+    "wins": 21,
+    "timeouts": 0,
+    "medianT": 38.6,
+    "retinue": [
+     4
+    ],
+    "drunkAvg": 5.5,
+    "mara": {
+     "mlvl": 4,
+     "mods": 0,
+     "hp": 258,
+     "dmg": [
+      8,
+      18
+     ]
+    },
+    "extra": {
+     "fled": 0,
+     "steps": 12,
+     "trailMed": 62,
+     "heroMaxHp": 94,
+     "minHpMed": 0.33
+    }
+   }
+  },
+  "3": {
+   "v1121_lvl4_pot6_seed3": {
+    "seed": 3,
+    "rule": "v1121",
+    "lvl": 4,
+    "pot": 6,
+    "runs": 30,
+    "deaths": 7,
+    "wins": 23,
+    "timeouts": 0,
+    "medianT": 41.4,
+    "retinue": [
+     4
+    ],
+    "drunkAvg": 5.9,
+    "mara": {
+     "mlvl": 4,
+     "mods": 0,
+     "hp": 258,
+     "dmg": [
+      8,
+      18
+     ]
+    },
+    "extra": {
+     "fled": 0,
+     "steps": 13,
+     "trailMed": 64,
+     "heroMaxHp": 94,
+     "minHpMed": 0.35
+    }
+   }
+  }
+ }
+}
