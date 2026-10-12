@@ -3,13 +3,16 @@
 // угли анчуток (вражеский снаряд: попадает при касании, гаснет о стену, от него можно уйти).
 import { rndInt } from '../core/math.js';
 import { sightClear } from '../world/collision.js';
-import { hitChance, MELEE_RANGE, HIT_STOP } from '../data/progression.js';
+import { hitChance, MELEE_RANGE, HIT_STOP, HIT_FX } from '../data/progression.js';
 import { SKILLS, skillNumbers, spellDamage, rankOf } from '../data/skills.js';
 import { PAL } from '../palette.js';
 import { baseDamageAvg } from '../data/enemies.js';
 import { t } from '../core/i18n.js';
+import { meleeReach } from '../entities/hero.js';
 
 let FIRE_ID = 1;
+// материал цели для звука удара (§4.6: плоть / дерево-щит / кость); прочие — плоть, боссы — кость
+// v1.13.2: материал звука удара — поле material в monsters.json / bosses.json (bone / wood / flesh по умолчанию)
 
 export class Combat {
   constructor(game) { this.game = game; this.projectiles = []; this.fires = []; this.teles = []; this.lastBlast = null; this.sprFx = []; }
@@ -42,9 +45,14 @@ export class Combat {
     return Math.abs(a) <= T.half + Math.asin(Math.min(1, pad / d));
   }
 
+  /** v1.14 E1 (§4.1/§4.2): удар в воздух (Shift+ЛКМ мимо цели, «Сшибка» по земле без врага): след взмаха и свист «мимо», без надписи. */
+  airSwing(hero, target) {
+    const g = this.game, dir = target ? [target.x - hero.x, target.y - hero.y] : hero.dirVec();
+    this.swingSmear(hero, dir, false); g.audio.play('miss'); g.counters.airSwing = (g.counters.airSwing || 0) + 1;
+  }
   heroMelee(hero, target, skill = null) {
     const g = this.game;
-    const sk = skill ? skillNumbers(hero, skill) : null;
+    const sk = skill ? skillNumbers(hero, skill) : null, MR = meleeReach();
     if (sk) {
       g.fx.ring(hero.x + hero.dirVec()[0] * 0.8, hero.y + hero.dirVec()[1] * 0.8, 0.6, PAL.bronze_lt, 0.25);
       g.lastBash = { t: g.time, target: target ? target.id : null };
@@ -56,27 +64,32 @@ export class Combat {
         for (const e of g.enemies) {
           if (e.dead) continue;
           const dx = e.x - hero.x, dy = e.y - hero.y, d = Math.hypot(dx, dy);
-          if (d > MELEE_RANGE + e.r + 0.2 || (dx * fx + dy * fy) / (d || 1) < 0.5) continue;
+          if (d - hero.r - e.r > MR.reach + MR.slack || (dx * fx + dy * fy) / (d || 1) < 0.5) continue;   // v1.14 E1: тот же зазор
           if (d < bd) { bd = d; best = e; }
         }
         target = best;
       }
     }
-    if (!target || target.dead) return;
-    if (hero.distTo(target) > MELEE_RANGE + target.r + 0.4) return;           // увернулся / убежал
+    if (!target || target.dead) { if (!target) this.airSwing(hero, null); return; }
+    // v1.14 E1: удар засчитан при зазоре ≤ reach + slack (1,3). Дальше — только Shift+ЛКМ (обычный замах снят раньше): взмах в воздух
+    if (hero.gapTo(target) > MR.reach + MR.slack) { this.airSwing(hero, target); return; }
+    const SS = skill ? SKILLS[skill] : null;
+    const dir = [target.x - hero.x, target.y - hero.y];
+    // GDD v1.13 §4.6 (D2): след взмаха «Сшибки» — дуга 120° (зона удара по дуге), и при промахе тоже
+    if (SS && SS.arc) this.swingSmear(hero, dir, false);
     const ar = sk ? hero.ar * (1 + sk.arPct / 100) : hero.ar;
     if (Math.random() >= hitChance(ar, target.dfn, hero.level, target.mlvl)) {
       g.fx.text(target.x, target.y, t('ui.combat.miss'), PAL.mist, target.def.height + 6, { dur: 0.7 });
-      g.audio.play('miss');
+      g.audio.play('miss');                                                  // §4.6: свист −6 дБ, без хит-стопа и тряски
       return;
     }
     const crit = Math.random() < hero.crit;
+    if (crit && SS && SS.arc && g.fx.smears.length) Object.assign(g.fx.smears[g.fx.smears.length - 1], { color: PAL.bronze_lt, crit: true });   // удачный удар — след bronze_lt
     let dmg = rndInt(hero.dmgMin, hero.dmgMax);
     if (target.def.family === 'Нечисть') dmg *= 1 + hero.vsNechist;
     if (crit) dmg *= hero.critMult;
     if (sk) dmg *= sk.dmgPct / 100;
     dmg = Math.floor(dmg);
-    const dir = [target.x - hero.x, target.y - hero.y];
     // «Сшибка» (GDD v1.6 §3.6): на 1 тайл отбрасывает только добивающий удар, с ранга 3 — ещё и удачный (крит);
     // обычные попадания не отбрасывают. Масса врага не смягчает: knock делится на mass, поэтому домножаем
     let kb, killKb;
@@ -86,12 +99,82 @@ export class Combat {
       killKb = rule.onKill != null ? S.knockback : undefined;
     } else kb = crit ? 0.5 : 0.28;
     const done = target.takeDamage(dmg, g, 'melee', hero, { crit, kbDir: dir, kb, killKb });
+    const hits = [{ e: target, tier: crit ? 'crit' : target.dead ? 'kill' : 'hit' }];
+    // GDD v1.13 §3.6 (D1, пакет F): +1 Удали за попадание — только основная цель, только при попадании, не выше максимума
+    if (SS && SS.yarOnHit) {
+      const y0 = hero.yar;
+      hero.yar = Math.min(hero.maxYar, hero.yar + SS.yarOnHit);
+      if (hero.yar > y0) hero.yarGlow = (HIT_FX && HIT_FX.yarGlow) || 0.15;   // §4.6: шар Удали коротко светлеет
+      g.counters.yarOnHit = (g.counters.yarOnHit || 0) + 1;
+    }
+    // «вздрог» основной цели: не чаще раза в cd на цель; боссы — по флагу сущности e.boss (у Кривши def.boss нет;
+    // Огнея — былинный враг, не босс, вздрагивает)
+    const FL = SS && SS.flinch;
+    if (FL && !target.dead && (FL.bosses || !target.boss) && target.age - (target.lastFlinch ?? -99) >= FL.cd) {
+      target.lastFlinch = target.age; target.stagger = Math.max(target.stagger || 0, FL.t);
+      if (target.state === 'attack' && !target.attackFired) { target.state = 'chase'; target.t = 0; }
+      g.counters.flinch = (g.counters.flinch || 0) + 1;
+    }
+    // удар по дуге: соседи в секторе deg и радиусе r получают mul урона; у каждого свой бросок меткости (может быть «Мимо»)
+    if (SS && SS.arc) {
+      const A = SS.arc, half = A.deg / 2 * Math.PI / 180, fa = Math.atan2(dir[1], dir[0]);
+      for (const e of g.enemies) {
+        if (e === target || e.dead || e.dummy) continue;
+        const dx = e.x - hero.x, dy = e.y - hero.y, d = Math.hypot(dx, dy);
+        if (d > A.r + e.r) continue;
+        let da = Math.atan2(dy, dx) - fa; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI;
+        if (Math.abs(da) > half) continue;
+        if (A.hitRoll !== false && Math.random() >= hitChance(ar, e.dfn, hero.level, e.mlvl)) {
+          g.fx.text(e.x, e.y, t('ui.combat.miss'), PAL.mist, e.def.height + 6, { dur: 0.7 });
+          g.counters.arcMiss = (g.counters.arcMiss || 0) + 1;
+          continue;
+        }
+        let d2 = rndInt(hero.dmgMin, hero.dmgMax); if (e.def.family === 'Нечисть') d2 *= 1 + hero.vsNechist; d2 *= sk.dmgPct / 100 * A.mul;
+        e.takeDamage(Math.floor(d2), g, 'melee', hero, { kbDir: [dx, dy], kb: 0, killKb });
+        hits.push({ e, tier: e.dead ? 'kill' : 'hit', arc: true });
+        g.counters.arcHits = (g.counters.arcHits || 0) + 1;
+      }
+    }
     if (hero.fireDmg && !target.dead) target.takeDamage(hero.fireDmg, g, 'fire', hero);
     if (hero.coldDmg && !target.dead) target.takeDamage(hero.coldDmg, g, 'cold', hero);
     if (hero.lifesteal) hero.hp = Math.min(hero.maxHp, hero.hp + done * hero.lifesteal);
-    g.hitStop(crit ? HIT_STOP * 1.6 : HIT_STOP);
-    if (crit) g.shake(1.5, 0.12);
-    g.audio.play(crit ? 'crit' : 'hit');
+    this.hitFeel(hero, hits);
+  }
+
+  /** GDD v1.13 §4.6 (D2): отклик попадания мечом за один взмах. hits — [{e, tier: 'hit' | 'crit' | 'kill'}].
+   *  Хит-стоп — один на взмах (наибольший; замирают герой и задетые цели, мир идёт), тряска — наибольшая, целыми px;
+   *  вспышка, искры по направлению удара и звук по материалу цели — у каждой задетой цели. */
+  hitFeel(hero, hits) {
+    const g = this.game, F = HIT_FX;
+    if (!F) { g.hitStop(HIT_STOP, [hero, ...hits.map((h) => h.e)]); g.audio.play('hit'); return; }
+    const rank = { hit: 0, kill: 1, crit: 2 };
+    let top = 'hit';
+    for (const h of hits) if (rank[h.tier] > rank[top]) top = h.tier;
+    g.hitStop(F.hitStop[top], [hero, ...hits.map((h) => h.e)]);
+    const [sp, st] = F.shake[top]; g.shake(sp, st);
+    g.lastHitFx = { t: g.time, tier: top, n: hits.length, hitStop: F.hitStop[top], shake: [sp, st] };
+    for (const h of hits) {
+      const e = h.e, crit = h.tier === 'crit';
+      const [ft, fa] = F.flash[crit ? 'crit' : 'hit'];
+      e.flash = ft; e.flashA = fa;
+      const [nb, ne] = F.sparks[crit ? 'crit' : 'hit'];
+      const dx = e.x - hero.x, dy = e.y - hero.y;
+      const sdx = dx - dy, sdy = (dx + dy) * 0.5;                            // направление удара на экране (изометрия 2:1)
+      const z = Math.round((e.def.height || 30) * 0.55);
+      g.fx.sparks(e.x, e.y, sdx, sdy, z, nb, PAL[F.sparks.colors[0]], F.sparks.spread, F.sparks.t);
+      g.fx.sparks(e.x, e.y, sdx, sdy, z, ne, PAL[F.sparks.colors[1]], F.sparks.spread, F.sparks.t);
+    }
+    const m = hits[0].e, mat = (m.def && m.def.material) || 'flesh';
+    g.audio.play('hit', { mat, tier: top, pitch: F.sfx.pitch, critDb: F.sfx.critDb, killDb: F.sfx.killDb });
+    g.counters.hitFx = (g.counters.hitFx || 0) + 1;
+  }
+
+  /** След взмаха (§4.6): дуга deg вокруг героя, r px, frames кадров по ft с; цвет linen (удачный — bronze_lt). */
+  swingSmear(hero, dir, crit) {
+    const F = HIT_FX && HIT_FX.smear, g = this.game;
+    if (!F) return;
+    g.fx.smears.push({ x: hero.x, y: hero.y, dx: dir[0], dy: dir[1], deg: F.deg, r: F.r, frames: F.frames, ft: F.ft, t: 0, dur: F.frames * F.ft, color: PAL[crit ? F.critColor : F.color] });
+    g.counters.smears = (g.counters.smears || 0) + 1;
   }
 
   /** Выпуск навыка на кадре каста (Hero.update). */
@@ -257,7 +340,7 @@ export class Combat {
             p.dead = true;
             g.fx.burst(p.x, p.y, PAL.ember, 8, 20, 50);
             if (p.src && p.src.kind === 'mara') this.sprFx.push({ key: 'm_hit', x: h.x, y: h.y, t: 0, dur: 5 / 12, fps: 12 });   // fx_mara_bolt_hit
-            const dealt = h.takeDamage(rndInt(p.dmg[0], p.dmg[1]), g, p.element, null);
+            const dealt = h.takeDamage(rndInt(p.dmg[0], p.dmg[1]), g, p.element, null, { src: 'proj', from: [p.x - (p.vx || 0), p.y - (p.vy || 0)] });   // v1.14 E2: снаряд спереди — в щит
             if (p.src && p.src.onHitHero) p.src.onHitHero(dealt, g);   // модификаторы элит (Жаркий, Студёный, Кровопийца)
           }
           continue;
@@ -302,7 +385,7 @@ export class Combat {
     g.fx.burst(p.x, p.y, PAL.ember, 12, 18, 60);
     g.fx.light(p.x, p.y, 90, 0.35);
     g.audio.play('explode');
-    g.shake(1, 0.1);
+    if (HIT_FX) g.shake(...HIT_FX.shake.zmey); else g.shake(1, 0.1);   // §4.6: «Змей» — 1 px, 0,10 с (как было)
     const hit = [], blocked = [];
     for (const e of g.enemies) {
       if (e.dead) continue;

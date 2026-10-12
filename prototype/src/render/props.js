@@ -7,6 +7,7 @@ import { w2s } from '../core/iso.js';
 import { rect, poly, strokePoly, isoBox, disc, ellipse, figure } from './shapes.js';
 import { drawRestSource, drawFxFrame } from './rest_fx.js';
 import { drawHearthArt, drawPerunArt } from './boss_art.js';
+import { VA, BLD_SHEET, sheetOf, frameOf, bakeSheet } from './village_art.js';
 
 // toS(x,y) -> [sx,sy] экранные координаты мировой точки
 export function drawProp(ctx, p, toS, time) {
@@ -21,12 +22,29 @@ export function drawProp(ctx, p, toS, time) {
   if (p.type === 'anvil') return anvil(ctx, p, toS);
   if (p.type === 'relic') return relic(ctx, p, toS, time);
   if (p.type === 'stump') { const [x, y] = toS(p.x + 0.5, p.y + 0.5); if (!drawFxFrame(ctx, 'stump', p.variant || 0, x, y, { flip: p.seed > 0.5 })) ashPile(ctx, p, toS); return; }   // горелый пень (GDD v1.11); без спрайта — кучка пепла
+  if ((p.type === 'gateseg' || sheetOf(p)) && drawBld(ctx, p, toS, time)) return;   // m1k: постройки и ворота Ладоги — листы художника
   if (!p._spr) p._spr = p.shared ? sharedSprite(p) : bake(p);   // остальное статично — запекаем в спрайт
   const [sx, sy] = toS(p.x, p.y);
   ctx.drawImage(p._spr.c, sx - p._spr.ox, sy - p._spr.oy);
 }
 
 // Закрывает ли запечённый спрайт прямоугольник r (экранные px)? Проверка по маске непрозрачных пикселей.
+/** m1k D4: непрозрачный ли пиксель спрайта пропса в экранной точке (X, Y). */
+export function propMaskAt(p, toS, X, Y) {
+  const s = p._spr;
+  if (!s) return false;
+  const [sx, sy] = toS(p.x, p.y), lx = Math.floor(X - (sx - s.ox)), ly = Math.floor(Y - (sy - s.oy));
+  if (lx < 0 || ly < 0 || lx >= s.c.width || ly >= s.c.height) return false;
+  if (!s.mask) propCovers(p, toS, { x: sx - s.ox, y: sy - s.oy, w: 1, h: 1 });
+  return !!(s.mask && s.mask[ly * s.c.width + lx]);
+}
+/** Экранная рамка спрайта пропса {x, y, w, h} или null. */
+export function propBox(p, toS) {
+  const s = p._spr;
+  if (!s) return null;
+  const [sx, sy] = toS(p.x, p.y);
+  return { x: sx - s.ox, y: sy - s.oy, w: s.c.width, h: s.c.height };
+}
 export function propCovers(p, toS, r) {
   const s = p._spr;
   if (!s) return false;
@@ -41,6 +59,7 @@ export function propCovers(p, toS, r) {
   let hits = 0;
   for (let yy = r.y; yy < r.y + r.h; yy += 3) {
     for (let xx = r.x; xx < r.x + r.w; xx += 3) {
+      if (r.ell) { const ex = (xx - r.ell.cx) / r.ell.rx, ey = (yy - r.ell.cy) / r.ell.ry; if (ex * ex + ey * ey > 1) continue; }
       const lx = xx - x0, ly = yy - y0;
       if (lx >= 0 && ly >= 0 && lx < W && ly < H && s.mask[ly * W + lx]) hits++;
     }
@@ -48,8 +67,52 @@ export function propCovers(p, toS, r) {
   return hits >= 6;
 }
 
+/** Лист художника для пропса (постройка / сегмент ворот) и его кадр; null — листа нет. */
+export function bldSheet(p, time = 0) {
+  const name = p.type === 'gateseg' ? (p.open || !p.closedSheet ? p.openSheet : p.closedSheet) : sheetOf(p);
+  const sh = name && VA.sheets[name];
+  if (!sh) return null;
+  const n = sh.meta.frame_count || 1;
+  const fr = p.type === 'gateseg' ? (n > 1 ? Math.floor(time * (sh.meta.fps || 8)) % n : 0) : p.type === 'sign' ? Math.min(n - 1, p.stage || 0) : frameOf(sh.meta, p.door);
+  return { name, sh, fr };
+}
+/** Постройка художника: кадр запекается один раз (маска для «рентгена» — по нему же), поверх — дым из anchors_px.smoke. */
+function drawBld(ctx, p, toS, time) {
+  const B = bldSheet(p, time);
+  if (!B) return false;
+  const key = B.name + ':' + B.fr, bk = p._bk || (p._bk = {});
+  let spr = bk[key];
+  if (!spr) {
+    spr = bakeSheet(B.sh, B.fr);
+    const [ax, ay] = p.anchor || [p.x, p.y];   // сегмент ворот: лист привязан к мин. углу ворот, опора пропса — его клетка
+    spr.ox -= ((ax - ay) - (p.x - p.y)) * HALF_W; spr.oy -= ((ax + ay) - (p.x + p.y)) * HALF_H;
+    bk[key] = spr;
+  }
+  p._spr = spr;
+  const [sx, sy] = toS(p.x, p.y);
+  ctx.drawImage(spr.c, sx - spr.ox, sy - spr.oy);
+  const sa = p.smoke ? smokeAnchor(B.sh.meta, B.fr) : null, pt = sa && sa.pt;
+  p._smoked = !!pt;   // v1.13.3: дым — только у видов из smokeKinds (изба, с сенями, на подклете, баня)
+  p._smokeSrc = sa ? sa.src : null;
+  if (pt) drawFxFrame(ctx, 'smoke', Math.floor(time * ((FXfps) || 5) + p.seed * 4), sx - spr.ox + pt[0], sy - spr.oy + pt[1]);
+  return true;
+}
+/** m1l (B-40): точка дыма листа. У bld_izba_small_tes_kon / _tes_prich художник не поставил anchors_px.smoke (есть только
+ *  gable_vent — дымник во фронтоне), поэтому избы izba_sw / izba_se не дымили. Порядок: anchors_px.smoke → gable_vent →
+ *  конёк над передним углом (front_corner_px − heights_px.ridge). Возвращает {pt, src} или null. */
+export function smokeAnchor(meta, fr) {
+  const A = (meta && meta.anchors_px) || {};
+  const pick = (a) => a && (Array.isArray(a) ? a : a[fr] || a['0']);
+  for (const src of ['smoke', 'gable_vent']) { const pt = pick(A[src]); if (pt) return { pt, src }; }
+  const fc = meta && meta.front_corner_px, rh = meta && meta.heights_px && meta.heights_px.ridge;
+  if (fc && rh) return { pt: [fc[0], fc[1] - rh], src: 'ridge' };
+  return null;
+}
+const FXfps = 5;   // fx_smoke_wisp: 4 кадра, 5 к/с (JSON художника)
+
 export function propHeight(p) {
-  if (p.type === 'tree') return p.birch ? 132 : 166;
+  if (p.type === 'gateseg' || sheetOf(p)) { const B = bldSheet(p); if (B) return B.sh.meta.frame_size[1]; return p.type === 'gateseg' ? 100 : 132; }
+  if (p.type === 'tree') return p.hMax ? p.hMax + 6 : p.birch ? 132 : 166;   // m1k D9: низкие деревья перед путём
   if (p.type === 'palisade') return p.tyn ? 44 : p.gatepost ? 100 : 86;   // m1i: низкий тын Залесья — как стена (44)
   if (p.type === 'fire' && p.krada) return 112;       // спрайт fx_rest_krada: 120 px, опора на 108
   return { rock: 36, wall: 44, izba: 132, fire: 80, hearth: 56, perun: 120, relic: 30, idol: 66, well: 64, churstone: 50, gate: 80, chest: 22, body: 12, bush: 24, ladya: 28, cart: 24, anvil: 16, stump: 18 }[p.type] || 40;
@@ -70,6 +133,9 @@ function drawRaw(ctx, p, toS) {
     case 'ash': return ashPile(ctx, p, toS);
     case 'chest': return chest(ctx, p, toS);
     case 'body': return body(ctx, p, toS);
+    case 'gateseg': return palisade(ctx, { ...p, gatepost: false }, toS);   // m1k: листа ворот нет — клетка тына
+    case 'sign': return idol(ctx, p, toS);
+    default: if (BLD_SHEET[p.type]) return izba(ctx, p, toS);               // m1k: постройка без листа — сруб-заглушка
   }
 }
 
@@ -77,7 +143,7 @@ function drawRaw(ctx, p, toS) {
 const SHARED = new Map();
 function sharedSprite(p) {
   const q = Math.round(p.seed * 12);
-  const key = p.type + (p.birch ? 'b' : 'p') + q;
+  const key = p.type + (p.birch ? 'b' : 'p') + q + (p.hMax ? 'h' + p.hMax : '');
   let s = SHARED.get(key);
   if (!s) { s = bake({ ...p, seed: q / 12 }); SHARED.set(key, s); }
   return s;
@@ -99,8 +165,9 @@ function bake(p) {
 
 function pine(ctx, p, toS) {
   const [x, y] = toS(p.x + 0.5, p.y + 0.5);
-  const H = Math.round(128 + p.seed * 32);          // 128–160, эталон 150
-  const half = 25 + Math.round(p.seed * 6);         // крона 50–62
+  const H0 = Math.round(128 + p.seed * 32);         // 128–160, эталон 150
+  const H = p.hMax ? Math.min(H0, p.hMax) : H0;     // m1k D9: молодая ель перед путём ≤ 96 px (крона ужата пропорционально)
+  const half = Math.round((25 + Math.round(p.seed * 6)) * (p.hMax ? Math.max(0.7, H / H0) : 1));   // крона 50–62
   ellipse(ctx, x, y, 16, 6, PAL.ink, 0.4);
   figure(ctx, [{ x: x - 2, y: y - 22, w: 5, h: 22, c: PAL.wood_dk }]);   // ствол 5
   const bottom = y - 16, top = y - H, n = 6;
@@ -119,7 +186,7 @@ function pine(ctx, p, toS) {
 
 function birch(ctx, p, toS) {
   const [x, y] = toS(p.x + 0.5, p.y + 0.5);
-  const H = Math.round(96 + p.seed * 32);           // 96–128
+  const H = Math.min(Math.round(96 + p.seed * 32), p.hMax || 999);   // 96–128; m1k D9: перед путём ≤ 112
   ellipse(ctx, x, y, 13, 5, PAL.ink, 0.4);
   const trunkTop = y - Math.round(H * 0.62);
   figure(ctx, [{ x: x - 2, y: trunkTop, w: 4, h: y - trunkTop, c: PAL.birch }]);

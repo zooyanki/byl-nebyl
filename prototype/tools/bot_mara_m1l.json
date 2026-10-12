@@ -1,0 +1,374 @@
+{
+ "v1121_lvl4_pot6_seed7": {
+  "seed": 7,
+  "rule": "v1121",
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 4,
+  "wins": 26,
+  "timeouts": 0,
+  "medianT": 43.3,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.4,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 14,
+   "trailMed": 73,
+   "heroMaxHp": 94,
+   "minHpMed": 0.36
+  }
+ },
+ "v1121_lvl4_pot6_seed11": {
+  "seed": 11,
+  "rule": "v1121",
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 2,
+  "wins": 28,
+  "timeouts": 0,
+  "medianT": 39.7,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.4,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 12,
+   "trailMed": 67,
+   "heroMaxHp": 94,
+   "minHpMed": 0.35
+  }
+ },
+ "v1121_lvl4_pot6_seed3": {
+  "seed": 3,
+  "rule": "v1121",
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 1,
+  "wins": 29,
+  "timeouts": 0,
+  "medianT": 40.4,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.3,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 13,
+   "trailMed": 67,
+   "heroMaxHp": 94,
+   "minHpMed": 0.35
+  }
+ },
+ "petr_lvl4_pot6_seed7": {
+  "seed": 7,
+  "rule": "petr",
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 10,
+  "wins": 20,
+  "timeouts": 0,
+  "medianT": 39.3,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.8,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 0,
+   "trailMed": 95,
+   "heroMaxHp": 94,
+   "minHpMed": 0.33
+  }
+ },
+ "petr_lvl4_pot6_seed11": {
+  "seed": 11,
+  "rule": "petr",
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 12,
+  "wins": 18,
+  "timeouts": 0,
+  "medianT": 38.9,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.9,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 0,
+   "trailMed": 98,
+   "heroMaxHp": 94,
+   "minHpMed": 0.17
+  }
+ },
+ "petr_lvl4_pot6_seed3": {
+  "seed": 3,
+  "rule": "petr",
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 6,
+  "wins": 24,
+  "timeouts": 0,
+  "medianT": 37.6,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.8,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 0,
+   "trailMed": 90,
+   "heroMaxHp": 94,
+   "minHpMed": 0.34
+  }
+ },
+ "v1121_lvl4_pot6_seed7_block": {
+  "seed": 7,
+  "rule": "v1121",
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 5,
+  "wins": 25,
+  "timeouts": 0,
+  "medianT": 46.4,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.2,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 12,
+   "trailMed": 62,
+   "heroMaxHp": 94,
+   "minHpMed": 0.35
+  }
+ },
+ "v1121_lvl4_pot6_seed11_block": {
+  "seed": 11,
+  "rule": "v1121",
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 2,
+  "wins": 28,
+  "timeouts": 0,
+  "medianT": 47.3,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.2,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 10,
+   "trailMed": 47,
+   "heroMaxHp": 94,
+   "minHpMed": 0.36
+  }
+ },
+ "v1121_lvl4_pot6_seed3_block": {
+  "seed": 3,
+  "rule": "v1121",
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 2,
+  "wins": 28,
+  "timeouts": 0,
+  "medianT": 46.3,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 4.8,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 11,
+   "trailMed": 50,
+   "heroMaxHp": 94,
+   "minHpMed": 0.38
+  }
+ },
+ "petr_lvl4_pot6_seed7_block": {
+  "seed": 7,
+  "rule": "petr",
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 11,
+  "wins": 19,
+  "timeouts": 0,
+  "medianT": 46.1,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.7,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 0,
+   "trailMed": 95,
+   "heroMaxHp": 94,
+   "minHpMed": 0.32
+  }
+ },
+ "petr_lvl4_pot6_seed11_block": {
+  "seed": 11,
+  "rule": "petr",
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 9,
+  "wins": 21,
+  "timeouts": 0,
+  "medianT": 45,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.6,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 0,
+   "trailMed": 78,
+   "heroMaxHp": 94,
+   "minHpMed": 0.32
+  }
+ },
+ "petr_lvl4_pot6_seed3_block": {
+  "seed": 3,
+  "rule": "petr",
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 11,
+  "wins": 19,
+  "timeouts": 0,
+  "medianT": 45.6,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.8,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0,
+   "hp": 258,
+   "dmg": [
+    8,
+    18
+   ]
+  },
+  "extra": {
+   "fled": 0,
+   "steps": 0,
+   "trailMed": 93,
+   "heroMaxHp": 94,
+   "minHpMed": 0.3
+  }
+ }
+}

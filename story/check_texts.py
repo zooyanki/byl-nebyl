@@ -59,9 +59,15 @@ pop = []
 for cells in data_rows(chunks[4]): pop.append((cells[0], clean(cells[3])))
 for cells in data_rows(chunks[6]): pop.append((cells[0], clean(cells[2])))
 for cells in data_rows(chunks[7]): pop.append((cells[0], clean(cells[3])))
-for m in re.finditer(r'`(bark\.vedana\.gift|npc\.\w+\.(?:idle\d|heal))`\s*«([^»]+)»', body):
+for m in re.finditer(r'`(bark\.vedana\.gift)`\s*«([^»]+)»', body):
     pop.append((m.group(1), m.group(2)))
 for cells in data_rows(chunks[20]): pop.append((cells[0], clean(cells[1])))
+# короткие повторные реплики NPC в окне диалога (greet, idle*, heal) ≤ 100 (GDD §12.2.2)
+short = [(m.group(1), m.group(2)) for m in re.finditer(r'`(npc\.\w+\.(?:greet|idle\w*|heal))`[^«\n]*«([^»]+)»', body)]
+ms = max(short, key=lambda x: len(x[1]))
+print(f'Короткие реплики NPC в окне: {len(short)}, самая длинная {len(ms[1])} симв. ({ms[0]})')
+for k, x in short:
+    if len(x) > 100: fail(f'короткая реплика > 100: {k} {len(x)}')
 mx = max(pop, key=lambda x: len(x[1]))
 bad = [(k, t, len(t)) for k, t in pop if len(t) > 60]
 print(f'Всплывающие реплики: {len(pop)}, самая длинная {len(mx[1])} симв. ({mx[0]})')
@@ -73,24 +79,79 @@ mt = max(tips, key=lambda x: len(x[1]))
 print(f'Советы: {len(tips)}, самый длинный {len(mt[1])} симв. ({mt[0]})')
 for k, t in tips:
     if len(t) > 120: fail(f'совет > 120: {k} {len(t)}')
-if len(tips) != 14: fail('советов не 13')
+if len(tips) != 15: fail('советов не 15')
 
 # 5. цели трекера из act1 ≤ 28 (сверка канона, в этом файле целей нет)
-goals = re.findall(r'^- ((?:Доберись|Спаси|Отбей|Одолей|Найди|Осмотри|Собери|Узнай|Пройди|Повали|Закрой)[^\n]*)$', act1, re.M)
+goals = re.findall(r'^- ((?:Доберись|Спаси|Отбей|Одолей|Найди|Осмотри|Собери|Узнай|Пройди|Повали|Закрой|Выйди|Доложи)[^\n]*)$', act1, re.M)
 print('Цели act1:', len(goals), ', максимум', max(len(g) for g in goals), 'симв.')
 for g in goals:
     if len(g) > 28: fail(f'цель > 28: {g}')
 
-# 6. диалоги NPC: 2–4 реплики, 20–40 слов на блок
-blocks = re.split(r'\n(?=\*\*(?:С\d|Опушка)[^\n]*`npc\.)', chunks[5])
-print('Диалоги NPC:')
-for b in blocks[1:]:
-    head = re.search(r'`(npc\.[\w.]+)`', b).group(1)
-    lines = re.findall(r'^> \*\*[^*]+:\*\* (.*)$', b, re.M)
-    words = sum(len(re.findall(r'[А-Яа-яЁё-]+', clean(l))) for l in lines)
-    flag = '' if 2 <= len(lines) <= 4 and 15 <= words <= 40 else '  <-- проверить'
-    print(f'  {head}: {len(lines)} репл., {words} слов{flag}')
-    if not 2 <= len(lines) <= 4: fail(f'{head}: реплик {len(lines)}')
+# 6. диалоги NPC в окне (GDD §10.4): реплика ≤ 200 (ошибка), > 160 — предупреждение;
+#    2–4 реплики на диалог, номера подряд, говорящие из реестра §5.0
+SPEAKERS = {'ratibor', 'vyshata', 'vedana', 'tverdyata', 'mal', 'priest', 'sbyslav'}
+dlg = {}
+for line in chunks[5].splitlines():
+    m = re.match(r'^\| `(dlg\.[\w.]+)` \| `([\w.]+)` \| (\d+) \| `(\w+)` \| (.*) \|$', line)
+    if not m: continue
+    key, d, n, who, text = m.group(1), m.group(2), int(m.group(3)), m.group(4), clean(re.sub(r'\((?:новое)\)', '', m.group(5)))
+    dlg.setdefault(d, []).append((n, key, who, text))
+print('Диалоги NPC (окно, реплик / слов / самая длинная):')
+allrep = []
+for d, rows_ in dlg.items():
+    nums = [r[0] for r in rows_]
+    words = sum(len(re.findall(r'[А-Яа-яЁё-]+', r[3])) for r in rows_)
+    longest = max(len(r[3]) for r in rows_)
+    print(f'  {d}: {len(rows_)} / {words} / {longest}')
+    if not 2 <= len(rows_) <= 4: fail(f'{d}: реплик {len(rows_)}')
+    if nums != list(range(1, len(nums) + 1)): fail(f'{d}: номера реплик {nums}')
+    for n, key, who, text in rows_:
+        allrep.append((key, text))
+        if who not in SPEAKERS: fail(f'{key}: неизвестный говорящий {who}')
+        if len(text) > 200: fail(f'{key}: реплика > 200 ({len(text)})')
+        elif len(text) > 160: print(f'  ПРЕДУПРЕЖДЕНИЕ: {key} длиннее 160 ({len(text)})')
+mr = max(allrep, key=lambda x: len(x[1]))
+print(f'Реплик в окне: {len(allrep)}, диалогов: {len(dlg)}, самая длинная {len(mr[1])} симв. ({mr[0]})')
+need_dlg = ['vyshata.s0', 'vyshata.s1', 'vedana.s0', 'vedana.s1', 'tverdyata.s0', 'tverdyata.s1', 'mal.s1', 'm1.mal']
+for d in need_dlg:
+    if d not in dlg: fail(f'нет диалога {d}')
+if not any(k == 'dlg.vyshata.m1.dir' for k, _ in allrep): fail('нет dlg.vyshata.m1.dir')
+
+# 6а. новые строки v1.3: пределы GDD §12.2.2–12.2.3
+LIMITS = [(r'quest\.m1\.obj\.\w+', 28), (r'ui\.gate\.[\w.]+', 24), (r'sign\.\w+', 14),
+          (r'ladoga\.caption\.\w+', 24), (r'ui\.dlg\.\w+', 24), (r'settings\.\w+', 24),
+          (r'ui\.death\.wake\.\w+', 28), (r'ui\.save\.\w+', 40), (r'death\.(?:ladoga|krada|stone)\.\d', 60),
+          (r'(?:proto\.)?respawn\.\w+', 60), (r'npc\.priest', 24)]
+kv = {}
+for line in body.splitlines():
+    m = re.match(r'^\| `([\w.]+)` \| ([^|]*?) \|', line)
+    if m: kv[m.group(1)] = clean(m.group(2))
+need_new = ['quest.m1.obj.ladoga_exit', 'quest.m1.obj.report', 'ui.gate.open.zalesye', 'ui.gate.closed',
+            'sign.zalesye', 'sign.sopki', 'sign.bor', 'sign.pier', 'ladoga.caption.church', 'ladoga.caption.pier',
+            'ladoga.caption.torg', 'ladoga.caption.kuznya', 'ui.dlg.skip', 'ui.settings.navArrow',
+            'ui.settings.xray', 'ui.settings.shake', 'ui.death.wake.ladoga', 'ui.death.wake.krada', 'ui.death.wake.stone',
+            'respawn.ladoga', 'ui.save.broken', 'ui.save.newer', 'ui.save.older', 'bark.ladoga.m1_where',
+            'bark.ladoga.gate_closed', 'ui.death.button']
+for k in need_new:
+    if k not in kv: fail(f'нет ключа {k}')
+checked = 0; worst = {}
+for k, x in kv.items():
+    for pat, lim in LIMITS:
+        if re.fullmatch(pat, k):
+            checked += 1
+            if len(x) > lim: fail(f'{k} > {lim}: {len(x)}')
+            if pat not in worst or len(x) > len(worst[pat][1]): worst[pat] = (k, x)
+print(f'Новые строки v1.3 по пределам GDD: проверено {checked}')
+for pat, lim in LIMITS:
+    if pat in worst: print(f'  ≤ {lim}: самая длинная {len(worst[pat][1])} ({worst[pat][0]})')
+# наборы гибели: 3–5 строк, Ладога / Волхов / Милуша — только в наборе Ладоги
+for place in ('ladoga', 'krada', 'stone'):
+    s_ = [x for k, x in kv.items() if re.fullmatch(rf'death\.{place}\.\d', k)]
+    if not 3 <= len(s_) <= 5: fail(f'death.{place}: строк {len(s_)}')
+    if place != 'ladoga':
+        for x in s_:
+            if re.search(r'Ладог|Волхов|Милуш', x): fail(f'death.{place}: место не то — «{x}»')
+print('Наборы гибели: ' + ', '.join(f"{p_} {len([k for k in kv if re.fullmatch(rf'death[.]{p_}[.][0-9]', k)])}" for p_ in ('ladoga', 'krada', 'stone')))
 
 # 7. генератор вожаков: длина сочетаний
 r9 = data_rows(chunks[9])

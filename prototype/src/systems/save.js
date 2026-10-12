@@ -8,7 +8,7 @@ import { bumpUid } from '../data/items.js';
 
 export const SAVE_KEY = 'bylnebyl.v1.slot1';
 export const SCHEMA = 1;
-const HERO_KEYS = ['level', 'xp', 'base', 'points', 'silver', 'relics', 'letters', 'kills', 'skills', 'bar', 'rmb', 'lmb',
+const HERO_KEYS = ['level', 'xp', 'base', 'points', 'silver', 'relics', 'letters', 'kills', 'skills', 'bar', 'lmb',
   'yarTier', 'yarBonusMax', 'yarRegenBonus', 'bonusSkillPoints', 'equip', 'belt', 'hp', 'yar'];
 const DONE_TYPES = new Set(['hut', 'hearth', 'chest', 'body', 'stone', 'reward']);
 const clone = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
@@ -19,6 +19,7 @@ function invIn(list, w, h) { const inv = new Inventory(w, h); for (const e of li
 export function snapshot(g) {
   const h = g.hero, q = g.quest, hero = {};
   for (const k of HERO_KEYS) hero[k] = clone(h[k]);
+  hero.e = h.rmb;                        // v1.14 E3: навык слота E (в коде поле героя по-прежнему rmb)
   hero.inv = clone(invOut(h.inv));
   const zones = {};
   for (const [id, st] of Object.entries(g.zoneStates || {})) {
@@ -59,6 +60,7 @@ export function writeSave(g, reason) {
 export function applySave(g, d) {
   const h = g.hero;
   for (const k of HERO_KEYS) if (d.hero[k] !== undefined && k !== 'hp' && k !== 'yar') h[k] = clone(d.hero[k]);
+  { const e = d.hero.e !== undefined ? d.hero.e : d.hero.rmb; if (e !== undefined) h.rmb = e; }   // v1.14 E3: старый слот rmb → E, навык не теряется
   h.inv = invIn(d.hero.inv, h.inv.w, h.inv.h);
   h.recalc();
   h.hp = Math.min(h.maxHp, d.hero.hp ?? h.maxHp); h.yar = Math.min(h.maxYar, d.hero.yar ?? h.maxYar);

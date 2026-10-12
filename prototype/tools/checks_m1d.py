@@ -134,7 +134,7 @@ async def run_m1d(pg, G, check, wait, client_of, client_scr, a):
         const cnt = () => h.belt.reduce((a, b) => a + (b && b.kind === 'life1' ? b.count : 0), 0) + h.inv.items.filter(i => i.kind === 'potion' && i.potion === 'life1').length;
         const p0 = cnt(), s0 = h.silver, x0 = h.xp; const L = [], add0 = g.log.add; g.log.add = (tx, c) => { L.push(tx); return add0.call(g.log, tx, c); };
         g.interact(hut); const now = { pot: cnt() - p0, silver: h.silver - s0 }; g.simulate(10); g.log.add = add0; const mal = L.filter(x => x.startsWith('Мал:'));
-        const out = { now, pot: cnt() - p0, silver: h.silver - s0, xp: h.xp - x0, gifts: g.counters.malGift, mal, bark: mal[1] === 'Мал: Вот, мамкины зелья. Тебе нужнее.' };
+        const out = { now, pot: cnt() - p0, silver: h.silver - s0, xp: h.xp - x0, gifts: g.counters.malGift, mal, bark: mal.filter(x => x === 'Мал: Вот, мамкины зелья. Тебе нужнее.').length === 1 };
         g.malGift(); hut.done = false; g.interact(hut); out.again = [cnt() - p0, h.silver - s0, g.counters.malGift]; const G = g.dbg.CFG.quests.m1.malGift; out.data = [G.potions.life1, G.silver, G.xp, G.once];
         out.tip14 = g.t('tip.14'); Math.random = rnd0; return out; })()'''.replace('__P__', P))
     check('M1d п.5 Мал при выходе из избы: +2 слабых зелья жизни, +30 серебра, опыт 0, реплика «Вот, мамкины зелья. Тебе нужнее.»; повторно не даёт; tip.14 в ru.json',

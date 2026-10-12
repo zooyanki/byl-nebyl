@@ -255,8 +255,8 @@ async def run_art(pg, G, check, wait, P):
         const boss = ['k_trail', 'k_aura', 'k_summon', 'k_burst', 'k_feed', 'k_feed_back', 'k_feed_src', 'm_ash', 'm_bolt', 'm_hit', 'a_coal'];
         const m1c = ['p_open', 'p_loop', 'p_fading', 'p_close', 'item_beresta'];
         return { boss: boss.filter(k => R.FX.sheets[k]).length, m1c: m1c.filter(k => R.FX.sheets[k]).length }; })()''')
-    check('арт M1b+m1c: листы Кривши/Мары/анчутки/упыря (6×2) + огнища/идол = 71; 11 FX боссов + 5 m1c (портал×4, береста)',
-          s['ready'] and not s['failed'] and s['n'] == 71 and not s['bad'] and fx['boss'] == 11 and fx['m1c'] == 5, {**s, 'fx': fx})
+    check('арт M1b+m1c: листы Кривши/Мары/анчутки/упыря (6×2) + огнища/идол = 71 (+2 листа священника m1k = 73; +25 листов блока героя и ic_block v1.14 = 99); 11 FX боссов + 5 m1c (портал×4, береста)',
+          s['ready'] and not s['failed'] and s['n'] == 99 and not s['bad'] and fx['boss'] == 11 and fx['m1c'] == 5, {**s, 'fx': fx})
 
     # --- A2. Кривша: подъём, когти (кадр 6 = удар), призыв (кадр 5 = упыри), прыжок (кадр 6 = приземление), выход (кадр 5 = ореол), гибель
     s = await G('''(async () => { const g = __game; __P__

@@ -1,0 +1,57 @@
+{
+ "character": "Ратибор (герой)",
+ "animation": "block_raise",
+ "direction": "s",
+ "mirror_for": null,
+ "mirror_rule": null,
+ "prototype_dirs": [
+  0
+ ],
+ "pivot": [
+  32,
+  56
+ ],
+ "fps": 13,
+ "loop": false,
+ "events": {
+  "block_active_after_last_frame": true,
+  "raised": 1
+ },
+ "visible_height_px": [
+  44,
+  44
+ ],
+ "height_rule": "pivot row (soles) to the top visible pixel, outline included",
+ "anchors": {
+  "shield_center": [
+   [
+    37.4,
+    38.2
+   ],
+   [
+    34.8,
+    34.8
+   ]
+  ],
+  "shield_rim": [
+   [
+    42,
+    33
+   ],
+   [
+    40,
+    30
+   ]
+  ]
+ },
+ "notes": "0,15 с (§4.7): щит от бедра к груди, меч опущен назад. Опускание = эти кадры в обратном порядке.",
+ "image": "hero_block_raise_s.png",
+ "frame_size": [
+  64,
+  64
+ ],
+ "frame_count": 2,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

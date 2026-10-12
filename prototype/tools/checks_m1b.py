@@ -69,11 +69,12 @@ async def run_m1b(pg, G, check, wait, client_of, client_scr, a):
           s['runs'] == 30 and s['deaths'] <= 5 and s['zoneLeft'] == 0, s)
 
     # QA B-26: уход из Залесья посреди диалога Мала
-    s = await G('''(() => { const g = __game; const o = g.objectById('hut3'); g.interact(o); g.simulate(3);
-        const pend = g.dialogQ.map(l => l.text), before = { q: pend.length, mal: g.npcs.filter(n => n.kind === 'mal').length, open: g.quest.flag('trailOpen') };
+    s = await G('''(() => { const g = __game; const o = g.objectById('hut3'); g.dlgAuto = false; g.interact(o); g.update(1 / 60);
+        const dq = () => (g.dlgWin ? 1 : 0) + (g.dlgQueue || []).length + g.dialogQ.length;
+        const pend = g.dialogQ.map(l => l.text), before = { q: dq(), mal: g.npcs.filter(n => n.kind === 'mal').length, open: g.quest.flag('trailOpen') };
         g.enterZone('trail', 'from_zalesye'); for (const e of g.enemies) e.stagger = 1e9; let over = 0;
         g.simulate(9, () => { if (g.fx.texts.some(x => pend.includes(x.str))) over++; return false; });
-        const after = { q: g.dialogQ.length, over };
+        const after = { q: dq(), over }; g.dlgAuto = true;
         g.enterZone('zalesye', 'from_trail'); g.simulate(1); after.malBack = g.npcs.filter(n => n.kind === 'mal' && !n.gone).length;
         for (const e of g.enemies) e.stagger = 0; return { before, after }; })()''')
     check('QA B-26: ушёл на тропу посреди диалога Мала — реплики не висят над Ратибором (только журнал), Мал не застревает у избы 3',

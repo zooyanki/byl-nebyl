@@ -1,0 +1,104 @@
+{
+ "character": "Ратибор (герой)",
+ "animation": "block_walk",
+ "direction": "ne",
+ "mirror_for": "nw",
+ "mirror_rule": "flip horizontally around x = 32.0; pivot stays (32, 56)",
+ "prototype_dirs": [
+  5,
+  3
+ ],
+ "pivot": [
+  32,
+  56
+ ],
+ "fps": 8,
+ "loop": true,
+ "events": {
+  "block_active": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "footstep": [
+   0,
+   3
+  ]
+ },
+ "visible_height_px": [
+  44,
+  43,
+  43,
+  44,
+  43,
+  43
+ ],
+ "height_rule": "pivot row (soles) to the top visible pixel, outline included",
+ "anchors": {
+  "shield_center": [
+   [
+    34.7,
+    29.1
+   ],
+   [
+    34.7,
+    30.3
+   ],
+   [
+    34.7,
+    30.3
+   ],
+   [
+    34.7,
+    29.1
+   ],
+   [
+    34.7,
+    30.3
+   ],
+   [
+    34.7,
+    30.3
+   ]
+  ],
+  "shield_rim": [
+   [
+    36,
+    23
+   ],
+   [
+    36,
+    24
+   ],
+   [
+    36,
+    24
+   ],
+   [
+    36,
+    23
+   ],
+   [
+    36,
+    24
+   ],
+   [
+    36,
+    24
+   ]
+  ]
+ },
+ "notes": "шаг со щитом (скорость × 0,5), цикл 0,75 с",
+ "image": "hero_block_walk_ne.png",
+ "frame_size": [
+  64,
+  64
+ ],
+ "frame_count": 6,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

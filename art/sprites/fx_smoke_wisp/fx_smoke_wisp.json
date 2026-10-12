@@ -1,0 +1,19 @@
+{
+ "effect": "дым из волокового окна / над баней (курная изба, бани)",
+ "pivot": [
+  5,
+  27
+ ],
+ "fps": 5,
+ "loop": true,
+ "anchor": "buildings' anchors_px.smoke (frame-specific); draw over the building, no ink outline",
+ "image": "fx_smoke_wisp.png",
+ "frame_size": [
+  14,
+  28
+ ],
+ "frame_count": 4,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

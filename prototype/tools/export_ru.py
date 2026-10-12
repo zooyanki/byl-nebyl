@@ -1,4 +1,4 @@
-"""Сборка data/ru.json из текстов сценариста (только чтение /workspace/game/story/act1_texts.md).
+"""Сборка data/ru.json из текстов сценариста (только чтение game/story/act1_texts.md).
 Запуск из папки prototype:  python3 tools/export_ru.py
 Берутся все строки таблиц, где первая ячейка — `ключ`. Двухколоночные — строка; многоколоночные — объект
 по заголовкам таблицы. Особые случаи: plural.* → [one, few, many]; skill.* → {name, branch, chant, desc}.
@@ -64,7 +64,9 @@ PROTO = {
     "proto.potion.res.yar": "к Удали",
     "proto.skills.lmb_basic": "На ЛКМ · без Удали — обычный удар",
     "proto.hero.attr.ene": "Дух: +2 к Удали, +1% к урону ведовства",
-    "proto.help.rmb": "Огненный змей (Удали: {n})",
+    "proto.help.e": "{skill} (Удали: {n})",
+    "proto.help.block.key": "ПКМ",
+    "proto.help.block": "щит: держать (Удали: {n} за удар)",   # v1.14: текст §12.2.4 не влезает в справку паузы (287 px при 204) — сокращён
     "proto.labels.always": "Подписи добычи: всегда",
     "proto.labels.alt": "Подписи добычи: по Alt",
     # веха m1i (critics_m1f П.12–13, 15): столбец цены в торге, справка паузы и переключатели, главное меню — строки, раньше
@@ -76,13 +78,15 @@ PROTO = {
     "proto.toggle.on": "вкл",
     "proto.toggle.off": "выкл",
     "proto.pause.hint": "Пауза — Esc, чтобы продолжить",
+    # веха m1j (GDD v1.13 §4.6, §10.5): переключатель «Тряска при ударе» (settings.shake), строка очка навыка на плашке «Награда»
+    "proto.reward.skill": "{line} · T — навыки",
     "proto.help.move.key": "ЛКМ / зажать ЛКМ",
     "proto.help.move": "идти; по нечисти — бить",
     "proto.help.stand.key": "Shift + ЛКМ",
     "proto.help.stand": "бить на месте",
     "proto.help.pickup.key": "ЛКМ по подписи",
     "proto.help.pickup": "поднять добычу (серебро — само)",
-    "proto.help.rmb.key": "ПКМ",
+    "proto.help.e.key": "E",
     "proto.help.dash": "рывок к курсору (Удаль не тратит)",
     "proto.help.belt.key": "1–4",
     "proto.help.belt": "выпить зелье из пояса",
@@ -118,16 +122,16 @@ PROTO = {
     "proto.sys.sound_on": "Звук включён",
     "proto.sys.lmb_set": "ЛКМ: {skill}",
     "proto.sys.lmb_basic": "обычный удар",
-    "proto.sys.rmb_set": "ПКМ: {skill}",
+    "proto.sys.e_set": "E: {skill}",
     "proto.small_window": "Окно меньше 640×360 — текст будет нечётким. Увеличьте окно.",
     "proto.hud.silver_label": "Серебро:",
     "proto.hud.lvl": "ур.",
     "proto.hud.lmb": "ЛКМ",
-    "proto.hud.rmb": "ПКМ",
+    "proto.hud.e": "E",
     "proto.hud.muted": "Звук выключен (N)",
     "proto.hud.labels_always": "Подписи: всегда (Z)",
     "proto.hud.killed": "Убито {n}/{total}",
-    "proto.hud.ctrl_hint": "ЛКМ — идти/бить · ПКМ — навык · F1–F6 — выбрать навык · Пробел — рывок · T — навыки · Alt — подписи · Tab — карта",
+    "proto.hud.ctrl_hint": "ЛКМ — идти/бить · E — навык · ПКМ — щит · F1–F6 — на E · Пробел — рывок · T — навыки · Alt — подписи · Tab — карта",
     "proto.hud.belt_slot": "{item} ×{n} — клавиша {key}",
     "proto.hud.belt_empty": "Пустая ячейка пояса",
     "proto.hud.skill_empty": "F{n}: пусто — наведи на навык в окне «Навыки» (T) и нажми F{n}",
@@ -151,7 +155,7 @@ PROTO = {
     "proto.skills.tier_start": "с начала",
     "proto.skills.soon": "появится позже",
     "proto.skills.passive": "пасс.",
-    "proto.skills.hint": "ЛКМ по навыку — на ПКМ · F1–F6 над навыком — в ячейку",
+    "proto.skills.hint": "ЛКМ по навыку — на E · F1–F6 над навыком — в ячейку",
     "proto.skills.not_impl": "Навык появится в следующих итерациях",
     "proto.skills.from_items": "(+{n} с вещей)",
     "proto.log.dropped": "Выброшено: {item}",
@@ -164,7 +168,7 @@ PROTO = {
     "proto.hero.to_level": "До уровня {n}",
     "proto.hero.free_points": "Свободных очков",
     "proto.hero.dmg_lmb": "Урон ЛКМ",
-    "proto.hero.dmg_rmb": "Урон ПКМ",
+    "proto.hero.dmg_e": "Урон E",
     "proto.hero.hit_chance": "Шанс попасть",
     "proto.hero.hint_points": "Жми [+], чтобы вложить свободные очки",
     "proto.hero.hint_nopoints": "Очки свойств даются за новый уровень (+5)",
@@ -235,11 +239,14 @@ for i, ln in enumerate(lines):
     if re.match(r"^\|\s*:?-{3,}", ln):
         continue
     cs = cells(ln)
-    m = re.match(r"^\s*`([a-z0-9_.]+)`\s*$", cs[0])
+    m = re.match(r"^\s*`([A-Za-z0-9_.]+)`\s*$", cs[0])   # m1k: ключи с заглавной (ui.settings.navArrow)
     if not m:
         continue
     key, vals = m.group(1), [clean(c) for c in cs[1:]]
-    if key in SKIP or not key[0].isalpha():
+    if key in SKIP or not key[0].isalpha() or "." not in key:     # m1j: §5.0 «Говорящие» — id ролей без точки, не строки
+        continue
+    if header and header[0] == "Ключ реплики" and len(vals) >= 4:      # m1j (v1.3): реплика окна диалога dlg.* — §5
+        out[key] = {"dlg": vals[0], "n": int(vals[1]) if vals[1].strip().isdigit() else vals[1], "who": vals[2], "text": re.sub(r"\s*\[ACT1[^\]]*\]", "", vals[3]).strip()}   # m1k: пометка источника [ACT1] — не текст реплики
         continue
     if key.startswith("plural."):
         out[key] = vals[:3]
@@ -285,7 +292,9 @@ def npc_dialogs():
     out["npc.vyshata.s1"] = quotes(sec.split("После миссии 1:", 1)[1].split("- После", 1)[0])
     s5 = src.split("## 5. Диалоги", 1)[1].split("\n## ", 1)[0]
     parts = re.split(r"\n### ", s5)
-    for part, role in ((parts[1], "tverdyata"), (parts[2], "vedana")):
+    # m1j: сценарист (act1_texts v1.3) добавил подраздел «5.0. Говорящие» — части ищем по заголовку, а не по номеру
+    byname = lambda nm: next(p for p in parts if p.split("\n", 1)[0].find(nm) >= 0)
+    for part, role in ((byname("Твердята"), "tverdyata"), (byname("Милуша"), "vedana")):
         g = re.search(r"«(.+?)»", part)
         out["npc." + role + ".greet"] = g.group(1)
         reps = re.search(r"Повторяющиеся \*\*\[ACT1\]\*\*: (.+)", part)
@@ -295,21 +304,58 @@ def npc_dialogs():
             out[key] = quotes(block)
         for key, text in re.findall(r"`(npc\.[a-z0-9_.]+)` «(.+?)»", part):
             out[key] = text
+    # m1k: короткие реплики окна по всему §5 — «`npc.x.y`: «…»» и «`npc.x.y` «…»» (npc.vyshata.idle_m1, npc.priest.greet, npc.sbyslav.*)
+    for key, text in re.findall(r"`(npc\.[a-z0-9_]+\.[a-z0-9_.]+)`:? «(.+?)»", s5):
+        out.setdefault(key, text)
+    # m1k: §5.0 «Говорящие» — имена в окне (npc.ratibor, npc.sbyslav, …)
+    for nk, name in re.findall(r"^\|\s*`[a-z]+`\s*\|\s*`(npc\.[a-z]+)`\s*\|\s*([^|]+?)\s*\|", s5, re.M):
+        out.setdefault(nk, name)
     # Мал: приветствие и слухи С1 (в Ладоге со сдачи М1)
-    mal = parts[3] if len(parts) > 3 else ""
+    mal = byname("Мал")                     # m1j: по заголовку (v1.3 добавил §5.0)
     mg = re.search(r"«(.+?)»", mal)
     if mg: out["npc.mal.greet"] = mg.group(1)
     mb = re.search(r"`npc\.mal\.s1`\*\*\n((?:>.*\n)+)", mal)
     if mb: out["npc.mal.s1"] = quotes(mb.group(1))
-    assert out["npc.vyshata.s0"] and out["npc.vyshata.s1"] and out.get("npc.tverdyata.s0") and out.get("npc.vedana.s0"), list(out)
+    # m1j: act1_texts v1.3 переводит диалоги на ключи dlg.* (окно диалога, GDD §10.4 — задача D6, не этой партии); пока код
+    # читает старые массивы, недостающие старые ключи диалогов берутся из прежнего data/ru.json (тексты не меняются)
+    try: prev = json.load(open(OUT, encoding="utf-8"))
+    except Exception: prev = {}
+    for k in ("npc.vyshata.s0", "npc.vyshata.s1", "npc.tverdyata.s0", "npc.tverdyata.s1", "npc.vedana.s0", "npc.vedana.s1", "npc.mal.s1", "npc.mal.greet", "dialog.m1.mal"):
+        if not out.get(k) and prev.get(k):
+            out[k] = prev[k]; print("  [m1j] старый ключ диалога из прежнего ru.json:", k)
     return out
 
+import sys
+PROTO_ONLY = "--proto-only" in sys.argv
+if PROTO_ONLY:
+    # m1j: act1_texts.md сейчас в работе у сценариста (v1.3: dlg.*, death.<место>.N — задачи D6/D14, не этой партии); полная
+    # пересборка сняла бы death.line1–5 и старые массивы диалогов, которые ещё читает код. Режим --proto-only берёт текущий
+    # data/ru.json как есть (тексты сценариста не трогает) и обновляет только словарь PROTO.
+    prev = json.load(open(OUT, encoding="utf-8")); about = prev.pop("_about", "")
+    out = prev
+    out.update(PROTO)
+    json.dump({"_about": about, **dict(sorted(out.items()))}, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    print(len(out), "ключей →", os.path.relpath(OUT), "(--proto-only)")
+    sys.exit(0)
 out.update(act1_strings())
 out.update(npc_dialogs())
 out.update(PROTO)
 for k in SKIP:
     out.pop(k, None)
-doc = {"_about": "Тексты интерфейса и игры (источник — story/act1_texts.md v1.2, сборка tools/export_ru.py; правки GDD v1.4 §12.2.1). "
+# m1k (D6, GDD v1.13.1): старые массивы диалогов npc.*.s0–s3 / npc.*.rep и dialog.m1.mal устарели — окно диалога читает только
+# dlg.* (data/dialogues.json); код их больше не читает, в ru.json не выгружаем
+OBSOLETE = re.compile(r"^(npc\.[a-z]+\.(s[0-3]|rep)|dialog\.m1\.mal|ui\.tut\.rmb|ui\.skills\.to_rmb)$")   # v1.14 §12.2.4: ui.tut.rmb → ui.tut.skill_e, ui.skills.to_rmb → ui.skills.to_e
+for k in [k for k in out if OBSOLETE.match(k)]:
+    out.pop(k)
+# m1j (v1.3): ключи, которых в act1_texts больше нет (death.line1–5 → death.<место>.N, npc.*.s2/s3/rep → dlg.*), код ещё читает —
+# сценарист разрешил держать их в ru.json до перехода на dialogues.json (§5, D6/D14). Переносим из прежнего ru.json как есть.
+try: prev_all = json.load(open(OUT, encoding="utf-8"))
+except Exception: prev_all = {}
+legacy = sorted(k for k in prev_all if k != "_about" and k not in out and not k.startswith("proto.") and not OBSOLETE.match(k))
+for k in legacy:
+    out[k] = prev_all[k]
+if legacy: print("  [m1j] устаревшие ключи сохранены из прежнего ru.json:", len(legacy))
+doc = {"_about": "Тексты интерфейса и игры (источник — story/act1_texts.md v1.3, сборка tools/export_ru.py; правки GDD v1.4 §12.2.1). "
                  "Ключи quest.*, dialog.*, letter.*, npc.* — из act1.md v1.1 дословно; proto.* — заглушки прототипа (нет у сценариста). "
                  "Серебро по числам не склоняется («Серебро: N», «Потеряно серебра: N», «N сер.»), счётные слова — plural(n, one, few, many) (§10.1).",
        **dict(sorted(out.items()))}

@@ -6,6 +6,7 @@ import { rect } from '../render/shapes.js';
 import { drawText, textWidth } from '../core/font.js';
 import { t, RU, silverText } from '../core/i18n.js';
 import { CFG } from '../data/config.js';
+import { S as STATS } from '../data/progression.js';
 import { POTIONS, makePotion, makeScroll } from '../data/items.js';
 import { itemColor } from '../systems/loot.js';
 import { priceOf, sellPrice, ensureShops } from '../systems/trade.js';
@@ -78,13 +79,24 @@ export class TownUI {
     g.ui.charOpen = false;
     this.open = true; this.mode = 'menu'; this.npc = npc; this.role = npc.role; this.tab = 'buy';
     g.audio.play('ui');
-    const greet = RU['npc.' + npc.role + '.greet'];
-    if (typeof greet === 'string') g.bark(npc, 'greet-' + npc.role, greet);
-    if (npc.role === 'vyshata') { g.quest.flags.vyshataSpoke = true; this.claimM1(); }
-    if (npc.role === 'mal') { this.rumorLine(); return; }
-    const stage = g.quest.flag('m1.turnedIn') ? 's1' : 's0';
-    const key = npc.role + ':' + stage;
-    if (!this.seen[key]) { this.seen[key] = true; this.play(npc.role, stage); }
+    // v1.13 §10.4 (D6): диалог стадии — в окне диалога (dialogues.json, ключи dlg.*), один раз; дальше — короткая реплика
+    if (npc.role === 'vyshata') { g.quest.flags.vyshataSpoke = true; if (this.claimM1()) { this.seen['vyshata:s1'] = true; g.startDialog('vyshata.s1', npc); return; } }
+    const stage = this.stage(), key = npc.role + ':' + stage;
+    if (!this.seen[key] && this.hasDialog(npc.role, stage)) { this.seen[key] = true; g.startDialog(npc.role + '.' + stage, npc); return; }
+    this.repeatLine(npc);
+  }
+  stage() { return this.game.quest.flag('m1.turnedIn') ? 's1' : 's0'; }
+  hasDialog(role, stage) { const D = CFG.dialogues && CFG.dialogues.dialogues; return !!(D && D[role + '.' + stage]); }
+  /** Повторный разговор (§10.4): одна короткая реплика (npc.*.greet / idle* по кругу; Вышата до сдачи М1 — npc.vyshata.idle_m1). */
+  repeatLine(npc) {
+    const R = (CFG.dialogues && CFG.dialogues.repeat) || {}, r = R[npc.role];
+    if (!r) return false;
+    const list = Array.isArray(r) ? r : (npc.role === 'vyshata' && !this.game.quest.flag('m1.turnedIn') ? r.beforeTurnIn : r.default);
+    const keys = (list || []).filter((k) => RU[k] != null);
+    if (!keys.length) return false;
+    this.repI = this.repI || {};
+    const i = this.repI[npc.role] || 0; this.repI[npc.role] = i + 1;
+    return this.game.shortLine(npc, keys[i % keys.length]);
   }
   openStash() {
     const g = this.game;
@@ -93,16 +105,10 @@ export class TownUI {
     this.open = true; this.mode = 'stash'; this.role = 'stash'; this.npc = null;
     g.audio.play('ui');
   }
-  play(role, stage) {
-    const lines = RU['npc.' + role + '.' + stage];
-    if (Array.isArray(lines)) this.game.dialog(lines);
-  }
-  rumorLine() {
-    const lines = RU['npc.mal.s1'];
-    if (!Array.isArray(lines) || !lines.length) return;
-    const line = lines[this.rumor % lines.length];
-    this.rumor++;
-    this.game.dialog([line]);
+  /** «Говорить» (ui.npc.talk): снова проиграть диалог стадии (act1_texts §5); нет диалога — короткая реплика. */
+  talk() {
+    const g = this.game, st = this.stage();
+    if (this.npc && this.hasDialog(this.role, st)) g.startDialog(this.role + '.' + st, this.npc); else if (this.npc) this.repeatLine(this.npc);
   }
 
   claimM1() {
@@ -119,10 +125,13 @@ export class TownUI {
     q.flags['m1.turnedIn'] = true;
     q.flags.m1Reward = true;
     g.say(this.npc, R.bark || 'bark.vyshata.reward');
-    g.notify(t('ui.sys.reward_silver', { n: R.silver }), PAL.bronze_hi, 'rew-s');
-    g.notify(t('ui.hero.yar_tier'), PAL.blue_lt, 'rew-y');
-    g.notify(t('ui.sys.reward_skill'), PAL.bronze_lt, 'rew-p');
-    g.notify(t('ui.sys.mission_open', { mission: t('ui.map.m2') }), PAL.bronze_hi, 'm2');
+    // GDD v1.13 §10.5 (D13): одна плашка «Награда» со всеми наградами сразу (6 с); «Открыта миссия 2» — обычным уведомлением после неё
+    const rows = [];
+    if (R.silver) rows.push({ text: t('ui.sys.reward_silver', { n: R.silver }), color: PAL.bronze_hi });
+    if (R.yarTier) rows.push({ text: t('ui.hero.yar_tier'), color: PAL.blue_lt });
+    if (R.skillPoints) rows.push({ text: t('proto.reward.skill', { line: t('ui.sys.reward_skill') }), color: PAL.bronze_lt });
+    g.showReward(rows, () => g.notify(t('ui.sys.mission_open', { mission: t('ui.map.m2') }), PAL.bronze_hi, 'm2'));
+    if (R.yarTier) h.yarGlow = Math.max(h.yarGlow || 0, (STATS.hitFx && STATS.hitFx.yarGlow) || 0.15);   // шар Удали вспыхивает (риска «I» — hud)
     g.log.add(t('ui.sys.reward_silver', { n: R.silver }) + ' · ' + t('ui.hero.yar_tier') + ' · ' + t('ui.sys.reward_skill'), PAL.bronze_lt);
     g.audio.play('silver');
     ensureShops(g, true);
@@ -232,11 +241,11 @@ export class TownUI {
     if (!hit) return this.over(mx, my);
     const g = this.game;
     if (hit.id === 'close' || hit.id === 'leave') { this.close(); g.audio.play('ui'); return true; }
-    if (hit.id === 'talk') { if (this.role === 'mal') this.rumorLine(); else this.play(this.role, g.quest.flag('m1.turnedIn') ? 's1' : 's0'); return true; }
+    if (hit.id === 'talk') { this.talk(); return true; }
     if (hit.id === 'trade') {
       this.mode = 'trade'; this.tab = 'buy';
-      const rep = RU['npc.' + this.role + '.rep'];
-      if (Array.isArray(rep) && rep[0] && this.npc) g.bark(this.npc, 'rep-' + this.role, rep[0]);
+      const rep = RU['npc.' + this.role + '.idle1'];   // m1k: реплика при торговле — npc.*.idle1 (act1_texts v1.3 §5), старые .rep устарели
+      if (typeof rep === 'string' && this.npc) g.bark(this.npc, 'rep-' + this.role, rep);
       return true;
     }
     if (hit.id === 'heal') { this.heal(); return true; }

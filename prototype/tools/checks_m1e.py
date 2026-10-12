@@ -1,8 +1,10 @@
 # Вехи M1e: хаб Ладога (GDD v1.10 §7–§8.2). Город — серый ящик; миссия 2 не начинается.
 import os
+from pathlib import Path
 
-SHOT = '/workspace/game/prototype/screenshot_m1e.png'
-SHOT_B = '/workspace/game/prototype/screenshot_m1e_b.png'
+ROOT = str(Path(__file__).resolve().parent.parent) + '/'   # B-39: корень прототипа от расположения файла
+SHOT = ROOT + 'screenshot_m1e.png'
+SHOT_B = ROOT + 'screenshot_m1e_b.png'
 
 async def run_m1e(pg, G, check, wait, client_of, client_scr, a):
     print('--- веха M1e', flush=True)
@@ -36,20 +38,25 @@ async def run_m1e(pg, G, check, wait, client_of, client_scr, a):
           st['z'] == 'ladoga' and abs(st['x'] - 26.5) < 0.6 and abs(st['y'] - 44.5) < 0.6
           and abs(s['pierX'] - 24.5) < 0.4 and abs(s['pierY'] - 41.5) < 0.4 and abs(s['cx'] - 34.5) < 0.4 and abs(s['cy'] - 19.5) < 0.4, {'start': st, 'vy': s})
 
+    # v1.14 E4 (§12.4.1): выход в Ладогу — устье тропы у западного края (0,7; 29,6): достижим пешком, вне круга костра,
+    # путь «вход → круг костра» не втягивает стаи; пешком в Ладогу и обратно
     walk = await G('''(() => { const g = __game, h = g.hero;
-        g.enterZone('zalesye', 'krada');
-        const o = g.objectById('to_ladoga'), k = g.map.krada;
-        const dist = Math.hypot(o.x - k.x, o.y - k.y);
-        const walk = g.map.isReachableAt(o.x, o.y);
-        h.x = o.x; h.y = o.y - 1.15; h.stop(); h.moveTo(g.map, o.x, o.y);
+        delete g.zoneStates.zalesye; g.enterZone('zalesye', 'from_ladoga');
+        const o = g.objectById('to_ladoga'), k = g.map.krada, R = (g.zone.krada && g.zone.krada.safeRadius) || 10;
+        const dist = Math.hypot(o.x - k.x, o.y - k.y), walk = ((o) => { for (let a = 0; a < 6.28; a += 0.2) for (let d = 0; d <= o.r; d += 0.1) if (g.map.isReachableAt(o.x + Math.cos(a) * d, o.y + Math.sin(a) * d)) return true; return false; })(o);   // центр устья — у кромки воды; достижим круг выхода r
+        const pulled = new Set(); h.invuln = 1e9; h.moveTo(g.map, k.x, k.y + 1.5);
+        const t0 = g.time; g.simulate(8, () => { for (const e of g.enemies) if (!e.dead && e.state !== 'idle') pulled.add(e); return Math.hypot(h.x - k.x, h.y - k.y) < R - 0.5; });
+        const inCircle = Math.hypot(h.x - k.x, h.y - k.y) < R, tCircle = +(g.time - t0).toFixed(2);
+        h.x = 3.0; h.y = 31.0; h.stop(); h.moveTo(g.map, o.x, o.y);
         g.simulate(6, () => g.zone.id === 'ladoga');
         const toTown = g.zone.id;
         const b = g.objectById('to_zalesye');
         h.x = b.x - 1.4; h.y = b.y; h.stop(); h.moveTo(g.map, b.x, b.y);
-        g.simulate(6, () => g.zone.id === 'zalesye');
-        return { dist: +dist.toFixed(2), walk, toTown, back: g.zone.id }; })()''')
-    check('M1e выход (16; 31) проходим и внутри круга крады; пешком в Ладогу и обратно',
-          walk['walk'] and walk['dist'] < 10 and walk['toTown'] == 'ladoga' and walk['back'] == 'zalesye', walk)
+        g.simulate(6, () => g.zone.id === 'zalesye'); h.invuln = 0;
+        return { dist: +dist.toFixed(2), walk, inCircle, tCircle, pulled: pulled.size, toTown, back: g.zone.id, at: [+h.x.toFixed(2), +h.y.toFixed(2)] }; })()''')
+    check('M1e / v1.14 E4: выход (0,7; 29,6) проходим и вне круга костра; путь вход → круг без втягивания стай; пешком в Ладогу и обратно (приход на (3; 31))',
+          walk['walk'] and walk['dist'] > 10 and walk['inCircle'] and walk['pulled'] == 0 and walk['toTown'] == 'ladoga' and walk['back'] == 'zalesye'
+          and abs(walk['at'][0] - 3.0) < 0.3 and abs(walk['at'][1] - 31.0) < 0.3, walk)
 
     price = await G('''(() => { const g = __game;
         const w = g.give('sword_1', 'normal', { ilvl: 1 });
@@ -101,8 +108,8 @@ async def run_m1e(pg, G, check, wait, client_of, client_scr, a):
         const court = g.npcs.find(n => n.role === 'vyshata');
         h.x = north.x; h.y = north.y + 1.6; g.notice = null; g.simulate(0.05);
         const openNote = g.notice && g.notice.text;
-        h.x = west.x + 1.6; h.y = west.y; g.notice = null; g._gateWarn = 0; west.warnT = 0; g.simulate(0.05);
-        return { beforeBtn, s0, y0, r0, p0, y1, r1, p1, bark, mal, northWall: !!north.wall, westWall: !!west.wall,
+        const wg = g.objectById('gate_west') || west; h.x = wg.x + 1.6; h.y = wg.y; g.notice = null; g._gateWarn = 0; west.warnT = 0; wg.nearT = -99; g.simulate(0.05);
+        return { beforeBtn, s0, y0, r0, p0, y1, r1, p1, bark, mal, northWall: !!north.wall, westWall: !!west.wall || !!(g.objectById('gate_west') || {}).wall,
           s1, s2: h.silver, uSame: u0 === u1, px, py, holdX, holdY, cx: court.x, cy: court.y, openNote, westNote: g.notice && g.notice.text,
           regen: +(r1 / (r0 * (y1 / y0) * 1.1)).toFixed(3), turned: !!q.flags['m1.turnedIn'] }; })()''')
     check('M1e награда только у Вышаты при сдаче: +300, Ярь I (+15 и +10% восстановления), +1 очко, один раз',
@@ -158,7 +165,7 @@ async def run_m1e(pg, G, check, wait, client_of, client_scr, a):
         g.stash.autoAdd(it); h.inv.remove(it); g.stashSilver = 40; h.silver = 100;
         g.enterZone('zalesye', 'krada'); g.enterZone('ladoga', 'from_zalesye');
         const kept = g.stash.items.includes(it) && g.stashSilver == 40;
-        h.invuln = 0; h.hp = 1; h.takeDamage(99999, g); g.respawnHero();
+        h.invuln = 0; h.hp = 1; h.takeDamage(99999, g, 'fire'); g.respawnHero();   /* m1j: не melee — иначе бросок блока иногда спасает героя */
         return { kept, zone: g.zone.id, bag: h.silver, stash: g.stashSilver, still: g.stash.items.includes(it) }; })()''')
     check('M1e ладья хранит вещь и серебро после ухода и смерти; с котомки −10%, точка воскрешения миссии 1 — Залесье',
           death['kept'] and death['still'] and death['stash'] == 40 and death['bag'] == 90 and death['zone'] == 'zalesye', death)

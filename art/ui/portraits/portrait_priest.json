@@ -1,0 +1,13 @@
+{
+ "image": "portrait_priest.png",
+ "size": [
+  64,
+  64
+ ],
+ "who": "Поп Иоанн (H19, speaker id priest)",
+ "draw_at": "(130, 234) inside a 68×68 code-drawn frame at (128, 232), GDD §10.4",
+ "light": "top-left",
+ "background": "night / slate_dk, opaque",
+ "palette": "palette_v2",
+ "alpha": "opaque (255)"
+}

@@ -1,0 +1,10 @@
+{
+ "what": "▼ 7×5 — more text / next line, at (502, 298); bob 1 px at 2 Hz by code optional",
+ "image": "ui_dlg_more.png",
+ "size": [
+  7,
+  5
+ ],
+ "palette": "palette_v2",
+ "alpha": "0/255 only"
+}

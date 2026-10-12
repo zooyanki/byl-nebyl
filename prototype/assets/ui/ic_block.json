@@ -1,0 +1,31 @@
+{
+ "name": "ic_block",
+ "frame_size": [
+  16,
+  16
+ ],
+ "frame_count": 2,
+ "frames": {
+  "normal": 0,
+  "broken": 1
+ },
+ "states_prototype": {
+  "ready": "normal",
+  "raised": "normal (+ обводка bronze_hi кодом, как сейчас)",
+  "broken": "broken (+ cooldownSector кодом, как сейчас)",
+  "none": "normal с затемнением (rect slate_dk alpha 0.6, как у навыков без Яри) — отдельного кадра нет"
+ },
+ "slot": {
+  "x": 509,
+  "y": 342,
+  "s": 18,
+  "icon_at": [
+   510,
+   343
+  ]
+ },
+ "palette": "palette_v2",
+ "alpha": "0/255 (иконка непрозрачна целиком)",
+ "source": "art/ui/src/ic_block.py; рисунок щита = sprites_rus._shield",
+ "gdd": "v1.14 §12.1.8 H22"
+}

@@ -1,0 +1,19 @@
+{
+ "what": "dialogue window frame, prebaked at window size 400×88 (GDD §10.4)",
+ "draw_at": "window x − 1, y − 1 = (119, 221)",
+ "interior": "transparent: engine fills the inside with night at alpha 0.92 before drawing the frame",
+ "inner_rect_in_image": [
+  8,
+  8,
+  386,
+  74
+ ],
+ "style": "ui_rus.carved_frame (quest tracker / HUD v2), notches unchanged",
+ "image": "ui_dlg_frame_400x88.png",
+ "size": [
+  402,
+  90
+ ],
+ "palette": "palette_v2",
+ "alpha": "0/255 only"
+}

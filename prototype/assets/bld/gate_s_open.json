@@ -1,0 +1,159 @@
+{
+ "object": "Ворота частокола Ладоги — южные (пристань), открыты",
+ "footprint_tiles": [
+  4,
+  1
+ ],
+ "world_min_corner": [
+  22,
+  37
+ ],
+ "pivot": [
+  34,
+  111
+ ],
+ "proto_corner_px": [
+  10,
+  91
+ ],
+ "footprint_px": [
+  [
+   10,
+   91
+  ],
+  [
+   74,
+   123
+  ],
+  [
+   58,
+   131
+  ],
+  [
+   -6,
+   99
+  ]
+ ],
+ "front_corner_px": [
+  58,
+  131
+ ],
+ "heights_px": {
+  "opening": 72,
+  "posts": 96,
+  "lintel": "84–90",
+  "torches": 48,
+  "bar": null
+ },
+ "replaces": "the prototype palisade props of the 2 gatepost cells (a = 0 and a = 3 of the footprint) incl. their torches and the lintel/disc drawn by the right gatepost",
+ "anchors_px": {
+  "torch_A": [
+   10,
+   44
+  ],
+  "torch_B": [
+   49,
+   64
+  ],
+  "mark": [
+   34,
+   15
+  ],
+  "caption": [
+   34,
+   11
+  ]
+ },
+ "torch_flame_px": {
+  "torch_A": [
+   [
+    10,
+    44
+   ],
+   [
+    10,
+    44
+   ],
+   [
+    10,
+    44
+   ],
+   [
+    10,
+    44
+   ]
+  ],
+  "torch_B": [
+   [
+    49,
+    64
+   ],
+   [
+    49,
+    64
+   ],
+   [
+    49,
+    64
+   ],
+   [
+    49,
+    64
+   ]
+  ]
+ },
+ "leaves": "open inward (toward the town, −y)",
+ "sort": "use the two segment sheets _A / _B, each sorted like a 1×1 palisade cell (scale.md §4.1: long objects in 1–2 tile segments); the full sheet is for previews / static shots",
+ "segments": {
+  "A": {
+   "tile_offset": [
+    0,
+    0
+   ],
+   "world_tile": [
+    22,
+    37
+   ],
+   "pivot": [
+    10,
+    99
+   ]
+  },
+  "B": {
+   "tile_offset": [
+    3,
+    0
+   ],
+   "world_tile": [
+    25,
+    37
+   ],
+   "pivot": [
+    58,
+    123
+   ]
+  }
+ },
+ "xray": {
+  "rule": "scale.md 1.4 §4.4 / GDD v1.13 §10.3: if the sprite intersects the ellipse rx 56, ry 40 px centred at hero pivot − 22 px and the building sorts IN FRONT of the hero, draw the whole sprite at alpha 0.35 (0.2 s transition); hero gets a 1-px bronze_hi outline when ≥ 25% covered",
+  "alpha": 0.35,
+  "ellipse_px": [
+   56,
+   40
+  ],
+  "hero_center_offset_y": -22
+ },
+ "torch_light": "code light r 3 tiles, flame colour, only when open",
+ "fps": 8,
+ "loop": true,
+ "disc": "plain bronze disc on the lintel, unchanged from the prototype (no rosette edits)",
+ "image": "gate_s_open.png",
+ "frame_size": [
+  70,
+  127
+ ],
+ "frame_count": 4,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

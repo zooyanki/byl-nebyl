@@ -70,66 +70,63 @@
   "gaps": [
    [
     39,
-    21,
+    20,
     1,
-    2
+    4
    ],
    [
-    23,
+    22,
     6,
-    2,
+    4,
     1
    ],
    [
     8,
-    21,
+    20,
     1,
-    2
+    4
    ],
    [
-    23,
+    22,
     37,
-    2,
+    4,
     1
    ]
   ]
  },
  "props": [
   [
-   "izba",
-   17,
+   "church",
    26,
-   4,
+   9,
+   6,
    [
-    17,
     26,
-    4,
+    9,
+    6,
     4
-   ]
+   ],
+   {
+    "id": "church",
+    "door": "+y"
+   }
   ],
   [
-   "izba",
-   27,
-   26,
-   5,
-   [
-    27,
-    26,
-    5,
-    4
-   ]
-  ],
-  [
-   "izba",
+   "izba_seni",
    33,
-   14,
-   5,
+   8,
+   6,
    [
     33,
-    14,
-    5,
-    5
-   ]
+    8,
+    6,
+    4
+   ],
+   {
+    "id": "seni_ne",
+    "door": "+y",
+    "variant": "tes"
+   }
   ],
   [
    "izba",
@@ -141,67 +138,309 @@
     8,
     4,
     4
-   ]
+   ],
+   {
+    "id": "izba_nw",
+    "door": "+y",
+    "variant": "dern"
+   }
   ],
   [
-   "izba",
+   "izba_podklet",
    15,
    8,
-   4,
+   5,
    [
     15,
     8,
-    4,
-    4
-   ]
+    5,
+    5
+   ],
+   {
+    "id": "podklet_nw",
+    "door": "+x",
+    "variant": "tes_kon"
+   }
   ],
   [
-   "izba",
-   29,
-   8,
+   "hlev",
+   10,
+   14,
+   4,
+   [
+    10,
+    14,
+    4,
+    3
+   ],
+   {
+    "id": "hlev_nw",
+    "door": "+x",
+    "variant": "dern"
+   }
+  ],
+  [
+   "lavka",
+   30,
+   14,
+   3,
+   [
+    30,
+    14,
+    3,
+    2
+   ],
+   {
+    "id": "lavka_e",
+    "door": "+y"
+   }
+  ],
+  [
+   "izba_seni",
+   9,
+   25,
    6,
    [
-    29,
-    8,
+    9,
+    25,
     6,
     4
-   ]
+   ],
+   {
+    "id": "seni_sw",
+    "door": "+x",
+    "variant": "dern"
+   }
   ],
   [
    "izba",
-   12,
+   13,
    31,
    4,
    [
-    12,
+    13,
     31,
     4,
     4
-   ]
+   ],
+   {
+    "id": "izba_sw",
+    "door": "+x",
+    "variant": "tes_prich"
+   }
   ],
   [
-   "izba",
+   "banya",
    9,
-   26,
+   32,
    3,
    [
     9,
-    26,
+    32,
     3,
     3
-   ]
+   ],
+   {
+    "id": "banya_sw",
+    "door": "+x",
+    "variant": "dern"
+   }
+  ],
+  [
+   "klet",
+   18,
+   32,
+   3,
+   [
+    18,
+    32,
+    3,
+    3
+   ],
+   {
+    "id": "klet_sw",
+    "door": "+x",
+    "variant": "tes"
+   }
+  ],
+  [
+   "masterskaya",
+   33,
+   25,
+   5,
+   [
+    33,
+    25,
+    5,
+    4
+   ],
+   {
+    "id": "masterskaya",
+    "door": "+y",
+    "variant": "tes"
+   }
+  ],
+  [
+   "izba",
+   27,
+   31,
+   4,
+   [
+    27,
+    31,
+    4,
+    4
+   ],
+   {
+    "id": "izba_se",
+    "door": "+y",
+    "variant": "tes_kon"
+   }
+  ],
+  [
+   "banya",
+   32,
+   31,
+   3,
+   [
+    32,
+    31,
+    3,
+    3
+   ],
+   {
+    "id": "banya_se",
+    "door": "+y",
+    "variant": "tes"
+   }
+  ],
+  [
+   "ambar",
+   36,
+   31,
+   3,
+   [
+    36,
+    31,
+    3,
+    3
+   ],
+   {
+    "id": "ambar_se",
+    "door": "+y",
+    "variant": "tes"
+   }
+  ],
+  [
+   "ambar_pier",
+   9,
+   38,
+   4,
+   [
+    9,
+    38,
+    4,
+    3
+   ],
+   {
+    "id": "ambar_p1",
+    "door": "+y",
+    "variant": "tes"
+   }
+  ],
+  [
+   "ambar_pier",
+   14,
+   38,
+   4,
+   [
+    14,
+    38,
+    4,
+    3
+   ],
+   {
+    "id": "ambar_p2",
+    "door": "+y",
+    "variant": "dern"
+   }
+  ],
+  [
+   "izba",
+   17,
+   26,
+   4,
+   [
+    17,
+    26,
+    4,
+    4
+   ],
+   {
+    "id": "milusha",
+    "door": "+x",
+    "variant": "dern"
+   }
+  ],
+  [
+   "izba",
+   27,
+   26,
+   5,
+   [
+    27,
+    26,
+    5,
+    4
+   ],
+   {
+    "id": "kuznya"
+   }
   ],
   [
    "izba",
    33,
-   31,
-   3,
+   14,
+   5,
    [
     33,
-    31,
-    3,
-    3
-   ]
+    14,
+    5,
+    5
+   ],
+   {
+    "id": "terem"
+   }
+  ],
+  [
+   "well",
+   20,
+   13,
+   2,
+   [
+    20,
+    13,
+    2,
+    2
+   ],
+   {
+    "id": "well"
+   }
+  ],
+  [
+   "sign",
+   26,
+   18,
+   1,
+   [
+    26,
+    18,
+    1,
+    1
+   ],
+   {
+    "id": "sign"
+   }
   ],
   [
    "cart",
@@ -280,17 +519,22 @@
   {
    "x": 24.5,
    "y": 42.2,
-   "text": "Пристань"
+   "textKey": "ladoga.caption.pier"
   },
   {
    "x": 24,
    "y": 17.2,
-   "text": "Торг"
+   "textKey": "ladoga.caption.torg"
   },
   {
    "x": 29.5,
    "y": 30.4,
-   "text": "Кузня"
+   "textKey": "ladoga.caption.kuznya"
+  },
+  {
+   "x": 28.5,
+   "y": 10.5,
+   "textKey": "ladoga.caption.church"
   }
  ],
  "npcs": [
@@ -321,6 +565,21 @@
    "role": "tverdyata",
    "x": 26.5,
    "y": 27.5
+  },
+  {
+   "id": "priest",
+   "role": "priest",
+   "speaker": "priest",
+   "nameKey": "npc.priest",
+   "x": 27.0,
+   "y": 14.4,
+   "dialogs": [
+    "priest.s0",
+    "priest.s1"
+   ],
+   "idle": [
+    "npc.priest.greet"
+   ]
   }
  ],
  "mal": {
@@ -375,8 +634,7 @@
    "y": 0.6,
    "r": 1.3,
    "opens": "m1.turnedIn",
-   "lockedKey": "ui.error.gate_closed",
-   "approach": 2
+   "lockedKey": "ui.error.gate_closed"
   },
   {
    "id": "to_bor",
@@ -385,8 +643,7 @@
    "y": 22.0,
    "r": 1.3,
    "opens": "m2.turnedIn",
-   "lockedKey": "ui.error.gate_closed",
-   "approach": 2
+   "lockedKey": "ui.error.gate_closed"
   }
  ],
  "entries": {
@@ -399,7 +656,9 @@
   },
   "from_zalesye": {
    "x": 44.5,
-   "y": 22.0
+   "y": 22.0,
+   "face": [-1, 0],
+   "_gdd": "v1.14 E4: возврат из Залесья — за восточными воротами, лицом на запад, к воротам"
   },
   "from_sopki": {
    "x": 24.0,
@@ -424,5 +683,88 @@
    }
   }
  ],
- "packs": []
+ "packs": [],
+ "gates": {
+  "east": {
+   "at": [
+    39,
+    20
+   ],
+   "axis": "y",
+   "open": true,
+   "torches": true,
+   "hoverKey": "ui.gate.open.zalesye",
+   "sheet": "gate_e"
+  },
+  "south": {
+   "at": [
+    22,
+    37
+   ],
+   "axis": "x",
+   "open": true,
+   "torches": true,
+   "hoverKey": "ui.gate.open.pier",
+   "sheet": "gate_s"
+  },
+  "north": {
+   "at": [
+    22,
+    6
+   ],
+   "axis": "x",
+   "open": "m1.turnedIn",
+   "hoverKey": "ui.gate.open.sopki",
+   "sheet": "gate_n"
+  },
+  "west": {
+   "at": [
+    8,
+    20
+   ],
+   "axis": "y",
+   "open": "m2.turnedIn",
+   "hoverKey": "ui.gate.open.bor",
+   "sheet": "gate_w"
+  },
+  "closedHoverKey": "ui.gate.closed",
+  "closedNear": {
+   "r": 2,
+   "key": "ui.error.gate_closed",
+   "cd": 10
+  },
+  "closedClick": {
+   "bark": "bark.ladoga.gate_closed",
+   "cd": 10
+  }
+ },
+ "smokeKinds": [
+  "izba",
+  "izba_seni",
+  "izba_podklet",
+  "banya"
+ ],
+ "sign": {
+  "x": 26,
+  "y": 18,
+  "showRange": 6,
+  "boards": [
+   {
+    "key": "sign.zalesye",
+    "to": "east"
+   },
+   {
+    "key": "sign.sopki",
+    "to": "north"
+   },
+   {
+    "key": "sign.bor",
+    "to": "west"
+   },
+   {
+    "key": "sign.pier",
+    "to": "south"
+   }
+  ]
+ }
 }

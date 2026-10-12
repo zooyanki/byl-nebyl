@@ -1,0 +1,22 @@
+{
+ "what": "target marker rhombus 9×9, 2 shine frames",
+ "frame_size": [
+  9,
+  9
+ ],
+ "frame_count": 2,
+ "layout": "horizontal strip",
+ "pivot": [
+  4,
+  8
+ ],
+ "fps": 2,
+ "usage": "40 px above the target (96 above gates, over NPC names), bob ±2 px at 1 Hz, fade 0.3 s within 3 tiles",
+ "image": "ui_nav_mark.png",
+ "size": [
+  18,
+  9
+ ],
+ "palette": "palette_v2",
+ "alpha": "0/255 only"
+}
