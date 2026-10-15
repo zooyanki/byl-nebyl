@@ -230,6 +230,14 @@ export function generateMap(seed, zone = null) {
   if (den) carveMaraDen(m, den, inDen, makeRng(seed + 7331));   // тупик Мары (GDD v1.8.1 B-31) — после чащи кромки и россыпи
   const lad = (zone.objects || []).find((o) => o.id === 'to_ladoga');
   if (lad) clearProps(m, lad.x, lad.y, 1.6);
+  // v1.14 E4 (§8.2): вход из Ладоги — тропа от западного края (продолжение дороги от восточных ворот Ладоги); устье в опушке
+  // вырубается ПОСЛЕ генерации (поток случайных чисел не сдвигается), земля тропы — та же T_DIRT
+  if (lad && lad.path) {
+    const P = lad.path, [cx, cy, cw, ch] = P.clear;
+    clearProps(m, 0, 0, 0, (p) => p.fp[0] + p.fp[2] > cx && p.fp[0] < cx + cw && p.fp[1] + p.fp[3] > cy && p.fp[1] < cy + ch);
+    trail(P.from[0], P.from[1], P.to[0], P.to[1]);
+    m.ladPath = P;
+  }
   // m1f (P0.1): перед дверью избы с дверью к колодцу — поляна 2–3 тайла без подлеска; стая избы — на открытом месте
   for (const o of m.objects) if (o.type === 'hut' && o.door === '+x') {
     clearProps(m, o.x + 1.5, o.y, 2.6);
@@ -270,6 +278,8 @@ export function generateMap(seed, zone = null) {
     const hut = (id) => m.objects.find((o) => o.id === id);
     const pts = [[m.krada.x, m.krada.y], ...['hut1', 'hut2', 'hut3'].map(hut).filter(Boolean).map((o) => [o.sx, o.sy])];
     const ex = m.objects.find((o) => o.id === 'to_trail'); if (ex) pts.push([ex.x, ex.y]);
+    const EL = zone.entries && zone.entries.from_ladoga;
+    if (lad && lad.path && EL && EL.x != null) pts.unshift([EL.x, EL.y]);   // v1.14 E4: путь «вход из Ладоги → костёр» — первым отрезком
     const TR = zone.treeRules, rings = [];
     if ((TR.rings || []).includes('hutDoor')) for (const o of m.objects) if (o.type === 'hut') rings.push([o.x, o.y, 'hut']);
     if ((TR.rings || []).includes('pack') || TR.packFront) for (const p of m.packs) rings.push([p.x, p.y, 'pack', (TR.rings || []).includes('pack')]);
@@ -369,7 +379,7 @@ export function resolveObjects(m, zone, pos) {
   m.entries = {};
   for (const [id, e] of Object.entries((zone && zone.entries) || {})) {
     if (e.at) m.entries[id] = { at: e.at };
-    else { const [x, y] = pos(e); m.entries[id] = { x, y }; }
+    else { const [x, y] = pos(e); m.entries[id] = { x, y, face: e.face || null }; }   // v1.14 E4: face — куда смотрит герой на входе
   }
 }
 

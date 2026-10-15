@@ -49,7 +49,7 @@ export class SkillsWindow {
       return true;
     }
     if (H.skill) {
-      if (h.setRmb(H.skill)) { g.audio.play('ui'); g.notify(t('ui.skills.to_rmb') + ': ' + SKILLS[H.skill].name, PAL.bronze_lt, 'rmb'); }
+      if (h.setRmb(H.skill)) { g.audio.play('ui'); g.notify(t('ui.skills.to_e') + ': ' + SKILLS[H.skill].name, PAL.bronze_lt, 'rmb'); }
       else g.audio.play('error');
       return true;
     }
@@ -102,7 +102,7 @@ export class SkillsWindow {
     // очки и подсказка
     const [fx, fy, fw] = L.points, pts = pointsFree(h);
     drawText(ctx, fx + 5, fy + 3, t('ui.skills.points', { n: pts }), pts > 0 ? PAL.flame : PAL.birch, { shadow: false });
-    drawText(ctx, fx + fw - 5, fy + 3, t('proto.sys.rmb_set', { skill: SKILLS[h.rmb] ? SKILLS[h.rmb].name : '—' }), PAL.bronze_lt, { align: 'r', shadow: false });
+    drawText(ctx, fx + fw - 5, fy + 3, t('proto.sys.e_set', { skill: SKILLS[h.rmb] ? SKILLS[h.rmb].name : '—' }), PAL.bronze_lt, { align: 'r', shadow: false });
     drawText(ctx, L.hint[0] + 2, L.hint[1], t('proto.skills.hint'), PAL.mist, { shadow: false });
     // подсказка навыка
     const id = H.skill || H.plus;

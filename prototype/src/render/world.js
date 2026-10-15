@@ -117,7 +117,10 @@ export class WorldRenderer {
         const [sx, sy] = toS(hero.x, hero.y);
         if (hero.buffs.chur) drawChurRunes(ctx, sx, sy, hero.buffs.chur, time, false);
         this.drawSmears(ctx, game, toS, 'under');            // H10: след взмаха на север — за телом героя
+        const shBack = hero.blockSt && (hero.blockSt.dx + hero.blockSt.dy) < -0.2;   // щит к северу экрана — за телом
+        if (shBack) this.drawHeroShield(ctx, hero, sx, sy);
         drawHero(ctx, sx, sy, hero, hero.dir, time);
+        if (hero.blockSt && !shBack) this.drawHeroShield(ctx, hero, sx, sy);
         if (hero.buffs.chur) drawChurRunes(ctx, sx, sy, hero.buffs.chur, time, true);
         if (RF && RF.sparksFrame >= 0) drawRestSparks(ctx, sx, sy, RF.sparksFrame);     // искры отдыха поверх героя
       } else {
@@ -297,6 +300,27 @@ export class WorldRenderer {
         ctx.globalAlpha = 0.6; ctx.beginPath(); pts2.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.stroke(); ctx.restore();
       }
     }
+    // v1.14 E2 (§4.7): поднятый щит — дуга сектора 120° на земле, bronze, альфа 0,25
+    const H = game.hero, B = H && H.blockSt;
+    if (B && !H.dead) {
+      const half = Math.PI / 3, a0 = Math.atan2(B.dy, B.dx), R = 1.2, n = 10, k = Math.min(1, B.t / 0.15);
+      const pts = [toS(H.x, H.y)];
+      for (let i = 0; i <= n; i++) { const a = a0 - half + (2 * half * i) / n; pts.push(toS(H.x + Math.cos(a) * R * k, H.y + Math.sin(a) * R * k)); }
+      ctx.save(); ctx.globalAlpha = 0.25; ctx.fillStyle = PAL.bronze; ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 0.5; ctx.strokeStyle = PAL.bronze_lt; ctx.lineWidth = 1; ctx.beginPath(); pts.slice(1).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke(); ctx.restore();
+      game._blockArcDrawn = (game._blockArcDrawn || 0) + 1;
+    }
+  }
+
+  /** v1.14 E2: щит перед героем (заглушка кодом до арта H21): круглый, умбон, обод bronze; дрожит при принятом ударе. */
+  drawHeroShield(ctx, hero, sx, sy) {
+    const B = hero.blockSt; if (!B) return;
+    if (ART.sheets['hero_block_hold_se']) return;                // v1.14 H21: есть лист художника — щит в нём
+    const k = Math.min(1, B.t / 0.15), ex = (B.dx - B.dy) * 16, ey = (B.dx + B.dy) * 8, L = Math.hypot(ex, ey) || 1;
+    const jig = hero.blockFx > 0 ? -1 : 0;
+    const x = Math.round(sx + (ex / L) * (7 + jig) * k), y = Math.round(sy - 22 + (ey / L) * (5 + jig) * k - 6 * k);
+    disc(ctx, x, y, 7, PAL.ink); disc(ctx, x, y, 6, PAL.bronze); disc(ctx, x, y, 5, PAL.wood_md); disc(ctx, x, y, 2, PAL.bronze_lt);
+    if (hero.blockFx > 0) { ctx.save(); ctx.globalAlpha = Math.min(1, hero.blockFx * 5); ctx.strokeStyle = PAL.bronze_hi; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, 7.5, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
   }
 
   /** Подсветка интерактивных объектов под курсором, подпись действия и полоса удержания (выбить дверь). */

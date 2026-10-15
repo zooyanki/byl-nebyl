@@ -1,10 +1,11 @@
 """m1k v1.13.3 D9: доля укороченных + заменённых деревьев (сиды 7/11/3), проходимость (m.sub) и обзор как при старых
 treeRules v1.13.2, снимки до/после: screenshot_m1k_d9_{zalesye,trail}_{before,after}.png.
   python3 tools/d9_m1k.py [--url http://127.0.0.1:8047/index.html?seed=7] [--no-shots]"""
+from pathlib import Path
 import argparse, asyncio, json
 from playwright.async_api import async_playwright
 
-ROOT = '/workspace/game/prototype/'
+ROOT = str(Path(__file__).resolve().parent.parent) + '/'   # B-39: корень прототипа от расположения файла
 OLD = {'pathClear': 1.5, 'frontClear': 3, 'frontMaxH': {'fir': 96, 'birch': 112}, 'rings': ['hutDoor', 'pack'], 'maxRemovedPct': 25}
 
 STATS = '''(async (OLD) => { const g = __game, M = await import('/src/world/map.js'), CFG = g.dbg.CFG, out = {};

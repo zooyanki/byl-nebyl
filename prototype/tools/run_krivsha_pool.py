@@ -15,6 +15,7 @@ async def main(a):
         pg = await br.new_page(viewport={'width': 1920, 'height': 1080})
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
         await pg.goto(a.url); await pg.wait_for_function('window.__game && window.__game.time > 0.5', timeout=60000)
+        if a.block: print('block policy', await pg.evaluate(open(os.path.join(HERE, 'block_policy.js'), encoding='utf-8').read()))   # m1l: справочно с блоком (GDD v1.14 §4.7)
         await pg.evaluate(FIGHT)
         out = {}
         for name, o in [x for x in SCEN if not a.scen or x[0] == a.scen]:
@@ -29,7 +30,8 @@ async def main(a):
             print(name, json.dumps(out[name]), flush=True)
         await br.close()
     print('errors', errs[:3])
-    OUTF = os.path.join(HERE, 'krivsha_pool_m1j.json') if not a.scen else '/tmp/krivsha_pool_' + a.scen + '.json'; d = json.load(open(OUTF)) if os.path.exists(OUTF) else {}
+    OUTF = a.out or (os.path.join(HERE, 'krivsha_pool_m1j.json') if not a.scen else '/tmp/krivsha_pool_' + a.scen + '.json'); d = json.load(open(OUTF)) if os.path.exists(OUTF) else {}
     d.update(out); json.dump(d, open(OUTF, 'w'), ensure_ascii=False, indent=1)
-ap = argparse.ArgumentParser(); ap.add_argument('--url', default='http://127.0.0.1:8043/index.html?seed=7'); ap.add_argument('--runs', type=int, default=30); ap.add_argument('--scen', default='')
+ap = argparse.ArgumentParser(); ap.add_argument('--url', default='http://127.0.0.1:8043/index.html?seed=7'); ap.add_argument('--runs', type=int, default=30); ap.add_argument('--scen', default=''); ap.add_argument('--out', default='')   # m1l: свой файл замера
+ap.add_argument('--block', type=int, default=0)
 asyncio.run(main(ap.parse_args()))

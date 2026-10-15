@@ -241,7 +241,7 @@ export class Krivsha extends Enemy {
           g.counters.krivshaClawMiss = (g.counters.krivshaClawMiss || 0) + 1; g.fx.text(hh.x, hh.y, t('ui.combat.miss'), PAL.mist, 50, { dur: 0.6 }); return;
         }
         const dmg = Math.round((me.dmgMin + Math.floor(Math.random() * (me.dmgMax - me.dmgMin + 1))) * C.mul);
-        const dealt = hh.takeDamage(dmg, g, 'melee', me);
+        const dealt = hh.takeDamage(dmg, g, 'melee', me, { src: 'melee', from: [me.x, me.y], heavy: true });   // v1.14 E2: когти — тяжёлый удар, щит не держит (heavyBlock false)
         me.clawDealt = (me.clawDealt || 0) + dealt;
         g.counters.krivshaClawHits = (g.counters.krivshaClawHits || 0) + 1;
         g.shake(2, 0.12);

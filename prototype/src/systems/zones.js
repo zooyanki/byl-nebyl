@@ -59,7 +59,8 @@ export const ZoneMixin = {
     if (opts.respawn) st.needRepop = false;
     this.enemyTotal = st.total;
     const h = this.hero, [x, y] = this.entryPoint(entry);
-    h.x = x; h.y = y; h.path = null; h.cmd = null; h.moving = false; h.kb = null; h.dashing = null;
+    h.x = x; h.y = y; h.path = null; h.cmd = null; h.moving = false; h.kb = null; h.dashing = null; h.blockSt = null; h.lowerT = h.breakT = h.blockHitT = null;
+    { const E = typeof entry === 'string' && ((this.zone && this.zone.entries && this.zone.entries[entry]) || this.map.entries[entry]); if (E && E.face) h.face(E.face[0], E.face[1]); }   // v1.14 E4: герой смотрит вглубь зоны / к воротам
     this.hoverEnemy = null; this.hoverGround = null; this.hoverObj = null; this.lastTarget = null; this.labelRects = [];
     for (const o of this.map.objects) o.inside = Math.hypot(h.x - o.x, h.y - o.y) <= (o.r || 0);
     this.updateCamera();
@@ -75,6 +76,8 @@ export const ZoneMixin = {
     }
     st.maraWarn = null;      // GDD v1.11: предупреждение у пепла — раз за посещение зоны (новый вход — новое посещение)
     this.quest.emit({ event: 'zoneEnter', zone: id });
+    // v1.14 §12.2.4: обучение «E — навык» — при первом входе в Залесье (первая боевая зона); «ПКМ — щит» — при первом ударе врага
+    if (id === 'zalesye' && !this._tutSkillE && !opts.respawn) { this._tutSkillE = true; this.notify(t('ui.tut.skill_e'), PAL.bronze_lt, 'tut'); }
     this.boss = st.boss && !st.boss.dead ? st.boss : null;
     this.applyChad();
     this.syncExitWalls();

@@ -1,7 +1,8 @@
 # Веха m1g: GDD v1.11 (inbox/designer_v1_11.md п.1–6) + декор тупика Мары (art/layout) + пустой футпринт не блокирует. Только миссия 1.
+from pathlib import Path
 import os, re
 
-ROOT = '/workspace/game/prototype/'
+ROOT = str(Path(__file__).resolve().parent.parent) + '/'   # B-39: корень прототипа от расположения файла
 SHOT_MARA = ROOT + 'screenshot_m1g_mara.png'
 
 FRESH = '''(() => { const g = __game; g.ui.closeAll(); delete g.zoneStates.zalesye; g.enterZone('zalesye', 'krada');
@@ -97,8 +98,8 @@ async def run_m1g(pg, G, check, wait, client_of, client_scr, a):
           s['A'] == [56.5, 16.5, 16] and R['krada']['min'] >= 16 and R['hut2']['min'] >= 16 and all(R[k]['mono'] and R[k]['n'] > 0 and R[k]['endD'] < 2 for k in R), s)
 
     # ---------- п.4 Залесье 66×48, выход в Ладогу (16; 31)
-    s = await G('''(() => { const g = __game, m = g.map, o = g.objectById('to_ladoga'); return { w: m.w, h: m.h, ex: [o.x, o.y, o.to], reach: m.isReachableAt(o.x, o.y) }; })()''')
-    check('m1g п.4 Залесье 66×48 (основная часть 48×48 + тупик Мары), выход в Ладогу (16; 31) достижим', s['w'] == 66 and s['h'] == 48 and s['ex'] == [16, 31, 'ladoga'] and s['reach'], s)
+    s = await G('''(() => { const g = __game, m = g.map, o = g.objectById('to_ladoga'); return { w: m.w, h: m.h, ex: [o.x, o.y, o.to], reach: ((o) => { for (let a = 0; a < 6.28; a += 0.2) for (let d = 0; d <= o.r; d += 0.1) if (g.map.isReachableAt(o.x + Math.cos(a) * d, o.y + Math.sin(a) * d)) return true; return false; })(o) }; })()''')   # v1.14: центр устья у воды — достижим круг выхода
+    check('m1g п.4 Залесье 66×48 (основная часть 48×48 + тупик Мары), выход в Ладогу (v1.14 E4: устье тропы (0,7; 29,6)) достижим', s['w'] == 66 and s['h'] == 48 and s['ex'] == [0.7, 29.6, 'ladoga'] and s['reach'], s)
 
     # ---------- п.5 капище realm nebyl
     s = await G('''(() => { const g = __game, CFG = g.dbg.CFG; g.enterZone('kapishche', 'start'); const z = g.zone.realm, n = g.enemies.length;

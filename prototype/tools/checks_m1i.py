@@ -1,8 +1,9 @@
 # Веха m1i: замечания критиков m1f — P2 (п.11–16), 10b (подписи частей Ладоги), W (staff_3 «Жезл»).
+from pathlib import Path
 import os, json
 from check_cyrillic import scan as cyr_scan, selftest as cyr_selftest
 
-ROOT = '/workspace/game/prototype/'
+ROOT = str(Path(__file__).resolve().parent.parent) + '/'   # B-39: корень прототипа от расположения файла
 SHOT_STASH = ROOT + 'screenshot_m1i_stash.png'
 SHOT_TRADE = ROOT + 'screenshot_m1i_trade.png'
 SHOT_MENU = ROOT + 'screenshot_m1i_menu.png'
@@ -103,7 +104,7 @@ async def run_m1i(pg, G, check, wait, client_of, client_scr, a):
     flat = ' '.join(a_ + ' ' + b_ for a_, b_ in s['lines'])
     check('m1i П.13 пауза: подпись и «вкл/выкл» раздельно (подпись не заходит на плашку 34 px), «Удали» с прописной, строка рывка «Пробел»',
           all(w + 4 <= bw - 34 for w, bw in zip(s['lw'], s['bw'])) and s['on'] == 'вкл' and s['off'] == 'выкл'
-          and 'Удали' in flat and 'удали' not in flat and any(a_ == 'Пробел' and 'рывок' in b_ for a_, b_ in s['lines']) and len(s['lines']) == 11, s)
+          and 'Удали' in flat and 'удали' not in flat and any(a_ == 'Пробел' and 'рывок' in b_ for a_, b_ in s['lines']) and len(s['lines']) == 12, s)
     await G('(() => { __game.paused = false; })()')
 
     # ---------- 14. Капище — realm nebyl; 16: красноватая темнота

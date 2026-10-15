@@ -39,6 +39,7 @@
  ],
  "skills": {
   "sshibka": {
+   "defaultSlot": "LMB",
    "name": "Сшибка",
    "branch": "ratnoe",
    "tier": 1,
@@ -146,6 +147,7 @@
    "textKey": "skill.ratnoe.secha"
   },
   "zmey": {
+   "defaultSlot": "E",
    "name": "Огненный змей",
    "branch": "vedovstvo",
    "tier": 1,

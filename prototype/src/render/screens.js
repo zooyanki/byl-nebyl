@@ -68,7 +68,7 @@ export function pauseButtonAt(m) { const b = PAUSE_BTNS.find((b) => inR(m, b)); 
 /** Строки справки: [клавиша, действие] — ключи ru.json; рывок (Пробел) — m1i. */
 export const HELP_KEYS = [
   ['proto.help.move.key', 'proto.help.move'], ['proto.help.stand.key', 'proto.help.stand'], ['proto.help.pickup.key', 'proto.help.pickup'],
-  ['proto.help.rmb.key', 'proto.help.rmb'], ['ui.hud.dash', 'proto.help.dash'], ['proto.help.belt.key', 'proto.help.belt'],
+  ['proto.help.e.key', 'proto.help.e'], ['proto.help.block.key', 'proto.help.block'], ['ui.hud.dash', 'proto.help.dash'], ['proto.help.belt.key', 'proto.help.belt'],   // v1.14: E — навык, ПКМ — щит
   ['proto.help.labels.key', 'proto.help.labels'], ['proto.help.map.key', 'proto.help.map'], ['proto.help.windows.key', 'proto.help.windows'],
   ['proto.help.sound.key', 'proto.help.sound'], ['proto.help.esc.key', 'proto.help.esc'],
 ];
@@ -86,10 +86,11 @@ export function drawPause(ctx, game) {
   ctx.save(); ctx.globalAlpha = 0.6; rect(ctx, 0, 0, VIEW_W, VIEW_H, PAL.ink); ctx.restore();
   frame(ctx, PX, PY, PW, PH);
   drawText(ctx, VIEW_W / 2, PY + 9, t('ui.menu.title'), PAL.bronze_hi, { align: 'c', outline: true, scale: 2 });
-  const rows = HELP_KEYS.map(([k, d]) => [t(k), t(d, { n: game.hero.skillCost })]);
+  const BK = (game.dbg && game.dbg.CFG && game.dbg.CFG.stats && game.dbg.CFG.stats.block) || { cost: 2 };
+  const rows = HELP_KEYS.map(([k, d]) => [t(k), t(d, d === 'proto.help.block' ? { n: BK.cost } : { n: game.hero.skillCost, skill: (game.dbg.SKILLS[game.hero.rmb] || {}).name || '—' })]);
   rows.forEach(([a, b], i) => {
-    drawText(ctx, PX + 22, PY + 34 + i * 14, a, PAL.birch);
-    drawText(ctx, PX + 150, PY + 34 + i * 14, b, PAL.linen);
+    drawText(ctx, PX + 22, PY + 34 + i * 13, a, PAL.birch);   // v1.14: 12 строк — шаг 13 px, не заходят на переключатели
+    drawText(ctx, PX + 150, PY + 34 + i * 13, b, PAL.linen);
   });
   game.pauseLines = rows;   // для автотеста m1i
   const st = { sound: !game.audio.muted, labels: game.labelsAlways, minimap: game.showMinimap, shake: game.settings.shake !== false, xray: game.settings.xray !== false, navArrow: game.settings.navArrow !== false };

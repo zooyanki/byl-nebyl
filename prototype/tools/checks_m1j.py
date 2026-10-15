@@ -1,8 +1,9 @@
 # Веха m1j: GDD v1.13 §12.4, часть A P0 — D1 (бой, пакет F), D2 (ощущение удара §4.6), D13 (плашка «Награда», очередь
 # уведомлений §10.5), D17 (serve.py, сообщение вместо чёрного экрана, репозиторий на Gitea в README).
+from pathlib import Path
 import os, json, urllib.request
 
-ROOT = '/workspace/game/prototype/'
+ROOT = str(Path(__file__).resolve().parent.parent) + '/'   # B-39: корень прототипа от расположения файла
 SHOT_COMBAT = ROOT + 'screenshot_m1j_combat.png'
 SHOT_REWARD = ROOT + 'screenshot_m1j_reward.png'
 

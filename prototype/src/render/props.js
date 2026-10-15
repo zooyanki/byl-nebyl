@@ -91,11 +91,22 @@ function drawBld(ctx, p, toS, time) {
   p._spr = spr;
   const [sx, sy] = toS(p.x, p.y);
   ctx.drawImage(spr.c, sx - spr.ox, sy - spr.oy);
-  const sm = B.sh.meta.anchors_px && B.sh.meta.anchors_px.smoke;
-  const pt = sm && (Array.isArray(sm) ? sm : sm[B.fr] || sm['0']);
-  p._smoked = !!(pt && p.smoke);   // v1.13.3: дым — только у видов из smokeKinds (изба, с сенями, на подклете, баня)
-  if (pt && p.smoke) drawFxFrame(ctx, 'smoke', Math.floor(time * ((FXfps) || 5) + p.seed * 4), sx - spr.ox + pt[0], sy - spr.oy + pt[1]);
+  const sa = p.smoke ? smokeAnchor(B.sh.meta, B.fr) : null, pt = sa && sa.pt;
+  p._smoked = !!pt;   // v1.13.3: дым — только у видов из smokeKinds (изба, с сенями, на подклете, баня)
+  p._smokeSrc = sa ? sa.src : null;
+  if (pt) drawFxFrame(ctx, 'smoke', Math.floor(time * ((FXfps) || 5) + p.seed * 4), sx - spr.ox + pt[0], sy - spr.oy + pt[1]);
   return true;
+}
+/** m1l (B-40): точка дыма листа. У bld_izba_small_tes_kon / _tes_prich художник не поставил anchors_px.smoke (есть только
+ *  gable_vent — дымник во фронтоне), поэтому избы izba_sw / izba_se не дымили. Порядок: anchors_px.smoke → gable_vent →
+ *  конёк над передним углом (front_corner_px − heights_px.ridge). Возвращает {pt, src} или null. */
+export function smokeAnchor(meta, fr) {
+  const A = (meta && meta.anchors_px) || {};
+  const pick = (a) => a && (Array.isArray(a) ? a : a[fr] || a['0']);
+  for (const src of ['smoke', 'gable_vent']) { const pt = pick(A[src]); if (pt) return { pt, src }; }
+  const fc = meta && meta.front_corner_px, rh = meta && meta.heights_px && meta.heights_px.ridge;
+  if (fc && rh) return { pt: [fc[0], fc[1] - rh], src: 'ridge' };
+  return null;
 }
 const FXfps = 5;   // fx_smoke_wisp: 4 кадра, 5 к/с (JSON художника)
 

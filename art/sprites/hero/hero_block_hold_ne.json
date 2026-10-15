@@ -1,0 +1,60 @@
+{
+ "character": "Ратибор (герой)",
+ "animation": "block_hold",
+ "direction": "ne",
+ "mirror_for": "nw",
+ "mirror_rule": "flip horizontally around x = 32.0; pivot stays (32, 56)",
+ "prototype_dirs": [
+  5,
+  3
+ ],
+ "pivot": [
+  32,
+  56
+ ],
+ "fps": 4,
+ "loop": true,
+ "events": {
+  "block_active": [
+   0,
+   1
+  ]
+ },
+ "visible_height_px": [
+  44,
+  43
+ ],
+ "height_rule": "pivot row (soles) to the top visible pixel, outline included",
+ "anchors": {
+  "shield_center": [
+   [
+    34.7,
+    29.1
+   ],
+   [
+    34.5,
+    30.3
+   ]
+  ],
+  "shield_rim": [
+   [
+    22,
+    24
+   ],
+   [
+    22,
+    25
+   ]
+  ]
+ },
+ "notes": "цикл; кромка щита на уровне подбородка, закрывает лицо наполовину",
+ "image": "hero_block_hold_ne.png",
+ "frame_size": [
+  64,
+  64
+ ],
+ "frame_count": 2,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

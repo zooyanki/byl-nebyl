@@ -1,4 +1,4 @@
-"""Сборка data/ru.json из текстов сценариста (только чтение /workspace/game/story/act1_texts.md).
+"""Сборка data/ru.json из текстов сценариста (только чтение game/story/act1_texts.md).
 Запуск из папки prototype:  python3 tools/export_ru.py
 Берутся все строки таблиц, где первая ячейка — `ключ`. Двухколоночные — строка; многоколоночные — объект
 по заголовкам таблицы. Особые случаи: plural.* → [one, few, many]; skill.* → {name, branch, chant, desc}.
@@ -64,7 +64,9 @@ PROTO = {
     "proto.potion.res.yar": "к Удали",
     "proto.skills.lmb_basic": "На ЛКМ · без Удали — обычный удар",
     "proto.hero.attr.ene": "Дух: +2 к Удали, +1% к урону ведовства",
-    "proto.help.rmb": "Огненный змей (Удали: {n})",
+    "proto.help.e": "{skill} (Удали: {n})",
+    "proto.help.block.key": "ПКМ",
+    "proto.help.block": "щит: держать (Удали: {n} за удар)",   # v1.14: текст §12.2.4 не влезает в справку паузы (287 px при 204) — сокращён
     "proto.labels.always": "Подписи добычи: всегда",
     "proto.labels.alt": "Подписи добычи: по Alt",
     # веха m1i (critics_m1f П.12–13, 15): столбец цены в торге, справка паузы и переключатели, главное меню — строки, раньше
@@ -84,7 +86,7 @@ PROTO = {
     "proto.help.stand": "бить на месте",
     "proto.help.pickup.key": "ЛКМ по подписи",
     "proto.help.pickup": "поднять добычу (серебро — само)",
-    "proto.help.rmb.key": "ПКМ",
+    "proto.help.e.key": "E",
     "proto.help.dash": "рывок к курсору (Удаль не тратит)",
     "proto.help.belt.key": "1–4",
     "proto.help.belt": "выпить зелье из пояса",
@@ -120,16 +122,16 @@ PROTO = {
     "proto.sys.sound_on": "Звук включён",
     "proto.sys.lmb_set": "ЛКМ: {skill}",
     "proto.sys.lmb_basic": "обычный удар",
-    "proto.sys.rmb_set": "ПКМ: {skill}",
+    "proto.sys.e_set": "E: {skill}",
     "proto.small_window": "Окно меньше 640×360 — текст будет нечётким. Увеличьте окно.",
     "proto.hud.silver_label": "Серебро:",
     "proto.hud.lvl": "ур.",
     "proto.hud.lmb": "ЛКМ",
-    "proto.hud.rmb": "ПКМ",
+    "proto.hud.e": "E",
     "proto.hud.muted": "Звук выключен (N)",
     "proto.hud.labels_always": "Подписи: всегда (Z)",
     "proto.hud.killed": "Убито {n}/{total}",
-    "proto.hud.ctrl_hint": "ЛКМ — идти/бить · ПКМ — навык · F1–F6 — выбрать навык · Пробел — рывок · T — навыки · Alt — подписи · Tab — карта",
+    "proto.hud.ctrl_hint": "ЛКМ — идти/бить · E — навык · ПКМ — щит · F1–F6 — на E · Пробел — рывок · T — навыки · Alt — подписи · Tab — карта",
     "proto.hud.belt_slot": "{item} ×{n} — клавиша {key}",
     "proto.hud.belt_empty": "Пустая ячейка пояса",
     "proto.hud.skill_empty": "F{n}: пусто — наведи на навык в окне «Навыки» (T) и нажми F{n}",
@@ -153,7 +155,7 @@ PROTO = {
     "proto.skills.tier_start": "с начала",
     "proto.skills.soon": "появится позже",
     "proto.skills.passive": "пасс.",
-    "proto.skills.hint": "ЛКМ по навыку — на ПКМ · F1–F6 над навыком — в ячейку",
+    "proto.skills.hint": "ЛКМ по навыку — на E · F1–F6 над навыком — в ячейку",
     "proto.skills.not_impl": "Навык появится в следующих итерациях",
     "proto.skills.from_items": "(+{n} с вещей)",
     "proto.log.dropped": "Выброшено: {item}",
@@ -166,7 +168,7 @@ PROTO = {
     "proto.hero.to_level": "До уровня {n}",
     "proto.hero.free_points": "Свободных очков",
     "proto.hero.dmg_lmb": "Урон ЛКМ",
-    "proto.hero.dmg_rmb": "Урон ПКМ",
+    "proto.hero.dmg_e": "Урон E",
     "proto.hero.hit_chance": "Шанс попасть",
     "proto.hero.hint_points": "Жми [+], чтобы вложить свободные очки",
     "proto.hero.hint_nopoints": "Очки свойств даются за новый уровень (+5)",
@@ -342,7 +344,7 @@ for k in SKIP:
     out.pop(k, None)
 # m1k (D6, GDD v1.13.1): старые массивы диалогов npc.*.s0–s3 / npc.*.rep и dialog.m1.mal устарели — окно диалога читает только
 # dlg.* (data/dialogues.json); код их больше не читает, в ru.json не выгружаем
-OBSOLETE = re.compile(r"^(npc\.[a-z]+\.(s[0-3]|rep)|dialog\.m1\.mal)$")
+OBSOLETE = re.compile(r"^(npc\.[a-z]+\.(s[0-3]|rep)|dialog\.m1\.mal|ui\.tut\.rmb|ui\.skills\.to_rmb)$")   # v1.14 §12.2.4: ui.tut.rmb → ui.tut.skill_e, ui.skills.to_rmb → ui.skills.to_e
 for k in [k for k in out if OBSOLETE.match(k)]:
     out.pop(k)
 # m1j (v1.3): ключи, которых в act1_texts больше нет (death.line1–5 → death.<место>.N, npc.*.s2/s3/rep → dlg.*), код ещё читает —

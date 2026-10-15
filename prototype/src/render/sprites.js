@@ -2,7 +2,7 @@
 import { PAL } from '../palette.js';
 import { drawText } from '../core/font.js';
 import { rect, ellipse, ellipseStroke, figure, pline, disc } from './shapes.js';
-import { ART, poseKrivsha, poseMara, poseAnchutka, poseUpyr, posePriest, drawCharArt, drawCharOutline, restoreUpyrEyes, feedFrame, viewOf } from './boss_art.js';
+import { ART, poseKrivsha, poseMara, poseAnchutka, poseUpyr, posePriest, drawCharArt, drawCharOutline, restoreUpyrEyes, feedFrame, viewOf, drawHeroBlock, poseHeroBlock, heroView } from './boss_art.js';
 import { HALF_W, HALF_H } from '../config.js';
 import { drawFxFrame, FX } from './rest_fx.js';
 
@@ -24,6 +24,11 @@ export function dirMarker(ctx, x, y, dir, rx, ry, c) {
 // пояс 26, колени 35, подошвы 44 — ровно на строке pivot), плечи 14, щит 13×15, клинок 16×2.
 export function drawHero(ctx, x, y, h, dir, time, outline = PAL.ink) {
   if (dir == null) dir = h.dir || 0;
+  // v1.14 H21: подъём / удержание / шаг / принятый удар / пробитие / опускание щита — лист художника; остальное — кодом (ниже)
+  if (!h.dead && poseHeroBlock(h, time) && ART.sheets['hero_block_hold_' + heroView(dir)[0]]) {
+    shadow(ctx, x, y, 9, 3.5); dirMarker(ctx, x, y, dir, 9, 3.5, PAL.bronze_lt);
+    if (drawHeroBlock(ctx, h, x, y, time, { flash: h.flash > 0, sparks: (sx, sy, fr, fl) => drawFxFrame(ctx, 'bsparks', fr, sx, sy, { flip: fl }) })) return;
+  }
   const f = dirSide(dir, h.facing);
   const back = BACK.has(dir), front = FRONT.has(dir);
   const a = h.action;
@@ -34,32 +39,34 @@ export function drawHero(ctx, x, y, h, dir, time, outline = PAL.ink) {
   const T = y - 43 - bob;               // верхняя строка силуэта
   const parts = [
     { x: x - 8 - f, y: T + 12, w: 16, h: 22, c: PAL.red },             // плащ (цветовой акцент)
-    { x: x - 5 + l, y: y - 11, w: 4, h: 12, c: PAL.wood_dk },          // ноги (подошвы на y)
-    { x: x + 1 - l, y: y - 11, w: 4, h: 12, c: PAL.wood_dk },
+    { x: x - 5 + l, y: y - 11, w: 4, h: 12, c: PAL.red_dk },           // ноги (подошвы на y); v1.14: порты red_dk, как в листах H21
+    { x: x + 1 - l, y: y - 11, w: 4, h: 12, c: PAL.red_dk },
     { x: x - 7, y: T + 13, w: 14, h: 14, c: PAL.slate_lt },            // кольчуга, плечи 14
-    { x: x - 6, y: T + 26, w: 12, h: 7, c: PAL.red_dk },               // подол рубахи
+    { x: x - 6, y: T + 26, w: 12, h: 7, c: PAL.slate },                // подол кольчуги (v1.14: slate, как в листах H21)
     { x: x + f * 7 - (f < 0 ? 3 : 0), y: T + 14, w: 3, h: 11, c: PAL.slate_lt }, // рука с мечом
     { x: x - 4, y: T + 7, w: 8, h: 6, c: PAL.wood_lt },                // лицо
-    { x: x - 4, y: T + 4, w: 8, h: 3, c: PAL.mist },                   // шелом
-    { x: x - 3, y: T + 2, w: 6, h: 2, c: PAL.mist },
-    { x: x - 1, y: T, w: 2, h: 2, c: PAL.birch },                      // шпиль
-    { cx: x - f * 8, cy: T + 21, r: 6.5, c: PAL.red_lt },              // щит Ø13
+    { x: x - 4, y: T + 4, w: 8, h: 3, c: PAL.bronze },                 // шелом (v1.14: бронза, как в листах H21)
+    { x: x - 3, y: T + 2, w: 6, h: 2, c: PAL.bronze },
+    { x: x - 1, y: T, w: 2, h: 2, c: PAL.slate_lt },                   // шпиль
+    { cx: x - f * 8, cy: T + 21, r: 6.5, c: PAL.bronze },              // щит Ø13: обод бронза, поле birch, крест red (как в листах H21)
   ];
   if (back) {                                                        // спиной к камере: плащ поверх кольчуги, лица не видно
     parts.splice(5, 0, { x: x - 8 + f, y: T + 12, w: 16, h: 22, c: PAL.red });
     parts.find((q) => q.c === PAL.wood_lt).c = PAL.slate_lt;
   }
   figure(ctx, parts, h.flash > 0, outline);
-  rect(ctx, x - 7, T + 26, 14, 2, PAL.bronze);                       // пояс
+  rect(ctx, x - 7, T + 26, 14, 2, PAL.wood); rect(ctx, x - 1, T + 26, 2, 2, PAL.bronze);   // пояс кожаный, пряжка (v1.14)
   rect(ctx, x - 4, T + 10, 8, 3, PAL.slate_lt);                      // бармица
   if (back) rect(ctx, x - 1, T + 13, 2, 12, PAL.red_dk);             // шов плаща
   else if (dir === 0) { rect(ctx, x - 3, T + 8, 2, 1, PAL.ink); rect(ctx, x + 1, T + 8, 2, 1, PAL.ink); } // анфас — оба глаза
   else if (front) { rect(ctx, x + (f > 0 ? -1 : -2), T + 8, 2, 1, PAL.ink); rect(ctx, x + (f > 0 ? 2 : -4), T + 8, 1, 1, PAL.ink); }
   else rect(ctx, x + (f > 0 ? 1 : -3), T + 8, 2, 1, PAL.ink);         // профиль
-  rect(ctx, x - 3, T + 4, 1, 3, PAL.linen);                          // блик шелома
-  rect(ctx, x - 5, y - 2, 4, 2, PAL.ink); rect(ctx, x + 1, y - 2, 4, 2, PAL.ink); // сапоги
-  const sx = x - f * 8;                                              // умбон и крест щита
-  rect(ctx, sx - 6, T + 20, 13, 1, PAL.linen); rect(ctx, sx, T + 15, 1, 13, PAL.linen);
+  rect(ctx, x - 3, T + 4, 1, 3, PAL.bronze_lt);                      // блик шелома
+  rect(ctx, x - 5 + l, y - 4, 4, 2, PAL.sea_dk); rect(ctx, x + 1 - l, y - 4, 4, 2, PAL.sea_dk);   // обмотки
+  rect(ctx, x - 5 + l, y - 2, 4, 2, PAL.wood_dk); rect(ctx, x + 1 - l, y - 2, 4, 2, PAL.wood_dk); // сапоги (v1.14: кожа, как в листах)
+  const sx = x - f * 8;                                              // поле, крест и умбон щита
+  if (!h.flash) disc(ctx, sx, T + 21, 5, PAL.birch);
+  rect(ctx, sx - 5, T + 20, 11, 1, PAL.red); rect(ctx, sx, T + 16, 1, 11, PAL.red);
   rect(ctx, sx - 1, T + 20, 3, 2, PAL.bronze_hi);
   // меч (клинок 16 px, 2 px толщиной)
   const hx = x + f * 8, hy = T + 24;

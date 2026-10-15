@@ -1,0 +1,78 @@
+{
+ "character": "Ратибор (герой)",
+ "animation": "block_break",
+ "direction": "e",
+ "mirror_for": "w",
+ "mirror_rule": "flip horizontally around x = 32.0; pivot stays (32, 56)",
+ "prototype_dirs": [
+  6,
+  2
+ ],
+ "pivot": [
+  32,
+  56
+ ],
+ "fps": 13,
+ "loop": false,
+ "events": {
+  "block_active": [],
+  "break": 0,
+  "sparks": 0,
+  "shield_down": 3
+ },
+ "visible_height_px": [
+  44,
+  43,
+  44,
+  44
+ ],
+ "height_rule": "pivot row (soles) to the top visible pixel, outline included",
+ "anchors": {
+  "shield_center": [
+   [
+    33.8,
+    30.0
+   ],
+   [
+    30.6,
+    33.2
+   ],
+   [
+    32.6,
+    36.5
+   ],
+   [
+    33.1,
+    39.2
+   ]
+  ],
+  "shield_rim": [
+   [
+    36,
+    28
+   ],
+   [
+    36,
+    33
+   ],
+   [
+    36,
+    33
+   ],
+   [
+    36,
+    34
+   ]
+  ]
+ },
+ "notes": "пробитие: щит отбит в сторону, герой качнулся, затем опускает щит; блок снят с кадра 0; 13 fps: 4 кадра ≈ 0,3 с = оглушение §4.7",
+ "image": "hero_block_break_e.png",
+ "frame_size": [
+  64,
+  64
+ ],
+ "frame_count": 4,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

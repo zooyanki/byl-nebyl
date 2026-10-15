@@ -15,6 +15,11 @@ import { t } from '../core/i18n.js';
 // суммарный опыт для начала уровня L
 export function xpAtLevel(L) { let s = 0; for (let i = 1; i < L; i++) s += xpToNext(i); return s; }
 
+// v1.14 E1 (§4.2): одна досягаемость удара — зазор между телами (расстояние − r героя − r цели); stats.json → melee
+export function meleeReach() { const M = (CFG.stats && CFG.stats.melee) || {}; return { reach: M.reach ?? 0.75, slack: M.slack ?? 0.55, chase: M.cancelChase ?? 2, max: M.cancelMax ?? 2 }; }
+// v1.14 E2 (§4.7): активный блок щитом на ПКМ; stats.json → block
+export function blockCfg() { return (CFG.stats && CFG.stats.block) || { raise: 0.15, sectorDeg: 120, reduceBase: 50, reduceCap: 75, cost: 2, heavyBlock: false, speedMul: 0.5, breakCd: 1.5, breakStun: 0.3, regen: false }; }
+
 export class Hero extends Actor {
   constructor(x, y) {
     super(x, y, 0.3);
@@ -173,37 +178,50 @@ export class Hero extends Actor {
   }
   /** Навык ЛКМ, если выучен. */
   /** Скорость шага с учётом замедления («Студёный» элит, GDD §5.3: −30% на 2 с). */
-  curSpeed() { return this.slowT > 0 ? this.speed * (1 - (this.slowPct || 0) / 100) : this.speed; }
+  curSpeed() { const b = this.blockSt ? blockCfg().speedMul : 1; return b * (this.slowT > 0 ? this.speed * (1 - (this.slowPct || 0) / 100) : this.speed); }   // v1.14 E2: со щитом × speedMul
+  /** v1.14 E2 (§4.7): щит поднят и уже держит (прошло raise с после нажатия). */
+  get blocking() { return !!(this.blockSt && this.blockSt.t >= blockCfg().raise); }
+  /** Любой щит в шуйце — даже с пассивным блоком 0. */
+  hasShield() { const l = this.equip.lhand; return !!(l && l.type === 'shield'); }
+  /** Снижение урона в стойке: min(reduceCap, reduceBase + пассивный блок щита). */
+  blockReduce() { const B = blockCfg(); return Math.min(B.reduceCap, B.reduceBase + (this.block || 0) * 100) / 100; }
   lmbSkill() { return this.lmb && SKILLS[this.lmb] && rankOf(this, this.lmb) ? this.lmb : null; }
-  /** Заслон (GDD v1.8 §4.1): цель дальше удара, за 0,3 с герой продвинулся к ней < 0,15 тайла, а другой враг стоит в секторе ±60°
-   *  не дальше удара — бьём его тем же навыком; приказ и выделенная цель остаются, после гибели или ухода заслона приказ продолжается.
-   *  Стены и объекты заслоном не считаются (обход по A*); Shift+ЛКМ и ПКМ правило не включают. */
+  /** Заслон (GDD v1.8 §4.1): цель дальше удара, за 0,3 с герой продвинулся к ней < 0,15 тайла, а другой враг стоит на пути —
+   *  в секторе ±60° не дальше удара — бьём его тем же навыком; приказ и выделенная цель остаются, после гибели или ухода заслона приказ продолжается.
+   *  Стены и объекты заслоном не считаются (обход по A*); Shift+ЛКМ и ПКМ правило не включают.
+   *  m1l (баг «ЛКМ по врагу в 2–3 тайлах — герой стоит и машет»): «на пути» — не только сектор, но и коридор шириной в тела
+   *  (враг ближе цели и пересекает отрезок герой → цель: боковое смещение < r героя + r врага + 0,15). Раньше в «заслон»
+   *  попадал любой сосед по стае сбоку в секторе ±60° / 1,8 тайла. */
   findBlocker(e, game) {
     const ax = e.x - this.x, ay = e.y - this.y, ad = Math.hypot(ax, ay) || 1, B = CFG.stats.blocker || {};
-    const cosMax = Math.cos(((B.sectorDeg ?? 60) * Math.PI) / 180);
+    const cosMax = Math.cos(((B.sectorDeg ?? 60) * Math.PI) / 180), pad = B.corridorPad ?? 0.15;
     let best = null, bd = 1e9;
     for (const o of game.enemies) {
-      if (o === e || o.dead || o.state === 'rise' || o.buried) continue;
+      if (o === e || o.dead || o.state === 'rise' || o.buried || o.dummy) continue;
       const dx = o.x - this.x, dy = o.y - this.y, d = Math.hypot(dx, dy);
-      if (d > MELEE_RANGE + this.r + o.r || d < 1e-6) continue;
+      if (d - this.r - o.r > meleeReach().reach || d < 1e-6 || d >= ad) continue;   // v1.14 E1: заслон — тот же зазор ≤ reach
       if ((dx * ax + dy * ay) / (d * ad) < cosMax) continue;
+      const along = (dx * ax + dy * ay) / ad, side = Math.abs(dx * ay - dy * ax) / ad;
+      if (along <= 0 || side >= this.r + o.r + pad) continue;           // сбоку от пути — не заслон
       if (d < bd) { bd = d; best = o; }
     }
     return best;
   }
   updateBlocker(c, e, dt, game) {
-    const B = CFG.stats.blocker || {}, win = B.window ?? 0.3, minAdv = B.minAdvance ?? 0.15, d = this.distTo(e);
+    const B = CFG.stats.blocker || {}, win = B.window ?? 0.3, minAdv = B.minAdvance ?? 0.15;
     if (c.blocker) {                                                     // уже бьём заслон: пока он жив и стоит на пути — продолжаем
       const b = c.blocker;
       if (!b.dead && this.findBlocker(e, game) === b) { this.path = null; this.moving = false; this.startAttack(b, c.skill, game); game.counters.blockerHits = (game.counters.blockerHits || 0) + 1; return true; }
-      c.blocker = null; c.blkT = 0; c.blkD0 = d;
+      c.blocker = null; c.blkT = 0; c.blkP = null;
       return false;
     }
-    if (c.blkD0 == null) { c.blkD0 = d; c.blkT = 0; }
+    // m1l: продвижение — собственный шаг героя в сторону цели (проекция смещения героя на направление к цели в начале окна),
+    // а не сокращение расстояния: цель, которая сама отходит (анчутка держит 2,2 тайла), больше не делает соседа «заслоном»
+    if (!c.blkP) { const d0 = this.distTo(e) || 1; c.blkP = { x: this.x, y: this.y, ux: (e.x - this.x) / d0, uy: (e.y - this.y) / d0 }; c.blkT = 0; }
     c.blkT += dt;
     if (c.blkT < win) return false;
-    const adv = c.blkD0 - d;
-    c.blkT = 0; c.blkD0 = d;
+    const P = c.blkP, adv = (this.x - P.x) * P.ux + (this.y - P.y) * P.uy;
+    c.blkP = null; c.blkT = 0;
     if (adv >= minAdv) return false;
     const b = this.findBlocker(e, game);
     if (!b) return false;
@@ -260,7 +278,7 @@ export class Hero extends Actor {
   useSkill(game, id, tx, ty, target = null) {
     if (this.dead) return 'dead';
     if (game.zone && game.zone.noAttack && !(target && target.dummy && SKILLS[id] && SKILLS[id].type === 'melee')) return 'town';
-    if (this.stun > 0 || this.dashing) return 'busy';
+    if (this.stun > 0 || this.dashing || this.blockSt) return 'busy';   // v1.14 E2: со щитом навык E ждёт (буфер §4.1)
     const sk = SKILLS[id];
     if (!sk || !rankOf(this, id) || sk.type === 'passive') return 'none';
     // хвост замаха/каста (удар уже прошёл, > 85% длительности) можно прервать навыком. m1f P0.4: раньше так было только у
@@ -325,7 +343,7 @@ export class Hero extends Actor {
     let dx = tx - this.x, dy = ty - this.y, d = Math.hypot(dx, dy);
     if (d < 0.05) { [dx, dy] = this.dirVec(); d = 1; }
     this.face(dx, dy);
-    this.action = null; this.cmd = null; this.path = null;
+    this.action = null; this.cmd = null; this.path = null; this.blockSt = null;   // v1.14 E2: рывок опускает щит
     this.dashing = { vx: (dx / d) * DASH.dist / DASH.time, vy: (dy / d) * DASH.dist / DASH.time, t: DASH.time, x0: this.x, y0: this.y };
     this.invuln = Math.max(this.invuln, DASH.invuln);
     this.cds.dash = DASH.cd;
@@ -336,6 +354,7 @@ export class Hero extends Actor {
 
   startAttack(target, skill = null, game = null) {
     if (game && game.zone && game.zone.noAttack && !(target && target.dummy)) { this.cmd = null; return; }
+    let paid = 0;
     if (skill) {            // «Сшибка» платит Ярь в начале замаха
       const cost = skillCost(this, skill);
       if (this.yar < cost && this.cmd && this.cmd.lmb) {
@@ -343,11 +362,12 @@ export class Hero extends Actor {
         if (game) game.counters.lmbFallback = (game.counters.lmbFallback || 0) + 1;
       } else if (this.yar < cost) { if (game) game.notify(game.t('ui.error.no_yar'), PAL.blue_lt, 'noyar'); this.cmd = null; return; }
       else {
-        this.yar -= cost;
+        this.yar -= cost; paid = cost;
         if (game) { game.audio.play('skill'); game.counters.casts[skill] = (game.counters.casts[skill] || 0) + 1; }
       }
     }
-    this.action = { type: 'attack', skill, target, t: 0, dur: this.attackTime, hitAt: this.attackTime * HIT_FRAME, fired: false };
+    this.action = { type: 'attack', skill, target, t: 0, dur: this.attackTime, hitAt: this.attackTime * HIT_FRAME, fired: false,
+      stand: !!(this.cmd && this.cmd.stand), paid: paid };   // v1.14 E1: stand — Shift+ЛКМ (не снимается), paid — Удаль вернуть при снятии
     this.face(target.x - this.x, target.y - this.y);
     this.path = null; this.moving = false;
   }
@@ -500,14 +520,50 @@ export class Hero extends Actor {
 
   // --- урон / опыт
   /** Урон по герою. type: 'melee' | 'fire' | 'cold' | 'poison'. Возвращает итоговый урон. */
-  takeDamage(amount, game, type = 'melee', attacker = null) {
+  /** opts (v1.14 E2): src 'melee' | 'proj' | 'ground' (по умолчанию: ближний бой с атакующим — melee, прочее — ground),
+   *  from [x, y] — откуда пришёл удар (снаряд — точка позади по полёту), heavy — тяжёлый удар (когти Кривши): щит не держит (heavyBlock false). */
+  takeDamage(amount, game, type = 'melee', attacker = null, opts = {}) {
     if (this.dead || this.invuln > 0) return 0;
-    if (type === 'melee' && this.block > 0 && Math.random() < this.block) {
+    if (type === 'melee' && this.block > 0 && Math.random() < this.block) {   // пассивный блок щита — первым, удар отменён целиком
       game.fx.text(this.x, this.y, t('proto.fx.block'), PAL.bronze_lt, 50);
       game.audio.play('block');
+      if (this.blocking) game.counters.blockPassive = (game.counters.blockPassive || 0) + 1;
       return 0;
     }
-    let dmg = amount;
+    let dmg = amount, guarded = false;
+    // v1.14 §12.2.4: ui.tut.block — первый удар врага по герою со щитом в Залесье (после ui.tut.skill_e)
+    if (attacker && !game._tutBlock && game._tutSkillE && game.zone && game.zone.id === 'zalesye' && this.hasShield() && (opts.src === 'melee' || (!opts.src && type === 'melee'))) {
+      game._tutBlock = true; game.notify(t('ui.tut.block'), PAL.bronze_lt, 'tut');
+    }
+    // v1.14 E2 (§4.7): стойка щита — удар ближнего боя или снаряд спереди (сектор к курсору) режется; огонь на земле, ореолы, следы — нет
+    const src = opts.src || (type === 'melee' && attacker ? 'melee' : 'ground');
+    if (this.blocking && (src === 'melee' || src === 'proj') && !(opts.heavy && !blockCfg().heavyBlock)) {   // v1.14: тяжёлый удар — мимо щита, от него рывок
+      const B = blockCfg(), from = opts.from || (attacker ? [attacker.x, attacker.y] : null), bs = this.blockSt;
+      let front = false;
+      if (from) { const ax = from[0] - this.x, ay = from[1] - this.y, d = Math.hypot(ax, ay) || 1; front = (ax * bs.dx + ay * bs.dy) / d >= Math.cos((B.sectorDeg / 2) * Math.PI / 180); }
+      if (front) {
+        const cost = B.cost;
+        if (this.yar >= cost) {
+          this.yar -= cost; dmg = amount * (1 - this.blockReduce()); guarded = true;
+          game.counters.blocked = (game.counters.blocked || 0) + 1; game.counters.blockedRaw = (game.counters.blockedRaw || 0) + amount;
+          game.counters.blockYar = (game.counters.blockYar || 0) + cost;
+          game.fx.text(this.x, this.y, t('proto.fx.block'), PAL.bronze_lt, 66); game.audio.play('block');   // выше числа урона — не налезают
+          const [sx, sy] = [bs.dx - bs.dy, (bs.dx + bs.dy) * 0.5];             // экранное направление щита
+          game.fx.sparks(this.x + bs.dx * 0.35, this.y + bs.dy * 0.35, sx, sy, 24, B.sparks ?? 6, PAL.bronze_lt, [8, 14], 0.15);
+          if (game.settings.shake !== false && game.hitStop) game.hitStop(B.hitStop ?? 0.05, attacker ? [this, attacker] : [this]);
+          this.blockFx = 0.2; this.blockHitT = 0;                           // H21 hit-кадры + H23 искры у обода
+          if (from) this.blockFromLeft = ((from[0] - this.x) - (from[1] - this.y)) < 0;   // нападающий слева на экране — искры зеркалом
+          if (!game._tipBlock && game.log) { game._tipBlock = true; game.log.add(t('tip.15'), PAL.birch); }   // совет tip.15 (§12.2.4) — при первом принятом в щит ударе
+        } else {                                                            // пробитие: Удали меньше цены — удар проходит полностью
+          this.blockSt = null; this.blockCd = B.breakCd; this.stun = Math.max(this.stun, B.breakStun); this.breakT = 0; this.lowerT = null;
+          if (this.action && !this.action.fired) this.action = null;
+          game.counters.guardBreak = (game.counters.guardBreak || 0) + 1;
+          game.fx.text(this.x, this.y - 0.2, t('ui.fx.guard_break'), PAL.red_lt, 62);
+          game.fx.sparks(this.x + bs.dx * 0.35, this.y + bs.dy * 0.35, bs.dx - bs.dy, (bs.dx + bs.dy) * 0.5, 24, B.breakSparks ?? 10, PAL.bronze_lt, [10, 20], 0.2);
+          game.audio.play('guard_break'); if (game.shake) game.shake(1, 0.12);
+        }
+      }
+    }
     if (type !== 'melee') dmg = dmg * (1 - (this.res[type] || 0) / 100);
     dmg = Math.max(1, Math.floor(dmg));
     this.hp -= dmg;
@@ -523,9 +579,9 @@ export class Hero extends Actor {
     }
     game.audio.play('hurt');
     if (attacker && this.thorns && type === 'melee') attacker.takeDamage(this.thorns, game, 'thorns', this);
-    // удар > 12% макс. жизни прерывает героя на 0,2 с
-    if (dmg > this.maxHp * STATS.heroStun.hpFrac && this.hp > 0) {
-      this.stun = STATS.heroStun.time;
+    // удар > 12% макс. жизни прерывает героя на 0,2 с (принятый в щит — не прерывает, v1.14 E2)
+    if (!guarded && dmg > this.maxHp * STATS.heroStun.hpFrac && this.hp > 0) {
+      this.stun = Math.max(this.stun, STATS.heroStun.time);         // не укорачивает оглушение пробития щита (v1.14 E2)
       if (this.action && !this.action.fired) this.action = null;
     }
     if (this.hp <= 0) {
@@ -552,6 +608,22 @@ export class Hero extends Actor {
     }
   }
 
+  /** v1.14 E2: blockWant = {x, y} (ПКМ зажата; бот) — поднять / держать щит к точке; null — опустить. */
+  updateBlock(dt, game) {
+    this.blockCd = Math.max(0, (this.blockCd || 0) - dt);
+    if (this.blockFx > 0) this.blockFx -= dt;
+    for (const k of ['blockHitT', 'breakT', 'lowerT']) if (this[k] != null) this[k] += dt;   // таймеры листов H21 (только для отрисовки)
+    const W = this.blockWant;
+    const can = W && this.hasShield() && !this.dead && !this.dashing && !(this.stun > 0) && !(this.blockCd > 0) && !(this.action && !this.action.fired);
+    if (!can) { if (this.blockSt && !this.dashing && !this.dead) this.lowerT = 0; this.blockSt = null; return; }   // опускание — raise назад
+    if (this.action && this.action.fired) this.action = null;            // хвост замаха/каста после удара щит обрезает
+    const dx = W.x - this.x, dy = W.y - this.y, d = Math.hypot(dx, dy) || 1;
+    if (!this.blockSt) { this.lowerT = null; this.breakT = null; this.blockSt = { t: 0, dx: dx / d, dy: dy / d }; game.counters.blockRaise = (game.counters.blockRaise || 0) + 1; }
+    else { this.blockSt.t += dt; if (d > 0.05) { this.blockSt.dx = dx / d; this.blockSt.dy = dy / d; } }
+    if (!this.moving && d > 0.05) this.face(dx, dy);                       // герой ведёт щит за курсором
+    game.counters.blockTime = (game.counters.blockTime || 0) + dt;
+  }
+
   update(dt, game) {
     if (this.dead) return;
     this.flash = Math.max(0, this.flash - dt);
@@ -573,7 +645,8 @@ export class Hero extends Actor {
     this.sinceHurt = (this.sinceHurt ?? 99) + dt;
     for (const k in this.cds) this.cds[k] = Math.max(0, this.cds[k] - dt);
     if (this.buffs.chur) { this.buffs.chur.t -= dt; if (this.buffs.chur.t <= 0) { delete this.buffs.chur; this.recalc(); } }
-    this.yar = Math.min(this.maxYar, this.yar + this.yarRegen * dt);   // жизнь сама не восстанавливается (GDD §3.3)
+    if (!this.blockSt || blockCfg().regen) this.yar = Math.min(this.maxYar, this.yar + this.yarRegen * dt);   // жизнь сама не восстанавливается (GDD §3.3); со щитом Удаль стоит (v1.14 E2)
+    this.updateBlock(dt, game);
     for (const e of this.effects) {
       const a = e.rate * Math.min(dt, e.t);
       if (e.res === 'hp') this.hp = Math.min(this.maxHp, this.hp + a);
@@ -597,8 +670,23 @@ export class Hero extends Actor {
     if (this.action) {
       const a = this.action;
       a.t += dt;
+      // v1.14 E1 (§4.2): цель ушла до кадра удара (зазор > reach + slack) — замах снимается, Удаль за него назад, приказ «бить»
+      // продолжается (герой догоняет). Shift+ЛКМ (stand) не снимается — бьёт в воздух со следом и свистом.
+      if (a.type === 'attack' && a.target && !a.fired && !a.stand && !a.target.dead) {
+        const MR = meleeReach();
+        if (this.gapTo(a.target) > MR.reach + MR.slack) {
+          this.action = null; this.yar = Math.min(this.maxYar, this.yar + (a.paid || 0));
+          game.counters.swingCancel = (game.counters.swingCancel || 0) + 1;
+          const c0 = this.cmd;
+          if (c0 && c0.type === 'attack' && c0.target === a.target) { c0.swung = false; c0.cancels = (c0.cancels || 0) + 1; c0.cancelT = 0; c0.repath = 0; }
+        }
+      }
+    }
+    if (this.action) {
+      const a = this.action;
       if (!a.fired && a.t >= a.hitAt) {
         a.fired = true;
+        if (a.type === 'attack' && !a.stand && this.cmd && this.cmd.type === 'attack' && this.cmd.target === a.target) { this.cmd.cancels = 0; this.cmd.cancelT = null; }
         if (a.type === 'attack') game.combat.heroMelee(this, a.target, a.skill);
         else if (a.type === 'read') game.finishScroll(a.item);
         else game.combat.release(this, a.skill, a.tx, a.ty);
@@ -621,7 +709,13 @@ export class Hero extends Actor {
     } else if (c.type === 'attack') {
       const e = c.target;
       if (e.dead || (c.swung && !c.repeat)) { this.cmd = null; this.moving = false; return; }
-      if (this.distTo(e) <= MELEE_RANGE + e.r * 0.5 || (c.stand && this.distTo(e) <= MELEE_RANGE + 0.6)) {
+      // v1.14 E1: после снятого замаха догоняем не дольше chase с и не больше max снятий подряд (без зажатой ЛКМ)
+      if (c.cancelT != null && !c.repeat) {
+        const MR = meleeReach(); c.cancelT += dt;
+        if (c.cancelT > MR.chase || c.cancels > MR.max) { this.cmd = null; this.path = null; this.moving = false; game.counters.chaseDropped = (game.counters.chaseDropped || 0) + 1; return; }
+      }
+      if (this.blockSt) { this.path = null; this.moving = false; return; }   // v1.14 E2: со щитом не бьём — приказ ждёт отпускания ПКМ
+      if (this.gapTo(e) <= meleeReach().reach) {                         // v1.14 E1: начать взмах — зазор ≤ reach
         c.swung = true;
         this.startAttack(e, c.skill, game);
         return;

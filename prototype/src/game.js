@@ -51,6 +51,7 @@ const LS_SETTINGS = 'byl_nebyl_settings';   // v1.13 §15: settings.shake (и д
 
 function heroBusy(h, what) {
   if (h.dashing || h.stun > 0) return true;
+  if (what === 'skill' && h.blockSt) return true;     // v1.14 E2: со щитом навык E ждёт отпускания ПКМ
   if (!h.action) return false;
   if (what === 'dash') return !h.action.fired;
   return !(h.action.fired && h.action.t > h.action.dur * 0.85);   // конец замаха/каста: можно ставить следующий
@@ -590,19 +591,34 @@ export class Game {
 
     // M1d (GDD v1.9 §4.4): ПКМ по ячейке пояса — выпить зелье / прочитать бересту, как клавиша ячейки
     if (inp.rightPressed && this.hoverBelt >= 0 && !ui.hand) h.drink(this.hoverBelt, this);
-    // ПКМ — навык панели; нажатие во время замаха запоминается до конца замаха + 0,3 с (QA B-02)
-    if ((inp.rightPressed || inp.right) && !this.overUi && !ui.hand) {
+    // v1.14 E2 (§4.7): ПКМ (зажать) — блок щитом к курсору. Нажатие над HUD / поясом / окном щит не поднимает.
+    if (inp.rightPressed && !this.overUi && !ui.hand && this.hoverBelt < 0) {
+      if (h.hasShield()) this.blockHeld = true;
+      else if (!h.dead) {
+        this.counters.noShield = (this.counters.noShield || 0) + 1;
+        if (!(this.noShieldT > 0)) { this.noShieldT = (STATS.block && STATS.block.noShieldCd) ?? 1.2; this.notify(t('ui.error.no_shield'), PAL.red_lt, 'noshield'); this.audio.play('error'); }
+      }
+    }
+    if (!inp.right || ui.hand || h.dead) this.blockHeld = false;
+    if (this.noShieldT > 0) this.noShieldT -= dt;
+    if (this.blockHeld) { const [bx, by] = this.toWorld(inp.mx, inp.my); h.blockWant = { x: bx, y: by }; this.blockByInput = true; }
+    else if (this.blockByInput) { h.blockWant = null; this.blockByInput = false; }   // ботам / тестам: h.blockWant, выставленный снаружи, не трогаем
+    // v1.14 E3 (§4.1): E — навык ячейки E (по умолчанию «Огненный змей»), зажатая E повторяет; нажатие во время
+    // замаха / каста / блока запоминается до конца действия + 0,3 с (QA B-02)
+    const ePressed = inp.pressed('KeyE'), eDown = inp.down('KeyE');
+    if ((ePressed || eDown) && !ui.hand) {
       const tg = this.hoverEnemy, id = h.rmb;
       const [wx, wy] = tg ? [tg.x, tg.y] : this.toWorld(inp.mx, inp.my);
-      if (inp.rightPressed || h.cdLeft(id) <= 0) {
+      if (ePressed || (h.cdLeft(id) <= 0 && !this.rmbBuf)) {
         const r = h.useSkill(this, id, wx, wy, tg);
         if (r === 'ok') { this.rmbBuf = null; if (tg) this.lastTarget = tg; }
-        else if (r === 'busy' && inp.rightPressed) { this.rmbBuf = { t: 0.3, id, wx, wy, tg }; this.dashBuf = null; this.dropQueuedLmb(); this.counters.buffered = (this.counters.buffered || 0) + 1; }
-        else if (r === 'town' && inp.rightPressed) { this.notify(t('ui.error.town_attack'), PAL.red_lt, 'townatk'); this.audio.play('error'); }
-        else if (r === 'cd' && inp.rightPressed) { this.counters.cdBlocked++; this.denyRmb('cd'); }
-        else if ((r === 'yar' || r === 'none') && inp.rightPressed) this.denyRmb(r);
+        else if (r === 'busy' && ePressed) { this.rmbBuf = { t: 0.3, id, wx, wy, tg }; this.dashBuf = null; this.dropQueuedLmb(); this.counters.buffered = (this.counters.buffered || 0) + 1; }
+        else if (r === 'town' && ePressed) { this.notify(t('ui.error.town_attack'), PAL.red_lt, 'townatk'); this.audio.play('error'); }
+        else if (r === 'cd' && ePressed) { this.counters.cdBlocked++; this.denyRmb('cd'); }
+        else if ((r === 'yar' || r === 'none') && ePressed) this.denyRmb(r);
       }
-    } else if (this.rmbBuf) {
+    }
+    if (this.rmbBuf) {
       // QA B-02: буфер живёт весь замах/каст (таймер стоит, пока герой занят) и ещё 0,3 с после
       const b = this.rmbBuf;
       if (!heroBusy(h, 'skill')) b.t -= dt;
@@ -647,7 +663,7 @@ export class Game {
       return;
     }
     const id = h.bar[k];
-    if (id && h.setRmb(id)) { this.audio.play('ui'); this.notify(t('proto.sys.rmb_set', { skill: SKILLS[id].name }), PAL.bronze_lt, 'rmb'); }
+    if (id && h.setRmb(id)) { this.audio.play('ui'); this.notify(t('proto.sys.e_set', { skill: SKILLS[id].name }), PAL.bronze_lt, 'rmb'); }
     else this.audio.play('error');
   }
   // колесо мыши — перебор навыков панели на ПКМ (GDD §4.1)

@@ -23,6 +23,7 @@ from checks_m1h import run_m1h
 from checks_m1i import run_m1i
 from checks_m1j import run_m1j
 from checks_m1k import run_m1k
+from checks_m1l import run_m1l
 from checks_v18 import run_balance18
 from playwright.async_api import async_playwright
 
@@ -91,7 +92,9 @@ async def main(a):
             print('консоль:', 'чисто' if not errors else errors[:5])
             await br.close()
             return 0
-        if a.only_m1b or a.only_m1c or a.only_m1d or a.only_m1e or a.only_m1f or a.only_m1g or a.only_m1h or a.only_m1i or a.only_m1j or a.only_m1k:
+        if a.only_m1b or a.only_m1c or a.only_m1d or a.only_m1e or a.only_m1f or a.only_m1g or a.only_m1h or a.only_m1i or a.only_m1j or a.only_m1k or a.only_m1l:
+            if a.only_m1l:
+                await run_m1l(pg, G, check, wait, client_of, client_scr, a)
             if a.only_m1k:
                 await run_m1k(pg, G, check, wait, client_of, client_scr, a)
             if a.only_m1j:
@@ -246,7 +249,7 @@ async def main(a):
             ex, ey = await client_of(st['e']['x'], st['e']['y'], st['e']['h'] / 2)
             await pg.mouse.move(ex, ey)
             if st['e']['d'] > 2.5:
-                await pg.mouse.down(button='right'); await wait(60); await pg.mouse.up(button='right')
+                await pg.keyboard.press('KeyE')
             else:
                 await pg.mouse.down(); await wait(250); await pg.mouse.up()
             await wait(150)
@@ -270,7 +273,7 @@ async def main(a):
         if st:
             e = await G('''(() => { const g = __game, h = g.hero; let b = null, bd = 1e9; for (const e of g.enemies) { if (e.dead) continue; const d = Math.hypot(e.x - h.x, e.y - h.y); if (d < bd) { bd = d; b = e; } } return { x: b.x, y: b.y, h: b.def.height }; })()''')
             ex, ey = await client_of(e['x'], e['y'], e['h'] / 2)
-            await pg.mouse.move(ex, ey); await pg.mouse.down(button='right'); await wait(60); await pg.mouse.up(button='right'); await wait(260)
+            await pg.mouse.move(ex, ey); await pg.keyboard.press('KeyE'); await wait(260)
             await pg.mouse.move(ex, ey)
         mm = await G('__game.showMinimap && __game.topRightVisible')
         await pg.screenshot(path=SHOT_GAME)
@@ -485,7 +488,7 @@ async def main(a):
         r1 = await G('__game.hero.rmb')
         await pg.mouse.move(*(await client_of(A[0] + 2, A[1] - 2))); await pg.mouse.wheel(0, 120); await wait(80)
         rw = await G('__game.hero.rmb')
-        check('F-клавиши (окно закрыто) ставят навык на ПКМ, колесо перебирает панель', r5 == 'morozko' and r1 == 'zmey' and rw != 'zmey', (r5, r1, rw))
+        check('F-клавиши (окно закрыто) ставят навык на E (v1.14; было ПКМ), колесо перебирает панель', r5 == 'morozko' and r1 == 'zmey' and rw != 'zmey', (r5, r1, rw))
 
         # 10.3 «Ратный» (+1 ко всем выученным навыкам «Ратного дела»), симметрично «Вещему»
         s = await G('''(() => { const g = __game, h = g.hero, d = g.dbg; const it = g.give('neck_1', 'magic', { affixes: [['P10a', 1]] });
@@ -537,17 +540,17 @@ async def main(a):
               if (d < 1.5) {{ const k = 1.6 / (d || 1); const nx = X + (e.x - X) * k, ny = Y + (e.y - Y) * k;
                 if (g.dbg.circleFree ? g.dbg.circleFree(g.map, nx, ny, e.r) : true) {{ e.x = nx; e.y = ny; }} }} }} return 1; }})()''')
         tx, ty = await client_of(A[0] + 2.5, A[1] + 2.5)
-        await pg.mouse.click(tx, ty, button='right'); await wait(380)
+        await pg.mouse.move(tx, ty); await pg.keyboard.press('KeyE'); await wait(380)
         p1 = await G('({ x: __game.hero.x, y: __game.hero.y, cd: __game.hero.cdLeft("skok"), skok: !!__game.combat.lastSkok || !!__game.lastSkok })')
         await wait(500)
         cb0 = await G('__game.counters.cdBlocked')
         tx2, ty2 = await client_of(A[0], A[1])
-        await pg.mouse.click(tx2, ty2, button='right'); await wait(300)
+        await pg.mouse.move(tx2, ty2); await pg.keyboard.press('KeyE'); await wait(300)
         p2 = await G('({ x: __game.hero.x, y: __game.hero.y, cb: __game.counters.cdBlocked, casts: __game.counters.casts.skok })')
-        check('ПКМ «Перунов скок»: перенос героя ≈3,5 тайла, удар грома, КД 3 с', abs(p1['x'] - p0[0]) > 2 and p1['cd'] > 2 and p1['skok'], (p0, p1))
+        check('E (v1.14; было ПКМ) «Перунов скок»: перенос героя ≈3,5 тайла, удар грома, КД 3 с', abs(p1['x'] - p0[0]) > 2 and p1['cd'] > 2 and p1['skok'], (p0, p1))
         check('перезарядка блокирует повторное применение (герой не сдвинулся, счётчик cdBlocked)', abs(p2['x'] - p1['x']) < 0.05 and p2['cb'] == cb0 + 1 and p2['casts'] == 1, p2)
         await wait(2300)
-        await pg.mouse.click(tx2, ty2, button='right'); await wait(450)
+        await pg.mouse.move(tx2, ty2); await pg.keyboard.press('KeyE'); await wait(450)
         check('после КД навык снова применяется', await G('__game.counters.casts.skok') == 2)
         # сцена для скриншота: у крады (открытая площадка), «Перунов скок» в пару упырей, «Чур-оберег» висит, «Морозко» на перезарядке нет — КД виден на скоке
         await wait(3100)
@@ -555,7 +558,7 @@ async def main(a):
             g.log.lines.length = 0; g.notice = null; h.levelFx = 0; h.cds = {}; h.buffs.chur = { t: 24, dur: 30, defPct: 50, resAll: 5 }; h.recalc();
             const t = [k.x + 4.5, k.y + 5.5]; const es = [g.spawnTest('upyr', t[0] + 0.6, t[1] - 0.4, 1), g.spawnTest('upyr', t[0] - 0.3, t[1] + 0.7, 1)];
             for (const e of es) e.stagger = 1e9; g.updateCamera(); return t; })()''')
-        await pg.mouse.click(*(await client_of(sc[0], sc[1])), button='right'); await wait(330)
+        await pg.mouse.move(*(await client_of(sc[0], sc[1]))); await pg.keyboard.press('KeyE'); await wait(330)
         await pg.mouse.move(*(await client_of(sc[0] - 4, sc[1] - 4)))
         await wait(60)
         await pg.screenshot(path=SHOT_SKILLS)
@@ -596,13 +599,14 @@ async def main(a):
         # до конца замаха ставим ровно 0,2 с и в той же задаче — настоящие DOM-события ПКМ: следующий кадр примет нажатие
         # внутри окна буфера при любой частоте кадров (раньше под --throttle опрос успевал проскочить конец замаха)
         sw = await G('''(([x, y]) => { const a = __game.hero.action; if (!a || a.type !== 'attack') return null; a.t = Math.max(0, a.dur - 0.2);
-            const c = document.getElementById('game'), o = { clientX: x, clientY: y, button: 2, buttons: 2, bubbles: true };
-            c.dispatchEvent(new MouseEvent('mousemove', o)); c.dispatchEvent(new MouseEvent('mousedown', o)); window.dispatchEvent(new MouseEvent('mouseup', { ...o, buttons: 0 }));
+            const c = document.getElementById('game'), o = { clientX: x, clientY: y, button: 0, buttons: 0, bubbles: true };
+            c.dispatchEvent(new MouseEvent('mousemove', o));   // v1.14 E3: навык — клавиша E (было ПКМ)
+            window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE', key: 'e', bubbles: true })); window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyE', key: 'e', bubbles: true }));
             return [a.t, a.dur]; })''', [ex, ey])
         await wait(700)
         s = await G('({ b: __game.counters.buffered || 0, f: __game.counters.bufferedFired || 0, z: __game.counters.casts.zmey || 0 })')
         s['f0'] = f0; s['swing'] = sw
-        check('B-02: ПКМ во время удара (окно 0,3 с) запоминается и срабатывает после замаха', s['f'] == f0 + 1 and s['z'] == z0 + 1, s)
+        check('B-02: E (v1.14; было ПКМ) во время удара (окно 0,3 с) запоминается и срабатывает после замаха', s['f'] == f0 + 1 and s['z'] == z0 + 1, s)
         s = await G('''((id) => { const g = __game, h = g.hero; const e = g.enemies.find(o => o.id === id); h.action = null; h.cmd = null; h.yar = h.maxYar;
             e.x = h.x + 6; h.cds.zmey = 0; const r = h.useSkill(g, 'zmey', e.x, e.y, e); g.simulate(1, () => g.combat.projectiles.some(p => !p.hostile)); const fl = g.combat.projectiles.filter(p => !p.hostile).length;
             const xp0 = h.xp; h.invuln = 0; h.dashing = null; h.takeDamage(99999, g, 'fire'); const after = g.combat.projectiles.filter(p => !p.hostile).length; h.gainXp(50, g);
@@ -821,10 +825,10 @@ async def main(a):
         s = await G('''(() => { const g = __game, h = g.hero, inp = g.input; g.simulate(0.5); h.dashing = null; h.yar = h.maxYar; h.cds = {}; h.action = null; h.cmd = null; g.rmbBuf = null; g.dashBuf = null; h.rmb = 'zmey';
             const z0 = g.counters.casts.zmey || 0; h.lmb = null; h.action = null;
             const rs = h.useSkill(g, 'sshibka', h.x + 1, h.y); if (rs !== 'ok' || !h.action) return { fail: rs };
-            g.simulate(0.08); const [sx, sy] = g.toS(h.x + 3, h.y + 0.5); inp.mx = sx; inp.my = sy; inp.rightPressed = true; inp.right = false; g.update(1 / 60); inp.endFrame();
+            g.simulate(0.08); const [sx, sy] = g.toS(h.x + 3, h.y + 0.5); inp.mx = sx; inp.my = sy; inp.keysPressed.add('KeyE'); g.update(1 / 60); inp.endFrame();
             const buf = !!g.rmbBuf, dur = +h.attackTime.toFixed(2); g.simulate(1.5, () => (g.counters.casts.zmey || 0) > z0);
             return { buf, dur, cast: (g.counters.casts.zmey || 0) - z0 }; })()''')
-        check('B-02: ПКМ в самом начале замаха (0,1 с при замахе дольше 0,3 с) не теряется — змей вылетает после удара', s['buf'] and s['dur'] > 0.4 and s['cast'] == 1, s)
+        check('B-02: E (v1.14; было ПКМ) в самом начале замаха (0,1 с при замахе дольше 0,3 с) не теряется — змей вылетает после удара', s['buf'] and s['dur'] > 0.4 and s['cast'] == 1, s)
         s = await G('''(() => { const g = __game, h = g.hero; h.yar = h.maxYar; h.cds = {}; h.action = null; h.cmd = null; const d0 = h.def;
             h.useSkill(g, 'chur', h.x, h.y); g.simulate(0.7); h.cds.skok = 2.5; h.cds.dash = 3; const d1 = h.def, buff1 = !!h.buffs.chur;
             h.invuln = 0; h.graceT = 0; h.takeDamage(99999, g, 'fire'); const atDeath = { dead: h.dead, buff: !!h.buffs.chur, cds: Object.values(h.cds).filter(v => v > 0).length };
@@ -847,7 +851,7 @@ async def main(a):
             const press = (fn, wx, wy) => { const [sx, sy] = g.toS(wx, wy); inp.mx = sx; inp.my = sy; fn(); g.update(1 / 60); inp.endFrame(); };
             const c = () => ({ z: g.counters.casts.zmey || 0, d: g.counters.casts.dash || 0 });
             let c0 = c(); h.useSkill(g, 'sshibka', h.x + 1, h.y); g.simulate(0.05);
-            press(() => { inp.rightPressed = true; inp.right = false; }, h.x + 3, h.y);
+            press(() => inp.keysPressed.add('KeyE'), h.x + 3, h.y);
             press(() => inp.keysPressed.add('Space'), h.x - 3, h.y);
             g.simulate(1.5); let c1 = c(); const a = { zmey: c1.z - c0.z, dash: c1.d - c0.d };
             g.simulate(0.5); h.cds = {}; h.dashing = null; c0 = c(); h.useSkill(g, 'sshibka', h.x + 1, h.y); g.simulate(0.05);
@@ -855,7 +859,7 @@ async def main(a):
             const tx = h.x + 2, ty = h.y + 2; press(() => { inp.leftPressed = true; inp.left = false; }, tx, ty);
             g.simulate(1.5); c1 = c(); const b = { zmey: c1.z - c0.z, dash: c1.d - c0.d, moved: +Math.hypot(h.x - tx, h.y - ty).toFixed(2) };
             return { a, b }; })()''')
-        check('GDD v1.7: ввод во время замаха копится до конца действия, срабатывает последний (ПКМ→Пробел: рывок; Пробел→ЛКМ: шаг)',
+        check('GDD v1.7: ввод во время замаха копится до конца действия, срабатывает последний (E→Пробел: рывок; Пробел→ЛКМ: шаг)',
               s['a'] == {'zmey': 0, 'dash': 1} and s['b']['zmey'] == 0 and s['b']['dash'] == 0 and s['b']['moved'] < 0.6, s)
         # GDD v1.7 п.2: отдых в тихом круге — +20%/с Жизни и Яри после 2 с без урона; вне круга регена Жизни нет
         s = await G('''(() => { const g = __game, h = g.hero, k = g.map.krada; const R = g.zone.safeZones[0].rest; h.x = k.x + 2; h.y = k.y + 2; h.cmd = null; h.action = null;
@@ -887,7 +891,7 @@ async def main(a):
             let tEnd = 0; while (g.restFx.sparksFrame >= 0 && tEnd < 2) { g.simulate(1 / 60); tEnd += 1 / 60; }
             const after = { full: h.hp === h.maxHp, kp: kp.restOn, src: g.restFx.src, tEnd: +tEnd.toFixed(2) }; g.simulate(0.4); after.a = ring();
             h.hp = h.maxHp; return { sheets, lay, phase, ringPx, mid, border, outNear, far, early, rest, after }; })()''')
-        ok = (len([k for k in s['sheets'] if not k.startswith(('k_', 'm_', 'a_', 'p_', 'sw_')) and k not in ('item_beresta', 'stump', 'smoke')]) == 13 and sorted(s['lay']) == [[6, 55], [10, 91]] and s['phase'] and s['ringPx']['R10'][0] > 300 and s['ringPx']['R6'][0] > 150
+        ok = (len([k for k in s['sheets'] if not k.startswith(('k_', 'm_', 'a_', 'p_', 'sw_')) and k not in ('item_beresta', 'stump', 'smoke', 'bsparks')]) == 13 and sorted(s['lay']) == [[6, 55], [10, 91]] and s['phase'] and s['ringPx']['R10'][0] > 300 and s['ringPx']['R6'][0] > 150
               and abs(s['ringPx']['R10'][1] - 128) <= 1 and s['mid']['a'] == 0 and s['mid']['src'] is None and s['mid']['sp'] == -1
               and s['border'] == {'a': 0.5, 'lit': False} and s['outNear'] == 0.5 and s['far'] == 0
               and not s['early']['r'] and s['early']['sp'] == -1 and not s['early']['kp']
@@ -1131,6 +1135,8 @@ async def main(a):
         await run_m1j(pg, G, check, wait, client_of, client_scr, a)
         # --- 21. Веха m1k (D4 видимость, D5 навигация, D6 окно диалога, D7 Ладога, D9 деревья вдоль пути)
         await run_m1k(pg, G, check, wait, client_of, client_scr, a)
+        # --- 22. Веха m1l (баг подхода по ЛКМ, B-39 пути в tools/, B-40 дым изб Ладоги)
+        await run_m1l(pg, G, check, wait, client_of, client_scr, a)
 
         check('консоль без ошибок и предупреждений', not errors, errors[:5])
         await br.close()
@@ -1151,6 +1157,7 @@ if __name__ == '__main__':
     ap.add_argument('--only-m1f', action='store_true', help='только проверки вехи m1f (замечания критиков m1e, P0/P1)')
     ap.add_argument('--only-m1g', action='store_true', help='только проверки вехи m1g (GDD v1.11)')
     ap.add_argument('--only-m1h', action='store_true', help='только проверки вехи m1h (замена терминов, rename_map.md)')
+    ap.add_argument('--only-m1l', action='store_true', help='только проверки вехи m1l (баг подхода ЛКМ, B-39, B-40)')
     ap.add_argument('--only-m1k', action='store_true', help='только проверки вехи m1k (D4, D5, D6, D7, D9)')
     ap.add_argument('--only-m1j', action='store_true', help='только проверки вехи m1j (D1, D2, D13, D17)')
     ap.add_argument('--only-m1i', action='store_true', help='только проверки вехи m1i (замечания критиков m1f, P2)')

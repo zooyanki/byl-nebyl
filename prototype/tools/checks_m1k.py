@@ -1,8 +1,9 @@
 # Веха m1k: GDD v1.13.2 §12.4 — D4 (видимость за кронами), D5 (навигация), D6 (окно диалога), D7 (Ладога: постройки
 # художника, ворота, указатель, священник), D9 (деревья вдоль пути). Окно диалога здесь настоящее: __game.dlgAuto = false.
+from pathlib import Path
 import os, json, subprocess
 
-ROOT = '/workspace/game/prototype/'
+ROOT = str(Path(__file__).resolve().parent.parent) + '/'   # B-39: корень прототипа от расположения файла
 SHOT_TREES = ROOT + 'screenshot_m1k_trees.png'
 SHOT_NAV = ROOT + 'screenshot_m1k_nav.png'
 SHOT_DIALOG = ROOT + 'screenshot_m1k_dialog.png'

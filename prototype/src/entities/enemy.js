@@ -223,7 +223,7 @@ export class Enemy extends Actor {
           this.attackFired = true;
           if (heroTargetable && !heroSafe && this.distTo(hero) <= def.reach + hero.r + 0.35) {
             if (Math.random() < hitChance(this.ar, hero.def, this.mlvl, hero.level)) {
-              this.onHitHero(hero.takeDamage(this.dmgMin + Math.floor(Math.random() * (this.dmgMax - this.dmgMin + 1)), game, 'melee', this), game);
+              this.onHitHero(hero.takeDamage(this.dmgMin + Math.floor(Math.random() * (this.dmgMax - this.dmgMin + 1)), game, 'melee', this, { src: 'melee', from: [this.x, this.y] }), game);   // v1.14 E2: удар спереди — в щит
             } else game.fx.text(hero.x, hero.y, t('ui.combat.miss'), PAL.mist, 50, { dur: 0.6 });
           }
         }

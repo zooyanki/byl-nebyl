@@ -18,7 +18,8 @@ const SHEETS = {
   m_ash: 'fx_mara_ash_trail', m_bolt: 'fx_mara_bolt', m_hit: 'fx_mara_bolt_hit', a_coal: 'fx_anchutka_coal',
   p_open: 'fx_chur_portal_open', p_loop: 'fx_chur_portal_loop', p_fading: 'fx_chur_portal_fading', p_close: 'fx_chur_portal_close',   // Чуров проход (m1c)
   sw_se: 'fx_swing_se', sw_ne: 'fx_swing_ne', sw_s: 'fx_swing_s', sw_n: 'fx_swing_n',   // след взмаха «Сшибки» (H10, m1j): SW/NW/W — зеркало, E → SE
-  smoke: 'fx_smoke_wisp',                                                                                                             // дым над курной избой, банями, мастерской (m1k, v1.13.2)
+  smoke: 'fx_smoke_wisp', bsparks: 'fx_block_sparks',   // искры блока щитом (H23, v1.14)
+                                                                                                              // дым над курной избой, банями, мастерской (m1k, v1.13.2)
   stump: 'prop_stump_burnt',                                                                                                         // горелый пень (декор тупика Мары, GDD v1.11)
   item_beresta: '../items/item_beresta_ground',                                                                                       // береста на земле (m1c)                                                     // Мара (спрайты M1b)
 };

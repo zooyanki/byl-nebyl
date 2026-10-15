@@ -1,0 +1,24 @@
+{
+ "effect": "Искры блока (H23, GDD v1.14 §12.1.8)",
+ "draw": "поверх героя, pivot = точка удара на кромке щита (anchors.shield_rim из hero_block_*.json); веер летит вправо",
+ "pivot": [
+  4,
+  8
+ ],
+ "fps": 20,
+ "loop": false,
+ "mirror": "атакующий слева от щита (экранно) → зеркалить по x, pivot (11,8)",
+ "colors": "кадр 0 bronze_hi/bronze_lt, кадр 1 bronze/bronze_lt, кадр 2 bronze_dk (затухание)",
+ "events": {
+  "spawn": "на событии hit (кадр 0 hero_block_hit) — 1 шт.; на break — 2 шт. (второй зеркальный)"
+ },
+ "image": "fx_block_sparks.png",
+ "frame_size": [
+  16,
+  16
+ ],
+ "frame_count": 3,
+ "layout": "horizontal strip, left to right",
+ "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
+ "alpha": "0/255 only"
+}

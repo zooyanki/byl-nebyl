@@ -1,6 +1,6 @@
 import { crand } from '../core/rng.js';   // B-35: звук не тратит игровое зерно
 // Звуки-заглушки: всё синтезируется WebAudio на лету, без файлов.
-// play(name): hit, crit, throw, miss, hurt, block, skill, explode, kill, pickup, silver, potion, equip, levelup, death, respawn, ui, error.
+// play(name): hit, crit, throw, miss, hurt, block, guard_break, skill, explode, kill, pickup, silver, potion, equip, levelup, death, respawn, ui, error.
 const STORE_KEY = 'byl_nebyl_mute';
 
 export class Audio {
@@ -83,6 +83,7 @@ export class Audio {
       case 'miss': this.noise(0.12, 0.09, 'highpass', 2500, 0.7, 0, 5000); break;   // v1.13 §4.6: свист −6 дБ (0,18 → 0,09)
       case 'hurt': this.tone('square', 180, 90, 0.12, 0.16); this.noise(0.06, 0.2, 'lowpass', 700); break;
       case 'block': this.tone('square', 900, 700, 0.06, 0.12); this.noise(0.08, 0.25, 'bandpass', 3000, 3); break;
+      case 'guard_break': this.noise(0.22, 0.35, 'lowpass', 900, 0.9, 0, 200); this.tone('square', 260, 80, 0.18, 0.16); break;   // v1.14 E2: треск пробитого щита
       case 'skill': this.tone('sawtooth', 160, 620, 0.28, 0.12); this.noise(0.25, 0.12, 'bandpass', 600, 2, 0, 2400); break;
       case 'explode': this.noise(0.45, 0.5, 'lowpass', 1400, 0.8, 0, 120); this.tone('sine', 90, 35, 0.35, 0.4); break;
       case 'kill': this.noise(0.18, 0.25, 'lowpass', 500, 1, 0, 150); this.tone('triangle', 200, 70, 0.2, 0.15); break;

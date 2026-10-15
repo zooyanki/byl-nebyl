@@ -13,6 +13,8 @@ import { SKILLS, DASH, rankOf, skillCost, pointsFree } from '../data/skills.js';
 import { drawSkillTooltip } from '../ui/skills_window.js';
 import { t as tr } from '../core/i18n.js';
 import { eliteTitle } from '../systems/elites.js';
+import { blockCfg } from '../entities/hero.js';
+import { ART } from './boss_art.js';
 
 export const LAYOUT = (() => {
   const by = 328, big = 32, sm = 26, beltW = 4 * 24 + 3 * 2 + 6;
@@ -29,7 +31,9 @@ export const LAYOUT = (() => {
   L.rmb = { x, y: by, s: big };
   // слот рывка 18×18 справа от ПКМ в одном ряду, зазор 2 px (GDD §10)
   L.dash = { x: x + big + 2, y: by + big - 18, s: 18 };
-  L.silver = { x: L.dash.x + 18 + 3, y: 331, w: 42 };
+  // v1.14 E2 (§10): слот щита 18×18 справа от рывка, зазор 3 px — (509; 342); серебро сдвинуто: x 530, ширина 40
+  L.shield = { x: L.dash.x + 18 + 3, y: L.dash.y, s: 18 };
+  L.silver = { x: L.shield.x + 18 + 3, y: 331, w: 40 };
   L.level = { cx: 112, cy: 343 };
   L.xp = { x: 96, y: 322, w: VIEW_W - 192 };
   L.orbL = { cx: 40, cy: 322, r: 27 };
@@ -149,6 +153,8 @@ function drawStatic(ctx) {
     for (const f of L.f) woodSlot(c, f.x, f.y, f.s);
     const D = L.dash;
     rect(c, D.x, D.y, D.s, D.s, PAL.ink); rect(c, D.x + 1, D.y + 1, D.s - 2, D.s - 2, PAL.wood_md);
+    const SH = L.shield;
+    rect(c, SH.x, SH.y, SH.s, SH.s, PAL.ink); rect(c, SH.x + 1, SH.y + 1, SH.s - 2, SH.s - 2, PAL.wood_md);
     const B = L.belt;
     rect(c, B.x, B.y, B.w, 30, PAL.ink);
     rect(c, B.x + 1, B.y + 1, B.w - 2, 28, PAL.wood_dk);
@@ -228,7 +234,7 @@ export function drawHud(ctx, game) {
     ctx.save(); ctx.globalAlpha = k; ctx.strokeStyle = dn.why === 'yar' ? PAL.blue_lt : PAL.red_lt; ctx.lineWidth = 2;
     ctx.strokeRect(R.x + 1, R.y + 1, R.s - 2, R.s - 2); ctx.restore();
   }
-  drawText(ctx, R.x + 3, R.y + R.s - 11, tr('proto.hud.rmb'), PAL.birch, { outline: true });
+  drawText(ctx, R.x + 3, R.y + R.s - 11, tr('proto.hud.e'), PAL.birch, { outline: true });   // v1.14 E3: слот E (было «ПКМ»)
   // рывок (Пробел)
   const D = L.dash;
   drawIcon(ctx, 'sk_ryvok_16', D.x + 1, D.y + 1, 16, 16);
@@ -236,6 +242,12 @@ export function drawHud(ctx, game) {
   if (h.cds.dash != null && h.cdLeft('dash') === 0 && (h._dashReadyAt == null || h._dashReadyAt > t)) h._dashReadyAt = t;
   if (h.cdLeft('dash') > 0) h._dashReadyAt = null;
   if (h._dashReadyAt != null && t - h._dashReadyAt < 0.25) { ctx.strokeStyle = PAL.bronze_hi; ctx.strokeRect(D.x + 0.5, D.y + 0.5, D.s - 1, D.s - 1); }   // вспышка рамки в конце КД
+  // v1.14 E2: слот щита (ПКМ): готов / поднят (рамка bronze_hi) / пробит (сектор отката) / щита нет (серый)
+  const SH = L.shield, hasSh = h.hasShield(), st = !hasSh ? 'none' : h.blockCd > 0 ? 'broken' : h.blockSt ? 'raised' : 'ready';
+  shieldIcon(ctx, SH.x + 1, SH.y + 1, st);
+  if (st === 'broken') cooldownSector(ctx, SH.x + 1, SH.y + 1, 16, h.blockCd / blockCfg().breakCd, h.blockCd);
+  if (st === 'raised') { ctx.strokeStyle = PAL.bronze_hi; ctx.lineWidth = 1; ctx.strokeRect(SH.x + 0.5, SH.y + 0.5, SH.s - 1, SH.s - 1); }
+  game._shieldSlot = st;
   // бафф «Чур-оберег» — иконка 12×12 над шаром Жизни (GDD §10)
   if (h.buffs.chur) {
     const bx = L.orbL.cx - 6, byy = L.orbL.cy - L.orbL.r - 22;
@@ -538,6 +550,7 @@ function drawTooltip(ctx, game) {
     txt = b ? tr('proto.hud.belt_slot', { item: b.scroll ? SCROLLS[b.scroll].name : POTIONS[b.kind].name, n: String(b.count), key: String(game.hoverBelt + 1) }) : tr('proto.hud.belt_empty');
   } else if (inSlot(m, LAYOUT.rmb) && h.rmb) { drawSkillTooltip(ctx, h, h.rmb, m.mx, PANEL_Y - 6, 'bc'); return; }
   else if (inSlot(m, LAYOUT.dash)) { drawSkillTooltip(ctx, h, 'dash', m.mx, PANEL_Y - 6, 'bc'); return; }
+  else if (inSlot(m, LAYOUT.shield)) txt = tr('proto.help.block.key') + ' — ' + tr('proto.help.block', { n: String(blockCfg().cost) });
   else if (LAYOUT.f.some((f) => inSlot(m, f))) {
     const i = LAYOUT.f.findIndex((f) => inSlot(m, f)), id = h.bar[i];
     game._tip = { slot: i, id: id || null };   // для автотеста: подсказка F-слота (ответ дизайнера 08.10, п.5)
@@ -551,6 +564,23 @@ function drawTooltip(ctx, game) {
   const x = Math.max(2, Math.min(VIEW_W - w - 2, m.mx - w / 2));
   plate(ctx, x, PANEL_Y - 22, w, 13, 0.9);
   drawText(ctx, x + 4, PANEL_Y - 20, txt, PAL.linen);
+}
+
+/** v1.14 E2: значок щита 16×16 кодом (до арта H22 `ic_block`): круглый щит с умбоном; пробит — трещина; нет щита — серый. */
+function shieldIcon(ctx, x, y, st) {
+  const ic = ART.sheets.ic_block;                               // H22: арт ic_block (32×16): кадр 0 — норма, 1 — пробит; рамка / сектор / затемнение — кодом
+  if (ic) {
+    ctx.drawImage(ic.img, st === 'broken' ? 16 : 0, 0, 16, 16, x, y, 16, 16);
+    if (st === 'none') { ctx.save(); ctx.globalAlpha = 0.6; rect(ctx, x, y, 16, 16, PAL.slate_dk); ctx.restore(); }
+    ART.icBlockDrawn = st;
+    return;
+  }
+  const cx = x + 8, cy = y + 8, grey = st === 'none';
+  disc(ctx, cx, cy, 7, PAL.ink);
+  disc(ctx, cx, cy, 6, grey ? PAL.slate : PAL.bronze);
+  disc(ctx, cx, cy, 5, grey ? PAL.slate_dk : PAL.wood_md);
+  disc(ctx, cx, cy, 2, grey ? PAL.slate : PAL.bronze_lt);
+  if (st === 'broken') { ctx.strokeStyle = PAL.ink; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx - 4.5, cy - 3.5); ctx.lineTo(cx - 1, cy - 0.5); ctx.lineTo(cx + 0.5, cy + 2); ctx.lineTo(cx + 4, cy + 4.5); ctx.stroke(); }
 }
 
 /** Иконка навыка с перезарядкой и серым при нехватке Яри. */
@@ -575,7 +605,7 @@ function cooldownSector(ctx, x, y, s, k, secs) {
   drawText(ctx, x + s / 2, y + s / 2 - 4, String(Math.ceil(secs)), PAL.linen, { align: 'c', outline: true });
 }
 
-/** Ячейка HUD под курсором: { kind: 'f', i } | { kind: 'lmb' } | { kind: 'rmb' } | { kind: 'dash' } | null. */
+/** Ячейка HUD под курсором: { kind: 'f', i } | { kind: 'lmb' } | { kind: 'rmb' } (слот E) | { kind: 'dash' } | { kind: 'shield' } | null. */
 export function hudSlotAt(mx, my) {
   const m = { mx, my }, L = LAYOUT;
   const i = L.f.findIndex((f) => inSlot(m, f));
@@ -583,6 +613,7 @@ export function hudSlotAt(mx, my) {
   if (inSlot(m, L.lmb)) return { kind: 'lmb' };
   if (inSlot(m, L.rmb)) return { kind: 'rmb' };
   if (inSlot(m, L.dash)) return { kind: 'dash' };
+  if (inSlot(m, L.shield)) return { kind: 'shield' };
   return null;
 }
 

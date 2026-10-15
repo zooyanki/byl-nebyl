@@ -1,7 +1,8 @@
 # Веха m1f: замечания критиков m1e (inbox/critics_m1f.md) — P0 (1–4) и P1 (5–10). Только миссия 1.
+from pathlib import Path
 import os
 
-ROOT = '/workspace/game/prototype/'
+ROOT = str(Path(__file__).resolve().parent.parent) + '/'   # B-39: корень прототипа от расположения файла
 SHOT_DOOR = ROOT + 'screenshot_m1f_door.png'
 SHOT_LOG = ROOT + 'screenshot_m1f_log.png'
 SHOT_TREES = ROOT + 'screenshot_m1f_trees.png'
@@ -134,15 +135,15 @@ async def run_m1f(pg, G, check, wait, client_of, client_scr, a):
         pt = await client_of(30 + 2.5, 18 - 1.5, 10)
         await pg.mouse.move(*pt)
         b = await G("({ c: __game.counters.casts.zmey || 0, y: __game.hero.yar })")
-        await pg.mouse.click(*pt, button='right')
+        await pg.mouse.move(*pt); await pg.keyboard.press('KeyE')
         if dbl:
             await pg.wait_for_timeout(60)
-            await pg.mouse.click(*pt, button='right')
+            await pg.mouse.move(*pt); await pg.keyboard.press('KeyE')
         await wait(1800)
         a2 = await G("({ c: __game.counters.casts.zmey || 0, y: __game.hero.yar })")
         res.append({'dbl': dbl, 'casts': a2['c'] - b['c'], 'spent': round(b['y'] - a2['y'], 2)})
         await G("__game.hero.yar = __game.hero.maxYar")
-    check('m1f P0.4 ПКМ в пустую точку — змей вылетает и тратит Ярь; быстрый двойной щелчок — второй щелчок запомнен, два змея и двойная трата',
+    check('m1f P0.4 E (v1.14; было ПКМ) в пустую точку — змей вылетает и тратит Ярь; быстрый двойной щелчок — второй щелчок запомнен, два змея и двойная трата',
           res[0]['casts'] == 1 and res[0]['spent'] > 0 and all(r['casts'] == 2 and r['spent'] > res[0]['spent'] * 1.5 for r in res[1:]), res)
     # ПКМ при зажатой ЛКМ на враге: раньше ни один не вылетал до отпускания ЛКМ
     await G('''(() => { const g = __game, h = g.hero; delete g.zoneStates.zalesye; g.enterZone('zalesye', 'krada'); const e = g.enemies.find(e => e.kind === 'upyr' && !e.special);
@@ -157,24 +158,24 @@ async def run_m1f(pg, G, check, wait, client_of, client_scr, a):
         c0 = await G("__game.counters.casts.zmey || 0")
         pt = await client_of(28, 20, 10)
         await pg.mouse.move(*pt)
-        await pg.mouse.click(*pt, button='right')
+        await pg.mouse.move(*pt); await pg.keyboard.press('KeyE')
         await pg.mouse.move(*ce)
         await wait(1000)
         got.append((await G("__game.counters.casts.zmey || 0")) - c0)
         await G("__game.hero.yar = __game.hero.maxYar")
     await pg.mouse.up()
-    check('m1f P0.4 ПКМ в точку при зажатой ЛКМ на враге — змей вылетает после текущего замаха (каждый щелчок)', got == [1, 1, 1, 1], got)
+    check('m1f P0.4 E (v1.14; было ПКМ) в точку при зажатой ЛКМ на враге — змей вылетает после текущего замаха (каждый щелчок)', got == [1, 1, 1, 1], got)
     # отказы: нет Яри → вспышка на иконке ПКМ и звук ошибки
     await wait(800)
     await G("(() => { const g = __game, h = g.hero; g.enemies = []; h.yar = 0; window.__snd = []; const p0 = g.audio.play.bind(g.audio); g.audio.play = (k, ...r) => { window.__snd.push(k); return p0(k, ...r); }; })()")
     pt = await client_of(28, 16, 10)
     await pg.mouse.move(*pt)
     d0 = await G("__game.counters.rmbDenied || 0")
-    await pg.mouse.click(*pt, button='right')
+    await pg.mouse.move(*pt); await pg.keyboard.press('KeyE')
     await wait(120)
     d = await G("({ n: (__game.counters.rmbDenied || 0), why: __game.rmbDeny && __game.rmbDeny.why, t: __game.rmbDeny && __game.rmbDeny.t, snd: window.__snd.slice(), casts: __game.counters.casts.zmey })")
     await G("__game.hero.yar = __game.hero.maxYar")
-    check('m1f P0.4 отказ ПКМ (нет Яри): вспышка на иконке ПКМ (rmbDeny «yar») и звук ошибки',
+    check('m1f P0.4 отказ E (v1.14; было ПКМ; нет Яри): вспышка на иконке слота E (rmbDeny «yar») и звук ошибки',
           d['n'] == d0 + 1 and d['why'] == 'yar' and d['t'] > 0 and 'error' in d['snd'], d)
 
     # ======================= P1 =======================

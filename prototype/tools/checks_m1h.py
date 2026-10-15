@@ -1,8 +1,9 @@
 # Веха m1h: замена терминов (story/rename_map.md v1.0, inbox/rename_plan.md): видимые строки, длины/вёрстка, старые флаги сохранения.
+from pathlib import Path
 import os, json
 from check_rename import scan, selftest
 
-ROOT = '/workspace/game/prototype/'
+ROOT = str(Path(__file__).resolve().parent.parent) + '/'   # B-39: корень прототипа от расположения файла
 SHOT_HUD = ROOT + 'screenshot_m1h_hud.png'
 SHOT_REWARD = ROOT + 'screenshot_m1h_reward.png'
 LEN_OUT = ROOT + 'tools/length_m1h.json'

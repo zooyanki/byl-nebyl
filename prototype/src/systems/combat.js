@@ -8,6 +8,7 @@ import { SKILLS, skillNumbers, spellDamage, rankOf } from '../data/skills.js';
 import { PAL } from '../palette.js';
 import { baseDamageAvg } from '../data/enemies.js';
 import { t } from '../core/i18n.js';
+import { meleeReach } from '../entities/hero.js';
 
 let FIRE_ID = 1;
 // материал цели для звука удара (§4.6: плоть / дерево-щит / кость); прочие — плоть, боссы — кость
@@ -44,9 +45,14 @@ export class Combat {
     return Math.abs(a) <= T.half + Math.asin(Math.min(1, pad / d));
   }
 
+  /** v1.14 E1 (§4.1/§4.2): удар в воздух (Shift+ЛКМ мимо цели, «Сшибка» по земле без врага): след взмаха и свист «мимо», без надписи. */
+  airSwing(hero, target) {
+    const g = this.game, dir = target ? [target.x - hero.x, target.y - hero.y] : hero.dirVec();
+    this.swingSmear(hero, dir, false); g.audio.play('miss'); g.counters.airSwing = (g.counters.airSwing || 0) + 1;
+  }
   heroMelee(hero, target, skill = null) {
     const g = this.game;
-    const sk = skill ? skillNumbers(hero, skill) : null;
+    const sk = skill ? skillNumbers(hero, skill) : null, MR = meleeReach();
     if (sk) {
       g.fx.ring(hero.x + hero.dirVec()[0] * 0.8, hero.y + hero.dirVec()[1] * 0.8, 0.6, PAL.bronze_lt, 0.25);
       g.lastBash = { t: g.time, target: target ? target.id : null };
@@ -58,14 +64,15 @@ export class Combat {
         for (const e of g.enemies) {
           if (e.dead) continue;
           const dx = e.x - hero.x, dy = e.y - hero.y, d = Math.hypot(dx, dy);
-          if (d > MELEE_RANGE + e.r + 0.2 || (dx * fx + dy * fy) / (d || 1) < 0.5) continue;
+          if (d - hero.r - e.r > MR.reach + MR.slack || (dx * fx + dy * fy) / (d || 1) < 0.5) continue;   // v1.14 E1: тот же зазор
           if (d < bd) { bd = d; best = e; }
         }
         target = best;
       }
     }
-    if (!target || target.dead) return;
-    if (hero.distTo(target) > MELEE_RANGE + target.r + 0.4) return;           // увернулся / убежал
+    if (!target || target.dead) { if (!target) this.airSwing(hero, null); return; }
+    // v1.14 E1: удар засчитан при зазоре ≤ reach + slack (1,3). Дальше — только Shift+ЛКМ (обычный замах снят раньше): взмах в воздух
+    if (hero.gapTo(target) > MR.reach + MR.slack) { this.airSwing(hero, target); return; }
     const SS = skill ? SKILLS[skill] : null;
     const dir = [target.x - hero.x, target.y - hero.y];
     // GDD v1.13 §4.6 (D2): след взмаха «Сшибки» — дуга 120° (зона удара по дуге), и при промахе тоже
@@ -333,7 +340,7 @@ export class Combat {
             p.dead = true;
             g.fx.burst(p.x, p.y, PAL.ember, 8, 20, 50);
             if (p.src && p.src.kind === 'mara') this.sprFx.push({ key: 'm_hit', x: h.x, y: h.y, t: 0, dur: 5 / 12, fps: 12 });   // fx_mara_bolt_hit
-            const dealt = h.takeDamage(rndInt(p.dmg[0], p.dmg[1]), g, p.element, null);
+            const dealt = h.takeDamage(rndInt(p.dmg[0], p.dmg[1]), g, p.element, null, { src: 'proj', from: [p.x - (p.vx || 0), p.y - (p.vy || 0)] });   // v1.14 E2: снаряд спереди — в щит
             if (p.src && p.src.onHitHero) p.src.onHitHero(dealt, g);   // модификаторы элит (Жаркий, Студёный, Кровопийца)
           }
           continue;

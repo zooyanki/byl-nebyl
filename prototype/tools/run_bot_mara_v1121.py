@@ -13,15 +13,17 @@ async def main(a):
         await pg.goto(a.url); await pg.wait_for_function('window.__game && window.__game.time > 0.5', timeout=60000)
         await pg.mouse.click(960, 300); await pg.wait_for_timeout(300)
         await pg.evaluate(f"window.__N = {a.runs}; window.__SEED = {a.seed}; window.__LVL = {a.lvl}; window.__POT = {a.pot}; window.__RULE = '{a.rule}'; window.__FLEE = {a.flee};")
+        if a.block: print('block policy', await pg.evaluate(open(os.path.join(HERE, 'block_policy.js'), encoding='utf-8').read()))   # m1l: справочно с блоком (GDD v1.14 §4.7)
         r = await pg.evaluate(open(os.path.join(HERE, 'bot_mara_ref_v1121.js'), encoding='utf-8').read())
         await br.close()
     print(json.dumps(r, ensure_ascii=False)); print('errors', errs[:3])
     out = a.out or os.path.join(HERE, 'bot_mara_m1h.json')
     d = json.load(open(out)) if os.path.exists(out) else {}
-    d[f'{a.rule}_lvl{a.lvl}_pot{a.pot}_seed{a.seed}' + ('_flee' if a.flee else '')] = r
+    d[f'{a.rule}_lvl{a.lvl}_pot{a.pot}_seed{a.seed}' + ('_flee' if a.flee else '') + ('_block' if a.block else '')] = r
     json.dump(d, open(out, 'w'), ensure_ascii=False, indent=1)
 ap = argparse.ArgumentParser(); ap.add_argument('--url', default='http://127.0.0.1:8039/index.html?seed=7')
 ap.add_argument('--seed', type=int, default=7); ap.add_argument('--runs', type=int, default=30); ap.add_argument('--lvl', type=int, default=4)
 ap.add_argument('--pot', type=int, default=6); ap.add_argument('--rule', default='v1121'); ap.add_argument('--flee', type=int, default=0)
 ap.add_argument('--out', default='')
+ap.add_argument('--block', type=int, default=0)
 asyncio.run(main(ap.parse_args()))

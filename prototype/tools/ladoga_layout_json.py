@@ -1,9 +1,13 @@
-"""m1k: прогон /workspace/gamedesign/tools/ladoga_layout_v113.py по координатам из data/zones/ladoga.json (D7, §12.3 H).
+"""m1k: прогон gamedesign/tools/ladoga_layout_v113.py (папка дизайнера рядом с game/; путь — BYL_GAMEDESIGN) по координатам из data/zones/ladoga.json (D7, §12.3 H).
 Скрипт дизайнера не меняется: список B подменяется футпринтами из ladoga.json (props + крада), остальное — как есть.
 Дополнительно сверяет id/клетки с таблицей скрипта и точку попа Иоанна из npcs."""
-import json, re, sys, io, contextlib
-SCRIPT = '/workspace/gamedesign/tools/ladoga_layout_v113.py'
-Z = json.load(open('/workspace/game/prototype/data/zones/ladoga.json', encoding='utf-8'))
+import json, re, sys, io, contextlib, os
+from pathlib import Path
+ROOT = Path(__file__).resolve().parent.parent   # B-39: корень прототипа от расположения файла
+# скрипт дизайнера лежит вне прототипа: <корень>/../../gamedesign (необязательный инструмент разработчика)
+GDD_DIR = Path(os.environ.get('BYL_GAMEDESIGN') or (ROOT.parent.parent / 'gamedesign'))
+SCRIPT = str(GDD_DIR / 'tools' / 'ladoga_layout_v113.py')
+Z = json.load(open(ROOT / 'data' / 'zones' / 'ladoga.json', encoding='utf-8'))
 src = open(SCRIPT, encoding='utf-8').read()
 ns = {}
 exec(re.search(r"^B = \[.*?^\]", src, re.S | re.M).group(0), ns)
