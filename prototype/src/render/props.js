@@ -49,13 +49,15 @@ export function v2PropSheet(p) {
   }
   if (p.type === 'palisade' && !p.tyn && !p.tynH && !p.gatepost) return 'palisade_u4';
   if (p.type === 'izba' && !sheetOf(p)) return (V2A().izba || {})[p.id] || null;
-  if (p.type === 'church') return V2A().church || null;   // v2art r2: клетская церковь 11×6 (ответ Василия)
+  if (p.type === 'church') return V2A().church || null;
+  if (p.type === 'rock') return p.size > 1 ? 'boulder_moss_c' : 'boulder_moss_a';   // v2art4: замшелые валуны v2 (1×1 → a, 2×2 → c; b 2×1 — футпринта такого нет)   // v2art r2: клетская церковь 11×6 (ответ Василия)
   return null;
 }
 function v2PropSprite(p) {
   const name = v2PropSheet(p), sh = name && v2(name);
   if (!sh) return null;
   if (p.type === 'tree') return v2Sprite(name, p, p.x + 0.5, p.y + 0.5, { flip: p.seed > 0.5 });
+  if (p.type === 'rock') return v2Sprite(name, p, p.x + p.size / 2, p.y + p.size / 2, { flip: p.seed > 0.5 });   // pivot — центр футпринта на земле
   if (p.type === 'palisade') {
     // прясло 4 тайла вдоль u: клетка тына берёт свою полосу 16 px (крайние — до края листа); вдоль v — зеркало (истинная пара)
     const ys = p.axis === 'y', k = ((Math.floor(ys ? p.y : p.x) % 4) + 4) % 4, [fw] = sh.meta.frame_size || sh.meta.size, px = sh.meta.pivot[0];

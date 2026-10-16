@@ -1,0 +1,46 @@
+{
+ "image": "hero_attack2_e.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  636,
+  91
+ ],
+ "pivot": [
+  53,
+  83
+ ],
+ "frames": 6,
+ "frame_size": [
+  106,
+  91
+ ],
+ "character": "Ратибор",
+ "loop": false,
+ "events": {
+  "hit": 2
+ },
+ "phases": {
+  "from_low": 0,
+  "pickup": 1,
+  "hit": 2,
+  "follow_through": [
+   3,
+   4
+  ],
+  "carry": 5
+ },
+ "note": "комбо 2/3 (видео Ильи): из нижней точки удара 1 без замаха — восходящая диагональ снизу-слева вправо-вверх; кадр 0 = нижняя точка hero_attack",
+ "fps": 12,
+ "direction": "e",
+ "visible_height_px": [
+  55,
+  56,
+  60,
+  81,
+  82,
+  78
+ ],
+ "rendered": "per direction (model rotated 315°), no mirroring",
+ "mirror_pair": null
+}

@@ -7,8 +7,8 @@
 import { poseUpyr } from './boss_art.js';
 const DIR = 'assets/v2/';
 export const V2_DIRS = ['s', 'sw', 'w', 'nw', 'n', 'ne', 'e', 'se'];   // dir прототипа 0..7 → вид листа
-const CHARS = { hero: ['idle', 'attack', 'walk', 'death', 'block_raise', 'block_hold', 'block_walk', 'block_hit', 'block_break'], upyr: ['idle', 'attack', 'walk', 'hurt', 'death', 'rise'] };
-const SINGLE = ['tree_birch', 'tree_spruce', 'palisade_u4', 'izba_tes', 'izba_tes_windows', 'izba_sod', 'izba_sod_windows',
+const CHARS = { hero: ['idle', 'attack', 'attack2', 'attack3', 'walk', 'death', 'block_raise', 'block_hold', 'block_walk', 'block_hit', 'block_break'], upyr: ['idle', 'attack', 'walk', 'hurt', 'death', 'rise'] };
+const SINGLE = ['boulder_moss_a', 'boulder_moss_b', 'boulder_moss_c', 'tree_birch', 'tree_spruce', 'palisade_u4', 'izba_tes', 'izba_tes_windows', 'izba_sod', 'izba_sod_windows',
   'church_kletskaya', 'church_kletskaya_windows', 'ladya_u', 'ladya_v',
   'bld_banya_tes_windows', 'bld_banya_dern_windows', 'bld_masterskaya_windows', 'bld_lavka_windows',
   'izba_small_tes', 'izba_small_tes_windows', 'izba_small_sod', 'izba_small_sod_windows',
@@ -41,7 +41,7 @@ export function loadV2Art() {
   for (const [slug, anims] of Object.entries(CHARS)) for (const a of anims) for (const d of V2_DIRS) jobs.push(load(`${slug}_${a}_${d}`));
   for (const [slug, anims] of Object.entries(ENEMIES3)) for (const a of anims) for (const d of V2_DIRS) jobs.push(load(`${slug}_${a}_${d}`));
   for (const [slug, anims] of Object.entries(NPCS)) for (const a of anims) for (const d of V2_DIRS) jobs.push(load(`npc_${slug}_${a}_${d}`));
-  return Promise.all(jobs).then(() => { V2.ready = true; if (V2.failed.length) console.info('v2art: missing sheets', V2.failed.join(', ')); });
+  return Promise.all(jobs).then(() => { V2.ready = true; V2.counters.comboSheets = Object.keys(V2.sheets).filter((n) => /^hero_attack[23]_/.test(n)).sort(); if (V2.failed.length) console.info('v2art: missing sheets', V2.failed.join(', ')); });
 }
 export const v2 = (name) => V2.sheets[name] || null;
 export const v2View = (dir) => V2_DIRS[((dir | 0) % 8 + 8) % 8];
@@ -88,16 +88,34 @@ export function v2Eyes(ctx, sh, frame, x, y) {
 // --- позы. Игровые тайминги не трогаем: кадр удара листа ставится ровно на момент удара (hitAt), до него кадры растянуты.
 const loopF = (t, fps, n) => Math.floor(t * fps) % n;
 /** Кадр атаки: кадры 0..hit−1 растянуты на [0, hitAt), hit и дальше — @fps листа от hitAt. */
-export function attackFrame(t, hitAt, sh) {
-  const m = sh.meta, n = nFrames(m), hit = (m.events && m.events.hit) ?? Math.floor(n / 2), fps = m.fps || 12;
+export function attackFrame(t, hitAt, sh, dur = null) {
+  const m = sh.meta, n = nFrames(m), hit = (m.events && m.events.hit) ?? Math.floor(n / 2);
+  // v2art4: кадры после удара должны уложиться в оставшееся время удара (dur − hitAt) — иначе fps поднимается (длительность удара не меняется)
+  const fps = dur != null && dur > hitAt ? Math.max(m.fps || 12, (n - hit) / (dur - hitAt)) : (m.fps || 12);
   if (t < hitAt - 1e-9) return Math.min(hit - 1, Math.floor((t / Math.max(1e-6, hitAt)) * hit + 1e-6));
   return Math.min(n - 1, hit + Math.floor((t - hitAt) * fps + 1e-6));
+}
+/** Комбо из 3 ударов (v2art4): удар N берёт лист hero_attack{N}_<вид> (N = 2, 3; удар 1 — hero_attack_<вид>) в формате
+ *  hero_attack: кадр events.hit листа ставится ровно на hitAt. Пока листов 2 и 3 нет — временные заглушки из hero_attack:
+ *  удар 2 — кадры в обратном порядке (кадр удара — зеркальный индекс), удар 3 — зеркало по x. Листы перечислены в манифесте CHARS (hero: attack2, attack3); новые файлы с теми же именами подхватываются без правок кода. */
+export function heroAttackPose(a, view) {
+  const step = a.combo || 1, hitAt = a.hitAt ?? a.dur * 0.5;
+  if (step > 1) { const own = v2('hero_attack' + step + '_' + view); if (own) return { name: 'hero_attack' + step + '_' + view, sheet: own, frame: attackFrame(a.t, hitAt, own, a.dur), bob: 0, step }; }
+  const sh = v2('hero_attack_' + view);
+  if (!sh) return null;
+  if (step === 2) {
+    const m = sh.meta, n = nFrames(m), hit = (m.events && m.events.hit) ?? Math.floor(n / 2);
+    const f = attackFrame(a.t, hitAt, { meta: { ...m, events: { ...(m.events || {}), hit: n - 1 - hit } } });
+    return { name: 'hero_attack2_' + view + '~rev', sheet: sh, frame: n - 1 - f, bob: 0, step };
+  }
+  if (step === 3) return { name: 'hero_attack3_' + view + '~flip', sheet: sh, frame: attackFrame(a.t, hitAt, sh), bob: 0, flip: true, step };
+  return { name: 'hero_attack_' + view, sheet: sh, frame: attackFrame(a.t, hitAt, sh), bob: 0, step };
 }
 /** Поза героя v2: { sheet, frame, bob } или null (листа нет). Ходьбы в v2 нет — idle @8 с покачиванием на 1 px. */
 export function poseHeroV2(h, time, dir = h.dir) {
   const view = v2View(dir), a = h.action;
   if (h.dead) { const sh = v2('hero_death_' + view); if (!sh) return null; const n = nFrames(sh.meta); return { name: 'hero_death_' + view, sheet: sh, frame: Math.min(n - 1, Math.floor(Math.max(0, time - (h.deathAt ?? time)) * (sh.meta.fps || 10) + 1e-6)), bob: 0 }; }
-  if (a && a.type === 'attack') { const sh = v2('hero_attack_' + view); if (sh) return { name: 'hero_attack_' + view, sheet: sh, frame: attackFrame(a.t, a.hitAt ?? a.dur * 0.5, sh), bob: 0 }; }
+  if (a && a.type === 'attack') { const P = heroAttackPose(a, view); if (P) return P; }
   const sh = v2('hero_idle_' + view);
   if (!sh) return null;
   if (a && a.type === 'cast') { const at = v2('hero_attack_' + view); if (at) return { name: 'hero_attack_' + view, sheet: at, frame: Math.min(1, Math.floor(a.t * 10)), bob: 0 }; }
