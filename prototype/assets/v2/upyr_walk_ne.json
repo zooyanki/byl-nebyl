@@ -1,0 +1,41 @@
+{
+ "image": "upyr_walk_ne.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  496,
+  64
+ ],
+ "pivot": [
+  31,
+  55
+ ],
+ "frames": 8,
+ "frame_size": [
+  62,
+  64
+ ],
+ "character": "упырь",
+ "loop": true,
+ "events": {
+  "footstep": [
+   0,
+   4
+  ]
+ },
+ "note": "волочащийся шаг 8 кадров @10; «Прыткий» — 13 к/с",
+ "fps": 10,
+ "direction": "ne",
+ "visible_height_px": [
+  49,
+  50,
+  50,
+  50,
+  49,
+  50,
+  50,
+  50
+ ],
+ "rendered": "per direction (model rotated 270°), no mirroring",
+ "mirror_pair": null
+}

@@ -1,0 +1,56 @@
+{
+ "image": "arsonist_torch_throw_w.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  310,
+  91
+ ],
+ "pivot": [
+  31,
+  85
+ ],
+ "frames": 5,
+ "frame_size": [
+  62,
+  91
+ ],
+ "character": "Черноярец-поджигатель (monsters.json chernoyarets_arsonist)",
+ "animation": "torch_throw",
+ "fps": 10,
+ "loop": false,
+ "events": {
+  "release_frame": 3,
+  "spawn_effect": "fx_torch_flight",
+  "telegraph": "красный круг — кодом, в кадре 3"
+ },
+ "direction": "w",
+ "visible_height_px": [
+  72,
+  83,
+  81,
+  58,
+  57
+ ],
+ "rendered": "per direction (model rotated 135°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "torch": [
+   [
+    7,
+    24
+   ],
+   [
+    35,
+    11
+   ],
+   [
+    47,
+    15
+   ],
+   null,
+   null
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

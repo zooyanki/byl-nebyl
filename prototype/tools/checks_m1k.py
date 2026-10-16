@@ -94,8 +94,8 @@ async def run_m1k(pg, G, check, wait, client_of, client_scr, a):
         g.town.openNpc(ve); const a2 = g.dlgWin && g.dlgWin.id, n2 = g.dlgWin && g.dlgWin.lines.length; g.flushDialogs(); g.town.close();
         const pr = g.npcs.find(n => n.role === 'priest');
         return { a1, a2, n2, pr: pr && [pr.x, pr.y, pr.name], art: !!(g.dbg.ART.sheets.npc_priest_idle_se && g.dbg.ART.sheets.npc_priest_idle_ne) }; })()''')
-    check('m1k D6 разговор с NPC: стадия — окно диалога один раз, повтор — одна короткая реплика (npc.*.greet/idle*); поп Иоанн стоит в (27,0; 14,4), спрайт художника',
-          s['a1'] == 'vedana.s0' and (s['a2'] or '').startswith('short:npc.vedana.') and s['n2'] == 1 and s['pr'] and abs(s['pr'][0] - 27.0) < 1e-6 and abs(s['pr'][1] - 14.4) < 1e-6 and s['art'], s)
+    check('m1k D6 разговор с NPC: стадия — окно диалога один раз, повтор — одна короткая реплика (npc.*.greet/idle*); поп Иоанн стоит в (26; 14) у южной паперти (v2art r4), спрайт художника',
+          s['a1'] == 'vedana.s0' and (s['a2'] or '').startswith('short:npc.vedana.') and s['n2'] == 1 and s['pr'] and abs(s['pr'][0] - 26.0) < 1e-6 and abs(s['pr'][1] - 14.0) < 1e-6 and s['art'], s)
 
     # ================= D7. Ладога
     s = await G('''(async () => { ''' + LAD + '''
@@ -151,7 +151,7 @@ async def run_m1k(pg, G, check, wait, client_of, client_scr, a):
           and s['N']['mark'] == {'size': 9, 'h': 40, 'hGate': 96, 'bob': 2, 'hideR': 3, 'fade': 0.3} and s['mk'] == {'ladoga': 'vyshata'}
           and s['zl']['ladoga'][0]['key'] == 'quest.m1.obj.ladoga_exit' and s['hints'][0]['sec'] == 90 and s['hints'][0]['bark'] == 'bark.ladoga.m1_where', s)
     s = await G('''(async () => { ''' + LAD + '''
-        h.x = 23.5; h.y = 33; g.updateCamera && g.updateCamera(); g.render(); const T0 = g.navTarget(), tr0 = g.trackerDrawn, nd0 = g.navDrawn;
+        h.x = 16.5; h.y = 34; g.updateCamera && g.updateCamera(); g.render(); const T0 = g.navTarget(), tr0 = g.trackerDrawn, nd0 = g.navDrawn;
         g.enterZone('zalesye', 'krada'); g.render(); const trZ = g.trackerDrawn.lines.filter(l => l.zone).length;
         return { T0, tr0, nd0: nd0 && { kind: nd0.kind, x: nd0.x, y: nd0.y, frame: nd0.frame, alpha: nd0.alpha, steps: nd0.steps, blocked: nd0.blocked && nd0.blocked.some(r => nd0.x > r.x - 7 && nd0.x < r.x + r.w + 7 && nd0.y > r.y - 7 && nd0.y < r.y + r.h + 7) }, trZ }; })()''')
     nd = s['nd0'] or {}
@@ -173,20 +173,20 @@ async def run_m1k(pg, G, check, wait, client_of, client_scr, a):
         g.update(0.05); const note = g.notice && g.notice.text; g.update(0.05); g.notice = null; h.x = W.x + 1.5; g.update(0.05); const n1 = (g.counters.gateNear || 0) - n0;
         const b0 = g.counters.gateBark || 0; W.clickT = -99; g.clickGate(W); g.clickGate(W); const b1 = (g.counters.gateBark || 0) - b0;
         g.time += 10.1; g.clickGate(W); const b2 = (g.counters.gateBark || 0) - b0;
-        g.render(); const icons = g.miniIcons;
+        h.x = 24; h.y = 18; /* v2art r2: церковь 11×6 восточнее — герой у торга, чтобы и она, и ворота попали на мини-карту */ g.render(); const icons = g.miniIcons;
         return { note, n1, b1, b2, icons }; })()''')
     ic = {x['kind']: x['frame'] for x in s['icons']}
     check('m1k D5 закрытые ворота: ближе 2 тайлов — уведомление «Ворота на запоре…» раз в 10 с; щелчок — реплика раз в 10 с; мини-карта: открытые — проём (кадр 0), закрытые — черта (1), церковь — точка (2)',
           (s['note'] or '').startswith('Ворота на запоре') and s['n1'] == 1 and s['b1'] == 1 and s['b2'] == 2
           and ic.get('gate_east') == 0 and ic.get('gate_south') == 0 and ic.get('gate_north') == 1 and ic.get('gate_west') == 1 and ic.get('church') == 2, s)
     s = await G('''(() => { ''' + LAD + '''
-        g.dlgDone = g.dlgDone || {}; g.dlgDone['vyshata.s0'] = g.time; g.navHint = null; h.x = 23.5; h.y = 33; const c0 = g.counters.navHint || 0;
+        g.dlgDone = g.dlgDone || {}; g.dlgDone['vyshata.s0'] = g.time; g.navHint = null; h.x = 16.5; h.y = 34; const c0 = g.counters.navHint || 0;
         for (let k = 0; k < 89; k++) g.updateNavHints(1); const at89 = (g.counters.navHint || 0) - c0;
         g._barks['bark.ladoga.m1_where'] = null; g.speechUntil = 0; g.dialogQ = []; g.fx.texts = [];
         for (let k = 0; k < 2; k++) g.updateNavHints(1); const at91 = (g.counters.navHint || 0) - c0, flash = g.navFlashUntil - g.time;
         const said = g.log.lines.some(l => String(l.text || l).includes('Залесье горит на восходе'));
         for (let k = 0; k < 200; k++) g.updateNavHints(1); const once = (g.counters.navHint || 0) - c0;
-        g.navHint = null; const gt = g.objectById('gate_east'); h.x = gt.x - 5; h.y = gt.y; g.updateNavHints(1); h.x = 23.5; h.y = 33; for (let k = 0; k < 120; k++) g.updateNavHints(1);
+        g.navHint = null; const gt = g.objectById('gate_east'); h.x = gt.x - 5; h.y = gt.y; g.updateNavHints(1); h.x = 16.5; h.y = 34; for (let k = 0; k < 120; k++) g.updateNavHints(1);
         const nearNo = (g.counters.navHint || 0) - c0;
         return { at89, at91, flash: +flash.toFixed(2), said, once, nearNo }; })()''')
     check('m1k D5 подсказка: 90 с после разговора с Вышатой и ни разу ближе 10 тайлов к воротам → «Залесье горит на восходе…» один раз за вход, стрелка мигает 3 с; подошёл к воротам — подсказки нет',
@@ -194,7 +194,7 @@ async def run_m1k(pg, G, check, wait, client_of, client_scr, a):
     s = await G('''(() => { ''' + LAD + '''
         const st0 = ['mal', 'reach', 'huts'].map(id => g.quest.get(id).state); ['mal', 'reach', 'huts'].forEach(id => { g.quest.get(id).state = 'done'; g.quest.get(id).doneT = g.time - 99; });
         const k = g.quest.get('krivsha'); k.state = 'done'; k.doneT = g.time - 99; g.quest.events.push({ event: 'bossKilled', boss: 'krivsha', t: g.time });
-        h.x = 23.5; h.y = 33; g.render(); const T = g.navTarget(), z = g.trackerDrawn.lines[0];
+        h.x = 16.5; h.y = 34; g.render(); const T = g.navTarget(), z = g.trackerDrawn.lines[0];
         g.quest.flags['m1.turnedIn'] = true; g.render(); const T2 = g.navTarget(), z2 = g.trackerDrawn.lines.filter(l => l.zone).length; delete g.quest.flags['m1.turnedIn'];
         k.state = 'locked'; ['mal', 'reach', 'huts'].forEach((id, i) => { g.quest.get(id).state = st0[i]; }); g.quest.events = g.quest.events.filter(e => e.event !== 'bossKilled');
         return { T, z, T2, z2 }; })()''')
@@ -205,7 +205,7 @@ async def run_m1k(pg, G, check, wait, client_of, client_scr, a):
     check('m1k D4/D5 «Настройки» (пауза): «Прозрачные кроны» ui.settings.xray, «Стрелка к цели» ui.settings.navArrow; по умолчанию вкл.',
           ['xray', 'ui.settings.xray'] in s['b'] and ['navArrow', 'ui.settings.navArrow'] in s['b'] and s['st'] == [True, True], s)
     # снимок навигации: стрелка + закрытые ворота с подписью
-    await G('''(() => { ''' + LAD + ''' const W = g.objectById('gate_north'); h.x = W.x - 2.5; h.y = W.y + 3.2; g.updateCamera && g.updateCamera(); g.labelsAlways = false; })()''')
+    await G('''(() => { ''' + LAD + ''' const W = g.objectById('gate_north'); h.x = W.x - 7; h.y = W.y - 1; /* v2art: поле 960×540 — дальше от восточных ворот */ g.updateCamera && g.updateCamera(); g.labelsAlways = false; })()''')
     await wait(300)
     cl = await G("(() => { const W = __game.objectById('gate_north'); return __game.clientOf(W.x, W.y, 30); })()")
     await pg.mouse.move(*cl)
@@ -218,9 +218,9 @@ async def run_m1k(pg, G, check, wait, client_of, client_scr, a):
 
     # ================= D4. Видимость
     s = await G('(() => __game.dbg.CFG.stats.xray)()')
-    check('m1k D4 stats.json xray по §15: эллипс 56×40 (−22), 0,35 / 0,5 в 9 тайлах / дверь 0,3, 0,2 с, ≤ 12, контуры hero bronze_hi / enemy red_lt / elite bronze / boss bronze_hi, ≥ 25%',
-          s == {'heroEllipse': {'rx': 56, 'ry': 40, 'dy': -22}, 'alpha': 0.35, 'alphaIdle': 0.5, 'idleRange': 9, 'alphaDoor': 0.3, 't': 0.2, 'maxFaded': 12,
-                'outline': {'hero': 'bronze_hi', 'enemy': 'red_lt', 'elite': 'bronze', 'boss': 'bronze_hi', 'minCovered': 0.25}}, s)
+    check('m1k D4 stats.json xray по §15: эллипс 71×51 (−28; v2art ×1,27), 0,35 / 0,5 в 9 тайлах / дверь 0,3, 0,2 с, ≤ 12, контуры hero bronze_hi / enemy red_lt / elite bronze / boss bronze_hi, ≥ 25%',
+          s == {'heroEllipse': {'_v2art': '×1,27 под героя 56 px (было rx 56, ry 40, dy −22)', 'rx': 71, 'ry': 51, 'dy': -28}, 'alpha': 0.35, 'alphaIdle': 0.5, 'idleRange': 9, 'alphaDoor': 0.3, 't': 0.2, 'maxFaded': 12,
+                'outline': {'hero': 'bronze_hi', 'enemy': 'red_lt', 'elite': 'bronze', 'boss': 'bronze_hi', 'npc': 'linen', 'npcRange': 12, 'minCovered': 0.25}}, s)
     ZAL = '''const g = __game, h = g.hero; g.dlgAuto = false; g.paused = true; g.ui.closeAll(); delete g.zoneStates.zalesye; g.enterZone('zalesye', 'krada'); const m = g.map; g.enemies = []; g.buried = [];
         h.invuln = 1e9; h.stop && h.stop(); g.settings.xray = true; g.hoverEnemy = null;
         const tick = (n) => { for (let k = 0; k < n; k++) { g.time += 0.05; g.render(); } };

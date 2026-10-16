@@ -79,8 +79,8 @@ async def run_m1g(pg, G, check, wait, client_of, client_scr, a):
     check('m1g п.3 плашка Мары без наведения: «Огнея Пепельная · ур. 4» / «Былинный враг», у свиты плашек нет; строки из ru.json (не в коде)',
           len(np) == 1 and np[0]['line1'] == 'Огнея Пепельная · ур. 4' and np[0]['line2'] == 'Былинный враг' and len(s['np']) == 1
           and 'Былинный' not in src and 'Пепельная' not in src, s)
-    i_pl, i_cr = src.find('this.renderNameplates(ctx, game, toS)'), src.find('drawProp(')
-    check('m1g п.3 плашка рисуется после сцены (крон), света и подписей', i_pl > 0 and i_pl > src.find('this.renderLight(ctx, game, toS)') and i_pl > src.find('this.renderLabels(ctx, game, toS)'), [i_pl, i_cr])
+    i_pl, i_cr = src.find('this.renderNameplates(uc, game, toU)'), src.find('drawProp(')
+    check('m1g п.3 плашка рисуется после сцены (крон), света и подписей', i_pl > 0 and i_pl > src.find('this.renderLight(ctx, game, toS)') and i_pl > src.find('this.renderLabels(uc, game, toU)'), [i_pl, i_cr])
     await pg.screenshot(path=SHOT_MARA)
     check('m1g скриншот плашки Мары: ' + os.path.basename(SHOT_MARA), os.path.exists(SHOT_MARA) and os.path.getsize(SHOT_MARA) > 50000, '')
 

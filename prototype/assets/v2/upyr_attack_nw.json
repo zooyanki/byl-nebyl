@@ -1,0 +1,51 @@
+{
+ "image": "upyr_attack_nw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  944,
+  80
+ ],
+ "pivot": [
+  59,
+  67
+ ],
+ "frames": 8,
+ "frame_size": [
+  118,
+  80
+ ],
+ "character": "упырь",
+ "loop": false,
+ "events": {
+  "hit": 4
+ },
+ "phases": {
+  "ready": 0,
+  "anticipation": [
+   1,
+   2
+  ],
+  "lunge": 3,
+  "hit": 4,
+  "follow_through": 5,
+  "recovery": [
+   6,
+   7
+  ]
+ },
+ "fps": 12,
+ "direction": "nw",
+ "visible_height_px": [
+  50,
+  56,
+  54,
+  60,
+  62,
+  52,
+  51,
+  50
+ ],
+ "rendered": "per direction (model rotated 180°), no mirroring",
+ "mirror_pair": null
+}

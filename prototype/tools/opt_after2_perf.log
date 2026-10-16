@@ -1,0 +1,6 @@
+firefox ladoga {"frames": 1041, "fps": 52.2, "low1": 29.4, "renderAvg": 17.05, "renderP95": 22, "renderP99": 28, "lightAvg": 6.51, "lights": 73, "sparks": 0, "canvas": [960, 540, "1920px", "1080px"]}
+firefox zalesye {"frames": 844, "fps": 42.4, "low1": 29.2, "renderAvg": 21.85, "renderP95": 28, "renderP99": 30, "lightAvg": 5.82, "lights": 42, "sparks": 32, "canvas": [960, 540, "1920px", "1080px"]}
+firefox kapishche {"frames": 797, "fps": 39.9, "low1": 29.2, "renderAvg": 22.95, "renderP95": 32, "renderP99": 35, "lightAvg": 4.89, "lights": 36, "sparks": 0, "canvas": [960, 540, "1920px", "1080px"]}
+chromium ladoga {"frames": 1111, "fps": 55.7, "low1": 29.9, "renderAvg": 7.43, "renderP95": 10, "renderP99": 11.7, "lightAvg": 2.7, "lights": 73, "sparks": 0, "canvas": [960, 540, "1920px", "1080px"]}
+chromium zalesye {"frames": 927, "fps": 46.5, "low1": 29.9, "renderAvg": 8.71, "renderP95": 12, "renderP99": 13.4, "lightAvg": 1.76, "lights": 38, "sparks": 0, "canvas": [960, 540, "1920px", "1080px"]}
+chromium kapishche {"frames": 851, "fps": 42.6, "low1": 29.9, "renderAvg": 10.65, "renderP95": 15.9, "renderP99": 19.6, "lightAvg": 1.36, "lights": 38, "sparks": 0, "canvas": [960, 540, "1920px", "1080px"]}

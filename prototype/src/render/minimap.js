@@ -190,7 +190,7 @@ export class Minimap {
     const L = this.layer(6);
     const clip = { x: 0, y: 0, w: 640, h: 314 };
     const [hx, hy] = L.P(game.hero.x, game.hero.y);
-    const offX = Math.round(game.camCX - hx), offY = Math.round(157 - hy);
+    const offX = Math.round(game.camUX - hx), offY = Math.round(157 - hy);
     ctx.save();
     // тёмная подложка под большой картой (Tab/M), чтобы линии не терялись на пёстром мире
     ctx.globalAlpha = 0.62; ctx.fillStyle = PAL.ink; ctx.fillRect(clip.x, clip.y, clip.w, clip.h);

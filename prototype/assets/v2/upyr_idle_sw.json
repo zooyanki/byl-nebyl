@@ -1,0 +1,30 @@
+{
+ "image": "upyr_idle_sw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  224,
+  62
+ ],
+ "pivot": [
+  28,
+  54
+ ],
+ "frames": 4,
+ "frame_size": [
+  56,
+  62
+ ],
+ "character": "упырь",
+ "loop": true,
+ "fps": 4,
+ "direction": "sw",
+ "visible_height_px": [
+  46,
+  45,
+  45,
+  45
+ ],
+ "rendered": "per direction (model rotated 90°), no mirroring",
+ "mirror_pair": null
+}

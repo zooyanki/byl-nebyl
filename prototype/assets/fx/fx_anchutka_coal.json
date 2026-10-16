@@ -1,19 +1,24 @@
 {
- "effect": "Угли анчутки в полёте (GDD §12.1.5: 3 кадра)",
- "draw": "centre of the coal at the flight height (prototype: z = 14 + arc 8 px above the shadow); drawn flying +x (sparks trail to the left), flip when moving left on screen. Ember / flame / soot crust, no red.",
- "pivot": [
-  6,
-  6
+ "image": "fx_anchutka_coal.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  33,
+  8
  ],
+ "pivot": [
+  7,
+  4
+ ],
+ "frames": 3,
+ "frame_size": [
+  11,
+  8
+ ],
+ "effect": "уголёк анчутки в полёте",
+ "pivot_note": "центр угля на высоте полёта",
  "fps": 12,
  "loop": true,
- "image": "fx_anchutka_coal.png",
- "frame_size": [
-  12,
-  12
- ],
- "frame_count": 3,
- "layout": "horizontal strip, left to right",
- "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
- "alpha": "0/255 only"
+ "drawn_facing": "+x screen (вправо); влево — зеркалить кодом",
+ "light": "самосвет огня, сцену не подсвечивает (свет — кодом)"
 }

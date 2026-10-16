@@ -1,0 +1,59 @@
+{
+ "image": "arsonist_death_sw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  1312,
+  110
+ ],
+ "pivot": [
+  82,
+  71
+ ],
+ "frames": 8,
+ "frame_size": [
+  164,
+  110
+ ],
+ "character": "Черноярец-поджигатель (monsters.json chernoyarets_arsonist)",
+ "animation": "death",
+ "fps": 10,
+ "loop": false,
+ "events": {
+  "torch_drops_frame": 2,
+  "torch_out_frame": 7,
+  "note": "последний кадр держать (труп); факел на земле — FX/код"
+ },
+ "direction": "sw",
+ "visible_height_px": [
+  59,
+  55,
+  49,
+  37,
+  21,
+  15,
+  20,
+  17
+ ],
+ "rendered": "per direction (model rotated 90°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "torch": [
+   [
+    53,
+    33
+   ],
+   [
+    50,
+    27
+   ],
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

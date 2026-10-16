@@ -1,0 +1,114 @@
+{
+ "image": "krivsha_walk_sw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  1280,
+  165
+ ],
+ "pivot": [
+  80,
+  143
+ ],
+ "frames": 8,
+ "frame_size": [
+  160,
+  165
+ ],
+ "character": "Кривша, Обгорелый страж (bosses.json krivsha, Б1)",
+ "phase": "normal",
+ "animation": "walk",
+ "fps": 9,
+ "loop": true,
+ "events": {
+  "footstep": [
+   0,
+   4
+  ],
+  "fire_trail": "fx_krivsha_fire_trail — кодом (every 0.3 с)"
+ },
+ "direction": "sw",
+ "visible_height_px": [
+  121,
+  121,
+  122,
+  120,
+  119,
+  121,
+  124,
+  119
+ ],
+ "rendered": "per direction (model rotated 90°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "claw_A": [
+   [
+    17,
+    111
+   ],
+   [
+    16,
+    110
+   ],
+   [
+    13,
+    108
+   ],
+   [
+    10,
+    109
+   ],
+   [
+    8,
+    109
+   ],
+   [
+    10,
+    109
+   ],
+   [
+    13,
+    108
+   ],
+   [
+    16,
+    110
+   ]
+  ],
+  "claw_B": [
+   [
+    56,
+    133
+   ],
+   [
+    57,
+    133
+   ],
+   [
+    60,
+    132
+   ],
+   [
+    64,
+    134
+   ],
+   [
+    65,
+    135
+   ],
+   [
+    64,
+    134
+   ],
+   [
+    60,
+    132
+   ],
+   [
+    57,
+    133
+   ]
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

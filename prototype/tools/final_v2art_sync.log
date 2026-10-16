@@ -1,0 +1,13 @@
+_b3r2 обновлено 24 нет в игре: ['review_chars_b3_mara_a.png', 'review_chars_b3_mara_b.png', 'review_chars_b3_mara_c.png']
+_b4r1 обновлено 60 нет в игре: ['review_chars_b4_fx.png', 'review_chars_b4_krivsha_a.png', 'review_chars_b4_krivsha_b.png', 'review_chars_b4_krivsha_c.png', 'review_chars_b4_krivsha_d.png', 'review_chars_b4_krivsha_fire_a.png', 'review_chars_b4_krivsha_fire_b.png', 'review_chars_b4_krivsha_fire_c.png', 'review_chars_b4_krivsha_fire_d.png', 'review_chars_b4_lineup.png']
+fx обновлено 13 нет в игре: []
+b5: в игре нет ни сущностей, ни спавна Сбыслава/нави/мертвяка/Згубы (только тексты ru.json/dialogues.json, NPC sbyslav не размещён в zones.js) — не подключались. Дым fx_smoke_wisp: в art/ новой версии нет (совпадает с игрой).
+fx пересинхронизирован (art обновлён в 01:32): fx_mara_ash_trail.png
+fx пересинхронизирован (art обновлён в 01:32): fx_mara_bolt.png
+fx пересинхронизирован (art обновлён в 01:32): fx_mara_bolt_hit.json
+fx пересинхронизирован (art обновлён в 01:32): fx_mara_bolt_hit.png
+fx пересинхронизирован (art обновлён в 01:32): fx_torch_flight.png
+Новые ревизии _b3r3/_b4r2/_b5r1 (01:28) не брались: задание — Огнея r2, Кривша r1 (у r2 Кривши pivot 146→145).
+--- синк 2 (02:07, правки по критике): chars/ и fx/
+обновлено: {'krivsha': 159, 'mara': 120}
+отличаются, но не в списке правок — не трогали: {'anchutka': 20, 'krivsha_fire': 111, 'npc': 4}

@@ -1,0 +1,92 @@
+{
+ "image": "krivsha_emerge_sw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  1440,
+  234
+ ],
+ "pivot": [
+  120,
+  193
+ ],
+ "frames": 6,
+ "frame_size": [
+  240,
+  234
+ ],
+ "character": "Кривша, Обгорелый страж (bosses.json krivsha, Б1)",
+ "phase": "normal",
+ "animation": "emerge",
+ "fps": 8,
+ "loop": false,
+ "events": {
+  "note": "подъём из горящего идола в начале боя (rise 2 с: держать кадр 0, 6 кадров за последние 0.75 с); часть ниже земли не рисуется"
+ },
+ "direction": "sw",
+ "visible_height_px": [
+  68,
+  80,
+  78,
+  96,
+  143,
+  123
+ ],
+ "rendered": "per direction (model rotated 90°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "claw_A": [
+   [
+    49,
+    128
+   ],
+   [
+    40,
+    116
+   ],
+   [
+    15,
+    145
+   ],
+   [
+    9,
+    154
+   ],
+   [
+    28,
+    53
+   ],
+   [
+    53,
+    158
+   ]
+  ],
+  "claw_B": [
+   [
+    100,
+    270
+   ],
+   [
+    90,
+    187
+   ],
+   [
+    91,
+    183
+   ],
+   [
+    84,
+    192
+   ],
+   [
+    118,
+    98
+   ],
+   [
+    100,
+    182
+   ]
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

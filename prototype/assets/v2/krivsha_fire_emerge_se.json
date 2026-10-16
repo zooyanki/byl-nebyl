@@ -1,0 +1,92 @@
+{
+ "image": "krivsha_fire_emerge_se.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  1464,
+  216
+ ],
+ "pivot": [
+  122,
+  197
+ ],
+ "frames": 6,
+ "frame_size": [
+  244,
+  216
+ ],
+ "character": "Кривша, Обгорелый страж (bosses.json krivsha, Б1)",
+ "phase": "fire",
+ "animation": "fire_emerge",
+ "fps": 8,
+ "loop": false,
+ "events": {
+  "note": "выход из огнища в начале огненной фазы вместе с fx_krivsha_feed/_back/_source, +15% HP на кадре 6 FX-листа feed (heal_frame 6)"
+ },
+ "direction": "se",
+ "visible_height_px": [
+  123,
+  127,
+  139,
+  156,
+  138,
+  129
+ ],
+ "rendered": "per direction (model rotated 0°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "claw_A": [
+   [
+    161,
+    211
+   ],
+   [
+    155,
+    204
+   ],
+   [
+    153,
+    161
+   ],
+   [
+    124,
+    102
+   ],
+   [
+    144,
+    139
+   ],
+   [
+    142,
+    186
+   ]
+  ],
+  "claw_B": [
+   [
+    209,
+    187
+   ],
+   [
+    203,
+    180
+   ],
+   [
+    236,
+    119
+   ],
+   [
+    214,
+    57
+   ],
+   [
+    227,
+    97
+   ],
+   [
+    189,
+    162
+   ]
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

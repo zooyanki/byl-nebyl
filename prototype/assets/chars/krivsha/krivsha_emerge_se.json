@@ -1,36 +1,92 @@
 {
- "character": "Кривша, Обгорелый страж",
- "animation": "emerge",
- "variant": "normal",
- "direction": "se",
- "mirror_for": "sw",
- "mirror_rule": "flip horizontally around the frame centre line x = 64.0; pivot stays (64, 116)",
- "pivot": [
-  64,
-  116
+ "image": "krivsha_emerge_se.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  1440,
+  234
  ],
+ "pivot": [
+  120,
+  193
+ ],
+ "frames": 6,
+ "frame_size": [
+  240,
+  234
+ ],
+ "character": "Кривша, Обгорелый страж (bosses.json krivsha, Б1)",
+ "phase": "normal",
+ "animation": "emerge",
  "fps": 8,
  "loop": false,
- "visible_height_px": [
-  78,
-  86,
-  97,
-  97,
-  96,
-  95
- ],
- "height_rule": "pivot row (ground under the feet) to the top visible pixel, outline included",
- "notes": "Кривша, Обгорелый страж (boss M1; «Обгорелый страж» is his title, one character). Hunched keeper of the капище in a burnt sheepskin coat with a ring of bronze keys, ghoul-grey skin, long claws with burning tips, fire in the coat's cracks. Body 96 (scale.md: boss 96, fire halo to 112), frame 128x128, pivot (64,116).",
  "events": {
-  "note": "normal sheet = rising out of the burning idol at the start of the fight (rise 2 s: hold frame 0, play the 6 frames over the last 0.75 s, or the whole sheet at 3 fps); krivsha_fire_emerge = leaving the огнище at the start of the fire phase, together with fx_krivsha_feed («огнище питает», +15% HP on feed frame 6); then aura on"
+  "note": "подъём из горящего идола в начале боя (rise 2 с: держать кадр 0, 6 кадров за последние 0.75 с); часть ниже земли не рисуется"
  },
- "image": "krivsha_emerge_se.png",
- "frame_size": [
-  128,
-  128
+ "direction": "se",
+ "visible_height_px": [
+  34,
+  54,
+  78,
+  95,
+  143,
+  121
  ],
- "frame_count": 6,
- "layout": "horizontal strip, left to right",
- "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
- "alpha": "0/255 only"
+ "rendered": "per direction (model rotated 0°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "claw_A": [
+   [
+    122,
+    162
+   ],
+   [
+    131,
+    150
+   ],
+   [
+    149,
+    183
+   ],
+   [
+    156,
+    192
+   ],
+   [
+    122,
+    98
+   ],
+   [
+    140,
+    182
+   ]
+  ],
+  "claw_B": [
+   [
+    187,
+    246
+   ],
+   [
+    219,
+    152
+   ],
+   [
+    225,
+    145
+   ],
+   [
+    231,
+    154
+   ],
+   [
+    212,
+    53
+   ],
+   [
+    187,
+    158
+   ]
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
 }

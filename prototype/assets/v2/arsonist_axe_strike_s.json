@@ -1,0 +1,66 @@
+{
+ "image": "arsonist_axe_strike_s.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  540,
+  98
+ ],
+ "pivot": [
+  45,
+  92
+ ],
+ "frames": 6,
+ "frame_size": [
+  90,
+  98
+ ],
+ "character": "Черноярец-поджигатель (monsters.json chernoyarets_arsonist)",
+ "animation": "axe_strike",
+ "fps": 12,
+ "loop": false,
+ "events": {
+  "hit_frame": 3,
+  "arc_deg": 90
+ },
+ "direction": "s",
+ "visible_height_px": [
+  62,
+  70,
+  75,
+  58,
+  58,
+  59
+ ],
+ "rendered": "per direction (model rotated 45°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "torch": [
+   [
+    9,
+    42
+   ],
+   [
+    9,
+    41
+   ],
+   [
+    9,
+    41
+   ],
+   [
+    9,
+    44
+   ],
+   [
+    9,
+    43
+   ],
+   [
+    9,
+    42
+   ]
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

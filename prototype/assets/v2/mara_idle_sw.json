@@ -1,0 +1,34 @@
+{
+ "image": "mara_idle_sw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  276,
+  74
+ ],
+ "pivot": [
+  23,
+  63
+ ],
+ "frames": 6,
+ "frame_size": [
+  46,
+  74
+ ],
+ "character": "Огнея Пепельная (bosses.json mara; id/имена файлов прежние)",
+ "animation": "idle",
+ "fps": 8,
+ "loop": true,
+ "events": {},
+ "direction": "sw",
+ "visible_height_px": [
+  60,
+  60,
+  62,
+  60,
+  59,
+  59
+ ],
+ "rendered": "per direction (model rotated 90°), no mirroring",
+ "mirror_pair": null
+}

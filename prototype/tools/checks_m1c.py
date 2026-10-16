@@ -344,8 +344,8 @@ async def run_art(pg, G, check, wait, P):
         const corpse = pose(10, 'idle', { dead: true, corpseT: 10 });
         const hgt = e.def.height; g.enemies = g.enemies.filter(o => o !== e);
         return { at0, atHit, atEnd, atIdle, rise0, riseMid, riseEnd, sumHidden, sumRise, corpse, hgt, sheet: !!D.ART.sheets.upyr_idle_se }; })()''')
-    check('арт упырь (m1c): кадр 3 удара ровно на hitAt 0,6; rise 0→5 за riseTime; призванный rise с 0,3; труп = death:7; рост 40; лист загружен',
-          s['sheet'] and s['at0'] == 'attack:0' and s['atHit'] == 'attack:3' and s['atEnd'] == 'attack:5' and s['hgt'] == 40
+    check('арт упырь (m1c): кадр 3 удара ровно на hitAt 0,6; rise 0→5 за riseTime; призванный rise с 0,3; труп = death:7; рост 45 (v2art: ×56/44 от 36→45 px хитбокса; лист v2 — в checks_v2art); лист загружен',
+          s['sheet'] and s['at0'] == 'attack:0' and s['atHit'] == 'attack:3' and s['atEnd'] == 'attack:5' and s['hgt'] == 45
           and s['rise0'] == 'rise:0' and s['riseEnd'] == 'rise:5' and s['sumHidden'] == 'rise:0' and s['sumRise'].startswith('rise:')
           and s['corpse'] == 'death:7', s)
 

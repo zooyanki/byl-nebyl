@@ -1,0 +1,108 @@
+{
+ "image": "church_kletskaya.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  253,
+  261
+ ],
+ "pivot": [
+  118,
+  211
+ ],
+ "footprint_tiles": [
+  11,
+  6
+ ],
+ "footprint_m": [
+  10.1,
+  5.9
+ ],
+ "door_px": 69,
+ "orientation": {
+  "slot": [
+   26,
+   7
+  ],
+  "altar_annex": "east (+x)",
+  "entrance": "porch on south long side (+y), west half",
+  "west_end": "blank"
+ },
+ "note": "r4: ориентация исправлена — алтарный прируб на востоке (+x), паперть с дверью на южной стороне (+y, к торгу) в западной половине, западный торец глухой; клеть, барабан + шлемовидная главка из лемеха, крест над клетью",
+ "windows": {
+  "mask": "church_kletskaya_windows.png",
+  "anchors": [
+   {
+    "x": 111,
+    "y": 173,
+    "w": 12,
+    "h": 17
+   },
+   {
+    "x": 216,
+    "y": 200,
+    "w": 11,
+    "h": 17
+   }
+  ]
+ },
+ "cells": {
+  "slot_origin": [
+   26,
+   7
+  ],
+  "footprint_cells": "x 26–36, y 7–12",
+  "nave": "x 26–33, y 7–11",
+  "altar_annex_east": "x 34–36, y 7–10 (34.0–36.6 × 7.7–10.5)",
+  "porch_south": "x 28–31, y 11–12 (28.6–31.4 × 11.2–12.9); door in south wall at x 29.2–30.8",
+  "west_end": "x 26, blank"
+ },
+ "pivot_note": "pivot = ground point at footprint centre (31.5; 10.0)",
+ "anchors": {
+  "porch_stand": {
+   "world": [
+    30.0,
+    13.4
+   ],
+   "px": [
+    40,
+    226
+   ],
+   "facing": "south (+y)",
+   "note": "поп Иоанн: перед южной папертью, 0,5 тайла от её края, лицом на юг (к торгу); проход с торга к двери свободен"
+  },
+  "door": {
+   "world": [
+    30.0,
+    11.2
+   ],
+   "px": [
+    75,
+    209
+   ],
+   "side": "+y"
+  },
+  "porch_centre": {
+   "world": [
+    30.0,
+    12.05
+   ],
+   "px": [
+    61,
+    215
+   ]
+  },
+  "altar_annex_centre": {
+   "world": [
+    35.3,
+    9.1
+   ],
+   "px": [
+    193,
+    234
+   ]
+  }
+ },
+ "door": "+y",
+ "gdd": "GDD v1.14.4 «Алтарь на восток, паперть на юг»"
+}

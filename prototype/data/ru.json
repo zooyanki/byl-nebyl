@@ -1263,6 +1263,7 @@
  "proto.nameplate": "{name} · {level}",
  "proto.pause.hint": "Пауза — Esc, чтобы продолжить",
  "proto.pause.labels": "Подписи (Z)",
+ "proto.pause.light_hq": "Качество света",
  "proto.pause.minimap": "Мини-карта",
  "proto.pause.sound": "Звук (N)",
  "proto.plural.vrag_upokoen": [

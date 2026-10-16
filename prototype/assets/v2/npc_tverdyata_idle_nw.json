@@ -1,0 +1,33 @@
+{
+ "image": "npc_tverdyata_idle_nw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  160,
+  67
+ ],
+ "pivot": [
+  20,
+  60
+ ],
+ "frames": 4,
+ "frame_size": [
+  40,
+  67
+ ],
+ "loop": true,
+ "events": {},
+ "character": "Твердята, кузнец",
+ "animation": "idle",
+ "fps": 4,
+ "direction": "nw",
+ "visible_height_px": [
+  59,
+  59,
+  59,
+  59
+ ],
+ "height_ratio_to_hero": 1.11,
+ "rendered": "per direction (model rotated 180°), no mirroring",
+ "mirror_pair": null
+}

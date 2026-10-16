@@ -1,0 +1,42 @@
+{
+ "image": "upyr_death_w.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  944,
+  97
+ ],
+ "pivot": [
+  59,
+  67
+ ],
+ "frames": 8,
+ "frame_size": [
+  118,
+  97
+ ],
+ "character": "упырь",
+ "loop": false,
+ "events": {
+  "collapse_frames": [
+   0,
+   3
+  ],
+  "hold_last": true,
+  "note": "отшатнулся → согнулся → падает ничком; последний кадр — труп (гасит движок). Огонёк Небыли — кодом/fx"
+ },
+ "fps": 10,
+ "direction": "w",
+ "visible_height_px": [
+  63,
+  41,
+  36,
+  36,
+  37,
+  38,
+  39,
+  39
+ ],
+ "rendered": "per direction (model rotated 135°), no mirroring",
+ "mirror_pair": null
+}

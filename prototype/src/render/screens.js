@@ -1,5 +1,5 @@
 // Оверлеи: экран смерти (с возвращением к краде) и меню паузы с переключателями.
-import { VIEW_W, VIEW_H } from '../config.js';
+import { UI_W as VIEW_W, UI_H as VIEW_H } from '../config.js';   // v2art r2: слой интерфейса 640×360 ×3
 import { PAL } from '../palette.js';
 import { rect } from './shapes.js';
 import { drawText, textWidth } from '../core/font.js';
@@ -63,6 +63,8 @@ export const PAUSE_BTNS = [
   // m1k D4/D5 (§15 «Настройки»): «Прозрачные кроны» (settings.xray), «Стрелка к цели» (settings.navArrow)
   { id: 'xray', key: 'ui.settings.xray', x: PX + 14 + 168, y: PY + PH - 56, w: 164, h: TG.h },
   { id: 'navArrow', key: 'ui.settings.navArrow', x: PX + 14, y: PY + PH - 37, w: 164, h: TG.h },
+  // v2light: «Качество света» (settings.lightQ: high — вкл., low — выкл.: буфер света ¼, частиц вдвое меньше)
+  { id: 'lightQ', key: 'proto.pause.light_hq', x: PX + 14 + 168, y: PY + PH - 37, w: 164, h: TG.h },
 ];
 export function pauseButtonAt(m) { const b = PAUSE_BTNS.find((b) => inR(m, b)); return b ? b.id : null; }
 /** Строки справки: [клавиша, действие] — ключи ru.json; рывок (Пробел) — m1i. */
@@ -93,7 +95,7 @@ export function drawPause(ctx, game) {
     drawText(ctx, PX + 150, PY + 34 + i * 13, b, PAL.linen);
   });
   game.pauseLines = rows;   // для автотеста m1i
-  const st = { sound: !game.audio.muted, labels: game.labelsAlways, minimap: game.showMinimap, shake: game.settings.shake !== false, xray: game.settings.xray !== false, navArrow: game.settings.navArrow !== false };
+  const st = { sound: !game.audio.muted, labels: game.labelsAlways, minimap: game.showMinimap, shake: game.settings.shake !== false, xray: game.settings.xray !== false, navArrow: game.settings.navArrow !== false, lightQ: game.settings.lightQ !== 'low' };
   for (const b of PAUSE_BTNS) toggle(ctx, b, t(b.key).replace(/ \(.\)$/, ''), st[b.id], inR(game.input, b));
   drawText(ctx, VIEW_W / 2, PY + PH - 15, t('proto.pause.hint'), PAL.mist, { align: 'c' });
 }

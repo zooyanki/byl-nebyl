@@ -1,20 +1,25 @@
 {
- "effect": "Пепельный след Мары (bosses.json ashTrail, r 0.6 tile, burns 3 s)",
- "radius_tiles": 0.6,
- "draw": "ground decal, native size; engine alpha fade stays",
- "pivot": [
-  20,
-  16
+ "image": "fx_mara_ash_trail.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  128,
+  18
  ],
+ "pivot": [
+  16,
+  9
+ ],
+ "frames": 4,
+ "frame_size": [
+  32,
+  18
+ ],
+ "effect": "Пепельный след (ashTrail r 0.6 тайла, 3 с)",
+ "pivot_note": "центр декали на земле; затухание — альфой движка",
+ "radius_tiles": 0.6,
  "fps": 6,
  "loop": true,
- "image": "fx_mara_ash_trail.png",
- "frame_size": [
-  40,
-  28
- ],
- "frame_count": 4,
- "layout": "horizontal strip, left to right",
- "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
- "alpha": "0/255 only"
+ "drawn_facing": "+x screen (вправо); влево — зеркалить кодом",
+ "light": "самосвет огня, сцену не подсвечивает (свет — кодом)"
 }

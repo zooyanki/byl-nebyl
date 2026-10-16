@@ -1,0 +1,40 @@
+{
+ "image": "anchutka_walk_s.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  318,
+  50
+ ],
+ "pivot": [
+  27,
+  43
+ ],
+ "frames": 6,
+ "frame_size": [
+  53,
+  50
+ ],
+ "character": "Анчутка (monsters.json anchutka)",
+ "animation": "walk",
+ "fps": 12,
+ "loop": true,
+ "events": {
+  "footstep": [
+   0,
+   3
+  ],
+  "note": "бег/шмыг: погоня, отход, страх"
+ },
+ "direction": "s",
+ "visible_height_px": [
+  30,
+  30,
+  30,
+  30,
+  30,
+  30
+ ],
+ "rendered": "per direction (model rotated 45°), no mirroring",
+ "mirror_pair": null
+}

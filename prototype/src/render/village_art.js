@@ -32,7 +32,8 @@ function load(dir, name, into) {
   return Promise.all([
     fetch(dir + name + '.json').then((r) => r.json()),
     new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = dir + name + '.png'; }),
-  ]).then(([meta, img]) => { if (img) into[name] = { meta, img }; else VA.failed.push(name); })
+  ]).then(([meta, img]) => { if (meta && meta.frames && !meta.frame_count) meta.frame_count = meta.frames;   // v2: в JSON «frames» вместо frame_count
+    if (img) into[name] = { meta, img }; else VA.failed.push(name); })
     .catch(() => { VA.failed.push(name); console.warn('asset failed', name); });
 }
 export function loadVillageArt() {

@@ -29,7 +29,8 @@ export function loadRestFx() {
   const one = (key, base) => Promise.all([
     fetch(DIR + base + '.json').then((r) => r.json()),
     new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => { console.warn('Не загрузился ассет', base); res(null); }; im.src = DIR + base + '.png'; }),
-  ]).then(([meta, img]) => { if (img) FX.sheets[key] = { meta, img }; }).catch(() => console.warn('Не загрузился ассет', base));
+  ]).then(([meta, img]) => { if (meta && meta.frames && !meta.frame_count) meta.frame_count = meta.frames;   // v2: в JSON «frames» вместо frame_count
+    if (img) FX.sheets[key] = { meta, img }; }).catch(() => console.warn('Не загрузился ассет', base));
   const ring = fetch(DIR + 'fx_safe_ring.json').then((r) => r.json()).then((j) => { FX.ring = j; }).catch(() => console.warn('Не загрузился ассет fx_safe_ring'));
   return Promise.all([...Object.entries(SHEETS).map(([k, b]) => one(k, b)), ring]).then(() => { FX.ready = true; });
 }
@@ -73,6 +74,7 @@ export function drawSafeRing(ctx, R, cx, cy, alpha, lit) {
 }
 
 /** Спрайт-эффект по ключу: кадр frame, опора в (x, y). o.flip — зеркально (полёт факела влево), o.alpha, o.scale. */
+const NEBYL_GLOW = new Set(['k_summon', 'k_feed', 'k_feed_back', 'k_feed_src']), NEBYL_GLOW_A = 0.45;
 export function drawFxFrame(ctx, key, frame, x, y, o = {}) {
   const sh = FX.sheets[key];
   if (!sh) return false;
@@ -80,6 +82,8 @@ export function drawFxFrame(ctx, key, frame, x, y, o = {}) {
   ctx.save(); if (o.alpha != null && o.alpha < 1) ctx.globalAlpha *= Math.max(0, o.alpha);
   ctx.translate(Math.round(x), Math.round(y)); ctx.scale(o.flip ? -k : k, k);
   ctx.drawImage(sh.img, (frame % n) * fw, 0, fw, fh, -px, -py, fw, fh);
+  // v2 b4: потоки Небыли в палитре бледно-зелёные — кодовое свечение (аддитивный второй проход) для яркости
+  if (NEBYL_GLOW.has(key)) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha *= NEBYL_GLOW_A; ctx.drawImage(sh.img, (frame % n) * fw, 0, fw, fh, -px, -py, fw, fh); FX.glowDrawn = (FX.glowDrawn || 0) + 1; }
   ctx.restore();
   return true;
 }

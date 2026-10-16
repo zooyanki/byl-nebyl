@@ -1,0 +1,34 @@
+{
+ "image": "bld_masterskaya_windows.png",
+ "base": "prototype/assets/bld/bld_masterskaya.png (the sprite the prototype uses; v1 geometry, not v2)",
+ "palette": "palette_v3 (fire2 only)",
+ "alpha": "0/255",
+ "size": [
+  160,
+  169
+ ],
+ "frame_size": [
+  160,
+  169
+ ],
+ "frame_count": 1,
+ "pivot": [
+  78,
+  132
+ ],
+ "layer": "window light mask for bld_masterskaya.png, same size, frames and pivot as base",
+ "usage": "additive/screen on top of the base frame, or as a mask for code light; anchors are in frame-local px (same space as anchors_px of the base)",
+ "anchors": {
+  "0": [
+   {
+    "x": 123,
+    "y": 103,
+    "w": 12,
+    "h": 18,
+    "cx": 128,
+    "cy": 111,
+    "lit_in_base": true
+   }
+  ]
+ }
+}

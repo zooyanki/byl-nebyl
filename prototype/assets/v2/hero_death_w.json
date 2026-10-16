@@ -1,0 +1,42 @@
+{
+ "image": "hero_death_w.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  976,
+  81
+ ],
+ "pivot": [
+  61,
+  60
+ ],
+ "frames": 8,
+ "frame_size": [
+  122,
+  81
+ ],
+ "character": "Ратибор",
+ "loop": false,
+ "events": {
+  "collapse": [
+   1,
+   5
+  ],
+  "hold_last": true
+ },
+ "note": "удар → колени подгибаются → падает навзничь; последний кадр держится",
+ "fps": 10,
+ "direction": "w",
+ "visible_height_px": [
+  57,
+  52,
+  47,
+  45,
+  35,
+  27,
+  28,
+  29
+ ],
+ "rendered": "per direction (model rotated 135°), no mirroring",
+ "mirror_pair": null
+}

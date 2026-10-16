@@ -1,0 +1,42 @@
+{
+ "image": "npc_mal_walk_ne.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  192,
+  46
+ ],
+ "pivot": [
+  12,
+  40
+ ],
+ "frames": 8,
+ "frame_size": [
+  24,
+  46
+ ],
+ "loop": true,
+ "events": {
+  "footstep": [
+   0,
+   4
+  ]
+ },
+ "character": "Мал, отрок",
+ "animation": "walk",
+ "fps": 10,
+ "direction": "ne",
+ "visible_height_px": [
+  38,
+  38,
+  39,
+  38,
+  38,
+  38,
+  39,
+  38
+ ],
+ "height_ratio_to_hero": 0.66,
+ "rendered": "per direction (model rotated 270°), no mirroring",
+ "mirror_pair": null
+}

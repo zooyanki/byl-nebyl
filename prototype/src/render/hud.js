@@ -1,6 +1,6 @@
 // HUD по макету mockup_gameplay_hud_v2: шары Жизнь/Ярь, панель, полоса опыта, уровень,
 // слоты ЛКМ/ПКМ, пояс 1–4, серебро; сверху — цель, задание, журнал.
-import { VIEW_W, VIEW_H, PANEL_Y } from '../config.js';
+import { UI_W as VIEW_W, UI_H as VIEW_H, UI_PANEL_Y as PANEL_Y } from '../config.js';   // v2art r2: HUD — слой интерфейса 640×360 ×3
 import { PAL } from '../palette.js';
 import { drawFrame9 } from './dialogue_win.js';
 import { VA } from './village_art.js';
@@ -384,26 +384,26 @@ function drawTopUi(ctx, game) {
     // QA B-27: при открытом окне свободная часть экрана уже — строка уведомления уходит ниже трекера и мини-карты (y ≥ 160)
     // и переносится по ширине свободной части
     const lines = [], win = ui.anyOpen;
-    const maxW = win ? Math.max(120, Math.min(300, 2 * Math.min(game.camCX, VIEW_W - game.camCX) - 16)) : 300;
+    const maxW = win ? Math.max(120, Math.min(300, 2 * Math.min(game.camUX, VIEW_W - game.camUX) - 16)) : 300;
     if (textWidth(N.text) <= maxW) lines.push(N.text);
     else { let cur = ''; for (const w of N.text.split(' ')) { const nx = cur ? cur + ' ' + w : w; if (textWidth(nx) > maxW && cur) { lines.push(cur); cur = w; } else cur = nx; } if (cur) lines.push(cur); }
     // m1h: одна строка на y 64 стоит вровень с трекером задания (x ≤ 210, y ≤ 84) — если по ширине заходит на него, тоже опускаем под трекер
-    const QA = UI_ATLAS.hud_quest, gap = QA ? 2 * (game.camCX - (QA.x + QA.w) - 4) : maxW;
+    const QA = UI_ATLAS.hud_quest, gap = QA ? 2 * (game.camUX - (QA.x + QA.w) - 4) : maxW;
     let y0 = win ? 160 : lines.length > 1 || Math.max(...lines.map((l) => textWidth(l))) > gap ? 90 : 64;   // несколько строк — ниже трекера (он до y 84)
     if (game.rewardCard && !win) y0 = Math.max(y0, game.rewardCard.y + game.rewardCard.h + 8);   // под плашкой «Награда»
     if (yNext != null) { if (y0 < yNext && yNext < 90 && !win) y0 = 90; y0 = Math.max(y0, yNext); }   // второе — ниже первого
-    game._noticeBox = { x: game.camCX, y: y0, w: Math.max(...lines.map((l) => textWidth(l))), lines: lines.length, text: N.text };
+    game._noticeBox = { x: game.camUX, y: y0, w: Math.max(...lines.map((l) => textWidth(l))), lines: lines.length, text: N.text };
     game._noticeBoxes.push(game._noticeBox);
     yNext = y0 + lines.length * 11 + (N.key === 'mission' ? 14 : 3);
     if (N.key === 'mission') drawMissionBanner(ctx, game, N, lines, y0);   // m1i (П.16): «Миссия пройдена» — плашкой-баннером
-    else lines.forEach((l, i) => drawText(ctx, game.camCX, y0 + i * 11, l, N.color, { align: 'c', outline: true }));
+    else lines.forEach((l, i) => drawText(ctx, game.camUX, y0 + i * 11, l, N.color, { align: 'c', outline: true }));
   }
 }
 
 /** «Миссия пройдена»: баннер — тёмная плашка с бронзовой рамкой и «хвостами» ленты по бокам, текст бронзой; въезжает
  *  и гаснет вместе с уведомлением. Ширина — по тексту. */
 function drawMissionBanner(ctx, game, N, lines, y0) {
-  const tw = Math.max(...lines.map((l) => textWidth(l))), w = tw + 36, h = 10 + lines.length * 11, x = Math.round(game.camCX - w / 2), y = y0 - 6;
+  const tw = Math.max(...lines.map((l) => textWidth(l))), w = tw + 36, h = 10 + lines.length * 11, x = Math.round(game.camUX - w / 2), y = y0 - 6;
   const age = game.time - N.t, dur = N.dur || 4, a = Math.min(1, age / 0.25, (dur - age) / 0.5);
   ctx.save(); ctx.globalAlpha = Math.max(0, a);
   for (const sd of [-1, 1]) {                                            // хвосты ленты
@@ -416,7 +416,7 @@ function drawMissionBanner(ctx, game, N, lines, y0) {
   rect(ctx, x + 2, y + 2, w - 4, h - 4, PAL.wood_dk);
   rect(ctx, x + 3, y + 3, w - 6, 1, PAL.bronze_dk);
   for (const [px, py] of [[x + 2, y + 2], [x + w - 4, y + 2], [x + 2, y + h - 4], [x + w - 4, y + h - 4]]) rect(ctx, px, py, 2, 2, PAL.bronze_hi);
-  lines.forEach((l, i) => drawText(ctx, game.camCX, y + 5 + i * 11, l, PAL.bronze_hi, { align: 'c', outline: true }));
+  lines.forEach((l, i) => drawText(ctx, game.camUX, y + 5 + i * 11, l, PAL.bronze_hi, { align: 'c', outline: true }));
   ctx.restore();
   game.bannerDrawn = { x, y, w, h, text: lines.join(' '), t: game.time };
 }
@@ -518,9 +518,17 @@ function drawLog(ctx, game) {
     const parts = wrapLine(l.text, LOG_BOX.w - 6);
     for (let k = parts.length - 1; k >= 0 && rows.length < LOG_BOX.rows; k--) rows.push({ text: parts[k], color: l.color, a });
   }
+  // QA B-49: одна сплошная подложка под всем журналом (ink 0,75, рамка 1 px) — читается и на светлом фоне
+  game.logBg = null;
+  if (rows.length) {
+    const bw = Math.min(LOG_BOX.w, Math.max(...rows.map((r) => textWidth(r.text))) + 6), bh = rows.length * 10 + 2, by = LOG_BOX.bottom - 11 - (rows.length - 1) * 10;
+    const ba = 0.75 * Math.max(...rows.map((r) => r.a));
+    ctx.save(); ctx.globalAlpha = ba; rect(ctx, LOG_BOX.x, by, bw, bh, PAL.ink); ctx.globalAlpha = ba * 0.6;
+    rect(ctx, LOG_BOX.x, by - 1, bw, 1, PAL.bronze); rect(ctx, LOG_BOX.x, by + bh, bw, 1, PAL.bronze); ctx.restore();
+    game.logBg = { x: LOG_BOX.x, y: by, w: bw, h: bh, a: ba };
+  }
   let y = LOG_BOX.bottom - 10;
   for (const r of rows) {
-    ctx.save(); ctx.globalAlpha = 0.5 * r.a; rect(ctx, LOG_BOX.x, y - 1, Math.min(LOG_BOX.w, textWidth(r.text) + 6), 10, PAL.ink); ctx.restore();
     drawText(ctx, LOG_BOX.x + 3, y, r.text, r.color, { alpha: r.a });
     y -= 10;
   }

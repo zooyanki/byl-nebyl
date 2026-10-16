@@ -1,0 +1,71 @@
+{
+ "image": "hero_block_hit_e.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  162,
+  69
+ ],
+ "pivot": [
+  27,
+  60
+ ],
+ "frames": 3,
+ "frame_size": [
+  54,
+  69
+ ],
+ "character": "Ратибор",
+ "animation": "block_hit",
+ "loop": false,
+ "events": {
+  "block_active": [
+   0,
+   1,
+   2
+  ],
+  "hit": 0,
+  "sparks": 0,
+  "recoil_px": 1
+ },
+ "notes": "принятый удар: щит дрогнул, отдача; искры H23 — в кадре 0 у anchors.shield_rim",
+ "fps": 12,
+ "direction": "e",
+ "visible_height_px": [
+  56,
+  57,
+  57
+ ],
+ "rendered": "per direction (model rotated 315°), no mirroring",
+ "mirror_pair": null,
+ "anchors": {
+  "shield_center": [
+   [
+    40,
+    20
+   ],
+   [
+    41,
+    21
+   ],
+   [
+    42,
+    21
+   ]
+  ],
+  "shield_rim": [
+   [
+    39,
+    9
+   ],
+   [
+    40,
+    11
+   ],
+   [
+    41,
+    11
+   ]
+  ]
+ }
+}

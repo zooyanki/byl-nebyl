@@ -24,6 +24,8 @@ from checks_m1i import run_m1i
 from checks_m1j import run_m1j
 from checks_m1k import run_m1k
 from checks_m1l import run_m1l
+from checks_v2light import run_v2light
+from checks_v2art import run_v2art
 from checks_v18 import run_balance18
 from playwright.async_api import async_playwright
 
@@ -92,7 +94,11 @@ async def main(a):
             print('консоль:', 'чисто' if not errors else errors[:5])
             await br.close()
             return 0
-        if a.only_m1b or a.only_m1c or a.only_m1d or a.only_m1e or a.only_m1f or a.only_m1g or a.only_m1h or a.only_m1i or a.only_m1j or a.only_m1k or a.only_m1l:
+        if a.only_m1b or a.only_m1c or a.only_m1d or a.only_m1e or a.only_m1f or a.only_m1g or a.only_m1h or a.only_m1i or a.only_m1j or a.only_m1k or a.only_m1l or a.only_v2light or a.only_v2art:
+            if a.only_v2art:
+                await run_v2art(pg, G, check, wait, client_of, client_scr, a)
+            if a.only_v2light:
+                await run_v2light(pg, G, check, wait, client_of, client_scr, a)
             if a.only_m1l:
                 await run_m1l(pg, G, check, wait, client_of, client_scr, a)
             if a.only_m1k:
@@ -451,7 +457,7 @@ async def main(a):
             for (let d = 0; d < 8; d++) { const c = document.createElement('canvas'); c.width = 64; c.height = 72; const x = c.getContext('2d', { willReadFrequently: true });
               S.drawEnemy(x, 32, 64, e, d, 0.5, false); en.push(Array.from(x.getImageData(0, 0, 64, 72).data).reduce((a, v, i) => (a * 31 + v * (i % 7 + 1)) % 1000000007, 7)); }
             return { hero: new Set(out).size, upyr: new Set(en).size }; })()''')
-        check('спрайты героя (8 ракурсов) и упыря (se/ne + зеркало ≥4)', s['hero'] == 8 and s['upyr'] >= 4, s)
+        check('спрайты героя и упыря: 8 ракурсов (v2art: листы v2 на 8 направлений без зеркала)', s['hero'] == 8 and s['upyr'] == 8, s)
         s = await G(f'''(() => {{ const g = __game, h = g.hero; const e = g.spawnTest('upyr', h.x + 3.2, h.y, 1); e.aggro(g, false); e.stagger = 0; return e.id; }})()''')
         r = await G("""((id) => { const g = __game, h = g.hero, e = g.enemies.find(e => e.id === id); let res = null;
             for (let i = 0; i < 90; i++) { g.simulate(1/60); const want = g.dbg.dirOf(h.x - e.x, h.y - e.y); const d = (e.dir - want + 8) % 8;
@@ -617,10 +623,15 @@ async def main(a):
         await pg.keyboard.press('Tab'); await wait(120)
         PIX = '''(() => { const src = __game.ctx.canvas, c = document.createElement('canvas'); c.width = 8; c.height = 8; const x = c.getContext('2d', { willReadFrequently: true });
             x.drawImage(src, 4, 140, 8, 8, 0, 0, 8, 8); const d = x.getImageData(0, 0, 8, 8).data; let s = 0; for (let i = 0; i < d.length; i += 4) s += d[i] + d[i + 1] + d[i + 2]; return Math.round(s / 64); })()'''
-        lum = await G(PIX)
-        await pg.keyboard.press('Tab'); await wait(120)
-        lum0 = await G(PIX)
-        check('большая карта (Tab) на тёмной подложке', lum < 150 and lum <= lum0, (lum, lum0))
+        # средняя яркость по 5 кадрам (requestAnimationFrame) — под --throttle 4 один кадр мерцания света давал +2…3
+        AVG = '(async () => { const v = []; for (let i = 0; i < 5; i++) { await new Promise(r => requestAnimationFrame(r)); v.push(' + PIX.strip() + '); } return Math.round(v.reduce((a, b) => a + b, 0) / v.length * 10) / 10; })()'
+        open1 = await G('__game.mapOverlay === true')
+        lum = await G(AVG)
+        await pg.keyboard.press('Tab'); await wait(120 * max(1, int(getattr(a, 'throttle', 1) or 1)))   # под --throttle 4 кадр закрытия не успевал
+        closed = await G('__game.mapOverlay === false')
+        lum0 = await G(AVG)
+        # подложка не светлее мира: допуск 4 (из 765 = сумма RGB) — шум света между замерами, а не ослабление подложки
+        check('большая карта (Tab) на тёмной подложке', open1 and closed and lum < 150 and lum <= lum0 + 4, (lum, lum0))
 
         # 10.6 правила дизайнера: базы 50/35/15, отход анчутки ≤ 1 раза в 3 с, реплики ≤ 1 раза в 15 с, тексты
         s = await G('''(() => { const d = __game.dbg; const cnt = (ilvl) => { const c = {}; for (let i = 0; i < 6000; i++) { const b = d.pickBase('sword', ilvl, Math.random); c[b.id] = (c[b.id] || 0) + 1; } return c; };
@@ -817,7 +828,7 @@ async def main(a):
         await G(HOME)
         s = await G('''(() => { const g = __game, h = g.hero, inp = g.input; h.yar = h.maxYar; h.cds = {}; h.action = null; h.cmd = null; g.dashBuf = null;
             const c0 = g.counters.dashBufferedFired || 0; h.useSkill(g, 'zmey', h.x + 3, h.y); g.simulate(0.05); const busy = h.action && !h.action.fired;
-            const [sx, sy] = g.toS(h.x - 3, h.y); inp.mx = sx; inp.my = sy; inp.keysPressed.add('Space'); g.update(1 / 60); inp.endFrame();
+            const [sx, sy] = g.toU(h.x - 3, h.y); inp.mx = sx; inp.my = sy; inp.keysPressed.add('Space'); g.update(1 / 60); inp.endFrame();
             const kept = !!g.dashBuf && !h.dashing; let dashed = false; g.simulate(1.0, () => { if (h.dashing) dashed = true; return dashed; });
             return { busy, kept, dashed, fired: (g.counters.dashBufferedFired || 0) - c0 }; })()''')
         check('B-23: Пробел во время каста запоминается — рывок срабатывает после выпуска снаряда', s['busy'] and s['kept'] and s['dashed'] and s['fired'] == 1, s)
@@ -825,7 +836,7 @@ async def main(a):
         s = await G('''(() => { const g = __game, h = g.hero, inp = g.input; g.simulate(0.5); h.dashing = null; h.yar = h.maxYar; h.cds = {}; h.action = null; h.cmd = null; g.rmbBuf = null; g.dashBuf = null; h.rmb = 'zmey';
             const z0 = g.counters.casts.zmey || 0; h.lmb = null; h.action = null;
             const rs = h.useSkill(g, 'sshibka', h.x + 1, h.y); if (rs !== 'ok' || !h.action) return { fail: rs };
-            g.simulate(0.08); const [sx, sy] = g.toS(h.x + 3, h.y + 0.5); inp.mx = sx; inp.my = sy; inp.keysPressed.add('KeyE'); g.update(1 / 60); inp.endFrame();
+            g.simulate(0.08); const [sx, sy] = g.toU(h.x + 3, h.y + 0.5); inp.mx = sx; inp.my = sy; inp.keysPressed.add('KeyE'); g.update(1 / 60); inp.endFrame();
             const buf = !!g.rmbBuf, dur = +h.attackTime.toFixed(2); g.simulate(1.5, () => (g.counters.casts.zmey || 0) > z0);
             return { buf, dur, cast: (g.counters.casts.zmey || 0) - z0 }; })()''')
         check('B-02: E (v1.14; было ПКМ) в самом начале замаха (0,1 с при замахе дольше 0,3 с) не теряется — змей вылетает после удара', s['buf'] and s['dur'] > 0.4 and s['cast'] == 1, s)
@@ -848,7 +859,7 @@ async def main(a):
         # GDD v1.7 п.4: ввод во время замаха копится, срабатывает последний (ПКМ, затем Пробел → рывок; Пробел, затем ЛКМ → только ЛКМ)
         await G(HOME)
         s = await G('''(() => { const g = __game, h = g.hero, inp = g.input; g.simulate(0.3); h.dashing = null; h.yar = h.maxYar; h.cds = {}; h.action = null; h.cmd = null; g.rmbBuf = null; g.dashBuf = null; h.rmb = 'zmey';
-            const press = (fn, wx, wy) => { const [sx, sy] = g.toS(wx, wy); inp.mx = sx; inp.my = sy; fn(); g.update(1 / 60); inp.endFrame(); };
+            const press = (fn, wx, wy) => { const [sx, sy] = g.toU(wx, wy); inp.mx = sx; inp.my = sy; fn(); g.update(1 / 60); inp.endFrame(); };
             const c = () => ({ z: g.counters.casts.zmey || 0, d: g.counters.casts.dash || 0 });
             let c0 = c(); h.useSkill(g, 'sshibka', h.x + 1, h.y); g.simulate(0.05);
             press(() => inp.keysPressed.add('KeyE'), h.x + 3, h.y);
@@ -872,7 +883,7 @@ async def main(a):
         check('GDD v1.7: отдых — в тихом круге Жизнь и Ярь +20%/с после 2 с без урона (≈5 с до полной), вне круга Жизнь не растёт',
               s['R'] == [20, 2] and s['at19'] == s['hp0'] and 15 <= s['perSec'] <= 21 and s['full'] and s['hpOut'][1] == s['hpOut'][0], s)
         # Эффекты отдыха художника (fx_rest_*, fx_safe_ring) по правилам дизайнера 08.10: общая фаза покоя/отдыха, искры пока
-        # растут шкалы (петля доигрывает), кольцо рез 50% — у границы (±3 тайла) или во время отдыха
+        # растут шкалы (петля доигрывает), кольцо рез 50% — у границы (±3 тайла) или во время отдыха  (QA B-46: искры вместо рез — пикселей кольца R10 меньше, порог 300 → 200)
         s = await G('''(async () => { const g = __game, h = g.hero, k = g.map.krada, FXm = await import('/src/render/rest_fx.js'), FX = FXm.FX;
             const sheets = Object.keys(FX.sheets).sort(), lay = FX.ring ? Object.values(FX.ring.layouts).map(l => [l.radius_tiles, l.pieces.length]) : [];
             const ki = FX.sheets.krada_idle, kr = FX.sheets.krada_rest, ci = FX.sheets.churov_idle, cr = FX.sheets.churov_rest;
@@ -891,7 +902,7 @@ async def main(a):
             let tEnd = 0; while (g.restFx.sparksFrame >= 0 && tEnd < 2) { g.simulate(1 / 60); tEnd += 1 / 60; }
             const after = { full: h.hp === h.maxHp, kp: kp.restOn, src: g.restFx.src, tEnd: +tEnd.toFixed(2) }; g.simulate(0.4); after.a = ring();
             h.hp = h.maxHp; return { sheets, lay, phase, ringPx, mid, border, outNear, far, early, rest, after }; })()''')
-        ok = (len([k for k in s['sheets'] if not k.startswith(('k_', 'm_', 'a_', 'p_', 'sw_')) and k not in ('item_beresta', 'stump', 'smoke', 'bsparks')]) == 13 and sorted(s['lay']) == [[6, 55], [10, 91]] and s['phase'] and s['ringPx']['R10'][0] > 300 and s['ringPx']['R6'][0] > 150
+        ok = (len([k for k in s['sheets'] if not k.startswith(('k_', 'm_', 'a_', 'p_', 'sw_')) and k not in ('item_beresta', 'stump', 'smoke', 'bsparks')]) == 13 and sorted(s['lay']) == [[6, 55], [10, 91]] and s['phase'] and s['ringPx']['R10'][0] > 200 and s['ringPx']['R6'][0] > 150
               and abs(s['ringPx']['R10'][1] - 128) <= 1 and s['mid']['a'] == 0 and s['mid']['src'] is None and s['mid']['sp'] == -1
               and s['border'] == {'a': 0.5, 'lit': False} and s['outNear'] == 0.5 and s['far'] == 0
               and not s['early']['r'] and s['early']['sp'] == -1 and not s['early']['kp']
@@ -923,7 +934,7 @@ async def main(a):
         if win:
             await pg.mouse.move(*(await client_scr(win[0], win[1])))
             await wait(80)
-            d0 = await G('[__game.hero.x, __game.hero.y, __game.counters.casts.dash || 0, ...__game.toWorld(%d, %d)]' % (win[0], win[1]))
+            d0 = await G('[__game.hero.x, __game.hero.y, __game.counters.casts.dash || 0, ...__game.toWorld(%d * 1.5, %d * 1.5)]' % (win[0], win[1]))
             await pg.keyboard.press('Space')
             for _ in range(40):
                 if await G('(__game.counters.casts.dash || 0) > %d' % d0[2]):
@@ -1076,7 +1087,7 @@ async def main(a):
         await pg.mouse.move(*(await client_of(sc[0], sc[1], 20)))
         await wait(250)
         await pg.screenshot(path=SHOT_M1A)
-        s = await G('''(() => { const g = __game, h = g.hero, near = g.enemies.filter(e => !e.dead && Math.abs(g.toS(e.x, e.y)[0] - 320) < 320 && g.toS(e.x, e.y)[1] > 0 && g.toS(e.x, e.y)[1] < 300);
+        s = await G('''(() => { const g = __game, h = g.hero, near = g.enemies.filter(e => !e.dead && Math.abs(g.toU(e.x, e.y)[0] - 320) < 320 && g.toU(e.x, e.y)[1] > 0 && g.toU(e.x, e.y)[1] < 300);
             return { zone: g.zone.id, kinds: [...new Set(near.map(e => e.kind))].sort(), lines: g.quest.lines().length, fires: g.combat.fires.length }; })()''')
         check('скриншот screenshot_m1a.png: тропа, трекер, поджигатели и анчутки в кадре', os.path.exists(SHOT_M1A) and s['zone'] == 'trail' and 'chernoyarets_arsonist' in s['kinds'] and s['lines'] >= 2, s)
         await G('(() => { const g = __game; g.combat.fires = []; for (const e of g.enemies) e.stagger = 0; for (const e of g.enemies) e.stagger = 1e9; })()')
@@ -1137,6 +1148,10 @@ async def main(a):
         await run_m1k(pg, G, check, wait, client_of, client_scr, a)
         # --- 22. Веха m1l (баг подхода по ЛКМ, B-39 пути в tools/, B-40 дым изб Ладоги)
         await run_m1l(pg, G, check, wait, client_of, client_scr, a)
+        # --- 23. Веха v2light (живой свет, атмосфера, «Качество света», «Удаль», бюджет кадра; tools/checks_v2light.py)
+        await run_v2light(pg, G, check, wait, client_of, client_scr, a)
+        # --- 24. Веха v2art (960×540 ×2, HUD на новой сетке, листы v2, хитбоксы/досягаемость 56 px, свет ×1,27; tools/checks_v2art.py)
+        await run_v2art(pg, G, check, wait, client_of, client_scr, a)
 
         check('консоль без ошибок и предупреждений', not errors, errors[:5])
         await br.close()
@@ -1158,6 +1173,8 @@ if __name__ == '__main__':
     ap.add_argument('--only-m1g', action='store_true', help='только проверки вехи m1g (GDD v1.11)')
     ap.add_argument('--only-m1h', action='store_true', help='только проверки вехи m1h (замена терминов, rename_map.md)')
     ap.add_argument('--only-m1l', action='store_true', help='только проверки вехи m1l (баг подхода ЛКМ, B-39, B-40)')
+    ap.add_argument('--only-v2art', action='store_true', help='только проверки вехи v2art (960×540 ×2, HUD, листы v2, хитбоксы, свет ×1,27)')
+    ap.add_argument('--only-v2light', action='store_true', help='только проверки вехи v2light (свет, атмосфера, качество света, бюджет кадра)')
     ap.add_argument('--only-m1k', action='store_true', help='только проверки вехи m1k (D4, D5, D6, D7, D9)')
     ap.add_argument('--only-m1j', action='store_true', help='только проверки вехи m1j (D1, D2, D13, D17)')
     ap.add_argument('--only-m1i', action='store_true', help='только проверки вехи m1i (замечания критиков m1f, P2)')

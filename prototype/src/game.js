@@ -1,7 +1,7 @@
 // Игра: состояние, обновление, ввод -> команды герою, спавн нечисти, смерть и возвращение у крады, отрисовка.
 import { ART, poseKrivsha, poseMara, poseAnchutka, poseUpyr, feedFrame } from './render/boss_art.js';
 import { makeRng, crand } from './core/rng.js';
-import { VIEW_W, VIEW_H, PLAYFIELD_CY, MAP_SEED, DEBUG } from './config.js';
+import { VIEW_W, VIEW_H, PLAYFIELD_CY, MAP_SEED, DEBUG, UI_W, UI_H, UI_K, UI_SCALE } from './config.js';
 import { PAL } from './palette.js';
 import { w2s, s2w } from './core/iso.js';
 import { Input } from './core/input.js';
@@ -57,10 +57,16 @@ function heroBusy(h, what) {
   return !(h.action.fired && h.action.t > h.action.dur * 0.85);   // конец замаха/каста: можно ставить следующий
 }
 
+
 export class Game {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
+    // v2art r2: слой интерфейса и надписей — второй холст 1920×1080 поверх мира, сетка 640×360 ×3 (текст прежнего размера)
+    let uc = document.getElementById('ui');
+    if (!uc) { uc = document.createElement('canvas'); uc.id = 'ui'; canvas.after(uc); }
+    uc.width = UI_W * UI_SCALE; uc.height = UI_H * UI_SCALE;
+    this.uiCanvas = uc; this.uctx = uc.getContext('2d');
     this.input = new Input(canvas);
     this.audio = new Audio();
     this.input.onGesture = () => this.audio.unlock();
@@ -72,7 +78,7 @@ export class Game {
     try { this.ctrlHintSeen = localStorage.getItem('byl_ctrl_hint_seen') === '1'; } catch (e) { /* нет localStorage */ }
     this.showMinimap = true;
     // GDD v1.13 §4.6/§15: настройки (settings.shake — тряска и хит-стоп при ударе; по умолчанию вкл.)
-    this.settings = { shake: true, xray: true, navArrow: true };
+    this.settings = { shake: true, xray: true, navArrow: true, lightQ: 'high' };   // v2light: качество света high/low
     this.dlgAuto = typeof window !== 'undefined' && !!window.__dlgAuto;   // старые автотесты: диалоги без окна (как до v1.13)
     try { Object.assign(this.settings, JSON.parse(localStorage.getItem(LS_SETTINGS) || '{}')); } catch (e) { /* нет localStorage / битая строка */ }
     this.counters = { hitStop: 0, shake: 0, backoff: 0, casts: {}, cdBlocked: 0, barks: 0, barksSuppressed: 0 };
@@ -202,13 +208,21 @@ export class Game {
     const [ix, iy] = w2s(x, y);
     return [Math.round(ix - this.cam.x + this.camCX + this.shakeX), Math.round(iy - this.cam.y + this.camCY + this.shakeY)];
   }
+  /** v2art r2: мировая точка → слой интерфейса (640×360): для подписей, курсора и автотестов */
+  toU(x, y) { const [sx, sy] = this.toS(x, y); return [sx * UI_K, sy * UI_K]; }
   toWorld(mx, my) { return s2w(mx - this.camCX + this.cam.x, my - this.camCY + this.cam.y); }
   // для автотестов: экранные (client) координаты мировой точки / нативной точки экрана
   clientOf(x, y, lift = 0) {
     const [sx, sy] = this.toS(x, y);
-    return this.clientOfScreen(sx, sy - lift);
+    return this.clientOfWorldScreen(sx, sy - lift);
   }
+  /** v2art r2: точка слоя интерфейса (640×360) → client */
   clientOfScreen(sx, sy) {
+    const r = this.canvas.getBoundingClientRect();
+    return [r.left + ((sx + 0.5) * r.width) / UI_W, r.top + ((sy + 0.5) * r.height) / UI_H];
+  }
+  /** v2art r2: точка экрана мира (960×540) → client */
+  clientOfWorldScreen(sx, sy) {
     const r = this.canvas.getBoundingClientRect();
     return [r.left + ((sx + 0.5) * r.width) / VIEW_W, r.top + ((sy + 0.5) * r.height) / VIEW_H];
   }
@@ -217,8 +231,9 @@ export class Game {
     this.cam.x = Math.round(ix); this.cam.y = Math.round(iy);
     // открыта одна панель — герой смещается в свободную половину экрана (как в D2)
     const ui = this.ui, left = ui.charOpen || (this.town && this.town.open), right = ui.rightOpen;
-    this.camCX = right && !left ? 161 : left && !right ? 479 : VIEW_W / 2;
+    this.camCX = right && !left ? Math.round(161 / UI_K) : left && !right ? Math.round(479 / UI_K) : VIEW_W / 2;   // v2art r2: прежние 161 / 479 слоя интерфейса в пикселях мира (окно 316 px)
   }
+  get camUX() { return Math.round(this.camCX * UI_K); }   // v2art r2: центр героя по x в слое интерфейса (640)
   get topRightVisible() { return !this.ui.rightOpen && !this.mapOverlay; }
   get labelsShown() { return this.labelsAlways || this.input.altHeld; }
 
@@ -434,10 +449,10 @@ export class Game {
     for (const it of this.loot.items) {
       if (it.dropT < 0.3) continue;
       const [sx, sy] = this.toS(it.x, it.y);
-      const dx = m.mx - sx, dy = m.my - sy;
-      const lw = textWidth(it.label) / 2 + 4;
+      const dx = m.wmx - sx, dy = m.wmy - sy;
+      const lw = (textWidth(it.label) / 2 + 4) * 1.5;   // v2art r2: подпись — в слое интерфейса (×1,5 в пикселях мира)
       const onSprite = Math.abs(dx) <= 10 && dy >= -14 && dy <= 4;
-      const onLabel = this._lastGround === it && Math.abs(dx) <= lw && dy >= -27 && dy <= -12;
+      const onLabel = this._lastGround === it && Math.abs(dx) <= lw && dy >= -40 && dy <= -18;
       if ((onSprite || onLabel) && Math.abs(dx) + Math.abs(dy) < bg) { bg = Math.abs(dx) + Math.abs(dy); bestG = it; }
     }
     this.hoverGround = this._lastGround = bestG;
@@ -446,18 +461,18 @@ export class Game {
     for (const e of this.enemies) {
       if (e.dead) continue;
       const [sx, sy] = this.toS(e.x, e.y);
-      const hw = e.kind === 'upyr' ? 11 : e.def.torch ? 10 : 8;
-      if (Math.abs(m.mx - sx) <= hw && m.my >= sy - e.def.height - 3 && m.my <= sy + 3) {
+      const hw = e.kind === 'upyr' ? (((CFG.stats && CFG.stats.v2art) || {}).upyrHalfW ?? 11) : e.def.torch ? 10 : 8;   // v2art: упырь v2 шире (торс ±13–14 px)
+      if (Math.abs(m.wmx - sx) <= hw && m.wmy >= sy - e.def.height - 3 && m.wmy <= sy + 3) {
         if (e.x + e.y > bd) { bd = e.x + e.y; best = e; }
       }
     }
     if (!best) {
-      const [wx, wy] = this.toWorld(m.mx, m.my);
+      const [wx, wy] = this.toWorld(m.wmx, m.wmy);
       let bdist = 0.6;
       for (const e of this.enemies) if (!e.dead) { const d = Math.hypot(e.x - wx, e.y - wy); if (d < bdist) { bdist = d; best = e; } }
     }
     this.hoverEnemy = best;
-    if (!best) this.hoverObj = this.objectAt(m.mx, m.my);
+    if (!best) this.hoverObj = this.objectAt(m.wmx, m.wmy);
   }
 
   menuButton(i) {
@@ -496,6 +511,7 @@ export class Game {
         else if (b === 'minimap') this.showMinimap = !this.showMinimap;
         else if (b === 'shake') this.setSetting('shake', !this.settings.shake);
         else if (b === 'xray' || b === 'navArrow') this.setSetting(b, this.settings[b] === false);
+        else if (b === 'lightQ') this.setSetting('lightQ', this.settings.lightQ === 'low' ? 'high' : 'low');
         if (b) this.audio.play('ui');
       }
       return;
@@ -513,7 +529,7 @@ export class Game {
     // Пробел — «Рывок». Во время замаха/каста (до удара) нажатие запоминается и срабатывает, как только
     // действие отпустит героя (+0,3 с запаса), — QA B-23. Направление — по курсору в момент рывка.
     if (inp.pressed('Space')) {
-      const [wx, wy] = this.toWorld(inp.mx, inp.my);
+      const [wx, wy] = this.toWorld(inp.wmx, inp.wmy);
       const r = h.dash(this, wx, wy);
       if (r === 'cd') { this.counters.cdBlocked++; this.audio.play('error'); }
       else if (r === 'busy' && !h.dead) { this.dashBuf = { t: 0.3 }; this.rmbBuf = null; this.dropQueuedLmb(); this.counters.dashBuffered = (this.counters.dashBuffered || 0) + 1; }
@@ -524,7 +540,7 @@ export class Game {
       else if (!heroBusy(h, 'dash')) b.t -= dt;      // ждём, пока идёт замах; запас 0,3 с — после
       if (this.dashBuf && b.t <= 0) this.dashBuf = null;
       else if (this.dashBuf && !heroBusy(h, 'dash')) {
-        const [wx, wy] = this.toWorld(inp.mx, inp.my);
+        const [wx, wy] = this.toWorld(inp.wmx, inp.wmy);
         const r = h.dash(this, wx, wy);
         if (r !== 'busy') {
           this.dashBuf = null;
@@ -569,9 +585,9 @@ export class Game {
         h.moveTo(this.map, tx, ty); this.leftMode = null;
       }
       else if (this.hoverObj) { h.interact(this.hoverObj); this.leftMode = 'interact'; }
-      else if (inp.shift) { h.stop(); const [wx, wy] = this.toWorld(inp.mx, inp.my); h.face(wx - h.x, wy - h.y); }
+      else if (inp.shift) { h.stop(); const [wx, wy] = this.toWorld(inp.wmx, inp.wmy); h.face(wx - h.x, wy - h.y); }
       else {
-        const [wx, wy] = this.toWorld(inp.mx, inp.my);
+        const [wx, wy] = this.toWorld(inp.wmx, inp.wmy);
         h.moveTo(this.map, wx, wy);
         this.fx.ring(wx, wy, 0.35, PAL.bronze_lt, 0.3);
         this.leftMode = 'move'; this.holdT = 0;
@@ -581,7 +597,7 @@ export class Game {
         this.holdT += dt;
         if (this.holdT >= 0.12) {
           this.holdT = 0;
-          const [wx, wy] = this.toWorld(inp.mx, inp.my);
+          const [wx, wy] = this.toWorld(inp.wmx, inp.wmy);
           if (!h.action) h.moveTo(this.map, wx, wy);
           else h.cmd = { type: 'move', x: wx, y: wy, retries: 0 };
         }
@@ -601,14 +617,14 @@ export class Game {
     }
     if (!inp.right || ui.hand || h.dead) this.blockHeld = false;
     if (this.noShieldT > 0) this.noShieldT -= dt;
-    if (this.blockHeld) { const [bx, by] = this.toWorld(inp.mx, inp.my); h.blockWant = { x: bx, y: by }; this.blockByInput = true; }
+    if (this.blockHeld) { const [bx, by] = this.toWorld(inp.wmx, inp.wmy); h.blockWant = { x: bx, y: by }; this.blockByInput = true; }
     else if (this.blockByInput) { h.blockWant = null; this.blockByInput = false; }   // ботам / тестам: h.blockWant, выставленный снаружи, не трогаем
     // v1.14 E3 (§4.1): E — навык ячейки E (по умолчанию «Огненный змей»), зажатая E повторяет; нажатие во время
     // замаха / каста / блока запоминается до конца действия + 0,3 с (QA B-02)
     const ePressed = inp.pressed('KeyE'), eDown = inp.down('KeyE');
     if ((ePressed || eDown) && !ui.hand) {
       const tg = this.hoverEnemy, id = h.rmb;
-      const [wx, wy] = tg ? [tg.x, tg.y] : this.toWorld(inp.mx, inp.my);
+      const [wx, wy] = tg ? [tg.x, tg.y] : this.toWorld(inp.wmx, inp.wmy);
       if (ePressed || (h.cdLeft(id) <= 0 && !this.rmbBuf)) {
         const r = h.useSkill(this, id, wx, wy, tg);
         if (r === 'ok') { this.rmbBuf = null; if (tg) this.lastTarget = tg; }
@@ -686,7 +702,7 @@ export class Game {
       this.counters.barksQueued = (this.counters.barksQueued || 0) + 1;
       return true;
     }
-    this.fx.text(actor.x, actor.y, text || t(key), PAL.linen, (actor.def ? actor.def.height : 46) + 12, { dur: 2.6, speech: true });
+    this.fx.text(actor.x, actor.y, text || t(key), PAL.linen, (actor.def ? actor.def.height : (((CFG.stats && CFG.stats.v2art) || {}).heroHeight ?? 44) + 2) + 12, { dur: 2.6, speech: true });
     this.speechUntil = this.time + 2.6;
     return true;
   }
@@ -760,10 +776,23 @@ export class Game {
   }
 
   render() {
-    const ctx = this.ctx;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.imageSmoothingEnabled = false;
-    this.renderer.render(ctx, this);
+    const P = this._prof, pt = P ? (k, t0) => { const t1 = performance.now(); P[k] = (P[k] || 0) + t1 - t0; return t1; } : null;   // профиль кадра (tools/prof_opt.py)
+    let t0 = P ? performance.now() : 0;
+    const wctx = this.ctx;
+    wctx.setTransform(1, 0, 0, 1, 0, 0);
+    wctx.imageSmoothingEnabled = false;
+    const ctx = this.uctx;   // v2art r2: всё, что ниже (подписи мира, HUD, окна), — в слое интерфейса 640×360 ×3
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.uiCanvas.width, this.uiCanvas.height);
+    ctx.setTransform(UI_SCALE, 0, 0, UI_SCALE, 0, 0); ctx.imageSmoothingEnabled = false;
+    if (P) t0 = pt('uiClear', t0);
+    this.renderer.render(wctx, this);
+    if (P) t0 = pt('world', t0);
+    this.renderHudLayer(ctx);
+    if (P) t0 = pt('hud', t0);
+  }
+
+  /** Всё поверх надписей мира: большая карта / стрелка, HUD, окна, подсказка, смерть, пауза, курсор (слой интерфейса). */
+  renderHudLayer(ctx) {
     if (this.state === 'menu') { drawMainMenu(ctx, this); drawCursor(ctx, this); return; }
     if (this.mapOverlay) this.minimap.drawOverlay(ctx, this);
     else drawNav(ctx, this);   // m1k D5: стрелка у края / маркер над целью — под HUD
@@ -780,7 +809,11 @@ export class Game {
     this.fps = this.fps * 0.95 + (1 / Math.max(dt, 1e-3)) * 0.05;
     this.frames = (this.frames || 0) + 1; this.clock = (this.clock || 0) + dt;   // для автотестов: кадры и «прожитое» время
     if (!this.simHold) this.update(dt);   // B-35: замеры (g.simulate) держат живой цикл, чтобы кадры между await не двигали бой
+    const r0 = performance.now();
     this.render();
+    const rms = performance.now() - r0;   // v2light: время отрисовки кадра (мс) — для замеров и автотеста
+    this.renderMs = (this.renderMs ?? rms) * 0.95 + rms * 0.05;
+    const RT = this.renderTimes || (this.renderTimes = []); RT.push(rms); if (RT.length > 2400) RT.splice(0, RT.length - 2400);
     this.input.endFrame();
   }
 

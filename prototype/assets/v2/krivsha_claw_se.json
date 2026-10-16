@@ -1,0 +1,130 @@
+{
+ "image": "krivsha_claw_se.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  1728,
+  203
+ ],
+ "pivot": [
+  108,
+  184
+ ],
+ "frames": 8,
+ "frame_size": [
+  216,
+  203
+ ],
+ "character": "Кривша, Обгорелый страж (bosses.json krivsha, Б1)",
+ "phase": "normal",
+ "animation": "claw",
+ "fps": 10,
+ "loop": false,
+ "events": {
+  "hit_frame": 6,
+  "telegraph_frames": [
+   0,
+   5
+  ],
+  "arc": "front cone (bosses.json claw.halfAngleDeg)",
+  "overlay": "огненный серп запечён в кадр 6",
+  "sync": "телеграф 0.6 с = кадры 0–5 при 10 fps; кадр 6 — с момента удара; если движок ждёт — держать кадр 5"
+ },
+ "direction": "se",
+ "visible_height_px": [
+  125,
+  125,
+  127,
+  132,
+  138,
+  139,
+  117,
+  119
+ ],
+ "rendered": "per direction (model rotated 0°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "claw_A": [
+   [
+    128,
+    174
+   ],
+   [
+    142,
+    134
+   ],
+   [
+    124,
+    83
+   ],
+   [
+    95,
+    55
+   ],
+   [
+    76,
+    48
+   ],
+   [
+    69,
+    47
+   ],
+   [
+    145,
+    173
+   ],
+   [
+    127,
+    178
+   ]
+  ],
+  "claw_B": [
+   [
+    175,
+    149
+   ],
+   [
+    173,
+    148
+   ],
+   [
+    171,
+    147
+   ],
+   [
+    170,
+    146
+   ],
+   [
+    168,
+    145
+   ],
+   [
+    168,
+    145
+   ],
+   [
+    185,
+    154
+   ],
+   [
+    179,
+    151
+   ]
+  ],
+  "crescent": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   [
+    167,
+    135
+   ],
+   null
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

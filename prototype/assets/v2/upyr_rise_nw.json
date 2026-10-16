@@ -1,0 +1,36 @@
+{
+ "image": "upyr_rise_nw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  576,
+  74
+ ],
+ "pivot": [
+  48,
+  54
+ ],
+ "frames": 6,
+ "frame_size": [
+  96,
+  74
+ ],
+ "character": "упырь",
+ "loop": false,
+ "events": {
+  "frames": "0 рука из земли, 1 голова и руки, 2 по плечи, 3 по пояс, 4 выбирается на колено, 5 стоит (≈ idle 0)",
+  "sync": "frame = min(5, floor(t / riseTime * 6)); яма и земля — часть кадров, рисовать в pivot без клипа"
+ },
+ "fps": 8,
+ "direction": "nw",
+ "visible_height_px": [
+  20,
+  28,
+  36,
+  44,
+  42,
+  50
+ ],
+ "rendered": "per direction (model rotated 180°), no mirroring",
+ "mirror_pair": null
+}

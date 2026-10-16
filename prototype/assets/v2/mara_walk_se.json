@@ -1,0 +1,36 @@
+{
+ "image": "mara_walk_se.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  288,
+  74
+ ],
+ "pivot": [
+  24,
+  62
+ ],
+ "frames": 6,
+ "frame_size": [
+  48,
+  74
+ ],
+ "character": "Огнея Пепельная (bosses.json mara; id/имена файлов прежние)",
+ "animation": "walk",
+ "fps": 8,
+ "loop": true,
+ "events": {
+  "note": "скользит, ног не видно"
+ },
+ "direction": "se",
+ "visible_height_px": [
+  59,
+  60,
+  61,
+  59,
+  58,
+  59
+ ],
+ "rendered": "per direction (model rotated 0°), no mirroring",
+ "mirror_pair": null
+}

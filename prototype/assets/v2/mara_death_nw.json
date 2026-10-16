@@ -1,0 +1,38 @@
+{
+ "image": "mara_death_nw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  368,
+  86
+ ],
+ "pivot": [
+  23,
+  69
+ ],
+ "frames": 8,
+ "frame_size": [
+  46,
+  86
+ ],
+ "character": "Огнея Пепельная (bosses.json mara; id/имена файлов прежние)",
+ "animation": "death",
+ "fps": 10,
+ "loop": false,
+ "events": {
+  "note": "оседает в кучу пепла; последний кадр держать"
+ },
+ "direction": "nw",
+ "visible_height_px": [
+  65,
+  68,
+  51,
+  43,
+  35,
+  28,
+  21,
+  18
+ ],
+ "rendered": "per direction (model rotated 180°), no mirroring",
+ "mirror_pair": null
+}

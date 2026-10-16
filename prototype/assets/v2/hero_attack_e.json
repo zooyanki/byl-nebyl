@@ -1,0 +1,35 @@
+{
+ "image": "hero_attack_e.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  636,
+  91
+ ],
+ "pivot": [
+  53,
+  83
+ ],
+ "frames": 6,
+ "frame_size": [
+  106,
+  91
+ ],
+ "character": "Ратибор",
+ "loop": false,
+ "events": {
+  "hit": 2
+ },
+ "fps": 12,
+ "direction": "e",
+ "visible_height_px": [
+  79,
+  80,
+  72,
+  55,
+  55,
+  57
+ ],
+ "rendered": "per direction (model rotated 315°), no mirroring",
+ "mirror_pair": null
+}

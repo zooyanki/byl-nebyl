@@ -1,0 +1,16 @@
+{
+ "image": "tree_birch_h96.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  73,
+  108
+ ],
+ "pivot": [
+  31,
+  96
+ ],
+ "note": "b2: низкое дерево под treeRules hMax 96 px (Залесье: перед путём / у края); масштаб модели ×0.84",
+ "hMax": 96,
+ "visible_height_px": 95
+}

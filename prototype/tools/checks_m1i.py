@@ -132,15 +132,15 @@ async def run_m1i(pg, G, check, wait, client_of, client_scr, a):
         const pal = new Set(Object.values(PAL)), stone = Object.values(P.STONE).flat();
         const e = window.__m1iCorpse, B = g.bannerDrawn;
         return { n: L.length, ov, lv, spread: new Set(cx).size, stoneOk: stone.length >= 8 && stone.every(c => pal.has(c)) && stone.includes(PAL.moss),
-          tyn: wall ? P.wallAsTyn(wall) : null, corpse: { style: e.corpseStyle, canvas: !!(e._corpse && e._corpse.c) },
+          tyn: wall ? P.wallAsTyn(wall) : null, corpse: { style: e.corpseStyle, canvas: !!(e._corpse && e._corpse.c), v2: ((await import('/src/render/v2art.js')).V2.counters.arsonistCorpse || null) },
           banner: B && { w: B.w, h: B.h, text: B.text, fresh: g.time - B.t < 1 } }; })()''')
     check('m1i П.16 подписи добычи: 6 подписей без наложений, разнесены «лесенкой» (разные центры по x)',
           s['n'] >= 6 and not s['ov'] and s['spread'] >= 2 and s['lv'] >= 2, {k: s[k] for k in ('n', 'ov', 'spread', 'lv')})
     check('m1i П.16 камни — палитра v2 с мхом (STONE: тёплый серо-оливковый), стены Залесья рисуются логикой тына (wallAsTyn: высота 26–32, 2 перевязи)',
           s['stoneOk'] and s['tyn'] and 26 <= s['tyn']['tynH'] <= 32 and len(s['tyn']['bands']) == 2, {'stone': s['stoneOk'], 'tyn': s['tyn']})
-    check('m1i П.16 «Миссия пройдена» — плашкой-баннером (bannerDrawn), труп без кадров смерти — затемнённый кадр «лёжа»',
+    check('m1i П.16 «Миссия пройдена» — плашкой-баннером (bannerDrawn), труп поджигателя — кадр death v2 (b3; без листа — затемнённый кадр «лёжа»)',
           s['banner'] and s['banner']['fresh'] and s['banner']['text'].startswith('Миссия пройдена') and s['banner']['h'] >= 15
-          and s['corpse'] == {'style': 'lying', 'canvas': True}, {'banner': s['banner'], 'corpse': s['corpse']})
+          and ((s['corpse']['v2'] or '').startswith('arsonist_death_') or (s['corpse']['style'] == 'lying' and s['corpse']['canvas'])), {'banner': s['banner'], 'corpse': s['corpse']})
     await pg.screenshot(path=SHOT_WORLD)
     await G('(() => { __game.labelsAlways = false; })()')
 

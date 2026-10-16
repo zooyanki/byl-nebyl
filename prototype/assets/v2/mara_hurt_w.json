@@ -1,0 +1,30 @@
+{
+ "image": "mara_hurt_w.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  88,
+  74
+ ],
+ "pivot": [
+  22,
+  63
+ ],
+ "frames": 2,
+ "frame_size": [
+  44,
+  74
+ ],
+ "character": "Огнея Пепельная (bosses.json mara; id/имена файлов прежние)",
+ "animation": "hurt",
+ "fps": 8,
+ "loop": false,
+ "events": {},
+ "direction": "w",
+ "visible_height_px": [
+  56,
+  59
+ ],
+ "rendered": "per direction (model rotated 135°), no mirroring",
+ "mirror_pair": null
+}

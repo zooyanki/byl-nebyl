@@ -178,6 +178,8 @@ export class Krivsha extends Enemy {
         const J = this.jump, q = Math.min(1, this.t / 0.6);
         this.x = J.x0 + (J.x1 - J.x0) * q; this.y = J.y0 + (J.y1 - J.y0) * q; this.lift = Math.sin(q * Math.PI) * 40;
         this.moving = false;
+        // v2art b6: приземление в огнище (кадр slam) — лёгкий акцент: короткая тряска 1 px и горсть искр
+        if (!J.landed && q >= 1) { J.landed = true; game.shake(1, 0.12); game.fx.burst(this.x, this.y, PAL.ember, 8, 25, 40); game.counters.krivshaLand = (game.counters.krivshaLand || 0) + 1; }
         // «огнище питает» (GDD v1.8 §5.4, спрайт fx_krivsha_feed): эффект стартует с кадром 0 fire_emerge (t = неуязвимость − 0,75 с),
         // +15% HP — на его кадре 6 (через 0,6 с, за 0,15 с до выхода)
         if (!J.fed && this.t >= B.hearthPhase.invuln - 0.75 + 0.6) { J.fed = true; this.feedHeal(game); }

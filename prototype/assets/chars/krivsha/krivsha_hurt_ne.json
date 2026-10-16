@@ -1,32 +1,56 @@
 {
- "character": "Кривша, Обгорелый страж",
- "animation": "hurt",
- "variant": "normal",
- "direction": "ne",
- "mirror_for": "nw",
- "mirror_rule": "flip horizontally around the frame centre line x = 64.0; pivot stays (64, 116)",
- "pivot": [
-  64,
-  116
+ "image": "krivsha_hurt_ne.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  396,
+  158
  ],
+ "pivot": [
+  99,
+  139
+ ],
+ "frames": 2,
+ "frame_size": [
+  198,
+  158
+ ],
+ "character": "Кривша, Обгорелый страж (bosses.json krivsha, Б1)",
+ "phase": "normal",
+ "animation": "hurt",
  "fps": 8,
  "loop": false,
- "visible_height_px": [
-  99,
-  95
- ],
- "height_rule": "pivot row (ground under the feet) to the top visible pixel, outline included",
- "notes": "Кривша, Обгорелый страж (boss M1; «Обгорелый страж» is his title, one character). Hunched keeper of the капище in a burnt sheepskin coat with a ring of bronze keys, ghoul-grey skin, long claws with burning tips, fire in the coat's cracks. Body 96 (scale.md: boss 96, fire halo to 112), frame 128x128, pivot (64,116).",
  "events": {
-  "note": "2 frames, flinch back; play over any anim except leap / emerge"
+  "note": "вздрагивание; поверх любой анимации, кроме leap/emerge"
  },
- "image": "krivsha_hurt_ne.png",
- "frame_size": [
-  128,
-  128
+ "direction": "ne",
+ "visible_height_px": [
+  133,
+  137
  ],
- "frame_count": 2,
- "layout": "horizontal strip, left to right",
- "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
- "alpha": "0/255 only"
+ "rendered": "per direction (model rotated 270°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "claw_A": [
+   [
+    190,
+    54
+   ],
+   [
+    162,
+    87
+   ]
+  ],
+  "claw_B": [
+   [
+    114,
+    16
+   ],
+   [
+    114,
+    63
+   ]
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
 }

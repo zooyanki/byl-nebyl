@@ -1,19 +1,24 @@
 {
- "effect": "Попадание сгустка",
- "draw": "at the impact point (pivot on the ground)",
- "pivot": [
-  16,
-  24
+ "image": "fx_mara_bolt_hit.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  185,
+  29
  ],
+ "pivot": [
+  19,
+  20
+ ],
+ "frames": 5,
+ "frame_size": [
+  37,
+  29
+ ],
+ "effect": "удар сгустка",
+ "pivot_note": "точка удара на земле",
  "fps": 12,
  "loop": false,
- "image": "fx_mara_bolt_hit.png",
- "frame_size": [
-  32,
-  32
- ],
- "frame_count": 5,
- "layout": "horizontal strip, left to right",
- "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
- "alpha": "0/255 only"
+ "drawn_facing": "+x screen (вправо); влево — зеркалить кодом",
+ "light": "самосвет огня, сцену не подсвечивает (свет — кодом)"
 }

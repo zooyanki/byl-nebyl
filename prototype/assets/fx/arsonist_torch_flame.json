@@ -1,0 +1,24 @@
+{
+ "image": "arsonist_torch_flame.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  66,
+  14
+ ],
+ "pivot": [
+  5,
+  11
+ ],
+ "frames": 6,
+ "frame_size": [
+  11,
+  14
+ ],
+ "effect": "оверлей пламени факела (необязателен)",
+ "pivot_note": "основание пламени = anchors_px.torch листов arsonist",
+ "fps": 10,
+ "loop": true,
+ "drawn_facing": "+x screen (вправо); влево — зеркалить кодом",
+ "light": "самосвет огня, сцену не подсвечивает (свет — кодом)"
+}

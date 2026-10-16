@@ -1,0 +1,32 @@
+{
+ "image": "anchutka_idle_w.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  192,
+  47
+ ],
+ "pivot": [
+  24,
+  42
+ ],
+ "frames": 4,
+ "frame_size": [
+  48,
+  47
+ ],
+ "character": "Анчутка (monsters.json anchutka)",
+ "animation": "idle",
+ "fps": 6,
+ "loop": true,
+ "events": {},
+ "direction": "w",
+ "visible_height_px": [
+  39,
+  38,
+  38,
+  39
+ ],
+ "rendered": "per direction (model rotated 135°), no mirroring",
+ "mirror_pair": null
+}

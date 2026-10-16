@@ -12,6 +12,10 @@ src = open(SCRIPT, encoding='utf-8').read()
 ns = {}
 exec(re.search(r"^B = \[.*?^\]", src, re.S | re.M).group(0), ns)
 ref = {b[0]: b for b in ns['B']}
+# v2art r2: согласованные перестановки (ответ Василия: церковь v2 11×6) — ladoga.json "_v2art_moves" подменяет клетки в таблице скрипта
+MOVES = {k: v for k, v in Z.get('_v2art_moves', {}).items() if not k.startswith('_')}
+for k, (mx, my, mw, mh) in MOVES.items():
+    if k in ref: ref[k] = (ref[k][0], ref[k][1], mx, mx + mw - 1, my, my + mh - 1)
 NAME = {'cart': lambda x, y: 'cart_w' if x < 24 else 'cart_e', 'anvil': lambda x, y: 'anvil', 'idol': lambda x, y: 'idol', 'churstone': lambda x, y: 'churstone'}
 B = [("krada", "костёр", Z['krada'][0], Z['krada'][0] + 1, Z['krada'][1], Z['krada'][1] + 1)]
 for kind, x, y, size, fp, *ex in Z['props']:
@@ -26,11 +30,12 @@ pr = next(n for n in Z['npcs'] if n.get('id') == 'priest')
 pts = re.search(r'"поп Иоанн[^"]*":\((\d+\.\d+),(\d+\.\d+)\)', src)
 src2 = re.sub(r"^B = \[.*?^\]", "B = " + repr(B), src, count=1, flags=re.S | re.M)
 src2 = re.sub(r'("поп Иоанн[^"]*":)\(\d+\.\d+,\d+\.\d+\)', r'\g<1>(%s,%s)' % (pr['x'], pr['y']), src2)
+src2 = re.sub(r'^MAL = \[.*\]$', 'MAL = ' + repr([tuple(q) for q in Z['mal']['route']]), src2, count=1, flags=re.M)   # v2art r2: путь Мала — из ladoga.json
 buf = io.StringIO(); code = 0
 with contextlib.redirect_stdout(buf):
     try: exec(compile(src2, SCRIPT, 'exec'), {'__name__': '__main__'})
     except SystemExit as e: code = e.code or 0
 out = buf.getvalue()
 print(out.splitlines()[0]); print(out.strip().splitlines()[-1] if code == 0 else out[out.find('ОШИБКИ'):])
-print('сверка с таблицей скрипта:', 'совпадает' if not diff else diff, '| поп Иоанн', (pr['x'], pr['y']), 'в скрипте', pts.groups() if pts else None)
+print('сверка с таблицей скрипта:', ('совпадает' + (' (перестановки v2art: ' + ', '.join(MOVES) + ')' if MOVES else '')) if not diff else diff, '| поп Иоанн', (pr['x'], pr['y']), 'в скрипте', pts.groups() if pts else None)
 sys.exit(1 if code or diff else 0)

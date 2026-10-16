@@ -58,6 +58,8 @@ PROTO = {
     "proto.hero.res_full.hp": "Жизнь и так полна",
     "proto.hero.res_full.yar": "Удаль и так полна",
     "proto.belt.empty": "Ячейка {n} пуста",
+    # v2light: переключатель в паузе (settings.lightQ)
+    "proto.pause.light_hq": "Качество света",
     "proto.potion.both": "Мгновенно восполняет {pct}% жизни и Удали",
     "proto.potion.over_time": "+{amount} {res} за {dur} с",
     "proto.potion.res.hp": "к жизни",
