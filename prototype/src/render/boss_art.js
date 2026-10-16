@@ -3,6 +3,7 @@
 // копии — assets/chars/<slug>/. Направления: dir 3,4,5 — лист *_ne, остальные — *_se; при dirSide < 0 — зеркало.
 // Правило синхронизации (ведущий, 08.10): игровые тайминги GDD не трогаем — анимацию растягиваем / держим кадр так,
 // чтобы кадр события совпал с игровым моментом. Позы — чистые функции (pose*), их проверяет tools/checks_m1c.py.
+import { V2, v2View, v2Outline as V2O } from './v2art.js';   // v2b2: блок героя — листы v2
 const DIR = 'assets/chars/';
 const SETS = {
   krivsha: ['idle', 'walk', 'claw', 'summon', 'leap', 'emerge', 'hurt', 'death', 'fire_idle', 'fire_walk', 'fire_claw', 'fire_summon', 'fire_emerge', 'fire_hurt', 'fire_death'],
@@ -19,7 +20,8 @@ function loadSheet(path, key) {
   return Promise.all([
     fetch(path + '.json').then((r) => r.json()),
     new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = path + '.png'; }),
-  ]).then(([meta, img]) => { if (img) ART.sheets[key] = { meta, img }; else ART.failed.push(key); })
+  ]).then(([meta, img]) => { if (meta && meta.frames && !meta.frame_count) meta.frame_count = meta.frames;   // v2: в JSON «frames» вместо frame_count
+    if (img) ART.sheets[key] = { meta, img }; else ART.failed.push(key); })
     .catch(() => { ART.failed.push(key); console.warn('Не загрузился ассет', key); });
 }
 
@@ -158,13 +160,16 @@ export function poseHeroBlock(h, time) {
 /** v1.14: лист блока героя; false — листа нет. o.flash — вспышка попадания. Искры H23 — в anchors.shield_rim кадра на hit / break. */
 export function drawHeroBlock(ctx, h, x, y, time, o = {}) {
   const pose = poseHeroBlock(h, time); if (!pose) return false;
-  const [view, flip] = heroView(h.dir), sh = ART.sheets[pose.anim + '_' + view];
+  // v2b2: лист v2 (56 px, 8 видов без зеркала, свой кадр и pivot у каждой анимации); нет — прежний H21 44 px
+  const v2n = pose.anim + '_' + v2View(h.dir), s2 = V2.sheets[v2n];
+  const [view, flip] = s2 ? [v2View(h.dir), false] : heroView(h.dir), sh = s2 || ART.sheets[pose.anim + '_' + view];
   if (!sh) return false;
+  if (s2) pose.frame = Math.min((s2.meta.frames || s2.meta.frame_count || 1) - 1, pose.frame);
   blitF(ctx, sh, pose.frame, x, y, flip);
   if (o.flash) { ctx.save(); ctx.globalAlpha *= o.flashA || FLASH_A; ctx.globalCompositeOperation = 'lighter'; blitF(ctx, sh, pose.frame, x, y, flip); ctx.restore(); }
   const rim = sh.meta.anchors && sh.meta.anchors.shield_rim && sh.meta.anchors.shield_rim[pose.frame];
   if (rim && o.sparks) {
-    const [px, py] = sh.meta.pivot, rx = x + (flip ? (63 - rim[0]) - px : rim[0] - px), ry = y + rim[1] - py;
+    const [px, py] = sh.meta.pivot, fw = (sh.meta.frame_size || [64])[0], rx = x + (flip ? (fw - 1 - rim[0]) - px : rim[0] - px), ry = y + rim[1] - py;
     const hitS = pose.anim === 'hero_block_hit' && h.blockHitT < 0.15, brkS = pose.anim === 'hero_block_break' && h.breakT < 0.15;
     if (hitS) { o.sparks(rx, ry, Math.floor(h.blockHitT * 20), !!h.blockFromLeft); ART.sparksHit = (ART.sparksHit || 0) + 1; }
     if (brkS) { ART.sparksBreak = (ART.sparksBreak || 0) + 2; o.sparks(rx, ry, Math.floor(h.breakT * 20), false); o.sparks(rx, ry, Math.floor(h.breakT * 20), true); }
@@ -174,7 +179,7 @@ export function drawHeroBlock(ctx, h, x, y, time, o = {}) {
 }
 
 function blitF(ctx, sh, frame, x, y, flip, alpha) {
-  const m = sh.meta, [fw, fh] = m.frame_size, [px, py] = m.pivot, n = m.frame_count || 1;
+  const m = sh.meta, [fw, fh] = m.frame_size, [px, py] = m.pivot, n = m.frame_count || m.frames || 1;
   ctx.save();
   if (alpha != null && alpha < 1) ctx.globalAlpha *= Math.max(0, alpha);
   ctx.translate(Math.round(x), Math.round(y)); if (flip) ctx.scale(-1, 1);
@@ -186,6 +191,8 @@ export const FLASH_A = 0.28;   // m1f P1.9: вспышка попадания (�
 
 /** Нарисовать персонажа по позе; false — листа нет (рисуется грей-бокс). */
 export function drawCharArt(ctx, pose, x, y, dir, facing, o = {}) {
+  const s2 = V2.sheets[pose.anim + '_' + v2View(dir)];   // v2 chars b3: лист v2 своего вида, без зеркала
+  if (s2) { const fr = Math.min((s2.meta.frames || 1) - 1, pose.frame); blitF(ctx, s2, fr, x, y, false, o.alpha); if (o.flash) { ctx.save(); ctx.globalAlpha *= o.flashA || FLASH_A; ctx.globalCompositeOperation = 'lighter'; blitF(ctx, s2, fr, x, y, false); ctx.restore(); } (V2.counters.charArt || (V2.counters.charArt = {}))[pose.anim.split('_')[0]] = pose.anim + '_' + v2View(dir) + ':' + fr; return true; }
   const { view, flip } = viewOf(dir, facing);
   const sh = ART.sheets[pose.anim + '_' + view] || ART.sheets[pose.anim + '_se'];
   if (!sh) return false;
@@ -223,6 +230,7 @@ export function restoreUpyrEyes(ctx, pose, x, y, dir, facing) {
 
 /** Обводка «под курсором / элита» — 1 px контур силуэта цветом c (рисуется до спрайта). */
 export function drawCharOutline(ctx, pose, x, y, dir, facing, c) {
+  { const s2 = V2.sheets[pose.anim + '_' + v2View(dir)]; if (s2) { V2O(ctx, s2, Math.min((s2.meta.frames || 1) - 1, pose.frame), x, y, c); return; } }
   const { view, flip } = viewOf(dir, facing);
   const sh = ART.sheets[pose.anim + '_' + view] || ART.sheets[pose.anim + '_se'];
   if (!sh) return;

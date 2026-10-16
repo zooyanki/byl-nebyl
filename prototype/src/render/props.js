@@ -7,7 +7,75 @@ import { w2s } from '../core/iso.js';
 import { rect, poly, strokePoly, isoBox, disc, ellipse, figure } from './shapes.js';
 import { drawRestSource, drawFxFrame } from './rest_fx.js';
 import { drawHearthArt, drawPerunArt } from './boss_art.js';
+import { CFG } from '../data/config.js';
 import { VA, BLD_SHEET, sheetOf, frameOf, bakeSheet } from './village_art.js';
+import { V2, v2, v2Blit } from './v2art.js';
+import { flick } from './light.js';
+
+// --- v2art: статичные листы v2 (деревья, прясло тына, избы) — спрайт { c, ox, oy } в системе drawProp (опора toS(p.x, p.y)).
+const V2A = () => (CFG.stats && CFG.stats.v2art) || {};
+const V2SPR = new Map();
+/** Кадр листа v2 в canvas; (cx, cy) — мировая точка, куда встаёт pivot; flip — зеркало; sx0/sw — вырезка по x (прясло по клеткам). */
+function v2Sprite(name, p, cx, cy, o = {}) {
+  const sh = v2(name);
+  if (!sh) return null;
+  const m = sh.meta, [fw, fh] = m.frame_size || m.size, [px, py] = m.pivot, sx0 = o.sx0 ?? 0, sw = o.sw ?? fw;
+  const key = name + (o.flip ? ':f' : '') + ':' + sx0 + ':' + sw + (o.glow ? ':g' : '');
+  let c = V2SPR.get(key);
+  if (!c) {
+    c = document.createElement('canvas'); c.width = sw; c.height = fh;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.save(); if (o.flip) { g.translate(sw, 0); g.scale(-1, 1); }
+    g.drawImage(sh.img, o.flip ? fw - sx0 - sw : sx0, 0, sw, fh, 0, 0, sw, fh);
+    g.restore();
+    const W = o.glow && v2(o.glow);   // маска окон v2 (избы) — запекается аддитивно: окна тёплые всегда (тон зоны постоянный)
+    if (W) { g.globalCompositeOperation = 'lighter'; g.globalAlpha = (((CFG.stats || {}).light || {}).windowMasksV2 || {}).maskA ?? 0.55; g.drawImage(W.img, sx0, 0, sw, fh, 0, 0, sw, fh); }
+    const d = g.getImageData(0, 0, sw, fh).data; c.mask = new Uint8Array(sw * fh);   // маска для «рентгена» — одна на общий canvas
+    for (let i = 0; i < sw * fh; i++) c.mask[i] = d[i * 4 + 3] > 0 ? 1 : 0;
+    V2SPR.set(key, c);
+    V2.counters.sprites = V2SPR.size;
+  }
+  const [a, b] = w2s(p.x, p.y), [u, v] = w2s(cx, cy);
+  const pxs = o.flip ? (fw - px) - sx0 : px - sx0;   // при зеркале pivot листа — fw − px
+  return { c, mask: c.mask, ox: Math.round(pxs - (u - a)), oy: Math.round(py - (v - b)), v2: name };
+}
+/** Какой лист v2 у пропса: дерево (кроме низких hMax перед путём), высокий тын (не низкий плетень, не столб ворот), изба-заглушка. */
+export function v2PropSheet(p) {
+  if (p.type === 'tree' && !p.hMax) return p.birch ? 'tree_birch' : 'tree_spruce';
+  if (p.type === 'tree' && p.hMax) {   // v2b2: низкие деревья (treeRules) — самый высокий лист с hMax листа ≤ hMax дерева
+    const L = p.birch ? ['tree_birch_h112', 'tree_birch_h96'] : ['tree_spruce_h120', 'tree_spruce_h80'];
+    for (const n of L) { const sh = v2(n); if (sh && (sh.meta.hMax ?? 999) <= p.hMax) return n; }
+    return null;
+  }
+  if (p.type === 'palisade' && !p.tyn && !p.tynH && !p.gatepost) return 'palisade_u4';
+  if (p.type === 'izba' && !sheetOf(p)) return (V2A().izba || {})[p.id] || null;
+  if (p.type === 'church') return V2A().church || null;   // v2art r2: клетская церковь 11×6 (ответ Василия)
+  return null;
+}
+function v2PropSprite(p) {
+  const name = v2PropSheet(p), sh = name && v2(name);
+  if (!sh) return null;
+  if (p.type === 'tree') return v2Sprite(name, p, p.x + 0.5, p.y + 0.5, { flip: p.seed > 0.5 });
+  if (p.type === 'palisade') {
+    // прясло 4 тайла вдоль u: клетка тына берёт свою полосу 16 px (крайние — до края листа); вдоль v — зеркало (истинная пара)
+    const ys = p.axis === 'y', k = ((Math.floor(ys ? p.y : p.x) % 4) + 4) % 4, [fw] = sh.meta.frame_size || sh.meta.size, px = sh.meta.pivot[0];
+    const a = k === 0 ? 0 : px + (k - 2) * HALF_W, b = k === 3 ? fw : px + (k - 1) * HALF_W;
+    const x0 = ys ? p.x : p.x - k, y0 = ys ? p.y - k : p.y;
+    const cx = ys ? x0 + 0.5 : x0 + 2, cy = ys ? y0 + 2 : y0 + 0.5;
+    return ys ? v2Sprite(name, p, cx, cy, { flip: true, sx0: fw - b, sw: b - a }) : v2Sprite(name, p, cx, cy, { sx0: a, sw: b - a });
+  }
+  if (p.type === 'izba' || p.type === 'church') {
+    const [fx, fy, fw2, fh2] = p.fp || [p.x, p.y, p.size, p.size], cx = fx + fw2 / 2, cy = fy + fh2 / 2;
+    const spr = v2Sprite(name, p, cx, cy, { glow: name + '_windows' });
+    if (spr && !p._lights) {   // окна — по windows.anchors листа (центр окна)
+      const W = (sh.meta.windows || {}).anchors || [];
+      p._lights = W.map((w) => [-spr.ox + w.x + w.w / 2, -spr.oy + w.y + w.h / 2, 'window']);
+      p._winSrc = name;
+    }
+    return spr;
+  }
+  return null;
+}
 
 // toS(x,y) -> [sx,sy] экранные координаты мировой точки
 export function drawProp(ctx, p, toS, time) {
@@ -17,13 +85,14 @@ export function drawProp(ctx, p, toS, time) {
   if (p.type === 'fire') return fire(ctx, p, toS, time);   // анимирован — рисуем каждый кадр
   if (p.type === 'hearth') return hearth(ctx, p, toS, time);   // огнища капища (веха M1b)
   if (p.type === 'perun') return perun(ctx, p, toS, time);
-  if (p.type === 'ladya') return ladya(ctx, p, toS);
+  if (p.type === 'ladya') return ladya(ctx, p, toS, time);
   if (p.type === 'cart') return cart(ctx, p, toS);
   if (p.type === 'anvil') return anvil(ctx, p, toS);
   if (p.type === 'relic') return relic(ctx, p, toS, time);
   if (p.type === 'stump') { const [x, y] = toS(p.x + 0.5, p.y + 0.5); if (!drawFxFrame(ctx, 'stump', p.variant || 0, x, y, { flip: p.seed > 0.5 })) ashPile(ctx, p, toS); return; }   // горелый пень (GDD v1.11); без спрайта — кучка пепла
-  if ((p.type === 'gateseg' || sheetOf(p)) && drawBld(ctx, p, toS, time)) return;   // m1k: постройки и ворота Ладоги — листы художника
-  if (!p._spr) p._spr = p.shared ? sharedSprite(p) : bake(p);   // остальное статично — запекаем в спрайт
+  const v2c = p.type === 'church' && v2PropSheet(p) && v2(v2PropSheet(p));   // v2art r2: церковь v2 11×6 — лист v2 вместо bld_church
+  if ((p.type === 'gateseg' || sheetOf(p) || zalIzba(p)) && !v2c && drawBld(ctx, p, toS, time)) return;   // m1k: постройки и ворота Ладоги — листы художника
+  if (!p._spr) p._spr = v2PropSprite(p) || (p.shared ? sharedSprite(p) : bake(p));   // остальное статично — запекаем в спрайт (v2art: листы v2)
   const [sx, sy] = toS(p.x, p.y);
   ctx.drawImage(p._spr.c, sx - p._spr.ox, sy - p._spr.oy);
 }
@@ -68,9 +137,17 @@ export function propCovers(p, toS, r) {
 }
 
 /** Лист художника для пропса (постройка / сегмент ворот) и его кадр; null — листа нет. */
+/** v2b2: изба 4×4 Залесья без облика (была заглушка кодом) → izba_small_tes / _sod v2 (чередуются по месту). */
+export function zalIzba(p) {
+  if (p.type !== 'izba' || p.burnt || p.variant || (V2A().izba || {})[p.id]) return null;
+  const n = (Math.round(p.x) + Math.round(p.y)) % 2 ? 'izba_small_sod' : 'izba_small_tes';
+  return v2(n) ? n : null;
+}
 export function bldSheet(p, time = 0) {
-  const name = p.type === 'gateseg' ? (p.open || !p.closedSheet ? p.openSheet : p.closedSheet) : sheetOf(p);
-  const sh = name && VA.sheets[name];
+  let name = p.type === 'gateseg' ? (p.open || !p.closedSheet ? p.openSheet : p.closedSheet) : sheetOf(p) || zalIzba(p);
+  const sub = (V2A().izbaSmall || {})[name], s2 = (sub && v2(sub)) || (name && name.startsWith('izba_small') && v2(name));   // v2b2: избы 4×4 Ладоги — листы v2
+  if (s2 && sub) name = sub;
+  const sh = s2 || (name && VA.sheets[name]);
   if (!sh) return null;
   const n = sh.meta.frame_count || 1;
   const fr = p.type === 'gateseg' ? (n > 1 ? Math.floor(time * (sh.meta.fps || 8)) % n : 0) : p.type === 'sign' ? Math.min(n - 1, p.stage || 0) : frameOf(sh.meta, p.door);
@@ -91,15 +168,60 @@ function drawBld(ctx, p, toS, time) {
   p._spr = spr;
   const [sx, sy] = toS(p.x, p.y);
   ctx.drawImage(spr.c, sx - spr.ox, sy - spr.oy);
-  const sa = p.smoke ? smokeAnchor(B.sh.meta, B.fr) : null, pt = sa && sa.pt;
+  const WM = maskV2(B.name);
+  if (WM) {   // v2art: маска окон художника поверх кадра — аддитивно, с лёгким дрожанием огня
+    const k = (((CFG.stats || {}).light || {}).windowMasksV2 || {}).maskA ?? 0.55;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = k * (0.85 + 0.15 * flick(time * 0.35, p.x * 3 + p.y));
+    const [fw, fh] = WM.meta.frame_size || WM.meta.size;
+    ctx.drawImage(WM.img, (B.fr % (WM.meta.frame_count || 1)) * fw, 0, fw, fh, sx - spr.ox, sy - spr.oy, fw, fh); ctx.restore();
+    V2.counters.masks = (V2.counters.masks || 0) + 1;
+  }
+  const sa = p.smoke ? (smokeV2(B.name) || smokeAnchor(B.sh.meta, B.fr)) : null, pt = sa && sa.pt;
   p._smoked = !!pt;   // v1.13.3: дым — только у видов из smokeKinds (изба, с сенями, на подклете, баня)
   p._smokeSrc = sa ? sa.src : null;
+  if (!p._lights || p.type === 'gateseg') p._lights = bldLights(p, B, spr);
+  p._smokePt = pt ? [-spr.ox + pt[0], -spr.oy + pt[1]] : null;   // v2light: точка для клубов дыма (atmo.js)
   if (pt) drawFxFrame(ctx, 'smoke', Math.floor(time * ((FXfps) || 5) + p.seed * 4), sx - spr.ox + pt[0], sy - spr.oy + pt[1]);
   return true;
+}
+/** v2light: точки света постройки (смещения от toS(p.x, p.y)): факелы ворот — anchors_px.torch_A/B (только у открытых, как
+ *  свет факелов в ladoga.js), окна/двери жилых — anchors_px.door, иначе передний угол чуть выше земли (окно/дверь фасада). */
+function bldLights(p, B, spr) {
+  const A = B.sh.meta.anchors_px || {}, out = [], pick = (a) => a && (Array.isArray(a) ? a : a[B.fr] || a['0']);
+  const at = (pt, kind) => out.push([-spr.ox + pt[0], -spr.oy + pt[1], kind]);
+  if (p.type === 'gateseg') {
+    if (p.open || !p.closedSheet) for (const k of ['torch_A', 'torch_B']) { const pt = pick(A[k]); if (pt) at(pt, 'torch'); }
+    return out;
+  }
+  const kinds = ((CFG.stats && CFG.stats.light && CFG.stats.light.window) || {}).kinds || ['izba', 'banya'];
+  if (!kinds.some((k) => B.name.includes(k))) return out;
+  // v2art: маски художника для бани / мастерской / лавки — окна по anchors[кадр] (cx, cy), у лавки — точка lamp у прилавка
+  const MV2 = maskV2(B.name);
+  if (MV2) {
+    const an = MV2.meta.anchors || {}, list = Array.isArray(an) ? an : an[B.fr] || an['0'] || [];
+    for (const w of list) at([w.cx ?? w.x + w.w / 2, w.cy ?? w.y + w.h / 2], 'window');
+    const lamp = pick(MV2.meta.lamp);
+    if (lamp) at(lamp, 'window');
+    p._winSrc = MV2.meta.image ? MV2.meta.image.replace('.png', '') : 'v2';
+    return out;
+  }
+  // v2: окна по маскам художника (stats.light.windowMasks), масштаб по ширине листа
+  const WM = (((CFG.stats && CFG.stats.light) || {}).windowMasks || {}).list || [], M = WM.find((m) => B.name.includes(m.match));
+  const pv = B.sh.meta.pivot, fs = B.sh.meta.frame_size;
+  if (M && pv && fs) { const k = fs[0] / M.size[0]; for (const [ax, ay] of M.anchors) at([pv[0] + (ax - M.pivot[0]) * k, pv[1] + (ay - M.pivot[1]) * k], 'window'); p._winSrc = M.src; return out; }
+  const door = pick(A.door), fc = B.sh.meta.front_corner_px;
+  if (door) at(door, 'window');
+  else if (fc) at([fc[0] - 10, fc[1] - 12], 'window');
+  else at([spr.ox, spr.oy - 14], 'window');
+  return out;
 }
 /** m1l (B-40): точка дыма листа. У bld_izba_small_tes_kon / _tes_prich художник не поставил anchors_px.smoke (есть только
  *  gable_vent — дымник во фронтоне), поэтому избы izba_sw / izba_se не дымили. Порядок: anchors_px.smoke → gable_vent →
  *  конёк над передним углом (front_corner_px − heights_px.ridge). Возвращает {pt, src} или null. */
+/** v2art: маска окон v2 для листа постройки (stats.light.windowMasksV2) или null. */
+export function maskV2(name) { const M = ((CFG.stats || {}).light || {}).windowMasksV2 || {}; return (M[name] && v2(M[name])) || null; }
+/** v2art: точка дыма из ответа художника (stats.v2art.smoke: izba_small_tes_kon / _prich → [107, 62] во всех кадрах). */
+export function smokeV2(name) { const s = (V2A().smoke || {})[name]; return Array.isArray(s) ? { pt: s, src: 'v2art' } : null; }
 export function smokeAnchor(meta, fr) {
   const A = (meta && meta.anchors_px) || {};
   const pick = (a) => a && (Array.isArray(a) ? a : a[fr] || a['0']);
@@ -111,11 +233,12 @@ export function smokeAnchor(meta, fr) {
 const FXfps = 5;   // fx_smoke_wisp: 4 кадра, 5 к/с (JSON художника)
 
 export function propHeight(p) {
-  if (p.type === 'gateseg' || sheetOf(p)) { const B = bldSheet(p); if (B) return B.sh.meta.frame_size[1]; return p.type === 'gateseg' ? 100 : 132; }
+  { const n = v2PropSheet(p), sh = n && v2(n); if (sh) return sh.meta.pivot[1] + 4; }   // v2art: высота листа v2 над опорой
+  if (p.type === 'gateseg' || sheetOf(p) || zalIzba(p)) { const B = bldSheet(p); if (B) return B.sh.meta.frame_size[1]; return p.type === 'gateseg' ? 100 : 132; }
   if (p.type === 'tree') return p.hMax ? p.hMax + 6 : p.birch ? 132 : 166;   // m1k D9: низкие деревья перед путём
   if (p.type === 'palisade') return p.tyn ? 44 : p.gatepost ? 100 : 86;   // m1i: низкий тын Залесья — как стена (44)
   if (p.type === 'fire' && p.krada) return 112;       // спрайт fx_rest_krada: 120 px, опора на 108
-  return { rock: 36, wall: 44, izba: 132, fire: 80, hearth: 56, perun: 120, relic: 30, idol: 66, well: 64, churstone: 50, gate: 80, chest: 22, body: 12, bush: 24, ladya: 28, cart: 24, anvil: 16, stump: 18 }[p.type] || 40;
+  return { rock: 36, wall: 44, izba: 132, fire: 80, hearth: 56, perun: 120, relic: 30, idol: 66, well: 64, churstone: 50, gate: 80, chest: 22, body: 12, bush: 24, ladya: 140, cart: 24, anvil: 16, stump: 18 }[p.type] || 40;
 }
 
 function drawRaw(ctx, p, toS) {
@@ -124,7 +247,7 @@ function drawRaw(ctx, p, toS) {
     case 'rock': return rock(ctx, p, toS);
     case 'wall': return wall(ctx, p, toS);
     case 'palisade': return palisade(ctx, p, toS);
-    case 'izba': return izba(ctx, p, toS);
+    case 'izba': if (!p._lights) { const [a, b] = toS(p.x, p.y), [c, d] = toS(p.x + p.size, p.y + p.size); p._lights = [[c - a - 4, d - b - 18, 'window']]; } return izba(ctx, p, toS);
     case 'idol': return idol(ctx, p, toS);
     case 'well': return well(ctx, p, toS);
     case 'churstone': return churstone(ctx, p, toS);
@@ -559,11 +682,34 @@ function ashPile(ctx, p, toS) {
   disc(ctx, x, y - 2, 2, PAL.slate_lt);
 }
 
-function ladya(ctx, p, toS) {
-  const len = p.len || 12, beam = p.beam || 3;
+/** v2art: ладья у пристани — лист ladya_u (ось вдоль x) / ladya_v (вдоль y), 4 кадра @4, pivot [100,131] = центр корпуса
+ *  на воде (p.x + len/2, p.y + beam/2). Под корпусом — отражение кодом: перевёрнутый кадр полосами с дрожанием, в пределах
+ *  reflection_x; низ корпуса в листе уже обрезан по воде. Фонарь у кормы — точка тёплого света (anchors_px.lantern). */
+function ladya(ctx, p, toS, time = 0) {
+  const len = p.len || 12, beam = p.beam || 3, alongY = beam > len, name = alongY ? 'ladya_v' : 'ladya_u', sh = v2(name);
+  if (sh) {
+    const m = sh.meta, L = V2A().ladya || {}, [fw, fh] = m.frame_size, [px, py] = m.pivot, n = m.frames || 4;
+    const fr = Math.floor(time * (L.fps ?? m.fps ?? 4)) % n, [cx, cy] = toS(p.x + len / 2, p.y + beam / 2);
+    const rx = (m.anchors_px && m.anchors_px.reflection_x) || [0, fw], x0 = Math.min(rx[0], rx[1]), x1 = Math.max(rx[0], rx[1]);
+    const RL = Math.round(py * (L.reflectLen ?? 1)), A = L.reflectA ?? 0.28;
+    ctx.save();
+    for (let r = 0; r < RL; r += 2) {   // строка r под водой = строка py − r листа (зеркало), гаснет книзу
+      const sy = py - r - 2; if (sy < 0) break;
+      ctx.globalAlpha = A * (1 - r / RL);
+      const dx = Math.round(Math.sin(time * 3 + r * 0.45) * (1 + r / 40));
+      ctx.drawImage(sh.img, fr * fw + x0, sy, x1 - x0, 2, cx - px + x0 + dx, cy + r, x1 - x0, 2);
+    }
+    ctx.restore();
+    v2Blit(ctx, sh, fr, cx, cy);
+    const [ax, ay] = toS(p.x, p.y), lan = m.anchors_px && m.anchors_px.lantern;
+    if (L.lantern !== false && lan) p._lights = [[cx - ax - px + lan[0], cy - ay - py + lan[1], 'window']];
+    p._ladyaFrame = fr; V2.counters.ladya = (V2.counters.ladya || 0) + 1;
+    return;
+  }
   const pts = [[p.x, p.y + beam / 2], [p.x + 1.2, p.y], [p.x + len - 1.2, p.y], [p.x + len, p.y + beam / 2], [p.x + len - 1.2, p.y + beam], [p.x + 1.2, p.y + beam]].map(([x, y]) => toS(x, y));
-  poly(ctx, pts, PAL.slate);
-  strokePoly(ctx, pts, PAL.ink, true);
+  // v2light: плоский серый шестиугольник-заглушка ладьи у пристани читался как «серый многоугольник на воде» — не рисуем,
+  // пока художник не даст лист ладьи (пропс и его клетки остаются; вода там и так непроходима)
+  void pts; void poly; void strokePoly;
 }
 function cart(ctx, p, toS) {
   const [x, y] = toS(p.x + 1.5, p.y + 1);

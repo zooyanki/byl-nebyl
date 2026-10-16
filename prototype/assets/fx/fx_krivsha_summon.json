@@ -1,22 +1,27 @@
 {
- "effect": "Призыв упырей: земля трескается, жар, дымки небыли",
+ "image": "fx_krivsha_summon.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  296,
+  45
+ ],
+ "pivot": [
+  21,
+  36
+ ],
+ "frames": 8,
+ "frame_size": [
+  37,
+  45
+ ],
+ "effect": "Призыв упырей: трещины, жар, дымки Небыли",
  "events": {
   "upyr_visible_from_frame": 3
  },
- "draw": "one per upyr spawn point; 8 frames @10 = the upyr riseTime 0.8 s; draw under the rising upyr",
- "pivot": [
-  24,
-  44
- ],
+ "draw": "по одному на точку призыва, под встающим упырём (upyr_rise)",
  "fps": 10,
  "loop": false,
- "image": "fx_krivsha_summon.png",
- "frame_size": [
-  48,
-  56
- ],
- "frame_count": 8,
- "layout": "horizontal strip, left to right",
- "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
- "alpha": "0/255 only"
+ "drawn_facing": "+x screen (вправо); влево — зеркалить кодом",
+ "light": "самосвет огня, сцену не подсвечивает (свет — кодом)"
 }

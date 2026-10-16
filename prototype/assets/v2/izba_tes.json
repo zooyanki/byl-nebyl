@@ -1,0 +1,40 @@
+{
+ "image": "izba_tes.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  211,
+  208
+ ],
+ "pivot": [
+  105,
+  156
+ ],
+ "footprint_tiles": [
+  6,
+  6
+ ],
+ "footprint_m": [
+  5.4,
+  5.4
+ ],
+ "door_px": 68,
+ "note": "r3: сруб, тёсовая кровля, охлупень, причелины",
+ "windows": {
+  "mask": "izba_tes_windows.png",
+  "anchors": [
+   {
+    "x": 176,
+    "y": 110,
+    "w": 11,
+    "h": 14
+   },
+   {
+    "x": 40,
+    "y": 114,
+    "w": 13,
+    "h": 16
+   }
+  ]
+ }
+}

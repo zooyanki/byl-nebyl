@@ -1,0 +1,56 @@
+{
+ "image": "krivsha_hurt_s.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  396,
+  158
+ ],
+ "pivot": [
+  99,
+  139
+ ],
+ "frames": 2,
+ "frame_size": [
+  198,
+  158
+ ],
+ "character": "Кривша, Обгорелый страж (bosses.json krivsha, Б1)",
+ "phase": "normal",
+ "animation": "hurt",
+ "fps": 8,
+ "loop": false,
+ "events": {
+  "note": "вздрагивание; поверх любой анимации, кроме leap/emerge"
+ },
+ "direction": "s",
+ "visible_height_px": [
+  134,
+  121
+ ],
+ "rendered": "per direction (model rotated 45°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "claw_A": [
+   [
+    45,
+    98
+   ],
+   [
+    65,
+    122
+   ]
+  ],
+  "claw_B": [
+   [
+    153,
+    98
+   ],
+   [
+    133,
+    122
+   ]
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

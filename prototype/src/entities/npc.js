@@ -13,7 +13,7 @@ export class Npc extends Actor {
     this.route = opts.route || null;
     this.stopR = opts.stop || 2;
     this.ri = 0; this.pause = 0; this.mark = '';
-    this.def = { height: kind === 'mal' ? 30 : opts.height || 40 };
+    this.def = { height: kind === 'mal' || opts.role === 'mal' ? 38 : opts.height || 52 };   // v2 chars: рост листов v2 (Мал 38, селяне 49–52)
     this.speed = opts.speed || 3.2;
     this.target = null;             // [x, y] — куда бежать
     this.wait = opts.wait || 0;     // сколько стоять перед бегом (с)
@@ -59,14 +59,14 @@ export class Dummy extends Actor {
     this.dummy = true; this.dead = false; this.hp = this.maxHp = 1;
     this.dfn = 0; this.mlvl = 1; this.state = 'idle'; this.kind = 'dummy'; this.id = 9001;
     this.res = {}; this.hits = 0; this.name = '';
-    this.def = { height: 36, mass: 99, family: '', name: '' };
+    this.def = { height: 46, mass: 99, family: '', name: '' };
   }
   update() { this.moving = false; this.state = 'idle'; this.hp = this.maxHp; this.dead = false; }
   takeDamage(amount, game) {
     const dmg = Math.max(1, Math.floor(amount));
     game.fx.text(this.x, this.y, String(dmg), PAL.linen, this.def.height + 6, {});
     game.fx.burst(this.x, this.y, PAL.birch, 4, 14);
-    this.hits++;
+    this.hits++; this.hitAt = game.time;   // v2 chars: кадры dummy_hit
     game.counters.dummyHits = (game.counters.dummyHits || 0) + 1;
     this.hp = this.maxHp; this.dead = false;
     return dmg;

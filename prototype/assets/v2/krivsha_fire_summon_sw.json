@@ -1,0 +1,128 @@
+{
+ "image": "krivsha_fire_summon_sw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  2032,
+  230
+ ],
+ "pivot": [
+  127,
+  192
+ ],
+ "frames": 8,
+ "frame_size": [
+  254,
+  230
+ ],
+ "character": "Кривша, Обгорелый страж (bosses.json krivsha, Б1)",
+ "phase": "fire",
+ "animation": "fire_summon",
+ "fps": 10,
+ "loop": false,
+ "events": {
+  "spawn_frame": 5,
+  "spawn_effect": "fx_krivsha_summon в каждой точке подъёма упыря; упыри — upyr_rise v2",
+  "note": "0–3 руки вверх, 4–6 удар оземь (угли запечены в 5–6)"
+ },
+ "direction": "sw",
+ "visible_height_px": [
+  132,
+  130,
+  157,
+  174,
+  131,
+  108,
+  110,
+  124
+ ],
+ "rendered": "per direction (model rotated 90°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "claw_A": [
+   [
+    40,
+    147
+   ],
+   [
+    27,
+    105
+   ],
+   [
+    55,
+    42
+   ],
+   [
+    86,
+    20
+   ],
+   [
+    34,
+    68
+   ],
+   [
+    9,
+    127
+   ],
+   [
+    8,
+    133
+   ],
+   [
+    31,
+    145
+   ]
+  ],
+  "claw_B": [
+   [
+    109,
+    181
+   ],
+   [
+    96,
+    139
+   ],
+   [
+    124,
+    77
+   ],
+   [
+    155,
+    55
+   ],
+   [
+    103,
+    102
+   ],
+   [
+    77,
+    161
+   ],
+   [
+    77,
+    167
+   ],
+   [
+    100,
+    180
+   ]
+  ],
+  "slam": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   [
+    90,
+    211
+   ],
+   [
+    90,
+    211
+   ],
+   null
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

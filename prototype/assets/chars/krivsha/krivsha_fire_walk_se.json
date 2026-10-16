@@ -1,35 +1,114 @@
 {
- "character": "Кривша, Обгорелый страж",
- "animation": "walk",
- "variant": "fire_phase",
- "direction": "se",
- "mirror_for": "sw",
- "mirror_rule": "flip horizontally around the frame centre line x = 64.0; pivot stays (64, 116)",
- "pivot": [
-  64,
-  116
+ "image": "krivsha_fire_walk_se.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  1280,
+  173
  ],
+ "pivot": [
+  80,
+  151
+ ],
+ "frames": 8,
+ "frame_size": [
+  160,
+  173
+ ],
+ "character": "Кривша, Обгорелый страж (bosses.json krivsha, Б1)",
+ "phase": "fire",
+ "animation": "fire_walk",
  "fps": 9,
  "loop": true,
+ "events": {
+  "footstep": [
+   0,
+   4
+  ],
+  "fire_trail": "fx_krivsha_fire_trail — кодом (every 0.3 с)"
+ },
+ "direction": "se",
  "visible_height_px": [
-  106,
-  102,
-  99,
-  103,
-  106,
-  102,
-  99,
-  103
+  129,
+  130,
+  134,
+  130,
+  129,
+  127,
+  132,
+  126
  ],
- "height_rule": "pivot row (ground under the feet) to the top visible pixel, outline included",
- "notes": "Кривша, Обгорелый страж (boss M1; «Обгорелый страж» is his title, one character). Hunched keeper of the капище in a burnt sheepskin coat with a ring of bronze keys, ghoul-grey skin, long claws with burning tips, fire in the coat's cracks. Body 96 (scale.md: boss 96, fire halo to 112), frame 128x128, pivot (64,116).",
- "image": "krivsha_fire_walk_se.png",
- "frame_size": [
-  128,
-  128
- ],
- "frame_count": 8,
- "layout": "horizontal strip, left to right",
- "palette": "palette_v2 (32 colours, /workspace/game/art/ui/palette_v2.json)",
- "alpha": "0/255 only"
+ "rendered": "per direction (model rotated 0°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "claw_A": [
+   [
+    95,
+    143
+   ],
+   [
+    96,
+    142
+   ],
+   [
+    100,
+    140
+   ],
+   [
+    103,
+    141
+   ],
+   [
+    104,
+    141
+   ],
+   [
+    103,
+    141
+   ],
+   [
+    100,
+    140
+   ],
+   [
+    96,
+    142
+   ]
+  ],
+  "claw_B": [
+   [
+    152,
+    117
+   ],
+   [
+    150,
+    117
+   ],
+   [
+    147,
+    116
+   ],
+   [
+    144,
+    118
+   ],
+   [
+    143,
+    119
+   ],
+   [
+    144,
+    118
+   ],
+   [
+    147,
+    116
+   ],
+   [
+    150,
+    117
+   ]
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
 }

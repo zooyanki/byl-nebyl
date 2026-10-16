@@ -1,0 +1,102 @@
+{
+ "image": "hero_block_walk_e.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  324,
+  66
+ ],
+ "pivot": [
+  27,
+  57
+ ],
+ "frames": 6,
+ "frame_size": [
+  54,
+  66
+ ],
+ "character": "Ратибор",
+ "animation": "block_walk",
+ "loop": true,
+ "events": {
+  "block_active": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "footstep": [
+   0,
+   3
+  ]
+ },
+ "notes": "шаг со щитом (скорость × 0,5), цикл 0,75 с",
+ "fps": 8,
+ "direction": "e",
+ "visible_height_px": [
+  56,
+  56,
+  56,
+  56,
+  56,
+  56
+ ],
+ "rendered": "per direction (model rotated 315°), no mirroring",
+ "mirror_pair": null,
+ "anchors": {
+  "shield_center": [
+   [
+    42,
+    19
+   ],
+   [
+    42,
+    19
+   ],
+   [
+    42,
+    19
+   ],
+   [
+    42,
+    19
+   ],
+   [
+    42,
+    19
+   ],
+   [
+    42,
+    19
+   ]
+  ],
+  "shield_rim": [
+   [
+    41,
+    9
+   ],
+   [
+    41,
+    8
+   ],
+   [
+    41,
+    8
+   ],
+   [
+    41,
+    9
+   ],
+   [
+    41,
+    8
+   ],
+   [
+    41,
+    8
+   ]
+  ]
+ }
+}

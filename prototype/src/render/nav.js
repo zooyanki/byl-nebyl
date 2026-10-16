@@ -1,7 +1,7 @@
 // Стрелка у края и маркер над целью (GDD v1.13 §10.2, §7.4; задача D5). Арт: ui_nav_arrow (8 кадров e, se, s, sw, w, nw, n, ne;
 // 12×12, pivot 6,6; кадр = round(atan2(dy, dx) / 45°) mod 8 в экранных координатах), ui_nav_mark (9×9, 2 кадра, pivot 4,8).
 // Числа — stats.json → nav. Цель — game.navTarget() (метка обязательной цели в зоне; в Ладоге после Кривши — Вышата).
-import { VIEW_W, PANEL_Y } from '../config.js';
+import { UI_W as VIEW_W, UI_PANEL_Y as PANEL_Y, UI_K } from '../config.js';   // v2art r2: стрелка — в слое интерфейса
 import { PAL } from '../palette.js';
 import { CFG } from '../data/config.js';
 import { drawText } from '../core/font.js';
@@ -30,8 +30,9 @@ export function drawNav(ctx, game) {
   const T = game.navTarget && game.navTarget();
   if (!T) return;
   const N = NAV(), A = N.arrow || {}, M = N.mark || {}, h = game.hero, time = game.time;
-  const [hx, hy0] = game.toS(h.x, h.y), hy = hy0 - 22;
-  const [tx, ty0] = game.toS(T.x, T.y), lift = T.kind === 'gate' ? (M.hGate ?? 96) : T.kind === 'npc' ? 58 : (M.h ?? 40), ty = ty0 - lift;
+  const toU = (x, y) => game.toS(x, y).map((v) => v * UI_K);   // v2art r2: экран мира → слой интерфейса
+  const [hx, hy0] = toU(h.x, h.y), hy = hy0 - 28 * UI_K;   // середина героя 56 px
+  const [tx, ty0] = toU(T.x, T.y), lift = T.kind === 'gate' ? (M.hGate ?? 96) : T.kind === 'npc' ? 58 : (M.h ?? 40), ty = ty0 - lift * UI_K;
   const combat = game.enemies.some((e) => !e.dead && !e.dummy && e.state !== 'idle' && e.state !== 'return' && e.state !== 'wander' && !e.buried);
   const flash = game.navFlashUntil && time < game.navFlashUntil;
   const [a0, a1] = A.alpha || [0.7, 1.0];

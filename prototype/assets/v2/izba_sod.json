@@ -1,0 +1,40 @@
+{
+ "image": "izba_sod.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  214,
+  211
+ ],
+ "pivot": [
+  107,
+  159
+ ],
+ "footprint_tiles": [
+  6,
+  6
+ ],
+ "footprint_m": [
+  5.4,
+  5.4
+ ],
+ "door_px": 68,
+ "note": "r3: сруб, дерновая кровля, охлупень; дверь на +u",
+ "windows": {
+  "mask": "izba_sod_windows.png",
+  "anchors": [
+   {
+    "x": 178,
+    "y": 113,
+    "w": 11,
+    "h": 14
+   },
+   {
+    "x": 42,
+    "y": 118,
+    "w": 13,
+    "h": 16
+   }
+  ]
+ }
+}

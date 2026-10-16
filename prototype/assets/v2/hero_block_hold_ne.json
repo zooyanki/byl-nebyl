@@ -1,0 +1,58 @@
+{
+ "image": "hero_block_hold_ne.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  108,
+  67
+ ],
+ "pivot": [
+  27,
+  58
+ ],
+ "frames": 2,
+ "frame_size": [
+  54,
+  67
+ ],
+ "character": "Ратибор",
+ "animation": "block_hold",
+ "loop": true,
+ "events": {
+  "block_active": [
+   0,
+   1
+  ]
+ },
+ "notes": "цикл; кромка щита у подбородка",
+ "fps": 4,
+ "direction": "ne",
+ "visible_height_px": [
+  57,
+  56
+ ],
+ "rendered": "per direction (model rotated 270°), no mirroring",
+ "mirror_pair": null,
+ "anchors": {
+  "shield_center": [
+   [
+    35,
+    15
+   ],
+   [
+    35,
+    15
+   ]
+  ],
+  "shield_rim": [
+   [
+    34,
+    4
+   ],
+   [
+    34,
+    5
+   ]
+  ]
+ }
+}

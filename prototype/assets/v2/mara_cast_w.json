@@ -1,0 +1,58 @@
+{
+ "image": "mara_cast_w.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  348,
+  85
+ ],
+ "pivot": [
+  29,
+  74
+ ],
+ "frames": 6,
+ "frame_size": [
+  58,
+  85
+ ],
+ "character": "Огнея Пепельная (bosses.json mara; id/имена файлов прежние)",
+ "animation": "cast",
+ "fps": 10,
+ "loop": false,
+ "events": {
+  "release_frame": 3,
+  "spawn_effect": "fx_mara_bolt (полёт), fx_mara_bolt_hit (удар)",
+  "sync": "attackTime 2.0, hitAt 0.7: старт анимации в 0.4 с"
+ },
+ "direction": "w",
+ "visible_height_px": [
+  59,
+  66,
+  72,
+  59,
+  59,
+  60
+ ],
+ "rendered": "per direction (model rotated 135°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "bolt": [
+   [
+    8,
+    34
+   ],
+   [
+    12,
+    14
+   ],
+   [
+    23,
+    7
+   ],
+   null,
+   null,
+   null
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

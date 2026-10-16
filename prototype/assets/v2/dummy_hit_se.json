@@ -1,0 +1,37 @@
+{
+ "image": "dummy_hit_se.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  180,
+  54
+ ],
+ "pivot": [
+  20,
+  50
+ ],
+ "frames": 4,
+ "frame_size": [
+  45,
+  54
+ ],
+ "character": "Соломенник (kind 'dummy', id 9001)",
+ "animation": "hit",
+ "fps": 12,
+ "loop": false,
+ "direction": "se",
+ "visible_height_px": [
+  41,
+  49,
+  45,
+  46
+ ],
+ "events": {
+  "impact": [
+   0
+  ]
+ },
+ "rendered": "одна ориентация: чучело неподвижно, не поворачивается (8 направлений не нужны)",
+ "mirror_pair": null,
+ "note": "hit — покачивание после удара, затем вернуться к idle"
+}

@@ -288,7 +288,7 @@ export const ZoneMixin = {
     // QA B-26: реплика говорящего, которого нет в зоне, идёт только в журнал (не над Ратибором)
     // m1f P1.6: в очереди и реплики-барки (l.actor) — они уже записаны в журнал
     const a = l.actor ? (l.actor.gone || l.actor.dead || !(l.actor === this.hero || this.npcs.includes(l.actor) || this.enemies.includes(l.actor)) ? null : l.actor) : this.speakerActor(l.who);
-    if (a) this.fx.text(a.x, a.y, l.text, PAL.linen, (a.def ? a.def.height : 46) + 12, { dur: 2.6, speech: true });
+    if (a) this.fx.text(a.x, a.y, l.text, PAL.linen, (a.def ? a.def.height : (((CFG.stats && CFG.stats.v2art) || {}).heroHeight ?? 44) + 2) + 12, { dur: 2.6, speech: true });
     if (!l.logged) this.log.add(l.who + ': ' + l.text, PAL.linen);
     this.dialogNext = this.time + 2.6; this.speechUntil = this.time + 2.6;
     if (!this.dialogQ.length) this.afterMalDialog();
@@ -564,8 +564,9 @@ export const ZoneMixin = {
   spawnLadoga() {
     for (const d of this.zone.npcs || []) {
       const at = d.pier || [d.x, d.y];
-      const n = new Npc('town', at[0], at[1], { name: t(d.nameKey), female: !!d.female, grey: true, role: d.role, height: 40 });
+      const n = new Npc('town', at[0], at[1], { name: t(d.nameKey), female: !!d.female, grey: true, role: d.role, height: 56 });
       n.role = d.role;
+      if (d.face) n.face(d.face[0], d.face[1]);   // v2art r4: стоит лицом по данным (поп Иоанн у южной паперти — на юг)
       this.npcs.push(n);
       this.map.objects.push({ id: d.id, type: 'npc', role: d.role, npc: n, x: at[0], y: at[1], sx: at[0], sy: at[1] + 0.7, reach: 1.35, done: false });
     }

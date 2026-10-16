@@ -1,0 +1,42 @@
+{
+ "image": "npc_tverdyata_walk_se.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  384,
+  69
+ ],
+ "pivot": [
+  24,
+  60
+ ],
+ "frames": 8,
+ "frame_size": [
+  48,
+  69
+ ],
+ "loop": true,
+ "events": {
+  "footstep": [
+   0,
+   4
+  ]
+ },
+ "character": "Твердята, кузнец",
+ "animation": "walk",
+ "fps": 10,
+ "direction": "se",
+ "visible_height_px": [
+  57,
+  58,
+  58,
+  58,
+  57,
+  58,
+  58,
+  58
+ ],
+ "height_ratio_to_hero": 1.11,
+ "rendered": "per direction (model rotated 0°), no mirroring",
+ "mirror_pair": null
+}

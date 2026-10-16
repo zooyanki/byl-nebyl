@@ -1,0 +1,33 @@
+{
+ "image": "npc_villager_f_idle_sw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  120,
+  57
+ ],
+ "pivot": [
+  15,
+  50
+ ],
+ "frames": 4,
+ "frame_size": [
+  30,
+  57
+ ],
+ "loop": true,
+ "events": {},
+ "character": "селянка Залесья",
+ "animation": "idle",
+ "fps": 4,
+ "direction": "sw",
+ "visible_height_px": [
+  49,
+  49,
+  49,
+  49
+ ],
+ "height_ratio_to_hero": 0.9,
+ "rendered": "per direction (model rotated 90°), no mirroring",
+ "mirror_pair": null
+}

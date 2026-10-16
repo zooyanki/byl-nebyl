@@ -7,7 +7,7 @@
   const stand = () => { const h = g.hero; g.state = 'play'; g.paused = false; g.ui.closeAll(); g.enterZone('zalesye', 'krada'); g.enemies = []; g.buried = [];
     g.combat.projectiles = []; g.notice = null; g.rewardCard = null; h.x = 34; h.y = 21; h.stop(); h.action = null; h.invuln = 0; h.maxHp = 1e5; h.hp = 1e5;
     for (let i = 0; i < 6; i++) { g.update(1 / 60); g.input.endFrame(); } return h; };
-  const click = (e, shift = false) => { const [sx, sy] = g.toS(e.x, e.y); g.input.mx = sx; g.input.my = sy - (e.def.height || 30) * 0.5; g.input.leftPressed = true; g.input.shift = shift; };
+  const click = (e, shift = false) => { const [sx, sy] = g.toU(e.x, e.y); g.input.mx = sx; g.input.my = sy - (e.def.height || 30) * 0.5 * 2 / 3; /* v2art r2: мышь — в слое интерфейса */ g.input.leftPressed = true; g.input.shift = shift; };
   const step = (n) => { for (let i = 0; i < n; i++) { g.update(1 / 60); g.input.endFrame(); } };
   const spy = () => { const r = { swings: [], air: 0 }; const o = g.combat.heroMelee.bind(g.combat);
     g.combat.heroMelee = (h, t, s) => { const gap = t ? h.gapTo(t) : 9; r.swings.push(+gap.toFixed(2)); if (!t || gap > M.reach + M.slack) r.air++; o(h, t, s); }; r.off = () => { g.combat.heroMelee = o; }; return r; };

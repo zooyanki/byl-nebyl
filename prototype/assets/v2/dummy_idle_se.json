@@ -1,0 +1,30 @@
+{
+ "image": "dummy_idle_se.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  45,
+  54
+ ],
+ "pivot": [
+  20,
+  50
+ ],
+ "frames": 1,
+ "frame_size": [
+  45,
+  54
+ ],
+ "character": "Соломенник (kind 'dummy', id 9001)",
+ "animation": "idle",
+ "fps": 0,
+ "loop": true,
+ "direction": "se",
+ "visible_height_px": [
+  46
+ ],
+ "events": {},
+ "rendered": "одна ориентация: чучело неподвижно, не поворачивается (8 направлений не нужны)",
+ "mirror_pair": null,
+ "note": "hit — покачивание после удара, затем вернуться к idle"
+}

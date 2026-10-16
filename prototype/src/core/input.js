@@ -1,5 +1,5 @@
-// Мышь и клавиатура. Координаты мыши — в нативных пикселях (640x360).
-import { VIEW_W, VIEW_H } from '../config.js';
+// Мышь и клавиатура. Координаты мыши mx/my — в слое интерфейса (640×360); wmx/wmy — в пикселях мира (960×540, v2art r2).
+import { UI_W as VIEW_W, UI_H as VIEW_H, UI_K } from '../config.js';
 
 // F1–F6 — горячие клавиши навыков (как в D2), поэтому браузерные F1 (справка) и F5 (обновить) в игре гасятся; Ctrl+R работает
 const PREVENT = new Set(['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Tab', 'AltLeft', 'AltRight', 'Space', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'KeyZ']);
@@ -59,6 +59,8 @@ export class Input {
     this.mx = x; this.my = y; this.pendingPos = null;
   }
 
+  get wmx() { return this.mx / UI_K; }
+  get wmy() { return this.my / UI_K; }
   pressed(code) { return this.keysPressed.has(code); }
   down(code) { return this.keysDown.has(code); }
   get altHeld() { return this.keysDown.has('AltLeft') || this.keysDown.has('AltRight'); }

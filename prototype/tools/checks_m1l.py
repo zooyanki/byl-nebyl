@@ -20,7 +20,7 @@ STAND = '''(([dist, ang, frozen]) => { const g = __game, h = g.hero; g.dlgAuto =
     window.__m1lHook = true;
     const P = Object.getPrototypeOf(h), sa = P.startAttack;
     P.startAttack = function (t, s, gm) { const r = sa.call(this, t, s, gm); const L = window.__m1l;
-      if (L && this.action && this.action.type === 'attack') L.sw.push({ d: this.distTo(t), reach: this.r + t.r + 0.75, same: t === L.e, moved: Math.hypot(this.x - L.x0, this.y - L.y0), stand: !!(this.cmd && this.cmd.stand) });
+      if (L && this.action && this.action.type === 'attack') L.sw.push({ d: this.distTo(t), reach: this.r + t.r + 0.85, same: t === L.e, moved: Math.hypot(this.x - L.x0, this.y - L.y0), stand: !!(this.cmd && this.cmd.stand) });
       return r; };
     const C = g.combat, hm = C.heroMelee.bind(C);
     C.heroMelee = function (hero, tg, sk) { const L = window.__m1l, hp0 = tg ? tg.hp : 0, rnd = Math.random; Math.random = () => 0.5;   // бросок меткости — попадание без крита
@@ -65,10 +65,10 @@ async def run_m1l(pg, G, check, wait, client_of, client_scr, a):
         sw = s['sw']
         first = sw[0] if sw else None
         out_of_reach = [x for x in sw if x['d'] > x['reach'] + 0.02]
-        need = max(0, dist - 1.35)
+        need = max(0, dist - 1.45)
         ok = (hov and first and first['same'] and not out_of_reach and not first['stand'] and first['moved'] >= need - 0.15
               and s['hits'] and s['hits'][0]['same'] and s['hits'][0]['dmg'] > 0 and s['blk'] == 0)
-        check(f'm1l баг ЛКМ: враг в {dist} тайл. — герой подходит до досягаемости (v1.14 E1: зазор ≤ reach 0,75), затем бьёт и попадает; замахов вне досягаемости нет',
+        check(f'm1l баг ЛКМ: враг в {dist} тайл. — герой подходит до досягаемости (v1.14 E1: зазор ≤ reach 0,85 (v2art)), затем бьёт и попадает; замахов вне досягаемости нет',
               ok, {'hover': hov, 'first': first, 'outOfReach': out_of_reach, 'hits': s['hits'][:2], 'moved': s['moved'], 'blk': s['blk']})
 
     # ================= 2. Соседи по стае сбоку от пути и цель, которая сама отходит, — не «заслон»
@@ -145,9 +145,9 @@ async def run_m1l(pg, G, check, wait, client_of, client_scr, a):
         const meta = (j) => j.meta || j;
         return { K, smokers, others, noAnchor: [!meta(kon).anchors_px.smoke, !meta(pr).anchors_px.smoke] }; })()''')
     sm = {x['id']: x for x in s['smokers']}
-    check('m1l B-40 дым: все постройки видов smokeKinds в Ладоге дымят (в т. ч. izba_sw / izba_se — точка gable_vent: в листах tes_kon / tes_prich нет anchors_px.smoke); у остальных дыма нет',
+    check('m1l B-40 дым: все постройки видов smokeKinds в Ладоге дымят (в т. ч. izba_sw / izba_se — v2b2: лист izba_small_tes, точка anchors_px.smoke по кадрам); у остальных дыма нет',
           s['K'] == ['izba', 'izba_seni', 'izba_podklet', 'banya'] and s['smokers'] and all(x['drawn'] for x in s['smokers'])
-          and all(x['drawn'] is False for x in s['others']) and sm.get('izba_sw', {}).get('src') == 'gable_vent' and sm.get('izba_se', {}).get('src') == 'gable_vent'
+          and all(not x['drawn'] for x in s['others']) and sm.get('izba_sw', {}).get('src') == 'smoke' and sm.get('izba_se', {}).get('src') == 'smoke'
           and all(s['noAnchor']), {'smokers': s['smokers'], 'othersDrawn': [x['id'] for x in s['others'] if x['drawn']]})
     # снимок: герой между izba_sw и izba_se (обе крыши с дымником в кадре)
     vis = await G('''(() => { const g = __game, h = g.hero; h.x = 19.5; h.y = 30.5; h.stop(); g.log.lines = []; g.updateCamera && g.updateCamera();
@@ -207,9 +207,9 @@ async def run_v114(pg, G, check, wait, client_of, client_scr, a):
             if (A.t > 0.1) { const dx = e.x - h.x, dy = e.y - h.y, d = Math.hypot(dx, dy) || 1; e.x += dx / d * 1.6; e.y += dy / d * 1.6; } } }
         const out = { M, gapAtSwing, paidMax: +paidMax.toFixed(2), yarBack: +(y0 - h.yar).toFixed(2), cancels: (g.counters.swingCancel || 0) - c0, dropped: (g.counters.chaseDropped || 0) - d0, cmd: !!h.cmd, t: +(frames / 60).toFixed(2) };
         h.yarRegen = yr; SK.cost = c0s; return out; })()''')
-    check('v1.14 E1: stats.melee reach 0,75 / slack 0,55 / cancelChase 2 / cancelMax 2; взмах начат при зазоре ≤ reach; цель ушла — взмах снят, Удаль возвращена; после 3-й отмены приказ снят (ЛКМ не зажата)',
-          s['M']['reach'] == 0.75 and s['M']['slack'] == 0.55 and s['M']['cancelChase'] == 2 and s['M']['cancelMax'] == 2
-          and s['gapAtSwing'] is not None and s['gapAtSwing'] <= 0.75 + 0.02 and s['paidMax'] > 0 and s['yarBack'] == 0 and s['cancels'] == 3 and s['dropped'] == 1 and not s['cmd'], s)
+    check('v1.14 E1: stats.melee reach 0,85 / slack 0,62 (v2art) / cancelChase 2 / cancelMax 2; взмах начат при зазоре ≤ reach; цель ушла — взмах снят, Удаль возвращена; после 3-й отмены приказ снят (ЛКМ не зажата)',
+          s['M']['reach'] == 0.85 and s['M']['slack'] == 0.62 and s['M']['cancelChase'] == 2 and s['M']['cancelMax'] == 2
+          and s['gapAtSwing'] is not None and s['gapAtSwing'] <= 0.85 + 0.02 and s['paidMax'] > 0 and s['yarBack'] == 0 and s['cancels'] == 3 and s['dropped'] == 1 and not s['cmd'], s)
 
     # ================= E2: правила блока (числа §4.7) — прямые вызовы takeDamage со стойкой
     s = await G('''(() => { ''' + BASE + '''
@@ -345,7 +345,7 @@ async def run_v114(pg, G, check, wait, client_of, client_scr, a):
     # E3 / §12.2.4: обучение и строки — «E — навык» при первом входе в Залесье, «ПКМ — держать щит» при первом ударе врага; в ru.json нет «ПКМ» как кнопки навыка
     s = await G('''(() => { const g = __game, h = g.hero; g._tutSkillE = false; g._tutBlock = false; window.__nt.length = 0; delete g.zoneStates.zalesye;
         g.enterZone('ladoga', 'start'); g.enterZone('zalesye', 'from_ladoga'); const a = window.__nt.filter(x => x[0] === 'tut').map(x => x[1]);
-        const e = g.spawnTest('upyr', h.x + 1, h.y, 1); h.invuln = 0; h.takeDamage(1, g, 'melee', e, { src: 'melee', from: [e.x, e.y] }); g.enemies = [];
+        const e = g.spawnTest('upyr', h.x + 1, h.y, 1); h.invuln = 0; const blk0 = h.block; h.block = 0; h.takeDamage(1, g, 'melee', e, { src: 'melee', from: [e.x, e.y] }); h.block = blk0; g.enemies = [];   // пассивный блок (случайный бросок) не должен отменять удар
         const b = window.__nt.filter(x => x[0] === 'tut').map(x => x[1]); return { a, b, skE: g.dbg.t('ui.tut.skill_e'), blk: g.dbg.t('ui.tut.block') }; })()''')
     import json as _json
     ru = _json.loads(Path(ROOT, 'data', 'ru.json').read_text(encoding='utf-8'))

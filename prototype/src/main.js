@@ -1,4 +1,4 @@
-// Точка входа: холст 640x360, масштабирование под окно (целый множитель, по умолчанию x3), игровой цикл.
+// Точка входа: холст 960×540, масштабирование под окно (целый множитель, при 1080p ×2), игровой цикл.
 import { VIEW_W, VIEW_H } from './config.js';
 import { makeRng } from './core/rng.js';
 import { Game } from './game.js';
@@ -13,13 +13,18 @@ if (seedParam !== null) { window.__seed = Number(seedParam) || 1; Math.random = 
 const canvas = document.getElementById('game');
 canvas.width = VIEW_W;
 canvas.height = VIEW_H;
+{ const c2 = canvas.getContext('2d'); c2.imageSmoothingEnabled = false; }   // v2art: без сглаживания при масштабировании спрайтов
 
 function fit() {
   const s = Math.min(window.innerWidth / VIEW_W, window.innerHeight / VIEW_H);
   const k = s >= 1 ? Math.floor(s) : s; // целочисленный масштаб для чётких пикселей
   canvas.style.width = VIEW_W * k + 'px';
   canvas.style.height = VIEW_H * k + 'px';
-  // окно меньше 640×360: дробный масштаб портит растровый текст — предупреждаем (QA B-13)
+  canvas.style.imageRendering = 'pixelated';   // v2art: чёткие пиксели при целом масштабе (CSS в index.html — тоже)
+  // v2art r2: слой интерфейса (#ui, 1920×1080) — ровно поверх холста мира
+  const ui = document.getElementById('ui');
+  if (ui) { const r = canvas.getBoundingClientRect(); Object.assign(ui.style, { imageRendering: 'pixelated', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' }); }
+  // окно меньше 960×540: дробный масштаб портит растровый текст — предупреждаем (QA B-13)
   let w = document.getElementById('small-warn');
   // текст — из ru.json (proto.small_window): до загрузки конфига не показываем, после loadConfig fit() зовётся ещё раз
   if (s < 1 && !w && RU['proto.small_window']) {
@@ -30,6 +35,7 @@ function fit() {
 }
 window.addEventListener('resize', fit);
 fit();
+requestAnimationFrame(fit);   // v2art r2: после раскладки страницы — выровнять слой интерфейса
 
 await loadConfig();
 fit();

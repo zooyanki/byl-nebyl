@@ -1,11 +1,11 @@
 {
- "effect": "Граница безопасной зоны: насечка на земле (2:1)",
+ "effect": "Граница безопасной зоны: неровная группа искр (qa1: без знаков)",
  "state": "lit",
  "pivot": [
   6,
   4
  ],
- "frames_are": "4 notch-group variants (3, 2, 4, 2 wide), not rotated",
+ "frames_are": "4 irregular spark-cluster variants (1-4 sparks), not rotated",
  "fps": 0,
  "loop": false,
  "layer": "ground decal under characters",

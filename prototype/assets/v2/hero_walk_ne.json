@@ -1,0 +1,41 @@
+{
+ "image": "hero_walk_ne.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  496,
+  66
+ ],
+ "pivot": [
+  31,
+  58
+ ],
+ "frames": 8,
+ "frame_size": [
+  62,
+  66
+ ],
+ "character": "Ратибор",
+ "loop": true,
+ "events": {
+  "footstep": [
+   0,
+   4
+  ]
+ },
+ "note": "шаг 8 кадров @10 к/с, 2 шага на цикл; при другой скорости — fps ∝ скорости",
+ "fps": 10,
+ "direction": "ne",
+ "visible_height_px": [
+  56,
+  56,
+  57,
+  56,
+  56,
+  56,
+  57,
+  56
+ ],
+ "rendered": "per direction (model rotated 270°), no mirroring",
+ "mirror_pair": null
+}

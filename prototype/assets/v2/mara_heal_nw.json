@@ -1,0 +1,66 @@
+{
+ "image": "mara_heal_nw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  324,
+  82
+ ],
+ "pivot": [
+  27,
+  71
+ ],
+ "frames": 6,
+ "frame_size": [
+  54,
+  82
+ ],
+ "character": "Огнея Пепельная (bosses.json mara; id/имена файлов прежние)",
+ "animation": "heal",
+ "fps": 10,
+ "loop": false,
+ "events": {
+  "apply_frame": 3,
+  "note": "раз в 8 с (bosses.json heal.every); блуждающие огоньки Небыли в руках; круговую вспышку r 6 рисует движок"
+ },
+ "direction": "nw",
+ "visible_height_px": [
+  57,
+  59,
+  63,
+  65,
+  66,
+  64
+ ],
+ "rendered": "per direction (model rotated 180°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "heal": [
+   [
+    13,
+    25
+   ],
+   [
+    12,
+    22
+   ],
+   [
+    13,
+    19
+   ],
+   [
+    13,
+    17
+   ],
+   [
+    14,
+    15
+   ],
+   [
+    15,
+    13
+   ]
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

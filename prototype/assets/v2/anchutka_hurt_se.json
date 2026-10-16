@@ -1,0 +1,32 @@
+{
+ "image": "anchutka_hurt_se.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  92,
+  46
+ ],
+ "pivot": [
+  23,
+  41
+ ],
+ "frames": 2,
+ "frame_size": [
+  46,
+  46
+ ],
+ "character": "Анчутка (monsters.json anchutka)",
+ "animation": "hurt",
+ "fps": 8,
+ "loop": false,
+ "events": {
+  "note": "визг — огненная глотка в кадре 0"
+ },
+ "direction": "se",
+ "visible_height_px": [
+  38,
+  36
+ ],
+ "rendered": "per direction (model rotated 0°), no mirroring",
+ "mirror_pair": null
+}

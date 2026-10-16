@@ -10,6 +10,7 @@ export function generateLadoga(zone) {
   const S = zone.entries.start;
   m.start = { x: S.x, y: S.y };
   const waterY = zone.waterFromY, [px, py, pw, ph] = zone.pier, [gx, gy] = zone.gangway;
+  m.pier = [px, py, pw, ph];   // v2light: настил пристани рисуется досками (world.js buildFloor)
   const pier = (x, y) => x >= px && x < px + pw && y >= py && y < py + ph;
   const gang = (x, y) => x === gx && y === gy;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -96,6 +97,9 @@ function fixFenceDepth(m) {
       const [x0, y0, A, B] = b.fp;
       const front = c.x >= x0 + A || c.y >= y0 + B, near = c.x >= x0 - 1 && c.x <= x0 + A && c.y >= y0 - 1 && c.y <= y0 + B;
       if (front && near && c.depth <= b.depth) { c.depth = b.depth + 0.01; m.fenceFixed.push([c.x, c.y, b.id || b.type]); }
+      // v2art r2: церковь 11×6 — клетка тына целиком за постройкой (x + 1 ≤ x0 или y + 1 ≤ y0) встаёт сразу за ней
+      const behind = !front && (c.x + 1 <= x0 || c.y + 1 <= y0);
+      if (behind && near && c.depth >= b.depth) { c.depth = b.depth - 0.01; (m.fenceBehind || (m.fenceBehind = [])).push([c.x, c.y, b.id || b.type]); }
     }
   }
 }

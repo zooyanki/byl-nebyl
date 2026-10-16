@@ -1,0 +1,16 @@
+{
+ "image": "tree_spruce_h80.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  62,
+  96
+ ],
+ "pivot": [
+  29,
+  77
+ ],
+ "note": "b2: низкое дерево под treeRules hMax 80 px (Залесье: перед путём / у края); масштаб модели ×0.62",
+ "hMax": 80,
+ "visible_height_px": 76
+}

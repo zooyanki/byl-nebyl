@@ -1,0 +1,74 @@
+{
+ "lvl4_pot6_seed7": {
+  "seed": 7,
+  "focus": false,
+  "retMlvl": [
+   1
+  ],
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 7,
+  "wins": 23,
+  "timeouts": 0,
+  "medianT": 38.1,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.8,
+  "heroLvl": 4,
+  "heroMaxHp": 94,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0
+  }
+ },
+ "lvl4_pot6_seed11": {
+  "seed": 11,
+  "focus": false,
+  "retMlvl": [
+   1
+  ],
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 11,
+  "wins": 19,
+  "timeouts": 0,
+  "medianT": 40.3,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.9,
+  "heroLvl": 4,
+  "heroMaxHp": 94,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0
+  }
+ },
+ "lvl4_pot6_seed3": {
+  "seed": 3,
+  "focus": false,
+  "retMlvl": [
+   1
+  ],
+  "lvl": 4,
+  "pot": 6,
+  "runs": 30,
+  "deaths": 6,
+  "wins": 24,
+  "timeouts": 0,
+  "medianT": 37.7,
+  "retinue": [
+   4
+  ],
+  "drunkAvg": 5.7,
+  "heroLvl": 4,
+  "heroMaxHp": 94,
+  "mara": {
+   "mlvl": 4,
+   "mods": 0
+  }
+ }
+}

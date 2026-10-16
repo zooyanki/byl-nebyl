@@ -1,0 +1,29 @@
+{
+ "image": "church_kletskaya_windows.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  253,
+  261
+ ],
+ "pivot": [
+  118,
+  211
+ ],
+ "layer": "window light mask for church_kletskaya.png",
+ "usage": "additive/screen on top of base, or as mask for code light; same size and pivot as base",
+ "anchors": [
+  {
+   "x": 111,
+   "y": 173,
+   "w": 12,
+   "h": 17
+  },
+  {
+   "x": 216,
+   "y": 200,
+   "w": 11,
+   "h": 17
+  }
+ ]
+}

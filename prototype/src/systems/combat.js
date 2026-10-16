@@ -9,6 +9,7 @@ import { PAL } from '../palette.js';
 import { baseDamageAvg } from '../data/enemies.js';
 import { t } from '../core/i18n.js';
 import { meleeReach } from '../entities/hero.js';
+import { launchPt } from '../render/v2art.js';
 
 let FIRE_ID = 1;
 // материал цели для звука удара (§4.6: плоть / дерево-щит / кость); прочие — плоть, боссы — кость
@@ -244,6 +245,7 @@ export class Combat {
     this.projectiles.push({
       hostile: true, coal: true, src: enemy, x: enemy.x + dx * 0.3, y: enemy.y + dy * 0.3, vx: dx * rg.projSpeed, vy: dy * rg.projSpeed,
       travelled: 0, range: rg.range + 0.8, r: 0.12, dmg: [enemy.dmgMin, enemy.dmgMax], element: rg.element, t: 0, trail: [],
+      ...((L) => (L ? { lz: L.z, ldx: L.dx, launch: L.sheet + ':' + L.frame } : {}))(enemy.kind === 'mara' ? launchPt(enemy, 'mara_cast', 'bolt') : launchPt(enemy, 'anchutka_coal_throw', 'coal')),   // v2 b3: точка вылета из листа
     });
     this.game.audio.play('throw');
   }
@@ -257,6 +259,7 @@ export class Combat {
       id: FIRE_ID++, src: enemy, x: tx, y: ty, fx: enemy.x, fy: enemy.y, t: 0, lit: false, litT: 0,
       flight: tc.flightTime ?? 0.6, tele: tc.telegraph, burn: tc.burn, r: tc.radius,
       dps: Math.floor(tc.dpsMul * baseDamageAvg(enemy.mlvl)), tick: tc.tick, tickT: 0, acc: 0, ticks: 0, dealt: 0,
+      ...((L) => (L ? { lz: L.z, ldx: L.dx, launch: L.sheet + ':' + L.frame } : {}))(launchPt(enemy, 'arsonist_torch_throw', 'torch')),   // v2 b3: факел вылетает из руки (anchors_px.torch)
     };
     this.fires.push(f);
     const g = this.game;

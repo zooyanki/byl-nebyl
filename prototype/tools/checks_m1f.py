@@ -88,7 +88,7 @@ async def run_m1f(pg, G, check, wait, client_of, client_scr, a):
     s = await G('''(() => { const g = __game, h = g.hero, wl = g.zone.landmarks.well, o = g.objectById('hut3');
         h.x = wl.x - 1.6; h.y = wl.y + 3.0; h.stop(); h.face(o.x - h.x, o.y - h.y); g.log.lines = []; g.notice = null; return [o.x, o.y]; })()''')
     # кадр: герой у колодца смещён вправо (как при открытой левой панели) — изба слева не уходит под трекер
-    await G("(() => { const g = __game; g._ucam = g.updateCamera; g.updateCamera = function () { g._ucam.call(g); g.camCX = 470; }; })()")
+    await G("(() => { const g = __game; g._ucam = g.updateCamera; g.updateCamera = function () { g._ucam.call(g); g.camCX = 705;   /* v2art r2: 470 слоя интерфейса */ }; })()")
     await pg.mouse.move(1500, 900)
     await wait(600)
     door = await G(f"(() => {{ const g = __game, [x, y] = g.clientOf({s[0]}, {s[1]}, 30); return {{ x, y, hi: g.doorHi, hero: g.clientOf(g.hero.x, g.hero.y, 0) }}; }})()")
@@ -198,7 +198,7 @@ async def run_m1f(pg, G, check, wait, client_of, client_scr, a):
     # подсказки обучения — отдельная плашка: не поверх трекера, не над героем (там «Блок»), уведомление не перебивают
     await G('''(() => { const g = __game; g.notice = null; g.notify('Блок', '#fff', 'blk'); g.notify(g.dbg.t('ui.tut.dash'), '#d39a45', 'tut'); })()''')
     await wait(150)
-    s = await G('''(() => { const g = __game, hb = g.hintBox, [hx, hy] = g.toS(g.hero.x, g.hero.y);
+    s = await G('''(() => { const g = __game, hb = g.hintBox, [hx, hy] = g.toU(g.hero.x, g.hero.y);
         return { hint: g.hint && g.hint.text, notice: g.notice && g.notice.text, hb, hero: [hx, hy], seen: g.ctrlHintSeen }; })()''')
     hb = s['hb'] or {}
     over_tracker = hb and hb['x'] < 212 and hb['y'] < 88
@@ -240,7 +240,7 @@ async def run_m1f(pg, G, check, wait, client_of, client_scr, a):
     await G('''(() => { const g = __game, h = g.hero; g.enterZone('ladoga', 'start'); g.ui.closeAll(); g._barks = {}; g.speechUntil = 0; g.dialogQ.length = 0;
         const tv = g.npcs.find(n => n.role === 'tverdyata'); h.x = tv.x + 0.3; h.y = tv.y + 0.9; h.stop(); g.bark(h, 'test.c', 'Реплика под окном'); })()''')
     await wait(200)
-    s = await G('''(() => { const g = __game, L = g.labelsDrawn || [], [hx, hy] = g.toS(g.hero.x, g.hero.y), hb = { x: hx - 11, y: hy - 48, w: 22, h: 50 };
+    s = await G('''(() => { const g = __game, L = g.labelsDrawn || [], [hx, hy] = g.toU(g.hero.x, g.hero.y), hb = { x: hx - 9, y: hy - 40, w: 18, h: 42 }   /* v2art r2: герой 56 px мира = 37 px слоя интерфейса */;
         const ov = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
         let pairs = 0; for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) if (ov(L[i], L[j])) pairs++;
         return { n: L.length, names: L.map(l => l.text), pairs, onHero: L.filter(l => ov(l, hb)).map(l => l.text), speech: g.speechDrawn }; })()''')

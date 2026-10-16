@@ -1,0 +1,33 @@
+{
+ "image": "npc_milusha_idle_w.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  120,
+  57
+ ],
+ "pivot": [
+  15,
+  50
+ ],
+ "frames": 4,
+ "frame_size": [
+  30,
+  57
+ ],
+ "loop": true,
+ "events": {},
+ "character": "Милуша, ворожея",
+ "animation": "idle",
+ "fps": 4,
+ "direction": "w",
+ "visible_height_px": [
+  49,
+  49,
+  49,
+  49
+ ],
+ "height_ratio_to_hero": 0.9,
+ "rendered": "per direction (model rotated 135°), no mirroring",
+ "mirror_pair": null
+}

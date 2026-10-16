@@ -586,7 +586,7 @@ export class Hero extends Actor {
     }
     if (this.hp <= 0) {
       this.hp = 0;
-      this.dead = true;
+      this.dead = true; this.deathAt = game.time;   // v2b2: отсчёт кадров hero_death
       this.action = null; this.cmd = null; this.path = null; this.moving = false; this.effects = [];
       if (this.buffs.chur) { this.buffs = {}; this.recalc(); }   // QA B-24: бафф снимается в момент гибели (как в D2)
       this.cds = {};

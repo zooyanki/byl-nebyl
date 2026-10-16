@@ -118,7 +118,7 @@ async def run_v18(pg, G, check, wait):
         delete g.zoneStates.kapishche; g.enterZone('trail', 'gate'); g.enterZone('kapishche', 'from_trail'); const m = g.map; g.enemies = []; g.buried = [];
         const { Enemy } = await import('/src/entities/enemy.js'); const out = {};
         const h = await mkRef(6, [m.idol.x - 5, m.idol.y + 4]); const b = g.riseBoss('test'); g.simulate(2.2); b.stagger = 1e9; b.x = m.idol.x; b.y = m.idol.y + 4; b.homeX = b.x; b.homeY = b.y;
-        h.x = b.x - 3.2; h.y = b.y; const u = new Enemy('upyr', b.x - 1.9, b.y, 'krivsha', 4); u.stagger = 1e9; u.mass = 99; g.enemies.push(u);
+        h.x = b.x - 4.2; h.y = b.y; const u = new Enemy('upyr', b.x - 2.9, b.y, 'krivsha', 4); u.stagger = 1e9; u.mass = 99; g.enemies.push(u);   // v2art: reach ×1,27 — расстановка сдвинута на 1 тайл (иначе герой достаёт Крившу из-за упыря)
         for (const e of [b, u]) { e.state = 'idle'; } b.stagger = 1e9;
         g.lastTarget = b; h.cmd = null; h.attack(b, false, h.lmbSkill(), true); let tHit = null, tt = 0; const u0 = u.hp;
         g.simulate(1.5, () => { tt += 1 / 60; if (u.hp < u0 || (h.action && h.action.target === u)) { tHit = +tt.toFixed(2); return true; } return false; });
@@ -126,10 +126,10 @@ async def run_v18(pg, G, check, wait):
         u.hp = 1; let bHit = null; tt = 0; const b0 = b.hp; g.simulate(5, () => { tt += 1 / 60; if (u.dead && h.action && h.action.target === b) { bHit = +tt.toFixed(2); return true; } return false; });   // m1j: ждём гибели упыря (промах по нему — ещё взмах; зерно сдвинулось — тряска теперь на crand)
         out.after = { uDead: u.dead, bHit, plate: g.lastTarget === b };
         // Shift+ЛКМ: удар на месте, заслон не включается
-        const u2 = new Enemy('upyr', b.x - 1.9, b.y, 'krivsha', 4); u2.stagger = 1e9; u2.mass = 99; g.enemies.push(u2); h.x = b.x - 3.2; h.y = b.y; h.cmd = null; h.action = null; g.counters.blockerHits = 0;
+        const u2 = new Enemy('upyr', b.x - 2.9, b.y, 'krivsha', 4); u2.stagger = 1e9; u2.mass = 99; g.enemies.push(u2); h.x = b.x - 4.2; h.y = b.y; h.cmd = null; h.action = null; g.counters.blockerHits = 0;   // v2art: reach ×1,27 — расстановка сдвинута на 1 тайл (иначе герой достаёт Крившу из-за упыря)
         h.attack(b, true, h.lmbSkill(), true); g.simulate(1.2); out.shift = g.counters.blockerHits || 0;
         // ПКМ («Сшибка» на ПКМ по Кривше): правило не включается
-        h.cmd = null; h.action = null; h.x = b.x - 3.2; h.y = b.y; g.counters.blockerHits = 0; h.attack(b, false, h.lmbSkill(), false); g.simulate(1.2); out.rmb = g.counters.blockerHits || 0;
+        h.cmd = null; h.action = null; h.x = b.x - 4.2; h.y = b.y; g.counters.blockerHits = 0; h.attack(b, false, h.lmbSkill(), false); g.simulate(1.2); out.rmb = g.counters.blockerHits || 0;   // v2art: reach ×1,27 — расстановка сдвинута на 1 тайл (иначе герой достаёт Крившу из-за упыря)
         Math.random = rnd0; return out; })()''').replace('__P__', P))
     bl = s['block']
     check('v1.8 заслон (§4.1): упырь на пути к Кривше — через ≈ 0,3 с без продвижения герой бьёт упыря, цель (плашка и приказ) остаётся Крившей; после гибели упыря сам идёт и бьёт Крившу; Shift+ЛКМ и ПКМ правило не включают',

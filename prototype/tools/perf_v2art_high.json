@@ -1,0 +1,104 @@
+{
+ "firefox/ladoga": {
+  "frames": 1121,
+  "fps": 56.2,
+  "low1": 30,
+  "renderAvg": 15.97,
+  "renderP95": 20,
+  "renderP99": 22,
+  "lightAvg": 7.04,
+  "lights": 73,
+  "sparks": 0,
+  "canvas": [
+   960,
+   540,
+   "1920px",
+   "1080px"
+  ]
+ },
+ "firefox/zalesye": {
+  "frames": 962,
+  "fps": 48.3,
+  "low1": 29.3,
+  "renderAvg": 19.51,
+  "renderP95": 25,
+  "renderP99": 28,
+  "lightAvg": 5.85,
+  "lights": 40,
+  "sparks": 0,
+  "canvas": [
+   960,
+   540,
+   "1920px",
+   "1080px"
+  ]
+ },
+ "firefox/kapishche": {
+  "frames": 940,
+  "fps": 47.1,
+  "low1": 19.7,
+  "renderAvg": 19.65,
+  "renderP95": 26,
+  "renderP99": 50,
+  "lightAvg": 5.08,
+  "lights": 40,
+  "sparks": 0,
+  "canvas": [
+   960,
+   540,
+   "1920px",
+   "1080px"
+  ]
+ },
+ "chromium/ladoga": {
+  "frames": 1162,
+  "fps": 58.2,
+  "low1": 29.9,
+  "renderAvg": 4.5,
+  "renderP95": 6.4,
+  "renderP99": 10.8,
+  "lightAvg": 2.87,
+  "lights": 73,
+  "sparks": 0,
+  "canvas": [
+   960,
+   540,
+   "1920px",
+   "1080px"
+  ]
+ },
+ "chromium/zalesye": {
+  "frames": 1033,
+  "fps": 51.8,
+  "low1": 29.9,
+  "renderAvg": 5.5,
+  "renderP95": 8,
+  "renderP99": 10.4,
+  "lightAvg": 1.86,
+  "lights": 40,
+  "sparks": 0,
+  "canvas": [
+   960,
+   540,
+   "1920px",
+   "1080px"
+  ]
+ },
+ "chromium/kapishche": {
+  "frames": 928,
+  "fps": 46.5,
+  "low1": 29.9,
+  "renderAvg": 7.61,
+  "renderP95": 11.5,
+  "renderP99": 15.3,
+  "lightAvg": 1.44,
+  "lights": 35,
+  "sparks": 0,
+  "canvas": [
+   960,
+   540,
+   "1920px",
+   "1080px"
+  ]
+ }
+}

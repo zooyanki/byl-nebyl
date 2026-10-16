@@ -1,0 +1,53 @@
+{
+ "image": "arsonist_idle_nw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  304,
+  96
+ ],
+ "pivot": [
+  38,
+  90
+ ],
+ "frames": 4,
+ "frame_size": [
+  76,
+  96
+ ],
+ "character": "Черноярец-поджигатель (monsters.json chernoyarets_arsonist)",
+ "animation": "idle",
+ "fps": 5,
+ "loop": true,
+ "events": {},
+ "direction": "nw",
+ "visible_height_px": [
+  89,
+  87,
+  89,
+  88
+ ],
+ "rendered": "per direction (model rotated 180°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "torch": [
+   [
+    50,
+    11
+   ],
+   [
+    50,
+    12
+   ],
+   [
+    50,
+    12
+   ],
+   [
+    50,
+    12
+   ]
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

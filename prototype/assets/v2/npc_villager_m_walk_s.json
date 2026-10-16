@@ -1,0 +1,42 @@
+{
+ "image": "npc_villager_m_walk_s.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  288,
+  60
+ ],
+ "pivot": [
+  18,
+  53
+ ],
+ "frames": 8,
+ "frame_size": [
+  36,
+  60
+ ],
+ "loop": true,
+ "events": {
+  "footstep": [
+   0,
+   4
+  ]
+ },
+ "character": "селянин Залесья",
+ "animation": "walk",
+ "fps": 10,
+ "direction": "s",
+ "visible_height_px": [
+  51,
+  51,
+  51,
+  51,
+  51,
+  51,
+  51,
+  51
+ ],
+ "height_ratio_to_hero": 0.96,
+ "rendered": "per direction (model rotated 45°), no mirroring",
+ "mirror_pair": null
+}

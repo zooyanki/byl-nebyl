@@ -1,0 +1,33 @@
+{
+ "image": "npc_vyshata_idle_nw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  128,
+  76
+ ],
+ "pivot": [
+  16,
+  68
+ ],
+ "frames": 4,
+ "frame_size": [
+  32,
+  76
+ ],
+ "loop": true,
+ "events": {},
+ "character": "Вышата, посадник",
+ "animation": "idle",
+ "fps": 4,
+ "direction": "nw",
+ "visible_height_px": [
+  67,
+  67,
+  67,
+  67
+ ],
+ "height_ratio_to_hero": 1.0,
+ "rendered": "per direction (model rotated 180°), no mirroring",
+ "mirror_pair": null
+}

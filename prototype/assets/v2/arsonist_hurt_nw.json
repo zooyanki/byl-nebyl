@@ -1,0 +1,43 @@
+{
+ "image": "arsonist_hurt_nw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  152,
+  96
+ ],
+ "pivot": [
+  38,
+  90
+ ],
+ "frames": 2,
+ "frame_size": [
+  76,
+  96
+ ],
+ "character": "Черноярец-поджигатель (monsters.json chernoyarets_arsonist)",
+ "animation": "hurt",
+ "fps": 8,
+ "loop": false,
+ "events": {},
+ "direction": "nw",
+ "visible_height_px": [
+  88,
+  87
+ ],
+ "rendered": "per direction (model rotated 180°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "torch": [
+   [
+    53,
+    13
+   ],
+   [
+    51,
+    12
+   ]
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

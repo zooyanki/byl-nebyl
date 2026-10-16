@@ -1,0 +1,40 @@
+{
+ "image": "npc_villager_m_run_s.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  288,
+  65
+ ],
+ "pivot": [
+  24,
+  55
+ ],
+ "frames": 6,
+ "frame_size": [
+  48,
+  65
+ ],
+ "loop": true,
+ "events": {
+  "footstep": [
+   0,
+   3
+  ]
+ },
+ "character": "селянин Залесья",
+ "animation": "run",
+ "fps": 14,
+ "direction": "s",
+ "visible_height_px": [
+  49,
+  49,
+  49,
+  49,
+  49,
+  49
+ ],
+ "height_ratio_to_hero": 0.96,
+ "rendered": "per direction (model rotated 45°), no mirroring",
+ "mirror_pair": null
+}

@@ -1,0 +1,55 @@
+{
+ "image": "anchutka_coal_throw_w.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  280,
+  48
+ ],
+ "pivot": [
+  28,
+  43
+ ],
+ "frames": 5,
+ "frame_size": [
+  56,
+  48
+ ],
+ "character": "Анчутка (monsters.json anchutka)",
+ "animation": "coal_throw",
+ "fps": 7,
+ "loop": false,
+ "events": {
+  "release_frame": 3,
+  "spawn_effect": "fx_anchutka_coal"
+ },
+ "direction": "w",
+ "visible_height_px": [
+  39,
+  40,
+  39,
+  38,
+  39
+ ],
+ "rendered": "per direction (model rotated 135°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "coal": [
+   [
+    9,
+    22
+   ],
+   [
+    22,
+    6
+   ],
+   [
+    30,
+    7
+   ],
+   null,
+   null
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

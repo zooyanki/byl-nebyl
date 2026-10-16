@@ -1,0 +1,31 @@
+{
+ "image": "upyr_hurt_e.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  100,
+  60
+ ],
+ "pivot": [
+  25,
+  52
+ ],
+ "frames": 2,
+ "frame_size": [
+  50,
+  60
+ ],
+ "character": "упырь",
+ "loop": false,
+ "events": {
+  "note": "2 кадра, голова откинута; поверх idle/walk"
+ },
+ "fps": 8,
+ "direction": "e",
+ "visible_height_px": [
+  51,
+  47
+ ],
+ "rendered": "per direction (model rotated 315°), no mirroring",
+ "mirror_pair": null
+}

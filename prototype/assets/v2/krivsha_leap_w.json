@@ -1,0 +1,119 @@
+{
+ "image": "krivsha_leap_w.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  2128,
+  214
+ ],
+ "pivot": [
+  133,
+  193
+ ],
+ "frames": 8,
+ "frame_size": [
+  266,
+  214
+ ],
+ "character": "Кривша, Обгорелый страж (bosses.json krivsha, Б1)",
+ "phase": "normal",
+ "animation": "leap",
+ "fps": 10,
+ "loop": false,
+ "events": {
+  "arc_frames": [
+   0,
+   5
+  ],
+  "loop_frames": [
+   6,
+   7
+  ],
+  "landing_frame": 6,
+  "note": "дугу и подъём (sin·40) двигает движок — высота не запечена; на кадре 6 — fx_krivsha_leap_burst на огнище, кадры 6–7 по кругу 2 с неуязвимости, затем fire_emerge"
+ },
+ "direction": "w",
+ "visible_height_px": [
+  119,
+  180,
+  154,
+  138,
+  124,
+  126,
+  123,
+  129
+ ],
+ "rendered": "per direction (model rotated 135°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "claw_A": [
+   [
+    80,
+    149
+   ],
+   [
+    80,
+    17
+   ],
+   [
+    43,
+    43
+   ],
+   [
+    30,
+    59
+   ],
+   [
+    21,
+    78
+   ],
+   [
+    35,
+    101
+   ],
+   [
+    15,
+    87
+   ],
+   [
+    15,
+    86
+   ]
+  ],
+  "claw_B": [
+   [
+    80,
+    188
+   ],
+   [
+    80,
+    66
+   ],
+   [
+    43,
+    92
+   ],
+   [
+    30,
+    107
+   ],
+   [
+    21,
+    131
+   ],
+   [
+    35,
+    160
+   ],
+   [
+    15,
+    146
+   ],
+   [
+    15,
+    145
+   ]
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

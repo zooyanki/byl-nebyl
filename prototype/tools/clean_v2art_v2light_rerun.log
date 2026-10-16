@@ -1,0 +1,25 @@
+--- веха v2light
+OK   v2light 1 проход света: буфер темноты/тепла ½ кадра, растяжка со сглаживанием — мягкий градиент (stats.light.bufScale.high, smooth), блоки light/atmo в stats.json, свет до подписей, HUD после мира  {'buf': [480, 270], 'lights': 73}
+OK   v2light 1 Ладога ночью: свет у факелов (огни зоны и torch_A/B ворот) и у окон/дверей изб  {'torches': 13, 'windows': 22, 'lights': 73, 'culled': 0}
+OK   v2light 1 окно светит: яркость у окна выше, чем без его света  {'on': 118.6, 'off': 69.6, 'at': [445, 32]}
+OK   v2light 1 читаемость: герой в свете ≥ 75% яркости кадра без света  {'on': 95.9, 'off': 80}
+OK   v2light 1 виньетка (в буфере темноты): края кадра затемнены (альфа угла ≈ stats.light.vignette.a), центр чистый  {'corner': 139, 'center': 0, 'a': 0.55}
+OK   v2light 1 мягкое дрожание огня (flick 0..1, размах > 0,2)  {'v': [0.3590166445815616, 0.12177553867532218, 0.6401806853236407, 0.7110094582635196, 0.8107226797406939], 'span': 0.6889471410653717}
+OK   v2light 2 Ладога: туман над рекой (пятна ≤ atmo.mist.max), дым над печными постройками (≤ кап), светлячков нет  {'smoke': 42, 'sparks': 0, 'fireflies': 0, 'mist': 40, 'reflect': 104, 'sparkCap': 160, 'smokeCap': 60}
+OK   v2light скриншоты screenshot_v2light_ladoga_before.png (свет выкл.) и screenshot_v2light_ladoga_night.png
+OK   v2light скриншот screenshot_v2light_river_fog.png: туман над водой  40
+OK   v2light 2 отражения огней и окон в воде (дрожащие чёрточки только над водой)  84
+OK   v2light скриншот screenshot_v2light_final.png: пристань, окна изб, отражения, змей в полёте с искрами  {'alive': True, 'win': 20, 'rf': 110, 'sp': 18}
+OK   v2light 3 «Огненный змей» в полёте освещает землю: яркость кольца 16–46 px вокруг точки под ним выше, чем без снаряда  {'on': 98.7, 'off': 29, 'zm': 1, 'at': [624, 264]}
+OK   v2light 3 искры: след змея и залп при взрыве, число ≤ atmo.sparks.max даже при 30 змеях  {'max': 156, 'cap': 160, 'burst': 1}
+OK   v2light скриншот screenshot_v2light_zmey_light.png: змей в полёте освещает землю, искры следа  {'alive': True, 'tr': 2.67, 'sparks': 59}
+OK   v2light 4 Залесье в сумерках: светлячки есть, не больше atmo.fireflies.max  {'n': 26, 'max': 40, 'want': 26}
+OK   v2light скриншот screenshot_v2light_forest_fireflies.png
+OK   v2light 5 Капище: сумерки красноватые (R > 2B), огни горят, без светлячков и тумана  {'am': [48, 8, 12, 0.6], 'fires': 9, 'ff': 0, 'mist': 0}
+OK   v2light скриншот screenshot_v2light_kapishche.png
+OK   v2light 6 пауза: «Качество света» (ключ ru.json) — щелчок: low (буфер ¼ без сглаживания, кап искр ×0,5, светлячков меньше), ещё щелчок: high  {'btn': {'key': 'proto.pause.light_hq', 'txt': 'Качество света', 'p': [476, 279]}, 'lo': {'q': 'low', 'k': 0.25, 'cap': 80, 'ff': 13}, 'hi': {'q': 'high', 'k': 0.5, 'cap': 160, 'ff': 26}}
+OK   v2light 7 «Ярь» → «Удаль»: шар — «Удаль», в ru.json/данных/коде (check_rename) 0, в запекаемых надписях атласов (export_ui.py) нет  {'hud': 'Удаль', 'ru': [], 'rc': 0}
+OK   v2light 8 бюджет кадра: медиана Game.render ≤ stats.light.budgetMs × замедление ЦП (1×) в Ладоге ночью  {'n': 147, 'med': 4.9, 'p95': 6.8, 'budget': 8}
+OK   консоль без ошибок и предупреждений
+
+22/22 проверок пройдено

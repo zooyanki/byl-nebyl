@@ -1,0 +1,72 @@
+{
+ "image": "krivsha_idle_w.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  656,
+  164
+ ],
+ "pivot": [
+  82,
+  145
+ ],
+ "frames": 4,
+ "frame_size": [
+  164,
+  164
+ ],
+ "character": "Кривша, Обгорелый страж (bosses.json krivsha, Б1)",
+ "phase": "normal",
+ "animation": "idle",
+ "fps": 5,
+ "loop": true,
+ "events": {},
+ "direction": "w",
+ "visible_height_px": [
+  133,
+  132,
+  130,
+  133
+ ],
+ "rendered": "per direction (model rotated 135°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "claw_A": [
+   [
+    21,
+    83
+   ],
+   [
+    17,
+    83
+   ],
+   [
+    15,
+    82
+   ],
+   [
+    12,
+    79
+   ]
+  ],
+  "claw_B": [
+   [
+    21,
+    117
+   ],
+   [
+    21,
+    118
+   ],
+   [
+    21,
+    119
+   ],
+   [
+    21,
+    118
+   ]
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

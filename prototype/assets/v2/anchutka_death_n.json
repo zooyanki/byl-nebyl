@@ -1,0 +1,36 @@
+{
+ "image": "anchutka_death_n.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  504,
+  59
+ ],
+ "pivot": [
+  42,
+  45
+ ],
+ "frames": 6,
+ "frame_size": [
+  84,
+  59
+ ],
+ "character": "Анчутка (monsters.json anchutka)",
+ "animation": "death",
+ "fps": 10,
+ "loop": false,
+ "events": {
+  "note": "валится и рассыпается в сажу с тлеющими угольками; последний кадр держать"
+ },
+ "direction": "n",
+ "visible_height_px": [
+  37,
+  39,
+  28,
+  26,
+  26,
+  26
+ ],
+ "rendered": "per direction (model rotated 225°), no mirroring",
+ "mirror_pair": null
+}

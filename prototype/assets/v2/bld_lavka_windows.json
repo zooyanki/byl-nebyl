@@ -1,0 +1,31 @@
+{
+ "image": "bld_lavka_windows.png",
+ "base": "prototype/assets/bld/bld_lavka.png (the sprite the prototype uses; v1 geometry, not v2)",
+ "palette": "palette_v3 (fire2 only)",
+ "alpha": "0/255",
+ "size": [
+  101,
+  102
+ ],
+ "frame_size": [
+  101,
+  102
+ ],
+ "frame_count": 1,
+ "pivot": [
+  50,
+  81
+ ],
+ "layer": "window light mask for bld_lavka.png, same size, frames and pivot as base",
+ "usage": "additive/screen on top of the base frame, or as a mask for code light; anchors are in frame-local px (same space as anchors_px of the base)",
+ "anchors": {
+  "0": []
+ },
+ "note": "лавка — открытый навес без окон: маска пустая. Для света используйте anchors.lamp (прилавок).",
+ "lamp": {
+  "0": [
+   50,
+   62
+  ]
+ }
+}

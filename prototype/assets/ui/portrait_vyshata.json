@@ -4,10 +4,11 @@
   64,
   64
  ],
- "who": "Вышата",
- "draw_at": "(130, 234) inside a 68×68 code-drawn frame at (128, 232), GDD §10.4",
- "light": "top-left",
- "background": "night / slate_dk, opaque",
- "palette": "palette_v2",
- "alpha": "opaque (255)"
+ "who": "Вышата, посадник",
+ "draw_at": "как прежний портрет: (130, 234) в рамке 68×68 (GDD §10.4); при 960×540 — по сетке UI Петра",
+ "light": "боковой слева (портретный, тень на правой половине лица)",
+ "background": "ночь, непрозрачный: water1/water0/outline0",
+ "palette": "palette_v3",
+ "alpha": "opaque (255)",
+ "source": "та же 3D-модель, что листы vyshata_*"
 }

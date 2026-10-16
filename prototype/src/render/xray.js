@@ -23,7 +23,8 @@ export function xrayRegions(game, toS, vis, isAggro) {
     if (!vis(sx, sy, h)) continue;
     const hot = e === game.hoverEnemy || isAggro(e);
     if (!hot && Math.hypot(e.x - hero.x, e.y - hero.y) > R) continue;
-    out.push({ a: hot ? A : AI, d: e.x + e.y, x: sx - 12, y: sy - h, w: 24, h, who: hot ? 'aggro' : 'idle' });
+    const hw = e.kind === 'upyr' ? 14 : 12;   // v2art: упырь v2 шире
+    out.push({ a: hot ? A : AI, d: e.x + e.y, x: sx - hw, y: sy - h, w: hw * 2, h, who: hot ? 'aggro' : 'idle' });
   }
   for (const dd of map.objects) if (dd.type === 'hut' && !dd.done) {
     const ax = dd.door === '+x', a0 = ax ? toS(dd.x, dd.y - 0.75) : toS(dd.x - 0.75, dd.y), a1 = ax ? toS(dd.x, dd.y + 0.75) : toS(dd.x + 0.75, dd.y);
@@ -57,18 +58,21 @@ function scratch() {
   return SCR;
 }
 /** Силуэт (draw(ctx, AX, AY)) → доля его пикселей, закрытых пропсами перед ним, и контур 1 px цветом color (если закрыт ≥ minCovered). */
-export function outlineIfCovered(ctx, game, toS, sx, sy, depth, draw, color) {
+export function outlineIfCovered(ctx, game, toS, sx, sy, depth, draw, color, only = null) {
   const X = XR(), O = X.outline || {}, min = O.minCovered ?? 0.25;
-  const C = scratch(), c = C.getContext('2d', { willReadFrequently: true });
-  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, SW, SH); c.imageSmoothingEnabled = false;
-  draw(c, AX, AY);
-  const img = c.getImageData(0, 0, SW, SH), d = img.data, x0 = sx - AX, y0 = sy - AY;
+  const x0 = sx - AX, y0 = sy - AY;
   const front = [];
   for (const p of game.map.props) {
-    if (!p._spr || p.depth <= depth || p.type === 'fire') continue;
+    if (!p._spr || p.depth <= depth || p.type === 'fire' || (only && !only(p))) continue;
     const b = propBox(p, toS);
     if (b && b.x < x0 + SW && b.x + b.w > x0 && b.y < y0 + SH && b.y + b.h > y0) front.push(p);
   }
+  // оптимизация: перед силуэтом нет ни одного пропса — закрыто 0%, силуэт не рисуем и не читаем пиксели (тот же итог)
+  if (!front.length) return { frac: 0, drawn: false };
+  const C = scratch(), c = C.getContext('2d', { willReadFrequently: true });
+  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, SW, SH); c.imageSmoothingEnabled = false;
+  draw(c, AX, AY);
+  const img = c.getImageData(0, 0, SW, SH), d = img.data;
   let tot = 0, cov = 0;
   for (let y = 0; y < SH; y += 2) for (let x = 0; x < SW; x += 2) {
     if (d[(y * SW + x) * 4 + 3] < 200) continue;
@@ -94,3 +98,7 @@ export function outlineColor(e) {
   const k = e.boss ? (O.boss || 'bronze_hi') : (e.elite || e.leader) ? (O.elite || 'bronze') : (O.enemy || 'red_lt');
   return PAL[k] || PAL.red_lt;
 }
+
+/** v2art r4: постройка (для контура NPC): не дерево, не тын, не мелкий реквизит. */
+const NOT_BLD = new Set(['tree', 'palisade', 'gateseg', 'fire', 'stump', 'cart', 'well', 'sign', 'churstone', 'anvil', 'relic', 'hearth', 'perun', 'ladya', 'rock', 'bush', 'fence']);
+export const isBuilding = (p) => !NOT_BLD.has(p.type);

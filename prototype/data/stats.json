@@ -63,7 +63,7 @@
   },
   "heroSpeed": 4.5,
   "meleeRange": 1.2,
-  "melee": {"reach": 0.75, "slack": 0.55, "cancelChase": 2.0, "cancelMax": 2, "_gdd": "GDD v1.14 §4.2 (E1): зазор = расстояние − r героя − r цели; взмах при зазоре ≤ reach, удар засчитан при ≤ reach + slack (1,3), иначе замах снят (Удаль назад), догнать ≤ 2 с и ≤ 2 снятий подряд (без зажатой ЛКМ); заслон — тот же reach. meleeRange больше не используется для досягаемости"},
+  "melee": {"reach": 0.85, "slack": 0.62, "_v2art": "герой v2 56 px (клинок в кадре удара ≈42 px от pivot, ×1,31): по геометрии ×1,27 = 0,95 / 0,7, но бой у Огнеи лёгок (16/90 смертей против 28) — взято ×1,13: 0,85 / 0,62 (было 0,75 / 0,55); сим — REPORT_v2art.md", "cancelChase": 2.0, "cancelMax": 2, "_gdd": "GDD v1.14 §4.2 (E1): зазор = расстояние − r героя − r цели; взмах при зазоре ≤ reach, удар засчитан при ≤ reach + slack (1,3), иначе замах снят (Удаль назад), догнать ≤ 2 с и ≤ 2 снятий подряд (без зажатой ЛКМ); заслон — тот же reach. meleeRange больше не используется для досягаемости"},
   "block": {"raise": 0.15, "sectorDeg": 120, "reduceBase": 50, "reduceCap": 75, "cost": 2, "heavyBlock": false, "speedMul": 0.5, "breakCd": 1.5, "breakStun": 0.3, "regen": false, "noShieldCd": 1.2, "hitStop": 0.05, "sparks": 6, "breakSparks": 10, "_gdd": "GDD v1.14 §4.7, §15 (E2): ПКМ — блок щитом; тяжёлые удары (heavy: когти Кривши) щит не держит"},
   "hitFrame": 0.6,
   "castTime": 0.8,
@@ -314,9 +314,10 @@
   },
   "xray": {
     "heroEllipse": {
-      "rx": 56,
-      "ry": 40,
-      "dy": -22
+      "_v2art": "×1,27 под героя 56 px (было rx 56, ry 40, dy −22)",
+      "rx": 71,
+      "ry": 51,
+      "dy": -28
     },
     "alpha": 0.35,
     "alphaIdle": 0.5,
@@ -329,6 +330,8 @@
       "enemy": "red_lt",
       "elite": "bronze",
       "boss": "bronze_hi",
+      "npc": "linen",
+      "npcRange": 12,
       "minCovered": 0.25
     }
   },
@@ -357,5 +360,50 @@
       "gateIcons": true,
       "church": true
     }
+  },
+  "light": {
+    "hostileShot": {"r": 51, "a": 0.8, "warmR": 43, "warm": 0.18, "_v2art": "снаряд врага: было в коде r 40 / тепло 34, ×1,27"},
+    "groundFire": {"r": 89, "flick": 10, "rUnlit": 43, "warm": 0.18, "_v2art": "огонь на земле (факелы поджигателей, следы): было 70 ±8 / негорящий 34, ×1,27"},
+    "enemyTorch": {"r": 58, "a": 0.85, "warmR": 51, "warm": 0.22, "_v2art": "факел в руке врага: было 46 / тепло 40, ×1,27"},
+    "perun": {"tiles": 6.35, "flick": 10, "warm": 0.15, "_v2art": "горящий Идол Перуна: было 5 тайлов ±8 px, ×1,27"},
+    "_v2art": "Все радиусы (hero.r/warmR, enemy.r, window.r, fire.torchR, zmey.r, flicker.rAmp) × 1,27 под героя 56 px (было 120/90, 30, 74, 64, 130, 7). enemy.zone — дистанция, не радиус, не менялась",
+    "_about": "v2light: динамический свет (src/render/light.js). Буфер темноты и тёплого света — в пониженном разрешении (bufScale: high/low), растягивается на кадр без сглаживания; туман и виньетка — в тех же буферах. budgetMs — бюджет Game.render (автотест v2light). ambient — сумерки по зонам [r,g,b,a] (Небыль — красноватая), hero — окно у героя, enemy — подсвет врагов для читаемости, window — окна/двери изб, zmey — свет «Огненного змея» в полёте, flicker — дрожание огня, vignette — затемнение краёв",
+    "bufScale": {"high": 0.5, "low": 0.25}, "smooth": true,
+    "ambient": {"byl": [6, 10, 34, 0.72], "byl_to_nebyl": [14, 8, 26, 0.66], "nebyl": [48, 8, 12, 0.6], "ladoga": [6, 10, 40, 0.76]},
+    "hero": {"r": 152, "a": 0.95, "aNebyl": 0.8, "warm": 0.12, "warmR": 114, "rgb": "255,190,120"},
+    "enemy": {"r": 38, "a": 0.5, "zone": 260},
+    "windowMasksV2": {"_about": "v2art: маски окон художника для текущих листов (тот же размер, кадры и pivot): PNG кладётся поверх кадра постройки аддитивно, свет — по anchors[кадр] (cx, cy); у лавки окон нет — точка lamp", "bld_banya_tes": "bld_banya_tes_windows", "bld_banya_dern": "bld_banya_dern_windows", "bld_masterskaya": "bld_masterskaya_windows", "bld_lavka": "bld_lavka_windows", "izba_small_tes": "izba_small_tes_windows", "izba_small_sod": "izba_small_sod_windows", "maskA": 0.55},
+    "windowMasks": {"_about": "Окна из масок художника v2 (art/v2/*_windows.json, anchors — центры окон): точка = pivot листа + (anchor + w/2 − pivot v2) × (ширина листа / ширина v2). match — подстрока имени листа; первое совпадение. Нет совпадения — anchors_px.door или передний угол (fallback). Маски *_windows.png пока не накладываем: геометрия v2 другая (3,6 м, герой 56 px)",
+      "list": [
+        {"match": "church", "src": "church_kletskaya", "size": [185, 196], "pivot": [97, 156], "anchors": [[60, 136.5], [84, 148.5]]},
+        {"match": "dern", "src": "izba_sod", "size": [148, 130], "pivot": [74, 96], "anchors": [[124.5, 80.5], [34.5, 84]]},
+        {"match": "izba", "src": "izba_tes", "size": [144, 127], "pivot": [71, 93], "anchors": [[121.5, 77.5], [32, 80.5]]}
+      ]},
+    "window": {"r": 94, "a": 0.95, "warm": 0.34, "rgb": "255,176,84", "kinds": ["izba", "banya", "masterskaya", "lavka", "church"]},
+    "fire": {"warm": 0.3, "torchR": 81, "rgb": "230,134,43"},
+    "zmey": {"r": 165, "a": 1, "warm": 0.36, "rgb": "255,150,56"},
+    "flash": {"warm": 0.28},
+    "flicker": {"amp": 0.22, "rAmp": 9, "speed": 9},
+    "vignette": {"a": 0.55, "inner": 0.45, "rgb": "6,6,14"},
+    "maxLights": 64,
+    "budgetMs": 8,
+    "cullPad": 80
+  },
+  "atmo": {
+    "_about": "v2light: атмосфера (src/render/atmo.js). mist — туман над водой (Ладога/Залесье), smoke — клубы дыма над печными постройками (поверх fx_smoke_wisp), sparks — искры змея (след и взрыв), fireflies — светлячки в лесных зонах в сумерках. max — потолок частиц; low — множитель количества при «Качество света: выкл»",
+    "mist": {"zones": ["ladoga", "zalesye"], "max": 40, "step": 2, "a": 0.08, "wisps": 2, "rx": 40, "ry": 5, "drift": 6, "speed": 0.35, "rgb": "190,205,225"},
+    "smoke": {"rate": 2.2, "life": 4.0, "rise": 9, "wind": 4, "grow": 2.2, "a": 0.32, "max": 60, "rgb": "150,150,160"},
+    "sparks": {"trailRate": 70, "life": 0.45, "burst": 26, "burstLife": 0.6, "speed": 70, "grav": 60, "max": 160},
+    "fireflies": {"zones": ["zalesye", "trail"], "n": 26, "max": 40, "a": 0.9, "blink": 1.6, "speed": 0.35, "rgb": "214,255,120"},
+    "reflect": {"a": 0.7, "len": 120, "step": 3, "wMax": 7, "shimmer": 6},
+    "low": 0.5
+  },
+  "v2art": {
+    "_about": "v2art: экранные хитбоксы и точки под листы v2 (герой 56 px вместо 44, упырь 45 вместо 40). Коллизия (r в тайлах) не менялась — масштаб мира прежний (тайл 32×16 = 1 м)",
+    "heroHeight": 56, "heroHalfW": 13, "upyrHalfW": 14,
+    "izba": {"_note": "избы-заглушки без листа (сруб кодом) → лист v2; футпринт v2 6×6, здесь 5×5 / 5×4 — свес ≤ 0,5 тайла", "terem": "izba_tes", "kuznya": "izba_sod"}, "church": "church_kletskaya",
+    "izbaSmall": {"_note": "v2b2: избы 4×4 Ладоги (tes_kon / tes_prich → izba_small_tes, dern → izba_small_sod); Залесье — props.zalIzba", "bld_izba_small_tes_kon": "izba_small_tes", "bld_izba_small_tes_prich": "izba_small_tes", "bld_izba_small_dern": "izba_small_sod"},
+    "smoke": {"bld_izba_small_tes_kon": [107, 62], "bld_izba_small_tes_prich": [107, 62], "_note": "волоковое окно во фронтоне (gable_vent + 2 px вверх), одинаково во всех кадрах — art/v2/INTEGRATION_v2_ladya_windows.md"},
+    "ladya": {"fps": 4, "reflectA": 0.28, "reflectLen": 1.0, "lantern": true}
   }
 }

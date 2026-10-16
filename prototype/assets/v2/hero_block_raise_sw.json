@@ -1,0 +1,56 @@
+{
+ "image": "hero_block_raise_sw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  116,
+  67
+ ],
+ "pivot": [
+  29,
+  58
+ ],
+ "frames": 2,
+ "frame_size": [
+  58,
+  67
+ ],
+ "character": "Ратибор",
+ "animation": "block_raise",
+ "loop": false,
+ "events": {
+  "block_active_after_last_frame": true,
+  "raised": 1
+ },
+ "notes": "0,15 с: щит от бедра к груди, меч опущен назад. Опускание = кадры в обратном порядке.",
+ "fps": 13,
+ "direction": "sw",
+ "visible_height_px": [
+  57,
+  57
+ ],
+ "rendered": "per direction (model rotated 90°), no mirroring",
+ "mirror_pair": null,
+ "anchors": {
+  "shield_center": [
+   [
+    26,
+    31
+   ],
+   [
+    21,
+    28
+   ]
+  ],
+  "shield_rim": [
+   [
+    27,
+    20
+   ],
+   [
+    22,
+    17
+   ]
+  ]
+ }
+}

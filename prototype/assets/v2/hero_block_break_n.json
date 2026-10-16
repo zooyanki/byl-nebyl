@@ -1,0 +1,76 @@
+{
+ "image": "hero_block_break_n.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  248,
+  69
+ ],
+ "pivot": [
+  31,
+  60
+ ],
+ "frames": 4,
+ "frame_size": [
+  62,
+  69
+ ],
+ "character": "Ратибор",
+ "animation": "block_break",
+ "loop": false,
+ "events": {
+  "block_active": [],
+  "break": 0,
+  "sparks": 0,
+  "shield_down": 3
+ },
+ "notes": "пробитие: щит отбит в сторону, герой качнулся, затем опускает щит; ≈0,3 с оглушения",
+ "fps": 13,
+ "direction": "n",
+ "visible_height_px": [
+  54,
+  53,
+  55,
+  57
+ ],
+ "rendered": "per direction (model rotated 225°), no mirroring",
+ "mirror_pair": null,
+ "anchors": {
+  "shield_center": [
+   [
+    16,
+    27
+   ],
+   [
+    12,
+    31
+   ],
+   [
+    15,
+    28
+   ],
+   [
+    18,
+    24
+   ]
+  ],
+  "shield_rim": [
+   [
+    18,
+    16
+   ],
+   [
+    17,
+    21
+   ],
+   [
+    17,
+    17
+   ],
+   [
+    17,
+    14
+   ]
+  ]
+ }
+}

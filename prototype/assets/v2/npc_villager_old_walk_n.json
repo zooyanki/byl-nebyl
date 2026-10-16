@@ -1,0 +1,42 @@
+{
+ "image": "npc_villager_old_walk_n.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  304,
+  75
+ ],
+ "pivot": [
+  19,
+  65
+ ],
+ "frames": 8,
+ "frame_size": [
+  38,
+  75
+ ],
+ "loop": true,
+ "events": {
+  "footstep": [
+   0,
+   4
+  ]
+ },
+ "character": "старик Залесья",
+ "animation": "walk",
+ "fps": 10,
+ "direction": "n",
+ "visible_height_px": [
+  62,
+  62,
+  60,
+  58,
+  57,
+  58,
+  60,
+  62
+ ],
+ "height_ratio_to_hero": 0.93,
+ "rendered": "per direction (model rotated 225°), no mirroring",
+ "mirror_pair": null
+}

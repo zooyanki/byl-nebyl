@@ -1,0 +1,30 @@
+{
+ "image": "hero_idle_n.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  248,
+  65
+ ],
+ "pivot": [
+  31,
+  58
+ ],
+ "frames": 4,
+ "frame_size": [
+  62,
+  65
+ ],
+ "character": "Ратибор",
+ "loop": true,
+ "fps": 4,
+ "direction": "n",
+ "visible_height_px": [
+  57,
+  56,
+  56,
+  56
+ ],
+ "rendered": "per direction (model rotated 225°), no mirroring",
+ "mirror_pair": null
+}

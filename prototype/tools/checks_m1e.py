@@ -217,7 +217,7 @@ async def run_m1e(pg, G, check, wait, client_of, client_scr, a):
     await G('''(() => { const g = __game; g.enterZone('ladoga', 'from_zalesye'); const v = g.npcs.find(n => n.role == 'vedana');
         g.ui.closeAll(); g.town.openNpc(v); g.town.mode = 'trade'; g.town.tab = 'buy'; g.updateCamera(); })()''')
     await pg.screenshot(path=SHOT)
-    cam = await G('[__game.camCX, __game.town.open, __game.town.mode, __game.ui.invOpen]')
+    cam = await G('[__game.camUX, __game.town.open, __game.town.mode, __game.ui.invOpen]')
     await G('''(() => { const g = __game; g.town.openStash(); g.updateCamera(); })()''')
     await pg.screenshot(path=SHOT_B)
     check('M1e скриншот торга (окно открыто, город виден) и скриншот ладьи-сундука',

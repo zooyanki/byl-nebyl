@@ -1,0 +1,78 @@
+{
+ "image": "arsonist_walk_sw.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  624,
+  99
+ ],
+ "pivot": [
+  39,
+  91
+ ],
+ "frames": 8,
+ "frame_size": [
+  78,
+  99
+ ],
+ "character": "Черноярец-поджигатель (monsters.json chernoyarets_arsonist)",
+ "animation": "walk",
+ "fps": 10,
+ "loop": true,
+ "events": {
+  "footstep": [
+   0,
+   4
+  ]
+ },
+ "direction": "sw",
+ "visible_height_px": [
+  78,
+  77,
+  78,
+  77,
+  77,
+  76,
+  79,
+  78
+ ],
+ "rendered": "per direction (model rotated 90°), no mirroring",
+ "mirror_pair": null,
+ "anchors_px": {
+  "torch": [
+   [
+    5,
+    24
+   ],
+   [
+    5,
+    24
+   ],
+   [
+    5,
+    23
+   ],
+   [
+    5,
+    24
+   ],
+   [
+    5,
+    24
+   ],
+   [
+    5,
+    24
+   ],
+   [
+    5,
+    23
+   ],
+   [
+    5,
+    24
+   ]
+  ]
+ },
+ "anchors_note": "точка в кадре (x,y от левого верхнего угла кадра) по кадрам; null — нет"
+}

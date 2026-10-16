@@ -1,0 +1,42 @@
+{
+ "image": "npc_priest_walk_se.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  320,
+  67
+ ],
+ "pivot": [
+  20,
+  58
+ ],
+ "frames": 8,
+ "frame_size": [
+  40,
+  67
+ ],
+ "loop": true,
+ "events": {
+  "footstep": [
+   0,
+   4
+  ]
+ },
+ "character": "поп Иоанн",
+ "animation": "walk",
+ "fps": 10,
+ "direction": "se",
+ "visible_height_px": [
+  55,
+  55,
+  56,
+  55,
+  55,
+  55,
+  56,
+  55
+ ],
+ "height_ratio_to_hero": 1.04,
+ "rendered": "per direction (model rotated 0°), no mirroring",
+ "mirror_pair": null
+}

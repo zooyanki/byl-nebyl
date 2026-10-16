@@ -1,0 +1,74 @@
+{
+ "image": "bld_banya_tes_windows.png",
+ "base": "prototype/assets/bld/bld_banya_tes.png (the sprite the prototype uses; v1 geometry, not v2)",
+ "palette": "palette_v3 (fire2 only)",
+ "alpha": "0/255",
+ "size": [
+  357,
+  148
+ ],
+ "frame_size": [
+  119,
+  148
+ ],
+ "frame_count": 3,
+ "pivot": [
+  59,
+  115
+ ],
+ "layer": "window light mask for bld_banya_tes.png, same size, frames and pivot as base",
+ "usage": "additive/screen on top of the base frame, or as a mask for code light; anchors are in frame-local px (same space as anchors_px of the base)",
+ "anchors": {
+  "0": [
+   {
+    "x": 45,
+    "y": 89,
+    "w": 9,
+    "h": 10,
+    "cx": 49,
+    "cy": 93,
+    "lit_in_base": true
+   },
+   {
+    "x": 79,
+    "y": 83,
+    "w": 9,
+    "h": 8,
+    "cx": 83,
+    "cy": 86,
+    "lit_in_base": false
+   }
+  ],
+  "1": [
+   {
+    "x": 31,
+    "y": 82,
+    "w": 9,
+    "h": 10,
+    "cx": 35,
+    "cy": 86,
+    "lit_in_base": true
+   }
+  ],
+  "2": [
+   {
+    "x": 31,
+    "y": 82,
+    "w": 9,
+    "h": 10,
+    "cx": 35,
+    "cy": 86,
+    "lit_in_base": true
+   },
+   {
+    "x": 79,
+    "y": 83,
+    "w": 9,
+    "h": 8,
+    "cx": 83,
+    "cy": 86,
+    "lit_in_base": false
+   }
+  ]
+ }
+}
