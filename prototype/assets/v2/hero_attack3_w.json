@@ -1,0 +1,52 @@
+{
+ "image": "hero_attack3_w.png",
+ "palette": "palette_v3",
+ "alpha": "0/255",
+ "size": [
+  848,
+  97
+ ],
+ "pivot": [
+  53,
+  86
+ ],
+ "frames": 8,
+ "frame_size": [
+  106,
+  97
+ ],
+ "character": "Ратибор",
+ "loop": false,
+ "events": {
+  "hit": 5,
+  "shake": 5
+ },
+ "phases": {
+  "windup": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "chop": 4,
+  "hit": 5,
+  "hold": 6,
+  "recovery": 7
+ },
+ "note": "комбо 3/3 (видео Ильи): долгий замах над головой, рубящий сверху вниз до земли с глубоким выпадом; удар в кадре 5",
+ "fps": 12,
+ "direction": "w",
+ "visible_height_px": [
+  81,
+  75,
+  69,
+  67,
+  74,
+  53,
+  53,
+  55
+ ],
+ "rendered": "per direction (model rotated 135°), no mirroring",
+ "mirror_pair": null,
+ "frame_note": "attack3 has its own frame size (taller): nothing is clipped in any direction (2 px margin); pivot = same ground point"
+}

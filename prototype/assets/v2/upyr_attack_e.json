@@ -3,17 +3,17 @@
  "palette": "palette_v3",
  "alpha": "0/255",
  "size": [
-  944,
-  80
+  1072,
+  88
  ],
  "pivot": [
-  59,
-  67
+  67,
+  70
  ],
  "frames": 8,
  "frame_size": [
-  118,
-  80
+  134,
+  88
  ],
  "character": "упырь",
  "loop": false,
@@ -37,15 +37,16 @@
  "fps": 12,
  "direction": "e",
  "visible_height_px": [
-  47,
-  61,
-  59,
+  51,
+  69,
+  67,
   48,
-  47,
-  41,
-  44,
-  46
+  48,
+  45,
+  48,
+  51
  ],
- "rendered": "per direction (model rotated 315°), no mirroring",
- "mirror_pair": null
+ "rendered": "per direction (model rotated 315°), no mirroring; upyr_ref (concept v3, SS5 + material detail pass)",
+ "mirror_pair": null,
+ "eyes": "red (approved exception, eyes only)"
 }

@@ -17,6 +17,9 @@ export function xpAtLevel(L) { let s = 0; for (let i = 1; i < L; i++) s += xpToN
 
 // v1.14 E1 (§4.2): одна досягаемость удара — зазор между телами (расстояние − r героя − r цели); stats.json → melee
 export function meleeReach() { const M = (CFG.stats && CFG.stats.melee) || {}; return { reach: M.reach ?? 0.75, slack: M.slack ?? 0.55, chase: M.cancelChase ?? 2, max: M.cancelMax ?? 2 }; }
+// v2art4/5: комбо из 3 ударов ЛКМ (stats.json → combo): щелчок во время удара буферизуется всегда (B-23); buffer — щелчок за ≤ buffer с до конца удара продолжает комбо, раньше — удар 1,
+// reset — пауза дольше reset с после конца удара сбрасывает счётчик на 1. Тайминги, урон и DPS ударов прежние (только поза).
+export function comboCfg() { const C = (CFG.stats && CFG.stats.combo) || {}; return { steps: C.steps ?? 3, buffer: C.buffer ?? 0.35, reset: C.reset ?? 0.6 }; }
 // v1.14 E2 (§4.7): активный блок щитом на ПКМ; stats.json → block
 export function blockCfg() { return (CFG.stats && CFG.stats.block) || { raise: 0.15, sectorDeg: 120, reduceBase: 50, reduceCap: 75, cost: 2, heavyBlock: false, speedMul: 0.5, breakCd: 1.5, breakStun: 0.3, regen: false }; }
 
@@ -232,7 +235,17 @@ export class Hero extends Actor {
   }
 
   attack(target, stand = false, skill = null, lmb = false) {
-    if (this.cmd && this.cmd.type === 'attack' && this.cmd.target === target && this.cmd.skill === skill) { this.cmd.swung = false; this.cmd.stand = stand; return; }
+    if (this.cmd && this.cmd.type === 'attack' && this.cmd.target === target && this.cmd.skill === skill) {
+      // v2art5 (QA B-52, GDD §4.1 / B-23): щелчок во время удара всегда буферизуется до конца действия и даёт следующий удар.
+      // Окно buffer решает только комбо: щелчок за ≤ buffer до конца — следующий шаг, раньше — комбо сбрасывается (удар 1). Срабатывает последний щелчок.
+      const a = this.action;
+      this.cmd.swung = false; this.cmd.stand = stand;
+      if (a && a.type === 'attack') {
+        if (a.dur - a.t > comboCfg().buffer) { this.comboBreak = true; this.comboEarly = (this.comboEarly || 0) + 1; }
+        else { this.comboBreak = false; this.comboBuf = (this.comboBuf || 0) + 1; }
+      }
+      return;
+    }
     this.cmd = { type: 'attack', target, repath: 0, swung: false, repeat: false, stand, skill, lmb };
   }
   pickup(item) { this.cmd = { type: 'pickup', item, repath: 0 }; }
@@ -292,7 +305,7 @@ export class Hero extends Actor {
       if (target) { this.attack(target, false, id); return 'ok'; }
       this.yar -= cost;
       this.face(tx - this.x, ty - this.y);
-      this.action = { type: 'attack', skill: id, target: null, t: 0, dur: this.attackTime, hitAt: this.attackTime * HIT_FRAME, fired: false };
+      this.action = { type: 'attack', skill: id, target: null, t: 0, dur: this.attackTime, hitAt: this.attackTime * HIT_FRAME, fired: false }; this.comboStep = 0;
       this.path = null; this.moving = false; this.cmd = null;
       return 'ok';
     }
@@ -366,8 +379,13 @@ export class Hero extends Actor {
         if (game) { game.audio.play('skill'); game.counters.casts[skill] = (game.counters.casts[skill] || 0) + 1; }
       }
     }
+    // v2art4: шаг комбо 1→2→3→1; навык или пауза > reset — снова 1
+    const CB = comboCfg(), step = !skill && !this.comboBreak && this.comboStep && (this.comboIdle ?? 99) <= CB.reset ? (this.comboStep % CB.steps) + 1 : 1;
+    this.comboBreak = false;
+    this.comboStep = skill ? 0 : step;
+    if (game) { const K = game.counters.combo || (game.counters.combo = {}); K[step] = (K[step] || 0) + 1; }
     this.action = { type: 'attack', skill, target, t: 0, dur: this.attackTime, hitAt: this.attackTime * HIT_FRAME, fired: false,
-      stand: !!(this.cmd && this.cmd.stand), paid: paid };   // v1.14 E1: stand — Shift+ЛКМ (не снимается), paid — Удаль вернуть при снятии
+      stand: !!(this.cmd && this.cmd.stand), paid: paid, combo: step };   // v1.14 E1: stand — Shift+ЛКМ (не снимается), paid — Удаль вернуть при снятии
     this.face(target.x - this.x, target.y - this.y);
     this.path = null; this.moving = false;
   }
@@ -676,6 +694,7 @@ export class Hero extends Actor {
         const MR = meleeReach();
         if (this.gapTo(a.target) > MR.reach + MR.slack) {
           this.action = null; this.yar = Math.min(this.maxYar, this.yar + (a.paid || 0));
+          if (a.combo) { this.comboStep = a.combo - 1; this.comboIdle = 0; }   // v2art4: снятый замах не считается шагом комбо
           game.counters.swingCancel = (game.counters.swingCancel || 0) + 1;
           const c0 = this.cmd;
           if (c0 && c0.type === 'attack' && c0.target === a.target) { c0.swung = false; c0.cancels = (c0.cancels || 0) + 1; c0.cancelT = 0; c0.repath = 0; }
@@ -694,7 +713,8 @@ export class Hero extends Actor {
       const cancel = a.type === 'cast' && a.fired && this.cmd && this.cmd.type === 'move';
       if (a.t < a.dur && !cancel) return;
       this.action = null;
-    }
+      if (a.type === 'attack') this.comboIdle = 0;
+    } else this.comboIdle = (this.comboIdle ?? 99) + dt;
 
     const c = this.cmd;
     if (!c) { this.moving = false; return; }

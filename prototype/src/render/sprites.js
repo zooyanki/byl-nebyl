@@ -35,7 +35,7 @@ export function drawHero(ctx, x, y, h, dir, time, outline = PAL.ink) {
   const P2 = poseHeroV2(h, time, dir);   // v2b2: и смерть (hero_death)
   if (P2) {
     if (!h.dead) { shadow(ctx, x, y, 11, 4.5); dirMarker(ctx, x, y, dir, 11, 4.5, PAL.bronze_lt); }
-    v2Blit(ctx, P2.sheet, P2.frame, x, y - P2.bob, { flash: h.flash > 0 });
+    v2Blit(ctx, P2.sheet, P2.frame, x, y - P2.bob, { flash: h.flash > 0, flip: !!P2.flip });
     V2.counters.heroPose = P2.name + ':' + P2.frame;
     return;
   }

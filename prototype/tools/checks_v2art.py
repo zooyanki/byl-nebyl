@@ -463,3 +463,100 @@ async def run_v2art(pg, G, check, wait, client_of, client_scr, a):
     await G('(() => { __game.ui.closeAll(); })()')
     check('qa3 B-50: items.png и win_character.png совпадают с art/qa_sym/export байт в байт (если экспорт рядом); окно «Витязь» открывается, скриншот screenshot_v2art_char_qa3.png',
           all(same.values()) and s2 and os.path.exists(ROOT + 'screenshot_v2art_char_qa3.png'), same)
+
+    # ================= 19. v2art3/4: зелёные пунктирные «пирамиды» (процедурные валуны грей-бокса) заменены замшелыми валунами v2
+    s = await G('''(async () => { const g = __game, P = await import('/src/render/props.js'); g.state = 'play'; g.ui.closeAll(); g.dlgWin = null; const out = {};
+        for (const z of ['ladoga', 'zalesye', 'trail', 'kapishche']) { g.enterZone(z, 'start'); const m = g.map, R = m.props.filter(p => p.type === 'rock');
+          const toS = (x, y) => g.toS(x, y); let v2ok = 0, blocked = 0; const sizes = {};
+          for (const p of R) { if (!p._spr) P.drawProp(document.createElement('canvas').getContext('2d'), p, toS, 0); const want = p.size > 1 ? 'boulder_moss_c' : 'boulder_moss_a'; if (p._spr && p._spr.v2 === want) v2ok++;
+            if (m.blockedAt(p.x + p.size / 2, p.y + p.size / 2)) blocked++; sizes[p.size] = (sizes[p.size] || 0) + 1; }
+          out[z] = { rocks: R.length, v2ok, blocked, sizes, trees: m.props.filter(p => p.type === 'tree').length }; }
+        g.enterZone('ladoga', 'start'); return out; })()''')
+    check('v2art4: валуны — замшелые boulder_moss v2 на прежних местах (Залесье 17, Тропа 6, Капище 20; 1×1 → a, 2×2 → c), процедурной «пирамиды» нет, коллизия на месте; деревья 428 / 460 / 664 — раскладка прежняя',
+          s['ladoga']['rocks'] == 0 and s['zalesye']['rocks'] == 17 and s['trail']['rocks'] == 6 and s['kapishche']['rocks'] == 20
+          and all(s[z]['v2ok'] == s[z]['rocks'] and s[z]['blocked'] == s[z]['rocks'] for z in ('zalesye', 'trail', 'kapishche'))
+          and s['zalesye']['trees'] == 428 and s['trail']['trees'] == 460 and s['kapishche']['trees'] == 664, s)
+
+    # ================= 22. upyr_ref: новый упырь — кадры и pivot из JSON, хитбокс / досягаемость / кадр удара прежние, ноги на pivot
+    UP = {'idle': ([78, 66], [39, 58], 4), 'walk': ([86, 68], [43, 58], 8), 'attack': ([134, 88], [67, 70], 8), 'hurt': ([66, 72], [33, 64], 2), 'death': ([144, 106], [72, 75], 8), 'rise': ([112, 78], [56, 58], 6)}
+    s = await G('''(() => { const V = __game.dbg && null; return import('/src/render/v2art.js').then(M => { const o = {}; for (const a of ['idle', 'walk', 'attack', 'hurt', 'death', 'rise']) for (const d of M.V2_DIRS) { const sh = M.V2.sheets['upyr_' + a + '_' + d]; o[a + '_' + d] = sh ? [sh.meta.frame_size, sh.meta.pivot, sh.meta.frames || sh.meta.frame_count, (sh.meta.events || {}).hit ?? null, sh.img.naturalWidth, sh.img.naturalHeight] : null; }
+        const M2 = __game.dbg.CFG.monsters ? __game.dbg.CFG.monsters.upyr : null; return { o, mon: M2 && { r: M2.r, reach: M2.reach, hitAt: M2.hitAt } }; }); })()''')
+    bad = [k for k, v in s['o'].items() if not v or v[0] != UP[k.split('_')[0]][0] or v[1] != UP[k.split('_')[0]][1] or v[2] != UP[k.split('_')[0]][2] or v[4] != v[0][0] * v[2] or v[5] != v[0][1]]
+    hits = {v[3] for k, v in s['o'].items() if k.startswith('attack_') and v}
+    from PIL import Image as _I
+    def _bot(a, d, f=0):
+        j = json.load(open(ROOT + f'assets/v2/upyr_{a}_{d}.json', encoding='utf-8')); im = _I.open(ROOT + f'assets/v2/upyr_{a}_{d}.png').convert('RGBA'); fw, fh = j['frame_size']
+        bb = im.split()[3].crop((f * fw, 0, f * fw + fw, fh)).getbbox(); return bb[3] - j['pivot'][1]
+    feet = {d: [_bot(a, d) for a in ('idle', 'attack', 'hurt', 'walk')] for d in ('s', 'sw', 'w', 'nw', 'n', 'ne', 'e', 'se')}
+    feetOk = all(v[0] == v[1] == v[2] and abs(v[3] - v[0]) <= 2 for v in feet.values())
+    mon = json.load(open(ROOT + 'data/monsters.json', encoding='utf-8'))['upyr']
+    check('upyr_ref: 6 анимаций × 8 видов, кадр и pivot из JSON (idle 78×66 / 39,58 … death r1 144×106 / 72,75 … rise 112×78 / 56,58), число кадров прежнее; удар events.hit = 4; хитбокс r 0,35, досягаемость 1,15, hitAt 0,6 не менялись; ноги на pivot: нижний край idle = attack = hurt по каждому виду, walk ±2 (шаг)',
+          not bad and hits == {4} and mon['r'] == 0.35 and mon['reach'] == 1.15 and mon['hitAt'] == 0.6 and feetOk, {'bad': bad, 'hits': list(hits), 'feet': feet})
+
+    # ================= 20. trees_r1 (отзыв Ильи): деревья v2 перерисованы массами — те же имена, размеры, pivot
+    TREES = ['tree_birch', 'tree_birch_h112', 'tree_birch_h96', 'tree_spruce', 'tree_spruce_h120', 'tree_spruce_h80']
+    ART2 = ROOT + '../art/v2/'
+    byte = {n: all(open(ROOT + 'assets/v2/' + n + e, 'rb').read() == open(ART2 + n + e, 'rb').read() for e in ('.png', '.json')) for n in TREES} if os.path.isdir(ART2) else {'skip': True}
+    want = {n: [list(__import__('PIL.Image', fromlist=['x']).open(ROOT + 'assets/v2/' + n + '.png').size), json.load(open(ROOT + 'assets/v2/' + n + '.json', encoding='utf-8'))['pivot']] for n in TREES}
+    s = await G('''(async () => { const V = (await import('/src/render/v2art.js')).V2; const o = {}; for (const n of %s) { const sh = V.sheets[n]; o[n] = sh ? [[sh.img.naturalWidth, sh.img.naturalHeight], sh.meta.pivot] : null; } return { o, failed: V.failed }; })()''' % json.dumps(TREES))
+    exp = {'tree_birch': [[119, 193], [59, 177]], 'tree_birch_h112': [[85, 126], [36, 112]], 'tree_birch_h96': [[73, 108], [31, 96]], 'tree_spruce': [[136, 215], [66, 179]], 'tree_spruce_h120': [[93, 145], [43, 117]], 'tree_spruce_h80': [[62, 96], [29, 77]]}
+    check('trees_r1: 6 листов деревьев совпадают с art/v2 байт в байт, загружены в игре; размеры и pivot прежние (берёза 119×193 / 59,177 … ель 62×96 / 29,77)',
+          all(byte.values()) and s['o'] == exp and want == exp and not [f for f in s['failed'] if 'tree' in str(f)], {'byte': byte, 'game': s})
+    for z, shot in (('trail', 'screenshot_v2art_trees_trail.png'), ('ladoga', 'screenshot_v2art_trees_ladoga.png')):
+        await G('''(() => { const g = __game; g.state = 'play'; g.ui.closeAll(); g.dlgWin = null; g.enterZone('%s', 'start'); g.log.lines.length = 0; g.updateCamera(); })()''' % z)
+        await pg.wait_for_timeout(600); await pg.screenshot(path=ROOT + shot)
+    check('trees_r1 скриншоты screenshot_v2art_trees_trail.png (Лесная тропа) и screenshot_v2art_trees_ladoga.png (Ладога)', os.path.exists(ROOT + 'screenshot_v2art_trees_trail.png') and os.path.exists(ROOT + 'screenshot_v2art_trees_ladoga.png'))
+
+    # ================= 21. v2art4: комбо из 3 ударов ЛКМ — порядок 1→2→3→1, буфер щелчка, сброс паузой, DPS прежний, позы
+    s = await G('''(async () => { const g = __game, V = await import('/src/render/v2art.js'), C = g.dbg.CFG.stats.combo; g.state = 'play'; g.ui.closeAll(); g.dlgWin = null; g.enterZone('zalesye', 'start');
+        const h = g.hero, R0 = Math.random; h.cmd = null; h.action = null; h.comboStep = 0; h.comboIdle = 99; h.hp = h.maxHp = 9999;
+        for (const q of g.enemies) { q.dead = true; q.gone = true; } const e = g.spawnTest('upyr', h.x + 0.9, h.y, 1); e.stagger = 1e9; e.mass = 99;
+        const place = () => { e.dead = false; e.hp = e.maxHp = 1e6; e.x = h.x + 0.9; e.y = h.y; e.update = () => {}; };
+        const run = (sec) => { place(); Math.random = () => 0.5; const hp0 = e.hp, seq = []; let last = null, durs = new Set(), hits = new Set(), n = 0;
+          h.attack(e, true, null, true); h.cmd.repeat = true; g.input.left = true; g.leftMode = 'attack';
+          for (let t = 0; t < sec; t += 1 / 60) { g.input.left = true; g.leftMode = 'attack'; g.simulate(1 / 60); const a = h.action; if (a && a !== last && a.type === 'attack') { seq.push(a.combo); durs.add(+a.dur.toFixed(4)); hits.add(+a.hitAt.toFixed(4)); n++; } last = a; if (h.cmd) h.cmd.repeat = true; }
+          g.input.left = false; g.leftMode = null; h.cmd = null; Math.random = R0; return { seq, dmg: hp0 - e.hp, durs: [...durs], hits: [...hits], n }; };
+        const on = run(4.0);
+        // DPS: то же время с выключенным комбо (steps 1) — тот же урон и число ударов
+        g.simulate(1.5); const st = C.steps; C.steps = 1; h.comboStep = 0; const off = run(4.0); C.steps = st;
+        // сброс паузой: удар → пауза > reset → снова 1; пауза < reset → продолжает
+        const toEnd = () => { let k = 0; while (h.action && k++ < 240) g.simulate(1 / 60); };   // B-53: ждать конца удара (хит-стоп удлиняет его)
+        const endOf = (a) => { let k = 0; while (h.action === a && k++ < 240) g.simulate(1 / 60); };
+        Math.random = () => 0.5; g.simulate(1.5); h.comboStep = 0; h.comboIdle = 99; place(); h.attack(e, true, null, true); g.simulate(0.05); toEnd(); const s1 = h.comboStep;
+        h.cmd = null; g.simulate(C.reset * 0.5); place(); h.attack(e, true, null, true); g.simulate(0.05); const sShort = h.action && h.action.combo; h.cmd = null; toEnd();
+        g.simulate(C.reset + 0.2); place(); h.attack(e, true, null, true); g.simulate(0.05); const sLong = h.action && h.action.combo; h.cmd = null; toEnd();
+        // буфер (B-52): ранний щелчок буферизуется до конца удара и даёт удар 1 (комбо сначала); щелчок в окне — следующий шаг
+        g.simulate(1.0); h.comboStep = 0; h.comboIdle = 99; place(); h.attack(e, false, null, true); h.cmd.repeat = false; g.simulate(0.05); const a0 = h.action; const ce0 = h.comboEarly || 0, cb0 = h.comboBuf || 0;
+        h.attack(e, false, null, true); const early = { early: (h.comboEarly || 0) - ce0, swung: h.cmd && h.cmd.swung }; endOf(a0); g.simulate(0.02); const a1 = h.action; early.next = a1 && a1 !== a0 ? a1.combo : null;
+        g.simulate(Math.max(0, a1.dur - a1.t - C.buffer * 0.5)); h.attack(e, false, null, true); const late = { buf: (h.comboBuf || 0) - cb0, swung: h.cmd && h.cmd.swung }; endOf(a1); g.simulate(0.02);
+        const next = h.action && h.action !== a1 ? h.action.combo : null; h.cmd = null; toEnd(); g.simulate(1); Math.random = R0;
+        // позы: удар 1 — hero_attack, 2 — заглушка (обратно), 3 — заглушка (зеркало); на hitAt — кадр удара листа
+        const sh = V.V2.sheets.hero_attack_se, n = sh.meta.frames || sh.meta.frame_count, hit = sh.meta.events.hit, poses = {};
+        for (const k of [1, 2, 3]) { const a = { type: 'attack', combo: k, t: 0, dur: h.attackTime, hitAt: h.attackTime * 0.5 }; const p0 = V.heroAttackPose(a, 'se'); a.t = a.hitAt; const p1 = V.heroAttackPose(a, 'se'); a.t = a.dur - 1e-3; const p2 = V.heroAttackPose(a, 'se');
+          poses[k] = { name: p1.name, f0: p0.frame, hit: p1.frame, end: p2.frame, flip: !!p1.flip }; }
+        e.dead = true; return { C, on, off, s1, sShort, sLong, early, late, next, poses, n, hit, sheets: V.V2.counters.comboSheets }; })()''')
+    P, n, hit = s['poses'], s['n'], s['hit']
+    check('v2art4 комбо: удар за ударом 1→2→3→1→2→3 (stats.json combo: steps 3, buffer 0,35 с, reset 0,6 с)',
+          s['C']['steps'] == 3 and s['C']['buffer'] == 0.35 and s['C']['reset'] == 0.6 and s['on']['seq'][:6] == [1, 2, 3, 1, 2, 3], s['on']['seq'])
+    check('v2art4 комбо: DPS прежний — за 4 с то же число ударов и тот же урон, что без комбо; длительность и момент удара у всех ударов одни (attackTime, HIT_FRAME)',
+          s['on']['n'] == s['off']['n'] and abs(s['on']['dmg'] - s['off']['dmg']) < 1e-6 and len(s['on']['durs']) == 1 and s['on']['durs'] == s['off']['durs'] and s['on']['hits'] == s['off']['hits'] and s['off']['seq'] == [1] * len(s['off']['seq']),
+          {'on': s['on'], 'off': s['off']})
+    check('v2art4 комбо: пауза < reset — следующий удар 2, пауза > reset — снова 1',
+          s['s1'] == 1 and s['sShort'] == 2 and s['sLong'] == 1, {k: s[k] for k in ('s1', 'sShort', 'sLong')})
+    check('v2art5 комбо (QA B-52, GDD §4.1 / B-23): ранний щелчок (раньше 0,35 с до конца удара) не теряется — буферизуется до конца удара и даёт удар 1 (комбо сначала); щелчок в окне 0,35 с — следующий шаг (2)',
+          s['early']['early'] == 1 and s['early']['swung'] is False and s['early']['next'] == 1 and s['late']['buf'] == 1 and s['late']['swung'] is False and s['next'] == 2, {k: s[k] for k in ('early', 'late', 'next')})
+    j2 = json.load(open(ROOT + 'assets/v2/hero_attack2_se.json', encoding='utf-8')); j3 = json.load(open(ROOT + 'assets/v2/hero_attack3_se.json', encoding='utf-8'))
+    check('v2art4 комбо, позы (листы художника): удар 1 — hero_attack (кадр удара 2), 2 — hero_attack2 (6 кадров, удар 2), 3 — hero_attack3 (8 кадров, удар 5, кадр 106×97 / pivot 53,86 из JSON); на hitAt — кадр удара листа, к концу удара — последний кадр; все 16 листов найдены листингом',
+          P['1']['name'] == 'hero_attack_se' and P['1']['hit'] == hit
+          and P['2']['name'] == 'hero_attack2_se' and P['2']['hit'] == j2['events']['hit'] == 2 and P['2']['f0'] == 0 and P['2']['end'] == j2['frames'] - 1 and not P['2']['flip']
+          and P['3']['name'] == 'hero_attack3_se' and P['3']['hit'] == j3['events']['hit'] == 5 and P['3']['end'] == j3['frames'] - 1 == 7 and not P['3']['flip']
+          and j3['frame_size'] == [106, 97] and j3['pivot'] == [53, 86] and len(s['sheets'] or []) == 16, {'poses': P, 'sheets': s['sheets']})
+    s = await G('''(() => { const g = __game, h = g.hero; g.state = 'play'; g.enterZone('zalesye', 'start'); for (const q of g.enemies) { q.dead = true; q.gone = true; }
+        const e = g.spawnTest('upyr', h.x + 0.9, h.y, 1); e.stagger = 1e9; e.mass = 99; e.update = () => {}; e.hp = e.maxHp = 1e6; h.cmd = null; h.action = null; h.comboStep = 0; h.comboIdle = 99;
+        const R0 = Math.random; Math.random = () => 0.5; const toEnd = () => { let k = 0; while (h.action && k++ < 240) g.simulate(1 / 60); };   // B-53: конец удара ждём явно — хит-стоп удлиняет удар
+        h.attack(e, false, null, true); g.simulate(0.05); toEnd(); h.cmd = null; const after1 = h.comboStep;
+        const c0 = g.counters.swingCancel || 0; h.attack(e, false, null, true); g.simulate(0.05); const st2 = h.action && h.action.combo; e.x = h.x + 4; g.simulate(0.1);
+        const cancelled = (g.counters.swingCancel || 0) - c0, stepAfterCancel = h.comboStep; h.cmd = null; e.x = h.x + 0.9; h.attack(e, false, null, true); g.simulate(0.05); const st3 = h.action && h.action.combo; h.cmd = null; e.dead = true; toEnd(); g.simulate(1); Math.random = R0;
+        return { after1, st2, cancelled, stepAfterCancel, st3 }; })()''')
+    check('v2art4 комбо и снятие замаха (v1.14 E1): снятый замах шагом комбо не считается — следующий удар повторяет тот же шаг',
+          s['after1'] == 1 and s['st2'] == 2 and s['cancelled'] == 1 and s['stepAfterCancel'] == 1 and s['st3'] == 2, s)
